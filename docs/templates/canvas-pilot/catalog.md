@@ -28,7 +28,8 @@ application or import it through **Import → Geometry file…** in Canvas Pilot
 Review the detected rectangles and their destination layers before applying.
 
 Tiers follow the [format matrix](../../canvas-pilot/guide/format-matrix.md):
-**Gold** is a complete `.pilot.json` project saved in Canvas Pilot; **Silver** formats
+**Gold** is a complete `.pilot.json` project for Canvas Pilot only, not an industry
+exchange standard; **Silver** formats
 can carry optional advanced-settings snapshots; **Bronze** exchanges geometry/artwork.
 These starter downloads are plain geometry templates, without embedded snapshots.
 

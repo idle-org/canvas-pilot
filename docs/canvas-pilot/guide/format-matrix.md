@@ -19,7 +19,10 @@ Tiers describe preservation of Canvas Pilot settings. Formats within a tier are
 tied; choose the one your editor supports.
 
 - **🥇 Gold — complete project:** ![Canvas Pilot](../../images/formats/project.svg)<br>
-  `.pilot.json` retains editable state and images.
+  `.pilot.json` retains editable state and images. **It is Canvas Pilot’s own
+  project format, intended to be opened only in Canvas Pilot—not an industry
+  standard or a file for other editors.** For sharing with another application,
+  choose one of the exchange formats below.
 - **🥈 Silver — optional snapshot:** ![SVG](../../images/formats/svg.svg) ![draw.io](../../images/formats/drawio.svg) ![JSON](../../images/formats/json.svg) ![HTML](../../images/formats/html.svg) ![PowerPoint](../../images/formats/pptx.svg) ![FigCraft](../../images/formats/figcraft.svg) ![CSV](../../images/formats/csv.svg) ![DXF](../../images/formats/dxf.svg)<br>
   These formats preserve advanced settings when extra parameters are enabled.
 - **🥉 Bronze — geometry/artwork:** ![Figma](../../images/formats/fig.svg) ![DWG](../../images/formats/dwg.svg) ![Illustrator](../../images/formats/illustrator.svg)<br>

@@ -5,6 +5,9 @@
 Gold saves the full project. Silver restores an optional embedded snapshot. Bronze
 imports geometry only. These tiers describe Canvas Pilot state preservation, not
 application quality or a guarantee that third-party editors retain metadata.
+Gold uses Canvas Pilot’s application-specific `.pilot.json` format, intended only
+for Canvas Pilot. It is not an industry standard or a measure of compatibility
+with other editors; use an exchange format for those workflows.
 
 ## Which editing features survive?
 

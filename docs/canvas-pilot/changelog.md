@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Clarified that Gold ranks preservation within Canvas Pilot: `.pilot.json` is
+  application-specific, not an industry-standard format for other editors.
+
 - Moved format tiers and pills above the feature matrix, restoring plain format
   names in the comparison table.
 
