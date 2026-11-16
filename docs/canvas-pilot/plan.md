@@ -71,11 +71,6 @@ device readback and physical-screen acceptance.
 
 ## To-do list
 
-- [ ] **Localization: book first, application second.** Follow the
-  [localization roadmap](../development/localization.md) for language selection,
-  translation workflow, publishing, UI catalogs and compatibility checks. Detailed
-  tasks and acceptance criteria live there; no translations are shipped yet.
-
 - [ ] **Resolve local input-ratio correction scope.** Shared-input Content ratio
   and Transform to controls already exist and are [documented](guide/formats-and-crop.md#content-ratio-versus-transform-to).
   Whether to add a local correction/preview model remains an unanswered question;
@@ -92,6 +87,11 @@ device readback and physical-screen acceptance.
   remains in the [engineering follow-up](midra-fit-precision.md).
 
 ### Stretch goals (distant future)
+
+- [ ] **Localization: book first, application second.** Follow the
+  [localization roadmap](../development/localization.md) for language selection,
+  translation workflow, publishing, UI catalogs and compatibility checks. Detailed
+  tasks and acceptance criteria live there; no translations are shipped yet.
 
 - [ ] **Video showcase, manual and optional chapter demonstrations.** Record a
   short showcase for the README and book introduction, then a guided video manual

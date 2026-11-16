@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Classified book and application localization as a stretch goal, retaining its
+  detailed roadmap and acceptance checklist.
+
 - Added a localization roadmap: translate and publish the book first, then localize
   the application, with a shared glossary, compatibility requirements and separate
   acceptance checklists. Translation implementation has not started.
