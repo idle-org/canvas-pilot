@@ -171,7 +171,7 @@ impl Editor {
                                 let scaling_before = (self.ui_scale, self.text_scale);
                                 let mut percent = self.ui_scale * 100.0;
                                 ui.label(tr(ctx, "access.interface-scale"));
-                                ui.add(egui::Slider::new(&mut percent, 100.0..=200.0).suffix(" %").step_by(5.0));
+                                ui.add(egui::Slider::new(&mut percent, 50.0..=400.0).suffix(" %").step_by(5.0));
                                 self.ui_scale = percent / 100.0;
                                 let mut separate = self.text_scale.is_some();
                                 if ui.checkbox(&mut separate, tr(ctx, "access.text-scale")).changed() {
@@ -179,7 +179,7 @@ impl Editor {
                                 }
                                 if let Some(scale) = &mut self.text_scale {
                                     let mut percent = *scale * 100.0;
-                                    ui.add(egui::Slider::new(&mut percent, 100.0..=150.0).suffix(" %").step_by(5.0));
+                                    ui.add(egui::Slider::new(&mut percent, 50.0..=200.0).suffix(" %").step_by(5.0));
                                     *scale = percent / 100.0;
                                     ui.weak(tr(ctx, "access.text-help"));
                                 }

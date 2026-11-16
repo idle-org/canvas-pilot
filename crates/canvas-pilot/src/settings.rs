@@ -149,12 +149,12 @@ impl Settings {
             return Err(format!("unsupported settings version {}", self.version));
         }
         if !self.ui_scale.is_finite()
-            || !(1.0..=2.0).contains(&self.ui_scale)
+            || !(0.5..=4.0).contains(&self.ui_scale)
             || self
                 .text_scale
-                .is_some_and(|scale| !scale.is_finite() || !(1.0..=1.5).contains(&scale))
+                .is_some_and(|scale| !scale.is_finite() || !(0.5..=2.0).contains(&scale))
         {
-            return Err("Interface scale must be 100–200%; text scale must be 100–150%".into());
+            return Err("Interface scale must be 50–400%; text scale must be 50–200%".into());
         }
         if self.recent_midra_hosts.len() > 4
             || self.recent_midra_hosts.iter().enumerate().any(|(i, host)| {
@@ -306,7 +306,18 @@ mod tests {
             Settings::parse(&serde_json::to_string(&saved).unwrap()).unwrap(),
             saved
         );
-        for scale in [0.5, 2.1, f32::NAN, f32::INFINITY] {
+        for (ui_scale, text_scale) in [(0.5, 0.5), (4.0, 2.0)] {
+            let boundary = Settings {
+                ui_scale,
+                text_scale: Some(text_scale),
+                ..saved.clone()
+            };
+            assert_eq!(
+                Settings::parse(&serde_json::to_string(&boundary).unwrap()).unwrap(),
+                boundary
+            );
+        }
+        for scale in [0.49, 4.01, f32::NAN, f32::INFINITY] {
             assert!(
                 Settings {
                     ui_scale: scale,
@@ -316,7 +327,7 @@ mod tests {
                 .is_err()
             );
         }
-        for scale in [0.5, 1.6, f32::NAN] {
+        for scale in [0.49, 2.01, f32::NAN] {
             assert!(
                 Settings {
                     text_scale: Some(scale),

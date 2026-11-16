@@ -6,7 +6,7 @@
 
 ### v0.9.1
 
-- Added Appearance controls for 100–200% interface zoom and optional 100–150%
+- Added Appearance controls for 50–400% interface zoom and optional 50–200%
   standard-widget text scaling, with a readily accessible size reset. Added a
   High Contrast theme with measured text contrast and stronger widget borders.
   Settings v11 migrates older preferences without changing projects or exports.

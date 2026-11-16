@@ -27,8 +27,8 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 | Field | Values / default |
 | --- | --- |
 | `version` | Integer `11` |
-| `ui_scale` | Finite number, 1.0–2.0 inclusive; default 1.0. egui interface zoom relative to the OS display scale. |
-| `text_scale` | `null` (default, disabled) or finite number 1.0–1.5 inclusive. Additional standard-widget text multiplier. |
+| `ui_scale` | Finite number, 0.5–4.0 inclusive; default 1.0. egui interface zoom relative to the OS display scale. |
+| `text_scale` | `null` (default, disabled) or finite number 0.5–2.0 inclusive. Additional standard-widget text multiplier. |
 | `language` | `"system"` (default), `"en"`, `"fr"`, `"ja"`, `"zh-CN"`, `"es"`, `"grc"`, `"eo"`. Unknown values are rejected. |
 | `autoconnect_at_startup` | Boolean; default false. Try one background connection at application startup if the saved address is nonblank. |
 | `allow_sending_to_program` | Boolean; default false. Enables the Program destination in the exporter. Turning it off restores Preview; applies to quick Apply too. |
