@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### v0.9.10
+
+- Restored faded content outside the layer during crop editing and outside the
+  retained image in the 1:1 helper. Source-mask clipping had inadvertently hidden
+  both preview textures and pattern guides there, even with no mask applied.
+- Actual layer rendering remains clipped to its layer and mask. Regression checks
+  cover translucent guides on all four sides and both mask origins. Native
+  double-click rendering was checked; required gates passed with 91.42% line coverage.
+
 ### v0.9.9
 
 - Added a subtle background shift to shared hover styling, including borderless

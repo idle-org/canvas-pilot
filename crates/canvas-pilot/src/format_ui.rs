@@ -785,6 +785,8 @@ fn paint_source_clipped(
     clip: Rect,
     preview: Option<(egui::TextureId, f32)>,
 ) {
+    // The caller owns clipping: crop helpers deliberately extend beyond rect.
+    // paint_layer_source already applies the actual layer and mask boundaries.
     let mut guides = painter.clone();
     if let Some((texture, opacity)) = preview {
         let Ok(input) = source.input() else {
@@ -807,7 +809,7 @@ fn paint_source_clipped(
             ),
         );
         painter
-            .with_clip_rect(painter.clip_rect().intersect(clip).intersect(rect))
+            .with_clip_rect(painter.clip_rect().intersect(clip))
             .image(
                 texture,
                 native,
@@ -838,7 +840,7 @@ fn paint_pattern_clipped(
     };
     let k = rect.width() as f64 / retained[0];
     let ky = rect.height() as f64 / retained[1];
-    let p = painter.with_clip_rect(painter.clip_rect().intersect(clip).intersect(rect));
+    let p = painter.with_clip_rect(painter.clip_rect().intersect(clip));
     let point = |x: f64, y: f64| {
         rect.min
             + Vec2::new(
@@ -1571,6 +1573,127 @@ mod tests {
 #[cfg(test)]
 mod preview_paint_tests {
     use super::*;
+    #[test]
+    fn crop_helpers_render_translucent_content_outside_the_retained_rectangle() {
+        let rect = Rect::from_min_size(Pos2::new(200.0, 200.0), Vec2::new(300.0, 300.0));
+        let source = Source {
+            aspect: canvas_pilot::formats::Aspect::Square,
+            native: [1000, 1000],
+            ..Source::default()
+        };
+        let crop = Crop {
+            left: 100.0,
+            right: 100.0,
+            top: 100.0,
+            bottom: 100.0,
+        };
+        let full = content_bounds(rect, source, crop).unwrap();
+        let probes = [
+            Pos2::new((full.left() + rect.left()) / 2.0, rect.center().y),
+            Pos2::new((full.right() + rect.right()) / 2.0, rect.center().y),
+            Pos2::new(rect.center().x, (full.top() + rect.top()) / 2.0),
+            Pos2::new(rect.center().x, (full.bottom() + rect.bottom()) / 2.0),
+        ];
+        for one_to_one in [false, true] {
+            for preview in [None, Some((egui::TextureId::User(91), 0.0))] {
+                let ctx = egui::Context::default();
+                let output = ctx.run_ui(
+                    egui::RawInput {
+                        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(900.0, 700.0))),
+                        ..Default::default()
+                    },
+                    |ui| {
+                        if one_to_one {
+                            paint_one_to_one_helper(ui.painter(), rect, source, crop, preview);
+                        } else {
+                            paint_content_overflow(ui.painter(), rect, source, crop, preview);
+                        }
+                    },
+                );
+                for point in probes {
+                    assert!(
+                        output.shapes.iter().any(|shape| {
+                            let alpha = match &shape.shape {
+                                egui::Shape::Rect(rect) => rect.fill.a(),
+                                egui::Shape::Mesh(mesh) => {
+                                    mesh.vertices.first().map_or(0, |v| v.color.a())
+                                }
+                                _ => 0,
+                            };
+                            alpha > 0
+                                && alpha < 255
+                                && shape.clip_rect.contains(point)
+                                && shape.shape.visual_bounding_rect().contains(point)
+                        }),
+                        "missing faded guide at {point:?}, 1:1={one_to_one}, preview={preview:?}"
+                    );
+                }
+                if !one_to_one {
+                    assert!(
+                        output
+                            .shapes
+                            .iter()
+                            .all(|shape| !shape.clip_rect.intersect(rect).is_positive()),
+                        "overflow must not paint the visible layer twice"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn actual_layer_stays_clipped_with_layer_and_source_masks() {
+        use canvas_pilot::formats::{Mask, MaskOrigin};
+        let mut app = Editor::default();
+        app.layout
+            .set_framing(
+                1,
+                canvas_pilot::formats::Framing {
+                    zoom: 2.0,
+                    offset: [0.0; 2],
+                },
+            )
+            .unwrap();
+        let rect = Rect::from_min_size(Pos2::new(200.0, 200.0), Vec2::new(320.0, 180.0));
+        for origin in [MaskOrigin::Layer, MaskOrigin::Source] {
+            app.layout
+                .set_mask(
+                    1,
+                    Mask {
+                        origin,
+                        left: 0.1,
+                        right: 0.1,
+                        top: 0.1,
+                        bottom: 0.1,
+                    },
+                )
+                .unwrap();
+            for preview in [None, Some((egui::TextureId::User(91), 0.0))] {
+                let ctx = egui::Context::default();
+                let output = ctx.run_ui(egui::RawInput::default(), |ui| {
+                    paint_layer_source(ui.painter(), rect, &app.layout, 1, preview)
+                });
+                assert!(!output.shapes.is_empty());
+                assert!(
+                    output
+                        .shapes
+                        .iter()
+                        .all(|shape| rect.contains_rect(shape.clip_rect)),
+                    "mask {origin:?} leaked beyond layer"
+                );
+                if origin == MaskOrigin::Layer {
+                    let masked = rect.shrink2(rect.size() * 0.1);
+                    assert!(
+                        output
+                            .shapes
+                            .iter()
+                            .all(|shape| masked.contains_rect(shape.clip_rect))
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn captured_texture_follows_both_crops_with_guides_above_and_opaque_fallback() {
         let ctx = egui::Context::default();
