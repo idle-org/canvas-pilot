@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Removed the project-format note from the feature matrix and renumbered the
+  remaining note references.
+
 - Switched the format matrix to ✅ / ❌ emoji, replaced ambiguous asterisks with
   linked numbered notes, and linked the comparison from the introduction, first
   layout, clipboard import and snapshot-restoration guidance.

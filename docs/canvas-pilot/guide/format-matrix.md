@@ -20,39 +20,35 @@ import maps boxes to **existing destination layers**: it keeps their names, sour
 settings and device links, and does not change the output resolution. File names
 and layer labels can help identify the boxes; they do not rename destinations.
 
-| File | Import | Export | Layer names in export | Background picture [2](#file-notes) | Crop/mask preview pictures [2](#file-notes) | Extra settings snapshot [5](#file-notes) |
+| File | Import | Export | Layer names in export | Background picture [1](#file-notes) | Crop/mask preview pictures [1](#file-notes) | Extra settings snapshot [4](#file-notes) |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot project (`.pilot.json`) | ✅ [1](#file-notes) | ✅ [1](#file-notes) | ✅ | ✅ [1](#file-notes) | ✅ [1](#file-notes) | ✅ [1](#file-notes) |
+| Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| DXF (`.dxf`) | ✅ | ✅ | ✅ [3](#file-notes) | ❌ | ❌ | ✅ |
-| DWG (`.dwg`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ [3](#file-notes) | ❌ | ❌ | ❌ |
+| DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ |
+| DWG (`.dwg`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
 | HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PowerPoint (`.pptx`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ | ✅ | ✅ | ✅ |
-| Figma file (`.fig`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ | ✅ | ✅ | ❌ |
-| FigCraft file (`.figcraft`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ | ✅ | ✅ | ❌ |
-| Illustrator file (`.ai`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ❌ |
+| PowerPoint (`.pptx`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ✅ | ✅ |
+| Figma file (`.fig`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ✅ | ❌ |
+| FigCraft file (`.figcraft`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ✅ | ❌ |
+| Illustrator file (`.ai`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
 
 ### File notes
 
-1. **Projects:** `.pilot.json` is the suggested name; Open project accepts any
-   `.json` filename and checks that its contents are a valid project. Use Open/Save
-   project, not geometry import/export. Pictures and
-   editable settings are saved directly; no optional snapshot is needed.
-2. **Pictures:** enable **Include background layer** and/or **Include placeholder
+1. **Pictures:** enable **Include background layer** and/or **Include placeholder
    pictures** when exporting. Background pictures flatten visible references.
    Placeholder pictures show source-grid patterns with crop, fit and masking;
    they are not live input images. Reimport reads their boxes, not their pixels
    or editable crop. CSV, DXF and DWG can include a background **rectangle** only.
-3. **Names:** exported as format-specific labels/metadata. CAD uses stable layer
+2. **Names:** exported as format-specific labels/metadata. CAD uses stable layer
    IDs with human names in descriptions; AI goes through an SVG conversion.
    Another application's layer panel may display these differently.
-4. **Native codecs:** DWG, PPTX, FIG, FIGCRAFT and AI require a build with vendor
+3. **Native codecs:** DWG, PPTX, FIG, FIGCRAFT and AI require a build with vendor
    formats enabled (the default). AI additionally requires the separately installed
    [VectorCraft converter](files.md#illustrator-ai-optional-converter-required).
-5. **Extra settings:** experimental and opt-in. Restore the original snapshot with
+4. **Extra settings:** experimental and opt-in. Restore the original snapshot with
    **Project → Restore parameters from export…**; ordinary geometry import never
    applies it. External applications may strip it or leave it stale after edits.
 
@@ -107,11 +103,11 @@ parameters and reopened through **Restore parameters from export**.
 | Feature | Project Open/Save | Plain geometry file import | Snapshot restore |
 | --- | :---: | :---: | :---: |
 | Layer position and size | ✅ | ✅ | ✅ |
-| Full-precision saved coordinates | ✅ | ❌ [6](#editing-notes) | ✅ |
+| Full-precision saved coordinates | ✅ | ❌ [5](#editing-notes) | ✅ |
 | Output screen resolution | ✅ | ❌ | ✅ |
 | Layer names and stacking order | ✅ | ❌ | ✅ |
-| Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [7](#editing-notes) |
-| Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [7](#editing-notes) |
+| Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [6](#editing-notes) |
+| Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [6](#editing-notes) |
 | Input crop edges | ✅ | ❌ | ✅ |
 | Normal layer crop zoom and offsets | ✅ | ❌ | ✅ |
 | Advanced fit modes and their crop edges | ✅ | ❌ | ✅ |
@@ -120,19 +116,19 @@ parameters and reopened through **Restore parameters from export**.
 | Saved device screen/layer links | ✅ | ❌ | ✅ |
 | Reference images and their individual settings | ✅ | ❌ | ❌ |
 | Capture assignments and saved preview stills | ✅ | ❌ | ❌ |
-| Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [7](#editing-notes) |
+| Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [6](#editing-notes) |
 | Undo history, pending edits and active device operations | ❌ | ❌ | ❌ |
-| Application theme, connection history and Program permission | ❌ [8](#editing-notes) | ❌ | ❌ |
+| Application theme, connection history and Program permission | ❌ [7](#editing-notes) | ❌ | ❌ |
 
 ### Editing notes
 
-6. Geometry **exports round boxes to whole pixels**; import can retain fractional
+5. Geometry **exports round boxes to whole pixels**; import can retain fractional
    coordinates where the reader supports them. Use a project or snapshot for
    full-precision recovery. Geometry import never reorders destination layers.
-7. Snapshot restoration includes only exported layers and their referenced inputs;
+6. Snapshot restoration includes only exported layers and their referenced inputs;
    selection and folders are filtered accordingly. It replaces the document with
    the saved snapshot, not a merge of the external artwork's latest edits.
-8. Application preferences are saved separately from projects. Opening a project
+7. Application preferences are saved separately from projects. Opening a project
    or restoring a snapshot does not connect or send to a switcher.
 
 PNG, JPEG and BMP are **reference-image imports**, not layer-geometry formats.
