@@ -67,12 +67,23 @@ Adjust the picture inside its layer while keeping the layout in view.
 
 ## Bring your layout with you
 
-Exchange layouts with vector editors, diagrams.net, CAD tools, PowerPoint and
-Figma. Choose the file or clipboard workflow that preserves what you need using
-the [**format feature matrix**](docs/canvas-pilot/guide/format-matrix.md).
+Choose the format your client already edits: **SVG for vector editors (including
+Illustrator)**, **draw.io for diagrams.net**, **PPTX for PowerPoint**, **FIG for
+Figma**, or **DXF / DWG for CAD**. Keep a Canvas Pilot project for continued editing.
+The comparison guide explains which features each file and clipboard path preserves.
 
-[Download starter templates](docs/templates/canvas-pilot/catalog.md) ·
-[Import and export guide](docs/canvas-pilot/guide/files.md)
+| Choose or download | Markdown | Book |
+| --- | --- | --- |
+| **Choose a format** — recommendations and feature matrix | [Format guide](docs/canvas-pilot/guide/format-matrix.md) | [Format guide in the book](https://books.dandaedre.com/manuals/canvas-pilot/docs/canvas-pilot/guide/format-matrix.html) |
+| **Download templates** — pick an editor and Full HD or 4K | [Template catalog](docs/templates/canvas-pilot/catalog.md) | [Template catalog in the book](https://books.dandaedre.com/manuals/canvas-pilot/docs/templates/canvas-pilot/catalog.html) |
+
+**Sending a template to a client?** Share the
+[template download page](https://books.dandaedre.com/manuals/canvas-pilot/docs/templates/canvas-pilot/catalog.html).
+They can choose their application and canvas size, download a starter file, edit
+its layer boxes and send it back. The Markdown catalog and book use the same
+source and template files.
+
+[Import and export instructions](docs/canvas-pilot/guide/files.md)
 
 For **Midra 4K** and **Aquilon / LivePremier**, see the
 [device guide](docs/canvas-pilot/guide/device.md) for supported profiles, setup and

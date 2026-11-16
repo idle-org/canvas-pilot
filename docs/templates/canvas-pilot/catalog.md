@@ -7,6 +7,15 @@ in both Full HD and UHD 4K (22 files). Extract the archive and use whichever
 format suits your editor. This also preserves file names when browsers would
 otherwise preview a template, including PDF-compatible Illustrator files.
 
+## Pick a template and send back your layout
+
+1. Choose your application and the requested canvas size in the table below.
+2. Download the matching file and open it in your editor.
+3. Arrange and resize the layer boxes, save the file, and send it back to the
+   person preparing the screen layout. You do not need Canvas Pilot to edit it.
+
+Unsure which format to choose? See the
+[format recommendations and feature matrix](../../canvas-pilot/guide/format-matrix.md).
 Individual downloads are listed below.
 
 This folder is the single source for the base files in every supported geometry

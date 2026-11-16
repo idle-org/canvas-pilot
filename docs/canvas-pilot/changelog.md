@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Added prominent README format recommendations and paired Markdown/book links
+  for the format matrix and template catalog. Added a short client handoff workflow
+  to the shared catalog; downloads and detailed capabilities keep one source.
+
 - Restored the illustrated main README with a workspace preview, feature overview
   and layout workflow. Kept status badges at the top, detailed instructions in the
   book and task lists behind the Development link.
