@@ -2256,10 +2256,12 @@ impl Editor {
             ui.separator();
             if let Some(i) = self.layout.selected() {
                 ui.menu_button(tr(ui.ctx(), "ui.properties"), |ui| {
+                    let mask_title = tr(ui.ctx(), "ui.mask-properties");
                     for (title, tab) in [
                         ("Source properties…", PropertyTab::Source),
                         ("Layer properties…", PropertyTab::Layer),
                         ("Crop properties…", PropertyTab::Crop),
+                        (mask_title.as_str(), PropertyTab::Mask),
                         ("Mapping properties…", PropertyTab::Mapping),
                     ] {
                         if ui.button(title).clicked() {
@@ -8243,6 +8245,7 @@ mod tests {
             (false, "Source properties…", PropertyTab::Source),
             (false, "Layer properties…", PropertyTab::Layer),
             (false, "Crop properties…", PropertyTab::Crop),
+            (false, "Mask properties…", PropertyTab::Mask),
             (false, "Mapping properties…", PropertyTab::Mapping),
             (false, "Configure capture…", PropertyTab::Preview),
             (true, "Lock selected layers", PropertyTab::Layer),

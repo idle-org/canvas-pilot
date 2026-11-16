@@ -455,5 +455,6 @@
   "language.confirm": "¿Te parece bien este nuevo idioma?",
   "language.keep": "Sí",
   "language.rollback": "Si no confirmas, se volverá al idioma anterior en %{seconds} segundos.",
-  "language.cancel": "No, elegí este idioma por accidente"
+  "language.cancel": "No, elegí este idioma por accidente",
+  "ui.mask-properties": "Propiedades de la máscara…"
 }

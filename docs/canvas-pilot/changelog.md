@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Added the missing Mask properties entry to the layer right-click Properties
+  submenu, opening the existing mask controls. The context-menu regression test
+  now covers this entry.
+
 - Language changes now preview for 20 seconds and require confirmation. The
   cancellation button stays in the previous language; cancellation, Escape or
   timeout restores it. Unconfirmed choices are never saved. Regression tests cover

@@ -455,5 +455,6 @@
   "language.confirm": "この言語設定でよろしいですか？",
   "language.keep": "はい",
   "language.rollback": "確認しない場合、%{seconds} 秒後に元の言語に戻ります。",
-  "language.cancel": "いいえ、間違えてこの言語を選びました"
+  "language.cancel": "いいえ、間違えてこの言語を選びました",
+  "ui.mask-properties": "マスクのプロパティ…"
 }

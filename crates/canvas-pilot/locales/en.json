@@ -455,5 +455,6 @@
   "language.confirm": "Does this new language choice suit you?",
   "language.keep": "Yes",
   "language.rollback": "Your previous language returns in %{seconds} seconds unless you confirm.",
-  "language.cancel": "No, I clicked on this language by accident"
+  "language.cancel": "No, I clicked on this language by accident",
+  "ui.mask-properties": "Mask properties…"
 }

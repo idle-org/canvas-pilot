@@ -455,5 +455,6 @@
   "language.confirm": "您要保留这个语言选择吗？",
   "language.keep": "是",
   "language.rollback": "如果不确认，将在 %{seconds} 秒后恢复原来的语言。",
-  "language.cancel": "不，我不小心选错了语言"
+  "language.cancel": "不，我不小心选错了语言",
+  "ui.mask-properties": "遮罩属性…"
 }

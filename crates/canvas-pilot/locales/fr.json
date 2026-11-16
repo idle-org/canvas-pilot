@@ -455,5 +455,6 @@
   "language.confirm": "Ce nouveau choix de langue vous convient-il ?",
   "language.keep": "Oui",
   "language.rollback": "Sans confirmation, la langue précédente sera rétablie dans %{seconds} secondes.",
-  "language.cancel": "Non, j’ai choisi cette langue par erreur"
+  "language.cancel": "Non, j’ai choisi cette langue par erreur",
+  "ui.mask-properties": "Propriétés du masque…"
 }

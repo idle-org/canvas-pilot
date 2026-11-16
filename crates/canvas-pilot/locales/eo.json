@@ -455,5 +455,6 @@
   "language.confirm": "Ĉu ĉi tiu nova lingvo taŭgas por vi?",
   "language.keep": "Jes",
   "language.rollback": "Sen konfirmo, la antaŭa lingvo revenos post %{seconds} sekundoj.",
-  "language.cancel": "Ne, mi elektis ĉi tiun lingvon erare"
+  "language.cancel": "Ne, mi elektis ĉi tiun lingvon erare",
+  "ui.mask-properties": "Ecoj de la masko…"
 }
