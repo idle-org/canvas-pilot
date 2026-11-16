@@ -68,7 +68,7 @@ See [formats and crop](guide/formats-and-crop.md) and
 
 ## Save, exchange or send a layout
 
-- **Save your work:** use **Project → Save project…** for a `.capi.json` file
+- **Save your work:** use **Project → Save project…** for a `.pilot.json` file
   that retains the full editor project.
 - **Work with another application:** drop a supported geometry file into the window,
   use **Import → Geometry file…**, or **Project → Export → Export layers…**. The [starter-file catalog](../templates/canvas-pilot/catalog.md)

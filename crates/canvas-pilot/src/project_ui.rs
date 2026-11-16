@@ -239,7 +239,7 @@ impl Editor {
             Ok(contents) => {
                 if let Some(path) = rfd::FileDialog::new()
                     .add_filter("Canvas Pilot project", &["json"])
-                    .set_file_name("layout.capi.json")
+                    .set_file_name("layout.pilot.json")
                     .save_file()
                 {
                     self.queue_write(path, contents);

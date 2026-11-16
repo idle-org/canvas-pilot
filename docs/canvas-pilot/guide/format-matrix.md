@@ -22,7 +22,7 @@ and layer labels can help identify the boxes; they do not rename destinations.
 
 | File | Import | Export | Layer names in export | Background picture | Crop/mask preview pictures | Extra settings snapshot |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot project (`.capi.json`) | ☑* | ☑* | ☑ | ☑* | ☑* | ☑* |
+| Canvas Pilot project (`.pilot.json`) | ☑* | ☑* | ☑ | ☑* | ☑* | ☑* |
 | SVG (`.svg`) | ☑ | ☑ | ☑ | ☑ | ☑ | ☑ |
 | draw.io (`.drawio`, XML) | ☑ | ☑ | ☑ | ☑ | ☑ | ☑ |
 | Geometry JSON (`.json`) | ☑ | ☑ | ☑ | ☑ | ☑ | ☑ |
