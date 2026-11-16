@@ -1,0 +1,7 @@
+{
+  "generator": "Built-in image_gen",
+  "prompts": {
+    "canvas-pilot": "Use case: logo-brand. Asset type: professional desktop application icon for canvas-pilot in a coordinated suite of document and audiovisual tools. Subject: three precisely aligned overlapping display rectangles, representing professional video screen layer layout. A single centered icon, square 1024x1024 canvas, rounded-square deep graphite tile with restrained luminous teal and cool silver pictogram. Premium contemporary desktop software visual identity, simple bold geometry, subtle depth and soft bevel, crisp silhouette legible at 32 pixels, front-facing orthographic view, balanced margins. Transparent background outside the tile, tile occupies 88% of canvas. No words, no labels, no watermark, no extra decorative objects.",
+    "midra-probe": "Use case: logo-brand. Asset type: professional desktop application icon for midra-probe in a coordinated suite of document and audiovisual tools. Subject: a display rectangle with a magnifying glass and a small connection node, representing video processor diagnostics. A single centered icon, square 1024x1024 canvas, rounded-square deep graphite tile with restrained luminous teal and cool silver pictogram. Premium contemporary desktop software visual identity, simple bold geometry, subtle depth and soft bevel, crisp silhouette legible at 32 pixels, front-facing orthographic view, balanced margins. Transparent background outside the tile, tile occupies 88% of canvas. No words, no labels, no watermark, no extra decorative objects."
+  }
+}

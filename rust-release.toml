@@ -1,0 +1,44 @@
+[release]
+tag-prefix = "v"
+
+[build]
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "x86_64-pc-windows-gnu",
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+]
+profile = "release"
+locked = true
+
+[build.apple]
+image = "ghcr.io/rust-cross/cargo-zigbuild@sha256:9b4f6b3eb9e8f9fefb3960fe288ddba576627d66d9eff851ce7f62d2455564a5"
+deployment-target = "13.0"
+sdk-root = "/opt/MacOSX11.3.sdk"
+
+[package]
+format = "tgz"
+
+[[package.bundles]]
+name = "portable"
+targets = ["x86_64-pc-windows-gnu", "x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin"]
+formats = { x86_64-pc-windows-gnu = "zip", x86_64-unknown-linux-gnu = "tgz", aarch64-apple-darwin = "zip", x86_64-apple-darwin = "zip" }
+archive-name = "{name}-{bundle}-{target}-v{version}"
+root = "{name}-{bundle}-{target}-v{version}"
+cargo-binaries = "all"
+files = [
+  { source = "assets/app-icon.png", destination = "icons/canvas-pilot/app-icon.png" },
+  { source = "assets/app-icon.ico", destination = "icons/canvas-pilot/app-icon.ico" },
+  { source = "assets/app-icon.icns", destination = "icons/canvas-pilot/app-icon.icns" },
+  { source = "scripts/create-desktop-launcher.py", destination = "scripts/create-desktop-launcher.py", workspace-relative = true },
+  { source = "scripts/desktop_icons.py", destination = "scripts/desktop_icons.py", workspace-relative = true },
+  { source = "LICENSE", destination = "LICENSES/MIT.txt", workspace-relative = true },
+  { source = "README.md", destination = "README.txt", workspace-relative = true },
+]
+
+[[repository.fallbacks]]
+origin = "https://git.dandaedre.com/idle-org/canvas-pilot"
+fallback-url = "https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot"
+
+[gitea]
+token-env = "GITEA_TOKEN"

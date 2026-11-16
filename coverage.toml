@@ -1,0 +1,5 @@
+# Whole Rust workspace, including desktop and PDF code; no production exclusions.
+# Baseline: the native window/event loop still needs Windows GUI automation.
+line-floor = 75.0
+tool = "cargo-llvm-cov"
+tool-version = "0.9.1"

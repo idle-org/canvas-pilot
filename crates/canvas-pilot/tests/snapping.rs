@@ -1,0 +1,705 @@
+use canvas_pilot::{Layout, snapping::Snapping};
+
+#[test]
+fn screen_snapping_recomputes_from_original_and_is_one_undo_step() {
+    let mut layout = Layout::default();
+    let before = layout.layers().clone();
+    let formats = layout.formats().clone();
+    let options = Snapping {
+        enabled: true,
+        layer_edges: false,
+        ..Default::default()
+    };
+    layout.start_drag([1200.0, 200.0]);
+    assert_eq!(
+        layout.drag_to_snapped([1317.0, 201.0], options, 6.0),
+        [Some(1920.0), Some(540.0)]
+    );
+    assert_eq!(layout.layers()[1].x, 1280.0);
+    layout.drag_to_snapped([1250.0, 200.0], options, 6.0);
+    assert_eq!(layout.layers()[1].x, before[1].x + 50.0);
+    layout.drag_to_snapped([1317.0, 201.0], options, 6.0);
+    layout.finish_drag();
+    assert_eq!(*layout.formats(), formats);
+    layout.undo();
+    assert_eq!(*layout.layers(), before);
+    layout.redo();
+    assert_eq!(layout.layers()[1].x, 1280.0);
+}
+#[test]
+fn visible_layer_edges_include_locked_targets_but_not_hidden_targets() {
+    let options = Snapping {
+        enabled: true,
+        screen_edges: false,
+        pixels: false,
+        ..Default::default()
+    };
+    for hidden in [false, true] {
+        let mut layout = Layout::default();
+        layout.set_locked(0, true);
+        if hidden {
+            layout.set_visible(0, false);
+        }
+        layout.start_drag([1160.0, 180.0]);
+        let guides = layout.drag_to_snapped([763.0, 190.0], options, 6.0);
+        assert_eq!(guides[0], if hidden { None } else { Some(760.0) });
+        assert_eq!(layout.layers()[1].x, if hidden { 763.0 } else { 760.0 });
+    }
+}
+#[test]
+fn group_snapping_preserves_spacing_and_cancel_restores_geometry() {
+    let mut layout = Layout::default();
+    layout.set_selection([true; 2]);
+    let before = layout.layers().clone();
+    layout.start_drag([200.0, 200.0]);
+    layout.drag_to_snapped(
+        [83.0, 200.0],
+        Snapping {
+            enabled: true,
+            ..Default::default()
+        },
+        6.0,
+    );
+    assert_eq!(layout.layers()[0].x, 0.0);
+    assert_eq!(
+        layout.layers()[1].x - layout.layers()[0].x,
+        before[1].x - before[0].x
+    );
+    layout.cancel_drag();
+    assert_eq!(*layout.layers(), before);
+    layout.start_drag([200.0, 200.0]);
+    assert_eq!(
+        layout.drag_to_snapped([83.0, 200.0], Snapping::default(), 6.0),
+        [None; 2]
+    );
+    assert_eq!(layout.layers()[0].x, 3.0);
+}
+#[test]
+fn pixel_snap_can_be_disabled_and_numeric_entry_bypasses_it() {
+    let mut layout = Layout::default();
+    let mut g = layout.layers()[1];
+    g.x = 1160.25;
+    layout.apply(1, g).unwrap();
+    for pixels in [false, true] {
+        layout.start_drag([1200.0, 200.0]);
+        layout.drag_to_snapped(
+            [1200.2, 200.0],
+            Snapping {
+                enabled: true,
+                pixels,
+                screen_edges: false,
+                layer_edges: false,
+                ..Default::default()
+            },
+            6.0,
+        );
+        assert!((layout.layers()[1].x - if pixels { 1160.0 } else { 1160.45 }).abs() < 1e-8);
+        layout.cancel_drag();
+        assert_eq!(layout.layers()[1], g);
+    }
+}
+#[test]
+fn resize_snaps_to_screen_keeps_anchor_and_undo() {
+    use canvas_pilot::ResizeHandle;
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    let before = layout.layers().clone();
+    let g = before[0];
+    layout.start_handle_resize(
+        0,
+        ResizeHandle::Right,
+        [g.x + g.width, g.y + g.height / 2.0],
+        true,
+    );
+    let guides = layout.drag_to_snapped(
+        [1918.0, g.y + g.height / 2.0],
+        Snapping {
+            enabled: true,
+            pixels: false,
+            screen_edges: true,
+            layer_edges: false,
+            ..Default::default()
+        },
+        6.0,
+    );
+    let next = layout.layers()[0];
+    assert_eq!(guides, [Some(1920.0), None]);
+    assert_eq!(next.x, g.x);
+    assert_eq!(next.x + next.width, 1920.0);
+    assert!((next.width / next.height - g.width / g.height).abs() < 1e-9);
+    layout.finish_drag();
+    layout.undo();
+    assert_eq!(*layout.layers(), before);
+}
+#[test]
+fn resize_can_bypass_snapping_and_cancel() {
+    use canvas_pilot::ResizeHandle;
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    let g = layout.layers()[0];
+    layout.start_handle_resize(0, ResizeHandle::Top, [g.x + g.width / 2.0, g.y], false);
+    let options = Snapping {
+        enabled: true,
+        pixels: false,
+        screen_edges: true,
+        layer_edges: false,
+        ..Default::default()
+    };
+    assert_eq!(
+        layout.drag_to_snapped([g.x + g.width / 2.0, 2.0], options, 6.0),
+        [None, Some(0.0)]
+    );
+    assert_eq!(
+        layout.layers()[0].y + layout.layers()[0].height,
+        g.y + g.height
+    );
+    layout.drag_to_snapped(
+        [g.x + g.width / 2.0, 2.0],
+        Snapping {
+            enabled: false,
+            ..options
+        },
+        6.0,
+    );
+    assert_eq!(layout.layers()[0].y, 2.0);
+    layout.cancel_drag();
+    assert_eq!(layout.layers()[0], g);
+}
+
+#[test]
+fn ratio_locked_corners_reach_fractional_layer_edges() {
+    use canvas_pilot::{Corner, ResizeHandle};
+    for corner in [
+        Corner::TopLeft,
+        Corner::TopRight,
+        Corner::BottomLeft,
+        Corner::BottomRight,
+    ] {
+        let mut layout = Layout::default();
+        let mut target = layout.layers()[1];
+        target.x = 900.25;
+        layout.apply(1, target).unwrap();
+        layout.select(Some(0));
+        let g = layout.layers()[0];
+        let handle = ResizeHandle::Corner(corner);
+        let start = ResizeHandle::positions(g)
+            .into_iter()
+            .find(|(h, _)| *h == handle)
+            .unwrap()
+            .1;
+        let left = matches!(corner, Corner::TopLeft | Corner::BottomLeft);
+        let target_x = if left { 0.0 } else { target.x };
+        layout.start_handle_resize(0, handle, start, true);
+        // Move along the aspect-ratio diagonal to just inside the snap radius.
+        let dx = target_x - start[0] + if left { 2.0 } else { -2.0 };
+        let same_sign = matches!(corner, Corner::TopLeft | Corner::BottomRight);
+        let point = [
+            start[0] + dx,
+            start[1] + dx * g.height / g.width * if same_sign { 1.0 } else { -1.0 },
+        ];
+        let guides = layout.drag_to_snapped(
+            point,
+            Snapping {
+                enabled: true,
+                pixels: false,
+                screen_edges: true,
+                layer_edges: true,
+                ..Default::default()
+            },
+            6.0,
+        );
+        let next = layout.layers()[0];
+        let edge = if left { next.x } else { next.x + next.width };
+        assert!((edge - target_x).abs() < 1e-6, "{corner:?}: {edge}");
+        assert_eq!(guides[0], Some(target_x));
+        assert!((next.width / next.height - g.width / g.height).abs() < 1e-9);
+    }
+}
+
+#[test]
+fn grid_movement_uses_group_bounds_and_preserves_fractional_spacing() {
+    for spacing in [10.0, 100.0] {
+        let mut layout = Layout::default();
+        let mut g = layout.layers()[0];
+        g.x = -123.25;
+        g.y = -17.5;
+        layout.apply(0, g).unwrap();
+        layout.set_selection([true; 2]);
+        let before = layout.layers().clone();
+        let formats = layout.formats().clone();
+        layout.start_drag([1200.0, 200.0]);
+        let guides = layout.drag_to_grid([1207.0, 203.0], spacing);
+        let x = ((g.x + 7.0) / spacing).round() * spacing;
+        let y = ((g.y + 3.0) / spacing).round() * spacing;
+        assert_eq!(guides, [Some(x), Some(y)]);
+        assert_eq!(layout.layers()[0].x, x);
+        assert_eq!(
+            layout.layers()[1].x - layout.layers()[0].x,
+            before[1].x - before[0].x
+        );
+        assert_eq!(*layout.formats(), formats);
+        layout.finish_drag();
+        layout.undo();
+        assert_eq!(*layout.layers(), before);
+    }
+}
+
+#[test]
+fn grid_resize_respects_anchors_ratios_and_free_corner_axes() {
+    use canvas_pilot::ResizeHandle;
+    for spacing in [10.0, 100.0] {
+        for keep_ratio in [false, true] {
+            let mut layout = Layout::default();
+            layout.select(Some(0));
+            let mut g = layout.layers()[0];
+            g.x = 123.25;
+            g.y = 181.5;
+            layout.apply(0, g).unwrap();
+            for (handle, start) in ResizeHandle::positions(g) {
+                layout.start_handle_resize(0, handle, start, keep_ratio);
+                let guides = layout.drag_to_grid([start[0] + 37.0, start[1] + 23.0], spacing);
+                let next = layout.layers()[0];
+                let positions = ResizeHandle::positions(next);
+                let actual = positions.iter().find(|(h, _)| *h == handle).unwrap().1;
+                let anchor = positions
+                    .iter()
+                    .find(|(h, _)| *h == handle.opposite())
+                    .unwrap()
+                    .1;
+                let original_anchor = ResizeHandle::positions(g)
+                    .into_iter()
+                    .find(|(h, _)| *h == handle.opposite())
+                    .unwrap()
+                    .1;
+                for axis in 0..2 {
+                    assert!((anchor[axis] - original_anchor[axis]).abs() < 1e-8);
+                }
+                assert!(guides.iter().any(Option::is_some));
+                for axis in 0..2 {
+                    if let Some(target) = guides[axis] {
+                        assert!((actual[axis] - target).abs() < 1e-8);
+                        assert!((target / spacing - (target / spacing).round()).abs() < 1e-8);
+                    }
+                }
+                if keep_ratio {
+                    assert!((next.width / next.height - g.width / g.height).abs() < 1e-8);
+                } else if matches!(handle, ResizeHandle::Corner(_)) {
+                    assert!(guides.iter().all(Option::is_some));
+                }
+                layout.cancel_drag();
+                assert_eq!(layout.layers()[0], g);
+            }
+        }
+    }
+}
+
+#[test]
+fn grid_group_resize_keeps_mirror_and_opposite_relationships() {
+    use canvas_pilot::{ResizeHandle, ResizeMode};
+    for mode in [ResizeMode::Same, ResizeMode::Mirror, ResizeMode::Opposite] {
+        let mut layout = Layout::default();
+        layout.set_selection([true; 2]);
+        let before = layout.layers().clone();
+        layout
+            .start_selected_resize(0, ResizeHandle::Right, [760.0, 360.0], true, mode)
+            .unwrap();
+        assert_eq!(
+            layout.drag_to_grid([837.0, 360.0], 100.0),
+            [Some(800.0), None]
+        );
+        assert_eq!(layout.layers()[0].width, 680.0);
+        assert_eq!(layout.layers()[1].width, 680.0);
+        if mode == ResizeMode::Same {
+            assert_eq!(layout.layers()[1].x, before[1].x);
+        } else {
+            assert_eq!(
+                layout.layers()[1].x + layout.layers()[1].width,
+                before[1].x + before[1].width
+            );
+        }
+        layout.finish_drag();
+        layout.undo();
+        assert_eq!(*layout.layers(), before);
+    }
+}
+
+#[test]
+fn grid_ignores_crop_content_and_invalid_spacing_does_not_edit() {
+    use canvas_pilot::formats::Framing;
+    let mut layout = Layout::default();
+    layout
+        .set_framing(
+            1,
+            Framing {
+                zoom: 2.0,
+                offset: [0.0; 2],
+            },
+        )
+        .unwrap();
+    let geometry = layout.layers().clone();
+    layout.start_content_drag(1, [1200.0, 200.0]);
+    assert_eq!(layout.drag_to_grid([1207.5, 203.5], 100.0), [None; 2]);
+    let framing = layout
+        .formats()
+        .mapping(1, layout.layers()[1])
+        .unwrap()
+        .framing;
+    assert!((framing.offset[0] - 7.5).abs() < 1e-8);
+    assert!((framing.offset[1] - 3.5).abs() < 1e-8);
+    assert_eq!(*layout.layers(), geometry);
+    layout.cancel_drag();
+    layout.start_drag([1200.0, 200.0]);
+    for spacing in [0.0, -10.0, f64::INFINITY, f64::NAN] {
+        assert_eq!(layout.drag_to_grid([1300.0, 300.0], spacing), [None; 2]);
+        assert_eq!(*layout.layers(), geometry);
+    }
+}
+
+#[test]
+fn mirrored_layers_snap_to_exact_contact_from_either_handle_and_keep_anchors() {
+    use canvas_pilot::{Corner, Geometry, ResizeHandle, ResizeMode};
+    for index in [0, 1] {
+        for corner in [false, true] {
+            for ratio in [false, true] {
+                for offset in [-2.0, 2.0] {
+                    let mut layout = Layout::default();
+                    layout
+                        .apply(
+                            0,
+                            Geometry {
+                                x: 100.25,
+                                y: 200.0,
+                                width: 400.0,
+                                height: 200.0,
+                            },
+                        )
+                        .unwrap();
+                    layout
+                        .apply(
+                            1,
+                            Geometry {
+                                x: 800.25,
+                                y: 200.0,
+                                width: 600.0,
+                                height: 300.0,
+                            },
+                        )
+                        .unwrap();
+                    layout.set_selection([true; 2]);
+                    let before = layout.layers().clone();
+                    let formats = layout.formats().clone();
+                    let handle = match (index, corner) {
+                        (0, false) => ResizeHandle::Right,
+                        (0, true) => ResizeHandle::Corner(Corner::BottomRight),
+                        (_, false) => ResizeHandle::Left,
+                        (_, true) => ResizeHandle::Corner(Corner::BottomLeft),
+                    };
+                    let start = ResizeHandle::positions(before[index])
+                        .into_iter()
+                        .find(|(h, _)| *h == handle)
+                        .unwrap()
+                        .1;
+                    let contact = 620.25;
+                    let factor = if index == 0 {
+                        (contact + offset - 100.25) / 400.0
+                    } else {
+                        (1400.25 - contact - offset) / 600.0
+                    };
+                    let point = [
+                        contact + offset,
+                        if corner && ratio {
+                            200.0 + before[index].height * factor
+                        } else {
+                            start[1]
+                        },
+                    ];
+                    layout
+                        .start_selected_resize(index, handle, start, ratio, ResizeMode::Mirror)
+                        .unwrap();
+                    let options = Snapping {
+                        enabled: true,
+                        pixels: false,
+                        screen_edges: false,
+                        layer_edges: true,
+                        ..Default::default()
+                    };
+                    let guides = layout.drag_to_snapped(point, options, 6.0);
+                    assert_eq!(
+                        guides,
+                        [Some(contact), None],
+                        "index={index} corner={corner} ratio={ratio}"
+                    );
+                    let a = layout.layers()[0];
+                    let b = layout.layers()[1];
+                    assert!((a.x + a.width - b.x).abs() < 1e-8);
+                    assert_eq!(a.x, before[0].x);
+                    assert!((b.x + b.width - 1400.25).abs() < 1e-8);
+                    assert!((a.width / 400.0 - b.width / 600.0).abs() < 1e-8);
+                    if ratio {
+                        assert!((a.width / a.height - 2.0).abs() < 1e-8);
+                        assert!((b.width / b.height - 2.0).abs() < 1e-8);
+                    }
+                    let snapped = layout.layers().clone();
+                    layout.drag_to_snapped(point, options, 6.0);
+                    assert_eq!(layout.layers(), &snapped);
+                    layout.drag_to_snapped([point[0] + 40.0, point[1]], options, 6.0);
+                    assert!(
+                        (layout.layers()[0].x + layout.layers()[0].width - layout.layers()[1].x)
+                            .abs()
+                            > 1.0
+                    );
+                    layout.drag_to_snapped(point, options, 6.0);
+                    layout.finish_drag();
+                    layout.undo();
+                    assert_eq!(layout.layers(), &before);
+                    assert_eq!(layout.formats(), &formats);
+                    layout.redo();
+                    assert_eq!(layout.layers(), &snapped);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn meeting_snap_respects_disabled_options_and_requires_actual_edge_contact() {
+    use canvas_pilot::{ResizeHandle, ResizeMode};
+    for (enabled, layer_edges, separated) in [
+        (false, true, false),
+        (true, false, false),
+        (true, true, true),
+    ] {
+        let mut layout = Layout::default();
+        if separated {
+            let mut g = layout.layers()[1];
+            g.y = 2000.0;
+            layout.apply(1, g).unwrap();
+        }
+        layout.set_selection([true; 2]);
+        let before = layout.layers().clone();
+        layout
+            .start_selected_resize(
+                0,
+                ResizeHandle::Right,
+                [760.0, 360.0],
+                false,
+                ResizeMode::Mirror,
+            )
+            .unwrap();
+        assert_eq!(
+            layout.drag_to_snapped(
+                [958.0, 360.0],
+                Snapping {
+                    enabled,
+                    layer_edges,
+                    pixels: false,
+                    screen_edges: false,
+                    ..Default::default()
+                },
+                6.0
+            ),
+            [None; 2]
+        );
+        assert_eq!(layout.layers()[0].x + layout.layers()[0].width, 958.0);
+        layout.cancel_drag();
+        assert_eq!(layout.layers(), &before);
+    }
+}
+
+#[test]
+fn opposite_vertical_edges_snap_to_meet() {
+    use canvas_pilot::{Geometry, ResizeHandle, ResizeMode};
+    let mut layout = Layout::default();
+    layout
+        .apply(
+            0,
+            Geometry {
+                x: 100.0,
+                y: 100.0,
+                width: 300.0,
+                height: 200.0,
+            },
+        )
+        .unwrap();
+    layout
+        .apply(
+            1,
+            Geometry {
+                x: 100.0,
+                y: 500.0,
+                width: 300.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+    layout.set_selection([true; 2]);
+    layout
+        .start_selected_resize(
+            0,
+            ResizeHandle::Bottom,
+            [250.0, 300.0],
+            false,
+            ResizeMode::Opposite,
+        )
+        .unwrap();
+    let target = 100.0 + 800.0 / 3.0;
+    let guides = layout.drag_to_snapped(
+        [250.0, target - 2.0],
+        Snapping {
+            enabled: true,
+            pixels: false,
+            screen_edges: false,
+            layer_edges: true,
+            ..Default::default()
+        },
+        6.0,
+    );
+    assert!((guides[1].unwrap() - target).abs() < 1e-8);
+    assert!((layout.layers()[0].y + layout.layers()[0].height - layout.layers()[1].y).abs() < 1e-8);
+}
+
+#[test]
+fn screen_quarters_snap_moving_edges_and_centers_and_survive_release() {
+    let options = Snapping {
+        enabled: true,
+        pixels: false,
+        layer_edges: false,
+        ..Default::default()
+    };
+    for fraction in [0.25, 0.5, 0.75] {
+        for anchor in [0.0, 0.5, 1.0] {
+            let mut layout = Layout::default();
+            let g = layout.layers()[1];
+            let target = [1920.0 * fraction, 1080.0 * fraction];
+            let point = [
+                target[0] - g.width * anchor + 2.0,
+                target[1] - g.height * anchor - 2.0,
+            ];
+            layout.start_drag([g.x, g.y]);
+            assert_eq!(
+                layout.drag_to_snapped(point, options, 6.0),
+                target.map(Some)
+            );
+            let snapped = layout.layers()[1];
+            assert_eq!(snapped.x + g.width * anchor, target[0]);
+            assert_eq!(snapped.y + g.height * anchor, target[1]);
+            layout.finish_drag();
+            assert_eq!(layout.layers()[1], snapped);
+            layout.undo();
+            assert_eq!(layout.layers()[1], g);
+        }
+    }
+}
+
+#[test]
+fn screen_quarters_snap_resizes_and_pivots_and_respect_screen_toggle() {
+    use canvas_pilot::ResizeHandle;
+    let options = Snapping {
+        enabled: true,
+        pixels: false,
+        layer_edges: false,
+        ..Default::default()
+    };
+    for fraction in [0.25, 0.5, 0.75] {
+        for axis in 0..2 {
+            for enabled in [false, true] {
+                let mut layout = Layout::default();
+                layout.select(Some(0));
+                let g = layout.layers()[0];
+                let handle = if axis == 0 {
+                    ResizeHandle::Right
+                } else {
+                    ResizeHandle::Bottom
+                };
+                let start = ResizeHandle::positions(g)
+                    .into_iter()
+                    .find(|(h, _)| *h == handle)
+                    .unwrap()
+                    .1;
+                let target = layout.formats().output[axis] as f64 * fraction;
+                let mut point = start;
+                point[axis] = target + 2.0;
+                let options = Snapping {
+                    screen_edges: enabled,
+                    ..options
+                };
+                let (pivot, guides) = layout.snap_pivot(0, point, options, 6.0, None, false);
+                assert_eq!(guides[axis], enabled.then_some(target));
+                assert_eq!(pivot[axis], if enabled { target } else { point[axis] });
+                layout.start_handle_resize(0, handle, start, false);
+                let guides = layout.drag_to_snapped(point, options, 6.0);
+                assert_eq!(guides[axis], enabled.then_some(target));
+                let next = layout.layers()[0];
+                assert_eq!(
+                    [next.x + next.width, next.y + next.height][axis],
+                    if enabled { target } else { point[axis] }
+                );
+                assert_eq!([next.x, next.y], [g.x, g.y]);
+            }
+        }
+    }
+}
+
+#[test]
+fn overlay_grid_snaps_moves_resizes_and_pivots_with_fractional_divisions() {
+    use canvas_pilot::ResizeHandle;
+    let options = Snapping {
+        enabled: true,
+        pixels: false,
+        screen_edges: false,
+        layer_edges: false,
+        grid: true,
+        show_grid: false,
+        grid_divisions: [7, 5],
+    };
+    let mut layout = Layout::default();
+    let x = 1920.0 / 7.0;
+    let y = 1080.0 / 5.0;
+    layout.select(Some(0));
+    let g = layout.layers()[0];
+    layout.start_drag([g.x, g.y]);
+    let guides = layout.drag_to_snapped([x + 2.0, y - 2.0], options, 6.0);
+    assert_eq!(guides, [Some(x), Some(y)]);
+    assert!((layout.layers()[0].x - x).abs() < 1e-8);
+    assert!((layout.layers()[0].y - y).abs() < 1e-8);
+    layout.finish_drag();
+    layout.undo();
+    assert_eq!(layout.layers()[0], g);
+    layout.start_handle_resize(
+        0,
+        ResizeHandle::Right,
+        [g.x + g.width, g.center()[1]],
+        false,
+    );
+    let target = 3.0 * 1920.0 / 7.0;
+    assert_eq!(
+        layout.drag_to_snapped([target - 2.0, g.center()[1]], options, 6.0),
+        [Some(target), None]
+    );
+    assert!((layout.layers()[0].x + layout.layers()[0].width - target).abs() < 1e-8);
+    layout.cancel_drag();
+    assert_eq!(
+        layout.snap_pivot(0, [x + 1.0, y - 1.0], options, 6.0, None, false),
+        ([x, y], [Some(x), Some(y)])
+    );
+    let disabled = Snapping {
+        grid: false,
+        ..options
+    };
+    assert_eq!(
+        layout
+            .snap_pivot(0, [x + 1.0, y - 1.0], disabled, 6.0, None, false)
+            .1,
+        [None; 2]
+    );
+    assert_eq!(options.grid_guides(1920, 0).len(), 8);
+    assert_eq!(
+        Snapping {
+            grid_divisions: [0, u32::MAX],
+            ..options
+        }
+        .grid_guides(1080, 1)
+        .len(),
+        65
+    );
+}

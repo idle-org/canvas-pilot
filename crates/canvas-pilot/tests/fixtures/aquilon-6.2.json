@@ -1,0 +1,2975 @@
+{
+  "device": {
+    "screenList": {
+      "items": {
+        "S1": {
+          "status": {
+            "pp": {
+              "mode": "FREESTYLE",
+              "transitionGroup": "S1",
+              "layerCount": 7
+            },
+            "size": {
+              "pp": {
+                "sizeH": 1920,
+                "sizeV": 1080
+              }
+            }
+          },
+          "presetList": {
+            "items": {
+              "A": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "B": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 1268,
+                          "posV": 713,
+                          "sizeH": 1305,
+                          "sizeV": 734
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "LIVE_1"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 289,
+                          "posV": 91,
+                          "sizeH": 599,
+                          "sizeV": 337
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "LIVE_5"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 282,
+                          "posV": 922,
+                          "sizeH": 563,
+                          "sizeV": 317
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "LIVE_4"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "C": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "S2": {
+          "status": {
+            "pp": {
+              "mode": "DISABLED",
+              "transitionGroup": "S2",
+              "layerCount": 0
+            },
+            "size": {
+              "pp": {
+                "sizeH": 1920,
+                "sizeV": 1080
+              }
+            }
+          },
+          "presetList": {
+            "items": {
+              "A": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "B": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "C": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "auxiliaryList": {
+      "items": {
+        "A1": {
+          "status": {
+            "pp": {
+              "mode": "DISABLED",
+              "transitionGroup": "A1",
+              "layerCount": 0
+            },
+            "size": {
+              "pp": {
+                "sizeH": 1920,
+                "sizeV": 1080
+              }
+            }
+          },
+          "presetList": {
+            "items": {
+              "A": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "B": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "C": {
+                "layerList": {
+                  "items": {
+                    "1": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "2": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "3": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "4": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "5": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "6": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "7": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    },
+                    "8": {
+                      "position": {
+                        "pp": {
+                          "anchor": "MIDDLE_CENTER",
+                          "posH": 960,
+                          "posV": 540,
+                          "sizeH": 1920,
+                          "sizeV": 1080
+                        }
+                      },
+                      "cropping": {
+                        "classic": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0,
+                            "aspectOverride": "NONE"
+                          }
+                        },
+                        "mask": {
+                          "pp": {
+                            "top": 0,
+                            "bottom": 0,
+                            "left": 0,
+                            "right": 0
+                          }
+                        }
+                      },
+                      "source": {
+                        "pp": {
+                          "inputNum": "NONE"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "screenAuxGroupList": {
+      "items": {
+        "S1": {
+          "control": {
+            "pp": {
+              "copyMode": false,
+              "tbarPosition": 0,
+              "takeUpTime": 10,
+              "takeDownTime": 10,
+              "presetUp": "B",
+              "presetDown": "A",
+              "presetPrevious": "C",
+              "xTake": false,
+              "xTakeUp": true,
+              "xTakeDown": false,
+              "xTakeAbort": false,
+              "xCut": false,
+              "xStepBack": false,
+              "xCopyProgramToPreview": false
+            }
+          },
+          "status": {
+            "pp": {
+              "isUsed": true,
+              "transition": "AT_UP",
+              "take": "OFF",
+              "tbarPosition": 65535,
+              "isTbarPositionValid": true
+            }
+          }
+        },
+        "S2": {
+          "control": {
+            "pp": {
+              "copyMode": false,
+              "tbarPosition": 0,
+              "takeUpTime": 10,
+              "takeDownTime": 10,
+              "presetUp": "B",
+              "presetDown": "A",
+              "presetPrevious": "C",
+              "xTake": false,
+              "xTakeUp": false,
+              "xTakeDown": false,
+              "xTakeAbort": false,
+              "xCut": false,
+              "xStepBack": false,
+              "xCopyProgramToPreview": false
+            }
+          },
+          "status": {
+            "pp": {
+              "isUsed": false,
+              "transition": "AT_DOWN",
+              "take": "OFF",
+              "tbarPosition": 0,
+              "isTbarPositionValid": true
+            }
+          }
+        },
+        "A1": {
+          "control": {
+            "pp": {
+              "copyMode": false,
+              "tbarPosition": 0,
+              "takeUpTime": 10,
+              "takeDownTime": 10,
+              "presetUp": "B",
+              "presetDown": "A",
+              "presetPrevious": "C",
+              "xTake": false,
+              "xTakeUp": false,
+              "xTakeDown": false,
+              "xTakeAbort": false,
+              "xCut": false,
+              "xStepBack": false,
+              "xCopyProgramToPreview": false
+            }
+          },
+          "status": {
+            "pp": {
+              "isUsed": false,
+              "transition": "AT_DOWN",
+              "take": "OFF",
+              "tbarPosition": 0,
+              "isTbarPositionValid": true
+            }
+          }
+        }
+      },
+      "control": {
+        "pp": {
+          "xUpdate": true
+        }
+      }
+    },
+    "inputList": {
+      "items": {
+        "IN_1": {
+          "status": {
+            "pp": {
+              "isAvailable": true,
+              "isEnabled": true,
+              "global": "USED",
+              "scope": "LOCAL",
+              "capability": "DUAL",
+              "group": "1X1",
+              "plug": "1",
+              "isOnProgram": true,
+              "isOnPreview": false,
+              "hdcp": "INACTIVE"
+            }
+          },
+          "snapshot": {
+            "pp": {
+              "enable": true,
+              "size": "256_256",
+              "highPriority": false
+            }
+          },
+          "plugList": {
+            "items": {
+              "1": {
+                "status": {
+                  "signal": {
+                    "pp": {
+                      "isValid": true,
+                      "imageWidth": 1920,
+                      "imageHeight": 1080
+                    }
+                  }
+                },
+                "settings": {
+                  "aspect": {
+                    "pp": {
+                      "signal": "NATIVE",
+                      "transformTo": "KEEP_INPUT_RATIO",
+                      "customRatio": 1333,
+                      "layerFill": "CENTERED"
+                    }
+                  },
+                  "cropping": {
+                    "status": {
+                      "pp": {
+                        "top": 0,
+                        "bottom": 0,
+                        "left": 0,
+                        "right": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "IN_4": {
+          "status": {
+            "pp": {
+              "isAvailable": true,
+              "isEnabled": true,
+              "global": "USED",
+              "scope": "LOCAL",
+              "capability": "DUAL",
+              "group": "1X1",
+              "plug": "1",
+              "isOnProgram": true,
+              "isOnPreview": false,
+              "hdcp": "INACTIVE"
+            }
+          },
+          "snapshot": {
+            "pp": {
+              "enable": true,
+              "size": "256_256",
+              "highPriority": false
+            }
+          },
+          "plugList": {
+            "items": {
+              "1": {
+                "status": {
+                  "signal": {
+                    "pp": {
+                      "isValid": true,
+                      "imageWidth": 1920,
+                      "imageHeight": 1080
+                    }
+                  }
+                },
+                "settings": {
+                  "aspect": {
+                    "pp": {
+                      "signal": "NATIVE",
+                      "transformTo": "KEEP_INPUT_RATIO",
+                      "customRatio": 1333,
+                      "layerFill": "CENTERED"
+                    }
+                  },
+                  "cropping": {
+                    "status": {
+                      "pp": {
+                        "top": 0,
+                        "bottom": 0,
+                        "left": 0,
+                        "right": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "IN_5": {
+          "status": {
+            "pp": {
+              "isAvailable": true,
+              "isEnabled": true,
+              "global": "USED",
+              "scope": "LOCAL",
+              "capability": "DUAL",
+              "group": "1X1",
+              "plug": "1",
+              "isOnProgram": true,
+              "isOnPreview": false,
+              "hdcp": "INACTIVE"
+            }
+          },
+          "snapshot": {
+            "pp": {
+              "enable": true,
+              "size": "256_256",
+              "highPriority": false
+            }
+          },
+          "plugList": {
+            "items": {
+              "1": {
+                "status": {
+                  "signal": {
+                    "pp": {
+                      "isValid": true,
+                      "imageWidth": 1920,
+                      "imageHeight": 1080
+                    }
+                  }
+                },
+                "settings": {
+                  "aspect": {
+                    "pp": {
+                      "signal": "NATIVE",
+                      "transformTo": "KEEP_INPUT_RATIO",
+                      "customRatio": 1333,
+                      "layerFill": "CENTERED"
+                    }
+                  },
+                  "cropping": {
+                    "status": {
+                      "pp": {
+                        "top": 0,
+                        "bottom": 0,
+                        "left": 0,
+                        "right": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "IN_17": {
+          "status": {
+            "pp": {
+              "isAvailable": true,
+              "isEnabled": true,
+              "global": "USED",
+              "scope": "LOCAL",
+              "capability": "DUAL",
+              "group": "1X1",
+              "plug": "1",
+              "isOnProgram": false,
+              "isOnPreview": false,
+              "hdcp": "INACTIVE"
+            }
+          },
+          "snapshot": {
+            "pp": {
+              "enable": true,
+              "size": "256_256",
+              "highPriority": false
+            }
+          },
+          "plugList": {
+            "items": {
+              "1": {
+                "status": {
+                  "signal": {
+                    "pp": {
+                      "isValid": true,
+                      "imageWidth": 1920,
+                      "imageHeight": 1080
+                    }
+                  }
+                },
+                "settings": {
+                  "aspect": {
+                    "pp": {
+                      "signal": "NATIVE",
+                      "transformTo": "KEEP_INPUT_RATIO",
+                      "customRatio": 1333,
+                      "layerFill": "CENTERED"
+                    }
+                  },
+                  "cropping": {
+                    "status": {
+                      "pp": {
+                        "top": 0,
+                        "bottom": 0,
+                        "left": 0,
+                        "right": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

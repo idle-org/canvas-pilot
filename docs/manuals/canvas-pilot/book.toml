@@ -1,0 +1,25 @@
+[book]
+title = "Canvas Pilot Manual"
+description = "Prepare screen layouts, exchange geometry and review device transfers."
+language = "en"
+src = "src"
+
+[build]
+create-missing = false
+
+[output.html]
+site-url = "/manuals/canvas-pilot/"
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot"
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.playground]
+runnable = false
+
+# Consumed by scripts/manuals.py when staging the book and landing page.
+[manual]
+icon = "crates/canvas-pilot/assets/app-icon.png"

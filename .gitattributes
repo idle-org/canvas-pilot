@@ -1,0 +1,4 @@
+# Preserve exact download/ZIP member bytes, including on Windows checkouts.
+docs/templates/canvas-pilot/* -text
+docs/templates/canvas-pilot/*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/templates/canvas-pilot/*.dxf -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

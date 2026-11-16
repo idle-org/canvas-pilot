@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-midra-layout-geometry="2" width="1920" height="1080" viewBox="0 0 1920 1080">
+<title>Canvas Pilot geometry</title>
+<rect id="layer-2" data-midra-role="layer" x="120" y="180" width="640" height="360" fill="#173b50"><title>Slides</title></rect>
+<rect id="layer-1" data-midra-role="layer" x="1160" y="180" width="640" height="360" fill="#173b50"><title>Presenter</title></rect>
+</svg>

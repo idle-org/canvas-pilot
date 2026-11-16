@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+<title id="title">Canvas Pilot — concept A</title><desc id="desc">Static design proposal, not working software. Two 640 by 360 layers on a 1920 by 1080 screen. Right inspector shows corner offsets and converted center coordinates.</desc>
+<rect x="0" y="0" width="1440" height="900" rx="0" fill="#111720" stroke="none"/>
+<rect x="0" y="0" width="1440" height="62" rx="0" fill="#1b2330" stroke="none"/>
+<path d="M0 62 L1440 62" fill="none" stroke="#354458" stroke-dasharray=""/>
+<text x="24" y="37" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700">MIDRA / LAYOUT</text>
+<text x="225" y="37" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Offline position helper</text>
+<text x="1048" y="36" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">DESIGN CONCEPT A</text>
+<rect x="1240" y="14" width="176" height="34" rx="6" fill="#121a25" stroke="#354458"/>
+<text x="1252" y="36" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Copy coordinates</text>
+<rect x="1040" y="63" width="400" height="806" rx="0" fill="#1b2330" stroke="none"/>
+<path d="M1040 63 L1040 869" fill="none" stroke="#354458" stroke-dasharray=""/>
+<rect x="24" y="82" width="184" height="34" rx="6" fill="#121a25" stroke="#354458"/>
+<text x="36" y="104" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Screen 1 · 1920 × 1080</text>
+<rect x="220" y="82" width="148" height="34" rx="6" fill="#121a25" stroke="#354458"/>
+<text x="232" y="104" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Reference image</text>
+<rect x="380" y="82" width="104" height="34" rx="6" fill="#121a25" stroke="#354458"/>
+<text x="392" y="104" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Snap: off</text>
+<rect x="496" y="82" width="92" height="34" rx="6" fill="#121a25" stroke="#354458"/>
+<text x="508" y="104" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Undo</text>
+<rect x="812" y="82" width="102" height="34" rx="6" fill="#121a25" stroke="#354458"/>
+<text x="824" y="104" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Fit screen</text>
+<rect x="926" y="82" width="92" height="34" rx="6" fill="#121a25" stroke="#354458"/>
+<text x="938" y="104" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Zoom ▾</text>
+<text x="28" y="158" fill="#66dbef" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="700">A / OPERATOR DESK</text>
+<text x="28" y="183" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400">Large canvas. Familiar controls. Values always visible.</text>
+<text x="64" y="244" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="700">SCREEN 1</text>
+<text x="786.4" y="244" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">1920 × 1080 px</text>
+<rect x="64" y="260" width="902.4" height="507.59999999999997" rx="0" fill="#142d40" stroke="#637b92"/>
+<rect x="64" y="260" width="902.4" height="33.839999999999996" rx="0" fill="#264556" stroke="none"/>
+<text x="88" y="280.21" fill="#abc0cb" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="600">ANNUAL FORUM / MAIN STAGE</text>
+<text x="88" y="719.5999999999999" fill="#a3b9c6" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="600">Ideas worth sharing.</text>
+<text x="88" y="744.5999999999999" fill="#9bb0be" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="400">Illustrative reference artwork · opacity 65%</text>
+<path d="M64.0 260 L64.0 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M176.8 260 L176.8 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M289.6 260 L289.6 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M402.4 260 L402.4 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M515.2 260 L515.2 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M628.0 260 L628.0 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M740.8 260 L740.8 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M853.5999999999999 260 L853.5999999999999 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M966.4 260 L966.4 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M64 260.0 L966.4 260.0" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M64 344.6 L966.4 344.6" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M64 429.2 L966.4 429.2" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M64 513.8 L966.4 513.8" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M64 598.4 L966.4 598.4" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M64 683.0 L966.4 683.0" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<path d="M64 767.5999999999999 L966.4 767.5999999999999" fill="none" stroke="#27475a" stroke-dasharray=""/>
+<rect x="120.4" y="344.6" width="300.79999999999995" height="169.2" rx="0" fill="#173b50" stroke="#f6c577"/>
+<text x="134.4" y="371.6" fill="#f6c577" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="700">01 / PRESENTER</text>
+<text x="134.4" y="495.79999999999995" fill="#c9d9e5" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">640 × 360 px</text>
+<rect x="609.1999999999999" y="344.6" width="300.79999999999995" height="169.2" rx="0" fill="#173b50" stroke="#66dbef"/>
+<text x="623.1999999999999" y="371.6" fill="#66dbef" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="700">02 / SLIDES</text>
+<text x="623.1999999999999" y="495.79999999999995" fill="#c9d9e5" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">640 × 360 px</text>
+<rect x="605.1999999999999" y="340.6" width="8" height="8" rx="1" fill="#1b2330" stroke="#66dbef"/>
+<rect x="905.9999999999999" y="340.6" width="8" height="8" rx="1" fill="#1b2330" stroke="#66dbef"/>
+<rect x="605.1999999999999" y="509.79999999999995" width="8" height="8" rx="1" fill="#1b2330" stroke="#66dbef"/>
+<rect x="905.9999999999999" y="509.79999999999995" width="8" height="8" rx="1" fill="#1b2330" stroke="#66dbef"/>
+<path d="M752.5999999999999 429.20000000000005 L766.5999999999999 429.20000000000005" fill="none" stroke="#66dbef" stroke-dasharray=""/>
+<path d="M759.5999999999999 422.20000000000005 L759.5999999999999 436.20000000000005" fill="none" stroke="#66dbef" stroke-dasharray=""/>
+<path d="M924.0 260 L924.0 344.6" fill="none" stroke="#66dbef" stroke-dasharray=""/>
+<path d="M918.0 260 L930.0 260" fill="none" stroke="#66dbef" stroke-dasharray=""/>
+<path d="M918.0 344.6 L930.0 344.6" fill="none" stroke="#66dbef" stroke-dasharray=""/>
+<text x="930.0" y="306.3" fill="#8fe4f3" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">180</text>
+<path d="M910.0 529.8 L966.4 529.8" fill="none" stroke="#66dbef" stroke-dasharray=""/>
+<text x="907.0" y="552.8" fill="#8fe4f3" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">120 px</text>
+<text x="28" y="823" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Space + drag  Pan     Scroll  Zoom at pointer     Arrows  Move 1 px</text>
+<text x="28" y="848" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Reference: stage-layout.png    1920 × 1080    1:1 mapping    Locked</text>
+<text x="1064" y="96" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="700">LAYERS</text>
+<rect x="1064" y="110" width="352" height="38" rx="5" fill="#121a25" stroke="#354458"/>
+<text x="1076" y="135" fill="#f6c577" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="600">01   Presenter</text>
+<text x="1350" y="134" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="400">Visible</text>
+<rect x="1064" y="154" width="352" height="38" rx="5" fill="#121a25" stroke="#66dbef"/>
+<text x="1076" y="179" fill="#66dbef" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="600">02   Slides</text>
+<text x="1350" y="178" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="400">Visible</text>
+<path d="M1064 211 L1416 211" fill="none" stroke="#354458" stroke-dasharray=""/>
+<text x="1064" y="245" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="600">02 / Slides</text>
+<text x="1064" y="269" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Position from screen corner</text>
+<rect x="1064" y="290" width="94" height="58" rx="4" fill="#121a25" stroke="#354458"/>
+<rect x="1068" y="294" width="8" height="8" rx="1" fill="#a5b5c9" stroke="none"/>
+<rect x="1146" y="294" width="8" height="8" rx="1" fill="#66dbef" stroke="none"/>
+<rect x="1068" y="336" width="8" height="8" rx="1" fill="#a5b5c9" stroke="none"/>
+<rect x="1146" y="336" width="8" height="8" rx="1" fill="#a5b5c9" stroke="none"/>
+<text x="1176" y="312" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="600">Top right</text>
+<text x="1176" y="334" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Offsets inward</text>
+<text x="1064" y="376" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">From right</text>
+<rect x="1064" y="386" width="170.0" height="42" rx="5" fill="#121a25" stroke="#354458"/>
+<text x="1076" y="413" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="500">120 px</text>
+<text x="1246.0" y="376" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">From top</text>
+<rect x="1246.0" y="386" width="170.0" height="42" rx="5" fill="#121a25" stroke="#354458"/>
+<text x="1258.0" y="413" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="500">180 px</text>
+<text x="1064" y="454" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Width</text>
+<rect x="1064" y="464" width="170.0" height="42" rx="5" fill="#121a25" stroke="#354458"/>
+<text x="1076" y="491" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="500">640 px</text>
+<text x="1246.0" y="454" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Height</text>
+<rect x="1246.0" y="464" width="170.0" height="42" rx="5" fill="#121a25" stroke="#354458"/>
+<text x="1258.0" y="491" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="500">360 px</text>
+<text x="1064" y="536" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Changing corner keeps the layer in place.</text>
+<path d="M1064 557 L1416 557" fill="none" stroke="#354458" stroke-dasharray=""/>
+<text x="1064" y="588" fill="#66dbef" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="700">WEBRCS / CENTER POSITION</text>
+<text x="1064" y="617" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Horizontal · from left</text>
+<rect x="1064" y="627" width="170.0" height="42" rx="5" fill="#121a25" stroke="#354458"/>
+<text x="1076" y="654" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="500">1480 px</text>
+<text x="1246.0" y="617" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Vertical · from top</text>
+<rect x="1246.0" y="627" width="170.0" height="42" rx="5" fill="#121a25" stroke="#354458"/>
+<text x="1258.0" y="654" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="500">360 px</text>
+<text x="1064" y="698" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Size 640 × 360 px</text>
+<rect x="1064" y="722" width="352" height="34" rx="6" fill="#6655d9" stroke="#354458"/>
+<text x="1076" y="744" fill="#ffffff" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="400">Copy position values</text>
+<text x="1064" y="784" fill="#edf3fc" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="500">Paste geometry…</text>
+<text x="1064" y="807" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="400">Preview coordinates before applying.</text>
+<rect x="0" y="870" width="1440" height="30" rx="0" fill="#1b2330" stroke="none"/>
+<text x="24" y="890" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="400">OFFLINE · No device connection</text>
+<text x="920" y="890" fill="#a5b5c9" font-family="DejaVu Sans, sans-serif" font-size="11" font-weight="400">Static proposal · coordinate convention to verify</text>
+</svg>

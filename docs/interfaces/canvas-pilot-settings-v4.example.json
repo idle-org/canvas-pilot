@@ -1,0 +1,17 @@
+{
+  "version": 4,
+  "theme": "midra",
+  "recent_themes": [
+    "midra"
+  ],
+  "show_toolbar_icon_names": false,
+  "keep_aspect_ratio": true,
+  "show_source_pattern": false,
+  "snapping": {
+    "enabled": false,
+    "pixels": true,
+    "screen_edges": true,
+    "layer_edges": true
+  },
+  "midra_host": ""
+}

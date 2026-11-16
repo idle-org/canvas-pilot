@@ -1,0 +1,16 @@
+[workspace]
+members = ["crates/canvas-pilot"]
+default-members = ["crates/canvas-pilot"]
+resolver = "3"
+
+[workspace.package]
+version = "0.7.0"
+edition = "2024"
+license = "MIT"
+repository = "https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot"
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+strip = true

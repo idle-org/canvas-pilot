@@ -1,0 +1,4 @@
+[alias]
+# Production defaults include every GUI/PDF feature and the vendor codecs.
+# --all-features would enable no_proprietary and omit those codecs from coverage.
+coverage = "llvm-cov --locked --workspace --json --summary-only --output-path coverage/summary.json"

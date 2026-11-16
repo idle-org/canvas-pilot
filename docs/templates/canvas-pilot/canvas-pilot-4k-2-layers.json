@@ -1,0 +1,29 @@
+{
+  "format": "beffroi.midra-geometry",
+  "version": 1,
+  "units": "px",
+  "canvas": {
+    "width": 3840,
+    "height": 2160
+  },
+  "layers": [
+    {
+      "id": "layer-2",
+      "name": "Slides",
+      "role": "layer",
+      "x": 240,
+      "y": 360,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "id": "layer-1",
+      "name": "Presenter",
+      "role": "layer",
+      "x": 2320,
+      "y": 360,
+      "width": 1280,
+      "height": 720
+    }
+  ]
+}

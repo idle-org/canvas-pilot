@@ -1,0 +1,132 @@
+{
+  "format": "beffroi.midra-layout",
+  "version": 12,
+  "output_resolution": {
+    "width": 1920,
+    "height": 1080
+  },
+  "inputs": [
+    {
+      "id": 1,
+      "source_format": "sixteen_nine",
+      "native_resolution": {
+        "width": 1920,
+        "height": 1080
+      },
+      "input_crop": {
+        "left": 0.0,
+        "right": 0.0,
+        "top": 0.0,
+        "bottom": 0.0
+      }
+    },
+    {
+      "id": 2,
+      "source_format": "sixteen_nine",
+      "native_resolution": {
+        "width": 1920,
+        "height": 1080
+      },
+      "input_crop": {
+        "left": 0.0,
+        "right": 0.0,
+        "top": 0.0,
+        "bottom": 0.0
+      }
+    }
+  ],
+  "layers": [
+    {
+      "id": 2,
+      "source_id": 1,
+      "bounds": {
+        "x": 120.0,
+        "y": 180.0,
+        "width": 640.0,
+        "height": 360.0
+      },
+      "advanced_crop": {
+        "left": 0.0,
+        "right": 0.0,
+        "top": 0.0,
+        "bottom": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "name": "Slides",
+      "folder": "",
+      "midra_link": null,
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "id": 1,
+      "source_id": 2,
+      "bounds": {
+        "x": 1160.0,
+        "y": 180.0,
+        "width": 640.0,
+        "height": 360.0
+      },
+      "advanced_crop": {
+        "left": 0.0,
+        "right": 0.0,
+        "top": 0.0,
+        "bottom": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "name": "Presenter",
+      "folder": "",
+      "midra_link": null,
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    }
+  ],
+  "editor": {
+    "backdrop_title": "Example Conference Name",
+    "selected_layer_ids": [
+      1
+    ],
+    "position_point": "top_left",
+    "keep_aspect_ratio": true,
+    "viewport_zoom": 1.0,
+    "viewport_pan": [
+      0.0,
+      0.0
+    ],
+    "show_source_pattern": false,
+    "show_toolbar_icon_names": false,
+    "outline_layers": false,
+    "position_layer_point": null
+  },
+  "next_layer_id": 3,
+  "references": [],
+  "workspace": {
+    "snapping": {
+      "enabled": false,
+      "pixels": true,
+      "screen_edges": true,
+      "layer_edges": true,
+      "grid": false,
+      "show_grid": true,
+      "grid_divisions": [
+        8,
+        6
+      ]
+    },
+    "resize_mode": "individual",
+    "grid_spacing": null,
+    "collapsed_folders": [],
+    "capture_interval_seconds": 10,
+    "show_empty_inputs": false,
+    "previews": []
+  },
+  "folders": [
+    "Memory A"
+  ]
+}
