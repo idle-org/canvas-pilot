@@ -68,6 +68,9 @@ See [formats and crop](guide/formats-and-crop.md) and
 
 ## Save, exchange or send a layout
 
+Use the [file and clipboard feature matrix](guide/format-matrix.md) to choose
+a format for your editor and see which settings it preserves.
+
 - **Save your work:** use **Project → Save project…** for a `.pilot.json` file
   that retains the full editor project.
 - **Work with another application:** drop a supported geometry file into the window,

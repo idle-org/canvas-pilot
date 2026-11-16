@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Switched the format matrix to ✅ / ❌ emoji, replaced ambiguous asterisks with
+  linked numbered notes, and linked the comparison from the introduction, first
+  layout, clipboard import and snapshot-restoration guidance.
+
 - Added prominent README format recommendations and paired Markdown/book links
   for the format matrix and template catalog. Added a short client handoff workflow
   to the shared catalog; downloads and detailed capabilities keep one source.

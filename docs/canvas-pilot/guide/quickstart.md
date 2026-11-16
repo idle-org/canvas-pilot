@@ -62,6 +62,9 @@ Choose **Project → Export → Export layers…**, select **SVG** and **All lay
 and save the export. For plain layer boxes, leave the background and placeholder
 pictures disabled. The SVG can be opened in a vector editor.
 
+Compare file and clipboard capabilities in the
+[format feature matrix](format-matrix.md) before choosing an exchange format.
+
 Keep the `.pilot.json` project as well: a geometry export does not retain all editor
 settings. The [starter-file catalog](../../templates/canvas-pilot/catalog.md) has
 matching layouts in every supported format if you prefer to start in another app.

@@ -9,9 +9,9 @@ unless you specifically need a native AI file. **DXF / DWG** suit CAD geometry;
 **JSON / CSV** suit scripts and tables. HTML provides a browser-viewable layout.
 
 These tables describe what **Canvas Pilot implements**, not everything each file
-format can theoretically contain. ☑ means supported; ☐ means unavailable in this
-workflow. Features marked * have conditions explained below. Checkboxes are a
-reference, not controls.
+format can theoretically contain. ✅ means supported; ❌ means unavailable in this
+workflow. Linked numbers refer to the notes below each table. These emoji are
+a reference, not interactive controls.
 
 ## File exchange matrix
 
@@ -20,39 +20,41 @@ import maps boxes to **existing destination layers**: it keeps their names, sour
 settings and device links, and does not change the output resolution. File names
 and layer labels can help identify the boxes; they do not rename destinations.
 
-| File | Import | Export | Layer names in export | Background picture | Crop/mask preview pictures | Extra settings snapshot |
+| File | Import | Export | Layer names in export | Background picture [2](#file-notes) | Crop/mask preview pictures [2](#file-notes) | Extra settings snapshot [5](#file-notes) |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot project (`.pilot.json`) | ☑* | ☑* | ☑ | ☑* | ☑* | ☑* |
-| SVG (`.svg`) | ☑ | ☑ | ☑ | ☑ | ☑ | ☑ |
-| draw.io (`.drawio`, XML) | ☑ | ☑ | ☑ | ☑ | ☑ | ☑ |
-| Geometry JSON (`.json`) | ☑ | ☑ | ☑ | ☑ | ☑ | ☑ |
-| Geometry CSV (`.csv`) | ☑ | ☑ | ☑ | ☐ | ☐ | ☑ |
-| DXF (`.dxf`) | ☑ | ☑ | ☑* | ☐ | ☐ | ☑ |
-| DWG (`.dwg`) | ☑* | ☑* | ☑* | ☐ | ☐ | ☐ |
-| HTML / CSS (`.html`) | ☑ | ☑ | ☑ | ☑ | ☑ | ☑ |
-| PowerPoint (`.pptx`) | ☑* | ☑* | ☑ | ☑ | ☑ | ☑ |
-| Figma file (`.fig`) | ☑* | ☑* | ☑ | ☑ | ☑ | ☐ |
-| FigCraft file (`.figcraft`) | ☑* | ☑* | ☑ | ☑ | ☑ | ☐ |
-| Illustrator file (`.ai`) | ☑* | ☑* | ☑* | ☑ | ☑ | ☐ |
+| Canvas Pilot project (`.pilot.json`) | ✅ [1](#file-notes) | ✅ [1](#file-notes) | ✅ | ✅ [1](#file-notes) | ✅ [1](#file-notes) | ✅ [1](#file-notes) |
+| SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| DXF (`.dxf`) | ✅ | ✅ | ✅ [3](#file-notes) | ❌ | ❌ | ✅ |
+| DWG (`.dwg`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ [3](#file-notes) | ❌ | ❌ | ❌ |
+| HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PowerPoint (`.pptx`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ | ✅ | ✅ | ✅ |
+| Figma file (`.fig`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ | ✅ | ✅ | ❌ |
+| FigCraft file (`.figcraft`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ | ✅ | ✅ | ❌ |
+| Illustrator file (`.ai`) | ✅ [4](#file-notes) | ✅ [4](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ❌ |
 
-- **Projects:** `.pilot.json` is the suggested name; Open project accepts any
-  `.json` filename and checks that its contents are a valid project. Use Open/Save
-  project, not geometry import/export. Pictures and
-  editable settings are saved directly; no optional snapshot is needed.
-- **Pictures:** enable **Include background layer** and/or **Include placeholder
-  pictures** when exporting. Background pictures flatten visible references.
-  Placeholder pictures show source-grid patterns with crop, fit and masking;
-  they are not live input images. Reimport reads their boxes, not their pixels
-  or editable crop. CSV, DXF and DWG can include a background **rectangle** only.
-- **Names:** exported as format-specific labels/metadata. CAD uses stable layer
-  IDs with human names in descriptions; AI goes through an SVG conversion.
-  Another application's layer panel may display these differently.
-- **Native codecs:** DWG, PPTX, FIG, FIGCRAFT and AI require a build with vendor
-  formats enabled (the default). AI additionally requires the separately installed
-  [VectorCraft converter](files.md#illustrator-ai-optional-converter-required).
-- **Extra settings:** experimental and opt-in. Restore the original snapshot with
-  **Project → Restore parameters from export…**; ordinary geometry import never
-  applies it. External applications may strip it or leave it stale after edits.
+### File notes
+
+1. **Projects:** `.pilot.json` is the suggested name; Open project accepts any
+   `.json` filename and checks that its contents are a valid project. Use Open/Save
+   project, not geometry import/export. Pictures and
+   editable settings are saved directly; no optional snapshot is needed.
+2. **Pictures:** enable **Include background layer** and/or **Include placeholder
+   pictures** when exporting. Background pictures flatten visible references.
+   Placeholder pictures show source-grid patterns with crop, fit and masking;
+   they are not live input images. Reimport reads their boxes, not their pixels
+   or editable crop. CSV, DXF and DWG can include a background **rectangle** only.
+3. **Names:** exported as format-specific labels/metadata. CAD uses stable layer
+   IDs with human names in descriptions; AI goes through an SVG conversion.
+   Another application's layer panel may display these differently.
+4. **Native codecs:** DWG, PPTX, FIG, FIGCRAFT and AI require a build with vendor
+   formats enabled (the default). AI additionally requires the separately installed
+   [VectorCraft converter](files.md#illustrator-ai-optional-converter-required).
+5. **Extra settings:** experimental and opt-in. Restore the original snapshot with
+   **Project → Restore parameters from export…**; ordinary geometry import never
+   applies it. External applications may strip it or leave it stale after edits.
 
 Exports use one screen-sized canvas, slide, frame or artboard. PPTX import offers
 a slide picker; FIG / FIGCRAFT offer page/frame choices; AI offers artboards.
@@ -69,15 +71,15 @@ applies to Illustrator and draw.io. “Paste” below means **into Canvas Pilot*
 
 | Clipboard path | Paste positions and sizes | Copy out in this format | Rename destination layers | Crop zoom | Crop edges / offsets, fit and masks |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot **Copy layer values**, normal crop | ☑ | ☑ | ☐ | ☑ | ☐ |
-| Figma **SVG text** copy/paste | ☑ | ☐ | ☐ | ☐ | ☐ |
-| Illustrator **SVG text** copy/paste | ☑ | ☐ | ☐ | ☐ | ☐ |
-| draw.io diagram XML copy/paste | ☑ | ☐ | ☐ | ☐ | ☐ |
-| SVG file contents pasted as text | ☑ | ☐ | ☐ | ☐ | ☐ |
-| Geometry JSON / CSV file contents pasted as text | ☑ | ☐ | ☐ | ☐ | ☐ |
-| Canvas Pilot HTML / ASCII DXF file contents pasted as text | ☑ | ☐ | ☐ | ☐ | ☐ |
-| PowerPoint native clipboard | ☐ | ☐ | ☐ | ☐ | ☐ |
-| QCAD native clipboard | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Canvas Pilot **Copy layer values**, normal crop | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Figma **SVG text** copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Illustrator **SVG text** copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
+| draw.io diagram XML copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
+| SVG file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Geometry JSON / CSV file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Canvas Pilot HTML / ASCII DXF file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
+| PowerPoint native clipboard | ❌ | ❌ | ❌ | ❌ | ❌ |
+| QCAD native clipboard | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 Figma SVG, Illustrator SVG and draw.io XML clipboard paths have been confirmed in
 user testing. This does not imply support for every application's native binary
@@ -104,33 +106,36 @@ parameters and reopened through **Restore parameters from export**.
 
 | Feature | Project Open/Save | Plain geometry file import | Snapshot restore |
 | --- | :---: | :---: | :---: |
-| Layer position and size | ☑ | ☑ | ☑ |
-| Full-precision saved coordinates | ☑ | ☐* | ☑ |
-| Output screen resolution | ☑ | ☐ | ☑ |
-| Layer names and stacking order | ☑ | ☐ | ☑ |
-| Folders, collapsed folders, visibility and locks | ☑ | ☐ | ☑* |
-| Source formats, assignments and shared input relationships | ☑ | ☐ | ☑* |
-| Input crop edges | ☑ | ☐ | ☑ |
-| Normal layer crop zoom and offsets | ☑ | ☐ | ☑ |
-| Advanced fit modes and their crop edges | ☑ | ☐ | ☑ |
-| Editable blanking masks | ☑ | ☐ | ☑ |
-| Resize pivots and group resize settings | ☑ | ☐ | ☑ |
-| Saved device screen/layer links | ☑ | ☐ | ☑ |
-| Reference images and their individual settings | ☑ | ☐ | ☐ |
-| Capture assignments and saved preview stills | ☑ | ☐ | ☐ |
-| Selection, camera, guides, snapping and workspace settings | ☑ | ☐ | ☑* |
-| Undo history, pending edits and active device operations | ☐ | ☐ | ☐ |
-| Application theme, connection history and Program permission | ☐* | ☐ | ☐ |
+| Layer position and size | ✅ | ✅ | ✅ |
+| Full-precision saved coordinates | ✅ | ❌ [6](#editing-notes) | ✅ |
+| Output screen resolution | ✅ | ❌ | ✅ |
+| Layer names and stacking order | ✅ | ❌ | ✅ |
+| Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [7](#editing-notes) |
+| Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [7](#editing-notes) |
+| Input crop edges | ✅ | ❌ | ✅ |
+| Normal layer crop zoom and offsets | ✅ | ❌ | ✅ |
+| Advanced fit modes and their crop edges | ✅ | ❌ | ✅ |
+| Editable blanking masks | ✅ | ❌ | ✅ |
+| Resize pivots and group resize settings | ✅ | ❌ | ✅ |
+| Saved device screen/layer links | ✅ | ❌ | ✅ |
+| Reference images and their individual settings | ✅ | ❌ | ❌ |
+| Capture assignments and saved preview stills | ✅ | ❌ | ❌ |
+| Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [7](#editing-notes) |
+| Undo history, pending edits and active device operations | ❌ | ❌ | ❌ |
+| Application theme, connection history and Program permission | ❌ [8](#editing-notes) | ❌ | ❌ |
 
-- Geometry **exports round boxes to whole pixels**; import can retain fractional
-  coordinates where the reader supports them. Use a project or snapshot for
-  full-precision recovery. Geometry import never reorders destination layers.
-- Snapshot restoration includes only exported layers and their referenced inputs;
-  selection and folders are filtered accordingly. It replaces the document with
-  the saved snapshot, not a merge of the external artwork's latest edits.
-- Application preferences are saved separately from projects. Opening a project
-  or restoring a snapshot does not connect or send to a switcher.
-- PNG, JPEG and BMP are **reference-image imports**, not layer-geometry formats.
+### Editing notes
+
+6. Geometry **exports round boxes to whole pixels**; import can retain fractional
+   coordinates where the reader supports them. Use a project or snapshot for
+   full-precision recovery. Geometry import never reorders destination layers.
+7. Snapshot restoration includes only exported layers and their referenced inputs;
+   selection and folders are filtered accordingly. It replaces the document with
+   the saved snapshot, not a merge of the external artwork's latest edits.
+8. Application preferences are saved separately from projects. Opening a project
+   or restoring a snapshot does not connect or send to a switcher.
+
+PNG, JPEG and BMP are **reference-image imports**, not layer-geometry formats.
   PDF, PSD, VSDX and ODG are not supported geometry-exchange choices.
 
 For a complete editable backup, **Save project** remains the recommended choice.

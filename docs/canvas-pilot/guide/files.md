@@ -7,6 +7,9 @@ for naming, crop, pictures and editable-settings support.
 
 ## Paste layer values and import geometry
 
+Check the [clipboard feature matrix](format-matrix.md#clipboard-matrix) for your
+application: its file and copy/paste workflows can support different features.
+
 Drop SVG, draw.io/XML, geometry JSON/CSV, DXF/DWG, HTML, PPTX, FIG, FIGCRAFT or AI files into
 the window to open the same geometry review as **Import → Geometry file…**.
 Native codecs still require their normal build options/dependencies. Filename
@@ -326,6 +329,9 @@ See the [complete persistence audit](../../interfaces/canvas-pilot-persistence-a
 and [versioned project contract](../../interfaces/canvas-pilot.md).
 
 ## Extra settings inside artwork exports
+
+See [which editing features survive](format-matrix.md#which-editing-features-survive)
+for a comparison of project saves, plain geometry import and snapshot restoration.
 
 In **Export layers**, enable **Include extra Midra parameters (experimental)** to
 store the exported layers' source/crop settings, names, folders, links and workspace
