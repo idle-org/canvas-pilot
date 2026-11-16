@@ -207,11 +207,13 @@ Projects/recovery preserve the mode. Pixel rounding is approximate pending the
 ## Masking without resizing
 
 Open **Layer properties → Mask**, or right-click a selected layer and choose
-**Adjust layer mask**. With the Select tool, **Alt + double-click** a layer
-(**Option + double-click** on macOS) to open the same mask controls directly,
-including while the crop helper is active. Plain double-click keeps its crop
-behavior; Alt still zooms out with the Zoom tool. Some Linux window managers
-reserve Alt + mouse gestures; use the context menu if the desktop intercepts it.
+**Adjust layer mask**. Or double-click a layer to enter crop mode, then **hold Alt**
+(**Option** on macOS) with the Select tool to temporarily show and edit the mask
+instead. Release Alt to return to crop; mask changes are kept. No properties window
+opens. If you release Alt during a drag, the mask guide stays active until that drag
+ends. Alt alone does nothing outside crop mode and still zooms out with the Zoom
+tool. Some Linux window managers reserve Alt + mouse gestures; use the context
+menu if the desktop intercepts it.
 The magenta rectangle reveals the image; outside pixels
 are blanked transparently. It works with normal crop and every advanced fit.
 

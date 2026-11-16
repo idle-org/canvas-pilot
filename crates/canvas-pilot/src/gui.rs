@@ -83,6 +83,7 @@ pub struct Editor {
     output_draft: Option<OutputDraft>,
     edit_content: bool,
     edit_mask: bool,
+    alt_mask: bool,
     crop_tab_editing: bool,
     show_pattern: bool,
     show_toolbar_icon_names: bool,
@@ -403,6 +404,7 @@ impl Default for Editor {
             output_draft: None,
             edit_content: false,
             edit_mask: false,
+            alt_mask: false,
             crop_tab_editing: false,
             show_pattern: false,
             show_toolbar_icon_names: false,
@@ -440,6 +442,27 @@ impl Editor {
             )
         )
     }
+    fn mask_editing(&self) -> bool {
+        self.edit_mask || (self.edit_content && self.alt_mask)
+    }
+
+    fn update_alt_mask(&mut self, ctx: &egui::Context) {
+        // Keep the active drag's interpretation stable if Alt changes mid-gesture.
+        if !self.layout.dragging() {
+            self.alt_mask = self.edit_content
+                && !self.edit_mask
+                && self.navigation_tool == NavigationTool::Select
+                && !ctx.wants_keyboard_input()
+                && self
+                    .layout
+                    .selected()
+                    .is_some_and(|i| !self.layout.locked(i) && self.layout.visible(i))
+                && ctx.input(|i| {
+                    i.focused && i.modifiers.alt && !i.modifiers.ctrl && !i.modifiers.command
+                });
+        }
+    }
+
     fn open_mask_edit(&mut self, i: usize) {
         self.property_tab = PropertyTab::Mask;
         if self
@@ -1141,7 +1164,7 @@ impl Editor {
             let result = if self.edit_content
                 && let Some(i) = self.layout.selected()
             {
-                if self.edit_mask {
+                if self.mask_editing() {
                     self.layout.formats().masks[i]
                         .translated(d, self.layout.layers()[i])
                         .and_then(|mask| self.layout.set_mask(i, mask))
@@ -1699,7 +1722,7 @@ impl Editor {
                 palette.muted,
             );
         }
-        let edit_label = if self.edit_content && self.edit_mask {
+        let edit_label = if self.edit_content && self.mask_editing() {
             "crop.done-mask"
         } else if self.edit_content {
             "crop.done"
@@ -1707,7 +1730,7 @@ impl Editor {
             "crop.adjust"
         };
         let edit_width = if self.edit_content { w - 120.0 } else { w };
-        let automatic_fit = self.automatic_layer_fit(i) && !self.edit_mask;
+        let automatic_fit = self.automatic_layer_fit(i) && !self.mask_editing();
         if automatic_fit {
             ink.card(0.0, 275.0, edit_width, 34.0, palette.field, palette.line);
             ink.text(
@@ -1731,7 +1754,7 @@ impl Editor {
                 w - 108.0,
                 275.0,
                 108.0,
-                if self.edit_mask {
+                if self.mask_editing() {
                     "Reset mask"
                 } else {
                     "Reset crop"
@@ -1744,7 +1767,7 @@ impl Editor {
                 [w - 108.0, 275.0, 108.0, 34.0],
                 "reset-visual-crop",
             ) {
-                let result = if self.edit_mask {
+                let result = if self.mask_editing() {
                     self.layout.set_mask(i, Default::default())
                 } else if let Some(mode) = self.layout.formats().layer_fit[i] {
                     self.layout
@@ -1767,7 +1790,7 @@ impl Editor {
                 "edit-layer-content",
             )
         {
-            if self.edit_mask {
+            if self.mask_editing() {
                 self.edit_content = false;
                 self.format_draft = None;
             } else {
@@ -1779,7 +1802,7 @@ impl Editor {
             egui::Label::new(
                 egui::RichText::new(tr(
                     ui.ctx(),
-                    if self.edit_mask {
+                    if self.mask_editing() {
                         "crop.help-mask"
                     } else if automatic_fit {
                         "crop.help-auto"
@@ -1960,7 +1983,7 @@ impl Editor {
         let single_layer = self.layout.selected_indices().len() == 1;
         let crop_mode = self.edit_content && single_layer;
         if crop_mode {
-            ui.label(if self.edit_mask {
+            ui.label(if self.mask_editing() {
                 "ALIGN MASK TO LAYER BOX"
             } else {
                 "ALIGN CONTENT TO LAYER BOX"
@@ -2035,7 +2058,7 @@ impl Editor {
                     } else {
                         self.align_target
                     };
-                    let result = if crop_mode && self.edit_mask {
+                    let result = if crop_mode && self.mask_editing() {
                         self.layout
                             .align_mask(self.layout.selected().unwrap(), &axes)
                     } else if crop_mode {
@@ -2054,7 +2077,7 @@ impl Editor {
                 }
             }
         });
-        ui.small(if crop_mode && self.edit_mask {
+        ui.small(if crop_mode && self.mask_editing() {
             "Moves the reveal window; keeps the image, mask size and layer box fixed."
         } else if crop_mode {
             "Moves zoomed content; keeps the layer box and zoom fixed."
@@ -2200,7 +2223,7 @@ impl Editor {
                 self.open_mask_edit(i);
                 ui.close_menu();
             }
-            let crop_label = if self.edit_content && !self.edit_mask {
+            let crop_label = if self.edit_content && !self.mask_editing() {
                 "crop.done"
             } else {
                 "crop.adjust"
@@ -2469,7 +2492,7 @@ impl Editor {
         {
             return None;
         }
-        if self.edit_mask {
+        if self.mask_editing() {
             return rect.contains(pointer).then_some(i);
         }
         if self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne) {
@@ -2495,7 +2518,7 @@ impl Editor {
             return None;
         }
         let i = self.layout.selected()?;
-        if self.edit_mask {
+        if self.mask_editing() {
             let g = self.layout.formats().masks[i].bounds(self.layout.layers()[i]);
             return Some(Rect::from_min_size(
                 origin + Vec2::new(g.x as f32, g.y as f32) * scale,
@@ -3217,7 +3240,7 @@ impl Editor {
                 let point = [p.x as f64, p.y as f64];
                 if self.edit_content {
                     if let Some(i) = self.layout.selected() {
-                        if self.edit_mask {
+                        if self.mask_editing() {
                             self.layout.start_mask_drag(i, point, None);
                         } else {
                             self.layout.start_content_drag(i, point);
@@ -3247,14 +3270,14 @@ impl Editor {
                 } else if self.edit_content {
                     if let Some(corner) = crop_handle {
                         if let Some(i) = self.layout.selected() {
-                            if self.edit_mask {
+                            if self.mask_editing() {
                                 self.layout.start_mask_drag(i, point, Some(corner));
                             } else {
                                 self.layout.start_content_resize(i, corner, point);
                             }
                         }
                     } else if let Some(i) = content {
-                        if self.edit_mask {
+                        if self.mask_editing() {
                             self.layout.start_mask_drag(i, point, None);
                         } else {
                             self.layout.start_content_drag(i, point);
@@ -3356,26 +3379,7 @@ impl Editor {
             self.zoom_drag = None;
             self.camera_before = None;
         }
-        let mask_shortcut = edit_pointer
-            && pivot_hover.is_none()
-            && ui.input(|i| {
-                i.modifiers.alt && !i.modifiers.shift && !i.modifiers.ctrl && !i.modifiers.command
-            })
-            && response.double_clicked_by(egui::PointerButton::Primary);
-        if mask_shortcut && let Some(pointer) = pointer {
-            let point = (pointer - origin) / scale;
-            if let Some(i) = self
-                .content_hit(pointer, origin, scale)
-                .or_else(|| self.layout.hit([point.x as f64, point.y as f64]))
-                .filter(|&i| !self.layout.locked(i) && self.layout.visible(i))
-            {
-                self.layout.select(Some(i));
-                self.open_mask_edit(i);
-                self.sync();
-            }
-        }
-        let finish_crop = !mask_shortcut
-            && self.edit_content
+        let finish_crop = self.edit_content
             && edit_pointer
             && pivot_hover.is_none()
             && !click_shift_modifier(ui)
@@ -3384,7 +3388,6 @@ impl Editor {
             self.edit_content = false;
         }
         if response.clicked()
-            && !mask_shortcut
             && edit_pointer
             && self.edit_content
             && pointer.is_some_and(|p| {
@@ -3403,7 +3406,6 @@ impl Editor {
             && edit_pointer
             && pivot_hover.is_none()
             && !finish_crop
-            && !mask_shortcut
             && !self.edit_content
             && let Some(p) = pointer
         {
@@ -3506,7 +3508,7 @@ impl Editor {
             screen_reference_hint(&screen, output);
         }
         if self.edit_content
-            && !self.edit_mask
+            && !self.mask_editing()
             && let Some(i) = self.layout.selected()
             && self.layout.formats().layer_fit[i]
                 .is_none_or(|fit| fit == canvas_pilot::formats::LayerFit::OneToOne)
@@ -3657,7 +3659,7 @@ impl Editor {
         viewport_guides::paint(&screen.painter, area, origin, scale, output);
         if let Some(rect) = self.crop_bounds(origin, scale) {
             let p = &screen.painter;
-            let helper_color = if self.edit_mask {
+            let helper_color = if self.mask_editing() {
                 Color32::from_rgb(222, 108, 220)
             } else {
                 palette.cyan
@@ -3767,7 +3769,7 @@ impl Editor {
             ink.text(
             24.0,
             r.height() - 40.0,
-            if move_pointer { "Move tool · Drag anywhere to move the current selection · V: Select · H: Pan" } else if self.navigation_tool == NavigationTool::Pan { "Pan tool · Drag to move the view · V: Select · Z: Zoom · Space/middle-drag pans from any tool" } else if self.navigation_tool == NavigationTool::Zoom { "Zoom tool · Click to zoom in · Alt-click to zoom out · Drag right/left to zoom · V: Select · H: Pan" } else if self.edit_content && self.edit_mask { "Mask · Drag edges to blank · Drag inside layer or use arrows to move window · Shift+arrows: 10 px · Escape cancels" } else if self.edit_content && self.layout.selected().is_some_and(|i| self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)) { "1:1 crop · Drag edges to trim · Drag picture or use arrows to reposition · Double-click or click outside to finish" } else if pivot_visible { "Pivot resize · Drag pivot to position · Double-click to center · Ctrl temporarily toggles pivot" } else if self.edit_content { "Crop mode · Drag crop handles to zoom content · Drag image to reposition · Double-click or click outside to finish" } else { match self.active_resize_mode() {
+            if move_pointer { "Move tool · Drag anywhere to move the current selection · V: Select · H: Pan" } else if self.navigation_tool == NavigationTool::Pan { "Pan tool · Drag to move the view · V: Select · Z: Zoom · Space/middle-drag pans from any tool" } else if self.navigation_tool == NavigationTool::Zoom { "Zoom tool · Click to zoom in · Alt-click to zoom out · Drag right/left to zoom · V: Select · H: Pan" } else if self.edit_content && self.mask_editing() { "Mask · Drag edges to blank · Drag inside layer or use arrows to move window · Shift+arrows: 10 px · Escape cancels" } else if self.edit_content && self.layout.selected().is_some_and(|i| self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)) { "1:1 crop · Drag edges to trim · Drag picture or use arrows to reposition · Double-click or click outside to finish" } else if pivot_visible { "Pivot resize · Drag pivot to position · Double-click to center · Ctrl temporarily toggles pivot" } else if self.edit_content { "Crop mode · Hold Alt/Option for mask · Drag crop handles to zoom content · Drag image to reposition · Double-click or click outside to finish" } else { match self.active_resize_mode() {
                 ResizeMode::Individual => "Corners resize · Side handles keep opposite edge fixed · Shift-click selects",
                 ResizeMode::Same => "Same handles · Matching handles scale selected layers proportionally · Escape cancels drag",
                 ResizeMode::Mirror => "Mirror horizontally · Left/right mirrored handles · Escape cancels drag",
@@ -3938,6 +3940,7 @@ fn click(ui: &egui::Ui, ink: &Ink, b: [f32; 4], id: impl std::hash::Hash) -> boo
 }
 impl Editor {
     fn ui(&mut self, ctx: &egui::Context) {
+        self.update_alt_mask(ctx);
         self.main_ui(ctx);
         self.language_confirmation(ctx);
     }
@@ -6116,63 +6119,100 @@ mod tests {
             assert!(!app.edit_content);
         }
     }
-    #[test]
-    fn alt_double_click_opens_mask_from_normal_and_crop_modes_without_mutation() {
-        for (crop, locked, target, tool) in [
-            (false, false, true, NavigationTool::Select),
-            (true, false, true, NavigationTool::Select),
-            (false, true, true, NavigationTool::Select),
-            (false, false, false, NavigationTool::Select),
-            (false, false, true, NavigationTool::Zoom),
-            (false, false, true, NavigationTool::Pan),
-        ] {
-            let mut app = Editor::default();
-            let ctx = egui::Context::default();
-            let output = frame(&mut app, &ctx, vec![]);
-            let pos = if target {
-                layer_rects(&output)[1].center()
+    fn alt_frame(app: &mut Editor, ctx: &egui::Context, alt: bool, events: Vec<egui::Event>) {
+        let input = egui::RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1440.0, 940.0))),
+            modifiers: if alt {
+                egui::Modifiers::ALT
             } else {
-                Pos2::new(500.0, 700.0)
-            };
-            app.layout.select(Some(1));
-            app.layout.set_locked(1, locked);
-            app.edit_content = crop;
-            app.navigation_tool = tool;
-            let before = app.layout.layers().clone();
-            let formats = app.layout.formats().clone();
-            for _ in 0..2 {
-                for pressed in [true, false] {
-                    let modifiers = egui::Modifiers::ALT;
-                    let input = egui::RawInput {
-                        screen_rect: Some(Rect::from_min_size(
-                            Pos2::ZERO,
-                            Vec2::new(1440.0, 940.0),
-                        )),
-                        modifiers,
-                        events: vec![
-                            egui::Event::PointerMoved(pos),
-                            egui::Event::PointerButton {
-                                pos,
-                                button: egui::PointerButton::Primary,
-                                pressed,
-                                modifiers,
-                            },
-                        ],
-                        ..Default::default()
-                    };
-                    let _ = ctx.run(input, |ctx| app.ui(ctx));
-                }
-            }
-            let expected = !locked && target && tool == NavigationTool::Select;
-            assert_eq!(app.edit_mask, expected);
-            if expected {
-                assert!(app.edit_content);
-                assert_eq!(app.property_tab, PropertyTab::Mask);
-                assert!(app.format_draft.as_ref().unwrap().is_for(1));
-            }
-            assert_eq!(*app.layout.layers(), before);
-            assert_eq!(*app.layout.formats(), formats);
+                egui::Modifiers::NONE
+            },
+            events,
+            ..Default::default()
+        };
+        let _ = ctx.run(input, |ctx| app.ui(ctx));
+    }
+
+    #[test]
+    fn holding_alt_in_crop_mode_temporarily_edits_mask_without_opening_properties() {
+        let mut app = Editor::default();
+        let ctx = egui::Context::default();
+        let output = frame(&mut app, &ctx, vec![]);
+        let pos = layer_rects(&output)[1].center();
+        for _ in 0..2 {
+            frame(
+                &mut app,
+                &ctx,
+                vec![egui::Event::PointerMoved(pos), mouse(pos, true)],
+            );
+            frame(&mut app, &ctx, vec![mouse(pos, false)]);
         }
+        assert!(app.edit_content);
+        let geometry = app.layout.layers().clone();
+        let before = app.layout.formats().clone();
+        alt_frame(&mut app, &ctx, true, vec![]);
+        assert!(app.mask_editing());
+        assert!(!app.edit_mask);
+        assert!(app.format_draft.is_none());
+        assert_eq!(*app.layout.formats(), before);
+        alt_frame(&mut app, &ctx, false, vec![]);
+        assert!(!app.mask_editing());
+        assert!(app.edit_content);
+
+        app.layout
+            .set_mask(
+                1,
+                canvas_pilot::formats::Mask {
+                    left: 0.1,
+                    right: 0.1,
+                    top: 0.1,
+                    bottom: 0.1,
+                },
+            )
+            .unwrap();
+        let before = app.layout.formats().clone();
+        alt_frame(&mut app, &ctx, true, vec![key(egui::Key::ArrowRight)]);
+        assert_ne!(app.layout.formats().masks, before.masks);
+        assert_eq!(app.layout.formats().advanced, before.advanced);
+        assert_eq!(*app.layout.layers(), geometry);
+        alt_frame(&mut app, &ctx, false, vec![]);
+        assert!(!app.mask_editing());
+        assert!(app.edit_content);
+    }
+
+    #[test]
+    fn alt_mask_respects_modes_and_keeps_drags_stable() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.layout.select(Some(1));
+        alt_frame(&mut app, &ctx, true, vec![]);
+        assert!(!app.mask_editing());
+        app.edit_content = true;
+        for tool in [NavigationTool::Pan, NavigationTool::Zoom] {
+            app.navigation_tool = tool;
+            alt_frame(&mut app, &ctx, true, vec![]);
+            assert!(!app.mask_editing());
+        }
+        app.navigation_tool = NavigationTool::Select;
+        app.layout.set_locked(1, true);
+        alt_frame(&mut app, &ctx, true, vec![]);
+        assert!(!app.mask_editing());
+        app.layout.set_locked(1, false);
+        app.layout.select(Some(1));
+        app.edit_content = true;
+        alt_frame(&mut app, &ctx, true, vec![]);
+        assert!(app.mask_editing());
+        app.layout
+            .start_mask_drag(1, app.layout.layers()[1].center(), None);
+        alt_frame(&mut app, &ctx, false, vec![]);
+        assert!(app.mask_editing());
+        app.layout.finish_drag();
+        alt_frame(&mut app, &ctx, false, vec![]);
+        assert!(!app.mask_editing());
+        app.edit_mask = true;
+        alt_frame(&mut app, &ctx, true, vec![]);
+        alt_frame(&mut app, &ctx, false, vec![]);
+        assert!(app.mask_editing());
     }
 
     #[test]
