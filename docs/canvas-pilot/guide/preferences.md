@@ -6,15 +6,19 @@
 
 The header’s **Menu** brings the application’s commands together:
 
+- **Open all settings…**: the full preferences window.
 - **Project**: open/save JSON and export SVG.
 - **Import**: SVG, clipboard layer values, and reference images.
 - **Edit**: undo/redo, copy values, select all editable layers, or deselect.
 - **View**: fit screen/selection, 1:1 pixels, output format, and reference settings.
 - **Layers**: selected-layer properties, crop/reset, alignment, shared resizing,
   lock/hide, and per-layer selection/visibility/lock controls.
-- **Options**: resize aspect ratio and the source-coordinate preview.
+- **Options**: quick controls for snapping, backdrop, theme, outlines, toolbar
+  captions, resize aspect ratio and the source-coordinate preview. The full
+  settings shortcut stays at the top of Menu, rather than repeating here.
 
 The toolbar, cog and right-click shortcuts use the same commands and preferences.
+The standalone cog also provides **Open all settings…** above its quick controls.
 Detailed numeric controls remain in their existing properties dialogs.
 
 Enable **Options → Show toolbar icon names** (also available from the toolbar cog)

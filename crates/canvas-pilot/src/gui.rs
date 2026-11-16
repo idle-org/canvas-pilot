@@ -3145,7 +3145,14 @@ impl Editor {
             |ui| {
                 ui.spacing_mut().interact_size = Vec2::new(36.0, 32.0);
                 ui.spacing_mut().button_padding.x = 11.0;
-                let menu = toolbar_menu(ui, "    ", |ui| self.viewport_options_menu(ui));
+                let menu = toolbar_menu(ui, "    ", |ui| {
+                    if ui.button(tr(ui.ctx(), "ui.open-all-settings")).clicked() {
+                        self.preferences_open = true;
+                        ui.close();
+                    }
+                    ui.separator();
+                    self.viewport_options_menu(ui);
+                });
                 let response = menu
                     .response
                     .on_hover_text(tr(ui.ctx(), "ui.viewport-options"));

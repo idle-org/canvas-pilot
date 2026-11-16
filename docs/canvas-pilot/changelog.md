@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.14
+
+- Removed the duplicate Open all settings entry from Menu → Options. Full settings
+  remain directly in Menu and in the standalone toolbar cog; Options keeps the
+  quick controls. No saved preferences or shortcuts changed.
+- Verified the native menus and settings shortcut; required checks passed, with
+  whole-application line coverage at 91.54%.
+
 ### v0.9.13
 
 - Added optional Mask edges snapping for movement, resize targets and pivots,

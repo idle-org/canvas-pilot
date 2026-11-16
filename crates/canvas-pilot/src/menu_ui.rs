@@ -162,11 +162,6 @@ impl Editor {
         }
     }
     pub(super) fn viewport_options_menu(&mut self, ui: &mut egui::Ui) {
-        if ui.button(tr(ui.ctx(), "ui.open-all-settings")).clicked() {
-            self.preferences_open = true;
-            ui.close();
-        }
-        ui.separator();
         self.snapping_menu(ui);
         ui.menu_button(tr(ui.ctx(), "ui.example-backdrop"), |ui| {
             self.backdrop_options(ui)
