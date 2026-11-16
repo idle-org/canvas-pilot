@@ -1,5 +1,7 @@
 # Quick start: your first layout
 
+**English — authoritative version** · [Français — traduction automatique non vérifiée](fr/quickstart.md)
+
 [Introduction](../introduction.md) · [Advanced guide](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
 Make a simple Slides + Presenter layout, save an editable project, and export its

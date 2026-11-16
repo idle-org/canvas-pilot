@@ -14,6 +14,9 @@ a supported Midra 4K or Aquilon / LivePremier device when you are ready to revie
 
 [Install and update](guide/install.md) · [Quick start](guide/quickstart.md) · [Advanced guide](guide/overview.md) · [Starter files for all formats](../templates/canvas-pilot/catalog.md) · [Changelog](changelog.md)
 
+[Démarrage rapide en français — traduction automatique non vérifiée](guide/fr/quickstart.md).
+The rest of the manual remains in English, the authoritative source.
+
 ## Start a layout
 
 Run the desktop app from the repository root:

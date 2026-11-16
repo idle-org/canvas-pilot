@@ -104,7 +104,9 @@ Publication is pending an issue-enabled token; the current token lacks
 - [ ] **Localization: book first, application second.** Follow the
   [localization roadmap](../development/localization.md) for language selection,
   translation workflow, publishing, UI catalogs and compatibility checks. Detailed
-  tasks and acceptance criteria live there; no translations are shipped yet.
+  tasks and acceptance criteria live there. A French quick-start pilot is available
+  as an unverified machine translation; the rest of the book and application remain
+  English. Human review and broader localization are still pending.
 
 - [ ] **Video showcase, manual and optional chapter demonstrations.** Record a
   short showcase for the README and book introduction, then a guided video manual

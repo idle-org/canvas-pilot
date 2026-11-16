@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Added a French quick-start pilot with English fallback links and an explicit
+  unverified machine-translation notice. Screenshots and application labels remain
+  English; the source revision and update workflow are recorded for maintenance.
+
 - Recorded the multi-screen design task, including shared layers, alignment and
   automatic/custom proportional scaling. Existing-feature testing and a visual-only
   prototype precede implementation; application behavior is unchanged.

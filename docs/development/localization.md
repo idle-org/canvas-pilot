@@ -2,13 +2,44 @@
 
 [Development](README.md) · [Project plan](../canvas-pilot/plan.md)
 
-Deliver the translated **book first**, then the **application**. This is a task
-list, not an announcement of available languages. Keep detailed completion status
-here and the overall milestone in the project plan.
+## Current pilot: French quick start only
 
-English remains the source language. French is the suggested first translation
-for proving the workflow; confirm the initial languages before starting translation.
-Keep the process small enough to maintain without a dedicated translation service.
+The [French quick start](../canvas-pilot/guide/fr/quickstart.md) is an explicitly
+unverified machine translation, requested as a small first step. English remains
+authoritative. No application translation, screenshot changes or human review is
+claimed. The rest of the manual remains English, with explicit fallback links.
+
+For this one-chapter pilot, use translated Markdown in `guide/fr/` and the existing
+mdBook build. The summary and reciprocal chapter links expose the language choice;
+a `lang="fr"` wrapper identifies French content while the book navigation stays
+English. The warning appears in the chapter and print view. Existing assets and
+English URLs remain unchanged. Do not duplicate the whole book for this pilot.
+
+The translation comment records the English source commit. When updating the English
+quick start, compare it with that revision, update the French text (or visibly mark
+it outdated), and advance the recorded revision only after translating the changes.
+For the initial source revision:
+
+```sh
+git diff 1ac01cbf65dbad206f5b989f24924333e688f646 -- docs/canvas-pilot/guide/quickstart.md
+```
+
+The initial difference is only the new reciprocal language link. Human review remains
+pending; build/link checks are not linguistic verification. Keep the visible warning
+until an actual review establishes a new status. Run the pinned manual build after
+updates and check French accents, links, screenshots, search and print output.
+
+For a larger translation effort, evaluate
+[mdbook-i18n-helpers / gettext](https://github.com/google/mdbook-i18n-helpers/blob/main/i18n-helpers/USAGE.md)
+for extracting messages and tracking changed translations. mdBook's
+[language setting](https://rust-lang.github.io/mdBook/format/configuration/general.html)
+sets book language metadata; it does not manage translation freshness. Separate
+language builds and a full language selector remain future work. Do not introduce
+both Markdown and gettext as competing maintained translation sources.
+
+The checklist below describes that broader future work. The pilot intentionally
+ships without a reviewer, with the explicit warning above; the later reviewed-book
+publication criteria do not describe its current status.
 
 ## 1. Localize the book
 
