@@ -12,7 +12,7 @@ frame their content before working with the screen processor. You can design
 offline, exchange geometry with drawing and presentation tools, and connect to
 a supported Midra 4K or Aquilon / LivePremier device when you are ready to review and transfer a layout.
 
-[Quick start](guide/quickstart.md) · [Advanced guide](guide/README.md) · [Starter files for all formats](../templates/canvas-pilot/README.md) · [Changelog](changelog.md)
+[Install and update](guide/install.md) · [Quick start](guide/quickstart.md) · [Advanced guide](guide/README.md) · [Starter files for all formats](../templates/canvas-pilot/README.md) · [Changelog](changelog.md)
 
 ## Start a layout
 

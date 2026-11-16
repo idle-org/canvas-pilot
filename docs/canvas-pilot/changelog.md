@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Added an installation/help chapter covering release downloads, tagged-manifest
+  cargo-binstall without compile fallback, cargo install from a release tag,
+  platform launchers, updates and troubleshooting. Linked it from the README,
+  book, guides and portable quick start; noted the pending first release.
+
+
 - Restored build-status badges to the top of the README. Checked release readiness
   without compilation or publication, added required cargo-binstall metadata and
   replaced the portable archive's repository README with standalone instructions.

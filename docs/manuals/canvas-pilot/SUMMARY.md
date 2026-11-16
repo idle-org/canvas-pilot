@@ -4,6 +4,7 @@
 
 # Quick start
 
+- [Install and update](../../canvas-pilot/guide/install.md)
 - [Your first layout](../../canvas-pilot/guide/quickstart.md)
 - [Starter files for every format](../../templates/canvas-pilot/README.md)
 

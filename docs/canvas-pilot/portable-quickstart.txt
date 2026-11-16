@@ -10,6 +10,7 @@ Start offline: arrange the example layers, adjust their crop and save your proje
 A device connection is optional. Review device mappings and transfer destinations
 before explicitly sending a layout to a switcher.
 
+Installation and updates: https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/src/branch/main/docs/canvas-pilot/guide/install.md
 Manual: https://books.dandaedre.com/manuals/canvas-pilot/
 Project, templates and help: https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot
 

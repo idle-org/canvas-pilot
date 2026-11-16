@@ -4,6 +4,7 @@
 
 | Area | Documents |
 | --- | --- |
+| Installation | [Downloads, cargo-binstall, cargo install and updates](canvas-pilot/guide/install.md) |
 | Getting started | [Introduction](canvas-pilot/README.md), [first layout](canvas-pilot/guide/quickstart.md) |
 | Advanced use | [Advanced guide](canvas-pilot/guide/README.md), [resolution/cropping model](canvas-pilot/resolutions.md) |
 | Tasks and stretch goals | [Implementation, to-do, stretch goals and acceptance tests](canvas-pilot/plan.md) |

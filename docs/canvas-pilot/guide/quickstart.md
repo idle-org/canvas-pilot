@@ -8,7 +8,8 @@ no screen processor is needed.
 
 ## 1. Open a fresh layout
 
-Launch Canvas Pilot. To run from source, use this command from the repository root:
+First follow [Install and update](install.md) to get Canvas Pilot, then launch it.
+If working from a development checkout, run this command from the repository root:
 
 ```sh
 cargo run --locked -p canvas-pilot

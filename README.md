@@ -100,19 +100,15 @@ Development requires **protocol documentation and a usable emulator/simulator**.
 
 ## Get started
 
-Build and run from source with a current stable Rust toolchain and a graphical desktop:
+Choose [a compiled release](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases),
+use `cargo binstall` to install a released binary, or build a selected release with
+`cargo install`. **[Installation and updates →](docs/canvas-pilot/guide/install.md)**
+explains platform downloads, exact commands and prerequisites.
 
-```sh
-git clone https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot.git
-cd canvas-pilot
-cargo run --locked
-```
+The first release has not been published yet (checked 2026-11-16). Until then,
+follow the [development build instructions](docs/canvas-pilot/guide/install.md#run-the-development-version).
 
-Linux builds need the X11/Wayland and desktop development libraries used by egui/rfd.
-Python 3.11+ is needed for the development helpers. See [development and checks](docs/development/README.md)
-and [release preparation](docs/development/releases.md) for build and packaging details.
-
-Then follow the [first-layout walkthrough](docs/canvas-pilot/guide/quickstart.md),
+Then try the [first-layout walkthrough](docs/canvas-pilot/guide/quickstart.md),
 or open the [advanced guide](docs/canvas-pilot/guide/README.md) for the full controls.
 
 ## Find your way around
