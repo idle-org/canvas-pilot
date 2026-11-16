@@ -22,7 +22,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            version: 9,
+            version: 10,
             language: Default::default(),
             autoconnect_at_startup: false,
             allow_sending_to_program: false,
@@ -116,12 +116,19 @@ impl Settings {
             value["language"] = "system".into();
             value["version"] = 9.into();
         }
+        if value["version"] == 9 {
+            // v9 only supported these languages; reject malformed old settings.
+            if !matches!(value["language"].as_str(), Some("system" | "en" | "fr")) {
+                return Err("Unsupported language in version 9 settings".into());
+            }
+            value["version"] = 10.into();
+        }
         let settings: Self = serde_json::from_value(value).map_err(|e| e.to_string())?;
         settings.validate()?;
         Ok(settings)
     }
     fn validate(&self) -> Result<(), String> {
-        if self.version != 9 {
+        if self.version != 10 {
             return Err(format!("unsupported settings version {}", self.version));
         }
         if self.recent_midra_hosts.len() > 4
@@ -256,10 +263,26 @@ mod tests {
         let old = include_str!("../../../docs/interfaces/canvas-pilot-settings-v8.example.json");
         let migrated = Settings::parse(old).unwrap();
         assert_eq!(migrated.language, Language::System);
-        assert_eq!(migrated.version, 9);
+        assert_eq!(migrated.version, 10);
         let current =
-            include_str!("../../../docs/interfaces/canvas-pilot-settings-v9.example.json");
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v10.example.json");
         assert_eq!(Settings::parse(current).unwrap(), migrated);
+        let v9 = include_str!("../../../docs/interfaces/canvas-pilot-settings-v9.example.json");
+        for old_language in ["system", "en", "fr"] {
+            let mut old: serde_json::Value = serde_json::from_str(v9).unwrap();
+            old["language"] = old_language.into();
+            let upgraded = Settings::parse(&old.to_string()).unwrap();
+            assert_eq!(upgraded.version, 10);
+            assert_eq!(
+                serde_json::to_value(upgraded.language).unwrap(),
+                old["language"]
+            );
+            old["version"] = 10.into();
+            assert_eq!(serde_json::to_value(upgraded).unwrap(), old);
+        }
+        let mut invalid_v9: serde_json::Value = serde_json::from_str(v9).unwrap();
+        invalid_v9["language"] = "ja".into();
+        assert!(Settings::parse(&invalid_v9.to_string()).is_err());
         for language in Language::ALL {
             let saved = Settings {
                 language,
@@ -348,7 +371,7 @@ mod tests {
         for text in [
             "broken".to_string(),
             serde_json::to_string(&Settings {
-                version: 10,
+                version: 11,
                 ..Default::default()
             })
             .unwrap(),

@@ -234,7 +234,7 @@
   "ui.edits-wait-for-send-opening-this-tab-or-enabling-the-checkbox-sends-nothing-refresh-l": "Edits wait for Send; opening this tab or enabling the checkbox sends nothing. Refresh/load after sending to inspect the device's resulting content dimensions.",
   "language.label": "Language / Langue",
   "language.system": "System default",
-  "language.preview": "French translation preview. Some advanced controls and diagnostics remain in English.",
+  "language.preview": "Unverified machine translations. Some advanced controls and diagnostics remain in English; device terminology stays in English.",
   "theme.current": "Current theme: %{name}",
   "ui.import-picture": "Import picture…",
   "ui.or-drag-png-jpeg-or-bmp-images-into-the-window": "Or drag PNG, JPEG or BMP images into the window.",
@@ -450,5 +450,6 @@
   "scope.folder": "Folder: %{name}",
   "viewport.screen": "SCREEN 1",
   "viewport.offline": "OFFLINE",
-  "viewport.pixels": "Screen pixels / %{width} × %{height}"
+  "viewport.pixels": "Screen pixels / %{width} × %{height}",
+  "language.font-license": "Font licenses"
 }

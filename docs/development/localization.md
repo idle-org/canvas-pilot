@@ -6,7 +6,7 @@
 
 The [French quick start](../canvas-pilot/guide/fr/quickstart.md) is an explicitly
 unverified machine translation, requested as a small first step. English remains
-authoritative. The application now also has a French UI preview (see below); screenshot changes
+authoritative. The application now also has six translated UI previews (see below); screenshot changes
 and human review are not claimed. The rest of the manual remains English, with explicit fallback links.
 
 For this one-chapter pilot, use translated Markdown in `guide/fr/` and the existing
@@ -43,8 +43,8 @@ publication criteria do not describe its current status.
 
 ## Application implementation
 
-The desktop UI uses [rust-i18n](https://docs.rs/rust-i18n/) with embedded English and
-French JSON catalogs in `crates/canvas-pilot/locales/`. `sys-locale` obtains the desktop
+The desktop UI uses [rust-i18n](https://docs.rs/rust-i18n/) with embedded English, French, Japanese, Simplified Chinese, Spanish, Ancient Greek
+and Esperanto JSON catalogs in `crates/canvas-pilot/locales/`. `sys-locale` obtains the desktop
 language. There is no custom translation parser, language-file loader, lookup cache
 or network translation service. The lockfile pins the dependency versions.
 
@@ -55,12 +55,42 @@ Catalogs compile into the binary, so portable releases need no additional files.
 The build script watches `locales/`, including catalog-only edits and newly added
 files; translators do not need to touch Rust code to trigger a rebuild.
 
-Settings v9 adds `system`, `en`, `fr`; v1–v8 migrate with System default. The always
+Settings v10 adds `ja`, `zh-CN`, `es`, `grc` and `eo` to v9’s `system`, `en`, `fr`.
+Versions 1–8 migrate with System default; v9 preserves its language and all other
+preferences. Unknown old language values are rejected rather than reinterpreted. The always
 visible **Language / Langue** selector at the top of Settings applies immediately.
-Project, export, clipboard and device contracts are unchanged. French is a preview,
-not a human-reviewed complete translation: technical diagnostics, some advanced
+Project, export, clipboard and device contracts are unchanged. Every non-English
+language has the same preview status, not a human-reviewed complete translation: technical diagnostics, some advanced
 controls, device-supplied labels and native file dialogs can still be English.
 Native dialogs follow the OS, not this application's preference.
+
+### Fonts and script support
+
+The application embeds full Noto Sans 2.015 (Latin, polytonic Greek and Cyrillic)
+and Noto Sans CJK 2.004 (including Japanese and Chinese). The collection is embedded
+once, using face 0 for Japanese and face 2 for Simplified Chinese. This preserves
+regional Han letterforms and supports arbitrary names beyond catalog characters.
+Noto Sans leads proportional text; CJK and existing symbol/emoji fonts provide
+fallbacks. Monospace keeps its existing first choice with Noto fallbacks. Language
+selection rebuilds the font definitions once per change, never per frame.
+
+See the [font provenance and checksums](../../crates/canvas-pilot/assets/fonts/README.md).
+The SIL Open Font License is included with the fonts and embedded in the executable,
+available in Settings → Files & settings → Font licenses. The full CJK collection
+adds about 19 MiB to the embedded assets; it is deliberately not reduced to only
+current translations, which would break future text and imported names.
+
+Tests check every catalog character, every language endonym, mixed Latin/CJK/Greek
+strings, both font families and the selected CJK face. Greek catalog text uses NFC
+precomposed accents for this renderer. These checks establish glyph coverage, not
+human translation review or general support for all complex scripts.
+
+Nepali and Thai were considered but are not selectable: egui 0.31's per-character
+layout does not perform the shaping/mark positioning they require. Revisit them
+with a maintained shaping-capable renderer, including conjuncts, reordered vowels,
+combining marks, cursor movement and selection tests. Do not fake shaping by
+rewriting Unicode text, mapping words into private-use glyphs, or romanizing labels.
+All available languages are normal choices, without joke labels or special modes.
 
 ### Operator terminology and content boundaries
 
@@ -91,7 +121,7 @@ Apply the same principle to other adapters' native terminology.
   concatenate grammatical sentence fragments. Numeric summaries should avoid
   English-only singular/plural assumptions; evaluate plural-aware messages before
   adding inflected count-dependent wording.
-- Add both languages together. English is the fallback; catalog tests check key and
+- Update all seven catalogs together. English is the fallback; catalog tests check key and
   placeholder parity and direct UI references. Do not translate serialization keys,
   protocol values, keyboard shortcut identities, project names, user input or IDs.
 - Give windows and controls stable IDs separate from translated display text.
@@ -104,9 +134,13 @@ Apply the same principle to other adapters' native terminology.
   independent contexts, catalog completeness, settings migrations and interactive
   switching/restart without changing project bytes, drafts or device-send state.
   A layout regression test checks that language selection and Close remain visible
-  in every section at 1000 × 720, in both languages. French Settings and menus were
+  in every section at 1000 × 720, in every language. French Settings and menus were
   also visually checked in the Linux desktop app at normal and minimum sizes.
   Native Windows/macOS visual acceptance and human language review remain pending.
+  The expanded catalogs also passed native Linux visual checks for Japanese,
+  Chinese, Spanish, Esperanto and polytonic Greek at 1000 × 720. Automated switching
+  preserves serialized project and clipboard data, settings persist all language
+  choices, and whole-application coverage passed at 91.01%.
 - Technical validation does not constitute human linguistic review. Keep preview
   status until terminology and actual workflows have been reviewed.
 

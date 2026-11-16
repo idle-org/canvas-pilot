@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+- Added Japanese, Simplified Chinese, Spanish, Ancient Greek and Esperanto software
+  translations with immediate language switching. All are unverified machine
+  translations; device terminology and document/clipboard content stay unchanged.
+  Embedded open Noto fonts cover mixed Latin, CJK and polytonic Greek text, including
+  language names in the selector. Settings v10 preserves older preferences while
+  adding the new language values. Glyph coverage, settings migration, language-switch
+  data preservation and minimum-window checks pass; native Linux rendering was
+  inspected. Whole-application coverage: 91.01%. The manuals are not translated into
+  these languages.
+
 - Refined French ratio wording and documented English MIDRA/WebRCS terminology
   preservation. Localization remains cosmetic, including unchanged new-project
   names, default values, export artwork and clipboard content.

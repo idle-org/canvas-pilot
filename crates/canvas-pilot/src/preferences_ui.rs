@@ -34,18 +34,10 @@ impl Editor {
                 ui.horizontal(|ui| {
                     ui.label(tr(ctx, "language.label"));
                     egui::ComboBox::from_id_salt("settings-language")
-                        .selected_text(match self.language {
-                            localization::Language::System => tr(ctx, "language.system"),
-                            localization::Language::En => "English".into(),
-                            localization::Language::Fr => "Français".into(),
-                        })
+                        .selected_text(self.language.name(ctx))
                         .show_ui(ui, |ui| {
                             for language in localization::Language::ALL {
-                                let name = match language {
-                                    localization::Language::System => tr(ctx, "language.system"),
-                                    localization::Language::En => "English".into(),
-                                    localization::Language::Fr => "Français".into(),
-                                };
+                                let name = language.name(ctx);
                                 if ui.selectable_value(&mut self.language, language, name).changed() {
                                     self.language.apply(ctx);
                                 }
@@ -115,6 +107,7 @@ impl Editor {
                             Section::Storage => {
                                 ui.heading(tr(ui.ctx(), "ui.files-settings"));
                                 ui.label(tr(ui.ctx(), "ui.application-settings-save-automatically-when-changed"));
+                                egui::CollapsingHeader::new(tr(ctx, "language.font-license")).id_salt("font-licenses").show(ui, |ui| { ui.label(include_str!("../assets/fonts/OFL.txt")); });
                                 if let Some(path) = &self.settings.path {
                                     ui.label(path.display().to_string());
                                     if ui.button(tr(ui.ctx(), "ui.copy-settings-path")).clicked() { ctx.copy_text(path.display().to_string()); }
@@ -226,16 +219,26 @@ mod tests {
         let project = app.project().to_json().unwrap();
         let draft = app.fields.clone();
         app.preferences_open = true;
+        let clipboard = canvas_pilot::clipboard::encode(&app.layout, &[0], "Summary").unwrap();
+        for language in localization::Language::ALL
+            .into_iter()
+            .skip(2)
+            .chain(std::iter::once(localization::Language::En))
+        {
+            let current_name = app.language.name(&ctx);
+            click_label(&mut app, &ctx, &current_name);
+            click_label(&mut app, &ctx, &language.name(&ctx));
+            assert_eq!(settings::Store::at(path.clone()).1.language, language);
+            assert_eq!(app.project().to_json().unwrap(), project);
+            assert_eq!(
+                canvas_pilot::clipboard::encode(&app.layout, &[0], "Summary").unwrap(),
+                clipboard
+            );
+            assert_eq!(app.fields, draft);
+            assert!(!app.device.sending);
+        }
         click_label(&mut app, &ctx, "English");
         click_label(&mut app, &ctx, "Français");
-        assert_eq!(localization::locale(&ctx), "fr");
-        assert_eq!(
-            settings::Store::at(path.clone()).1.language,
-            localization::Language::Fr
-        );
-        assert_eq!(app.project().to_json().unwrap(), project);
-        assert_eq!(app.fields, draft);
-        assert!(!app.device.sending);
         click_label(&mut app, &ctx, "Fermer");
         assert!(!app.preferences_open);
         let (store, saved) = settings::Store::at(path);
@@ -251,7 +254,7 @@ mod tests {
     #[test]
     fn settings_language_and_close_stay_visible_at_minimum_window_size() {
         let screen = Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 720.0));
-        for language in [localization::Language::En, localization::Language::Fr] {
+        for language in localization::Language::ALL {
             for (section, _) in Section::ALL {
                 let ctx = egui::Context::default();
                 language.apply(&ctx);

@@ -234,7 +234,7 @@
   "ui.edits-wait-for-send-opening-this-tab-or-enabling-the-checkbox-sends-nothing-refresh-l": "Les modifications attendent Envoyer ; ouvrir cet onglet ou cocher l’option n’envoie rien. Actualisez ou chargez après l’envoi pour vérifier les dimensions obtenues.",
   "language.label": "Language / Langue",
   "language.system": "Langue du système",
-  "language.preview": "Traduction française en cours de validation. Certaines commandes avancées et certains diagnostics restent en anglais.",
+  "language.preview": "Traductions automatiques non vérifiées. Certaines commandes avancées et certains diagnostics restent en anglais, ainsi que les termes des appareils.",
   "theme.current": "Thème actuel : %{name}",
   "ui.import-picture": "Importer une image…",
   "ui.or-drag-png-jpeg-or-bmp-images-into-the-window": "Ou déposez des images PNG, JPEG ou BMP dans la fenêtre.",
@@ -450,5 +450,6 @@
   "scope.folder": "Dossier : %{name}",
   "viewport.screen": "ÉCRAN 1",
   "viewport.offline": "HORS LIGNE",
-  "viewport.pixels": "Pixels écran / %{width} × %{height}"
+  "viewport.pixels": "Pixels écran / %{width} × %{height}",
+  "language.font-license": "Licences des polices"
 }

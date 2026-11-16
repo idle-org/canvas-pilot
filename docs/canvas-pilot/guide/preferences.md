@@ -24,13 +24,17 @@ project; older projects open with captions off.
 ### Interface language
 
 Open **Menu → Open all settings…** and use **Language / Langue** at the top.
-Choose **System default**, **English** or **Français**. The change takes effect
+Choose **System default**, **English**, **Français**, **日本語**, **简体中文**,
+**Español**, **Ἑλληνικὴ ἀρχαία** (Ancient Greek), or **Esperanto**. The change takes effect
 immediately, saves automatically and survives restarting. In French, the route is
 **Menu → Ouvrir tous les réglages…**; language names stay recognizable in either UI.
 
-System default uses French for French regional locales and English otherwise.
-French is a translation preview; some advanced controls and technical diagnostics
-remain in English. The book's [French quick start](fr/quickstart.md) remains an
+System default follows supported system languages, with English fallback. Chinese
+uses Simplified Chinese; Traditional Chinese system locales fall back to English.
+All translations are unverified machine translations. Some advanced controls and
+technical diagnostics remain in English, as do device control names. Built-in open
+fonts cover Japanese, Chinese, Latin text and polytonic Greek without installing
+fonts separately. **Files & settings → Font licenses** contains their license. The book's [French quick start](fr/quickstart.md) remains an
 unverified machine translation. Screenshots and its quoted commands use English;
 select English to follow those labels exactly.
 
