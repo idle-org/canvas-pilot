@@ -1718,7 +1718,9 @@ impl Layout {
             return;
         }
         if let Some((i, before, start, handle)) = &self.mask_drag {
-            let g = before.layers[*i];
+            let Ok(g) = before.formats.mask_reference(*i, before.layers[*i]) else {
+                return;
+            };
             let mut mask = before.formats.masks[*i];
             let delta = [point[0] - start[0], point[1] - start[1]];
             if let Some(handle) = handle {

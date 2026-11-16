@@ -35,6 +35,7 @@ fn copied(fit: Option<LayerFit>) -> (Layout, String) {
         .set_mask(
             0,
             Mask {
+                origin: Default::default(),
                 left: 0.125,
                 right: 0.0625,
                 top: 0.25,
@@ -47,42 +48,51 @@ fn copied(fit: Option<LayerFit>) -> (Layout, String) {
 }
 #[test]
 fn every_fit_roundtrips_exact_crop_mask_and_offset_with_atomic_undo() {
-    for fit in [
-        None,
-        Some(LayerFit::OneToOne),
-        Some(LayerFit::Centered),
-        Some(LayerFit::Fullscreen),
-        Some(LayerFit::Cropped),
+    for origin in [
+        canvas_pilot::formats::MaskOrigin::Layer,
+        canvas_pilot::formats::MaskOrigin::Source,
     ] {
-        let (mut layout, text) = copied(fit);
-        let shape = parse_values(&text).unwrap().shapes.remove(0);
-        let before = Project::from_layout(&layout);
-        let a = shape.appearance.unwrap();
-        assert_eq!(a.fit, fit);
-        assert_eq!(a.crop, layout.formats().advanced[0]);
-        layout
-            .apply_mapped_clipboard(&[(1, shape.geometry)], &[], &[(1, a)], true, true)
-            .unwrap();
-        let after = Project::from_layout(&layout);
-        assert_eq!(layout.formats().advanced[1], layout.formats().advanced[0]);
-        assert_eq!(layout.formats().layer_fit[1], fit);
-        assert_eq!(layout.formats().masks[1], layout.formats().masks[0]);
-        if fit.is_none() {
-            assert_eq!(
-                layout.formats().mapping(1, shape.geometry).unwrap(),
-                layout.formats().mapping(0, shape.geometry).unwrap()
-            );
+        for fit in [
+            None,
+            Some(LayerFit::OneToOne),
+            Some(LayerFit::Centered),
+            Some(LayerFit::Fullscreen),
+            Some(LayerFit::Cropped),
+        ] {
+            let (mut layout, _) = copied(fit);
+            let mut mask = layout.formats().masks[0];
+            mask.origin = origin;
+            layout.set_mask(0, mask).unwrap();
+            let text = clipboard::encode(&layout, &[0], "Readable values").unwrap();
+            let shape = parse_values(&text).unwrap().shapes.remove(0);
+            let before = Project::from_layout(&layout);
+            let a = shape.appearance.unwrap();
+            assert_eq!(a.fit, fit);
+            assert_eq!(a.crop, layout.formats().advanced[0]);
+            layout
+                .apply_mapped_clipboard(&[(1, shape.geometry)], &[], &[(1, a)], true, true)
+                .unwrap();
+            let after = Project::from_layout(&layout);
+            assert_eq!(layout.formats().advanced[1], layout.formats().advanced[0]);
+            assert_eq!(layout.formats().layer_fit[1], fit);
+            assert_eq!(layout.formats().masks[1], layout.formats().masks[0]);
+            if fit.is_none() {
+                assert_eq!(
+                    layout.formats().mapping(1, shape.geometry).unwrap(),
+                    layout.formats().mapping(0, shape.geometry).unwrap()
+                );
+            }
+            assert_eq!(after.inputs, before.inputs);
+            assert_eq!(after.layers[1].source_id, before.layers[1].source_id);
+            assert_eq!(after.layers[1].device_link, before.layers[1].device_link);
+            assert_eq!(after.layers[1].name, before.layers[1].name);
+            let second = clipboard::encode(&layout, &[1], "Second copy").unwrap();
+            assert_eq!(parse_values(&second).unwrap().shapes[0].appearance, Some(a));
+            layout.undo();
+            assert_eq!(Project::from_layout(&layout), before);
+            layout.redo();
+            assert_eq!(Project::from_layout(&layout), after);
         }
-        assert_eq!(after.inputs, before.inputs);
-        assert_eq!(after.layers[1].source_id, before.layers[1].source_id);
-        assert_eq!(after.layers[1].device_link, before.layers[1].device_link);
-        assert_eq!(after.layers[1].name, before.layers[1].name);
-        let second = clipboard::encode(&layout, &[1], "Second copy").unwrap();
-        assert_eq!(parse_values(&second).unwrap().shapes[0].appearance, Some(a));
-        layout.undo();
-        assert_eq!(Project::from_layout(&layout), before);
-        layout.redo();
-        assert_eq!(Project::from_layout(&layout), after);
     }
 }
 #[test]
@@ -166,7 +176,7 @@ fn clipboard_schema_is_bounded_versioned_and_never_falls_back_on_invalid_payload
     let (_, json) = text.rsplit_once(clipboard::MARKER).unwrap();
     let good: serde_json::Value = serde_json::from_str(json).unwrap();
     for (pointer, value) in [
-        ("/version", serde_json::json!(3)),
+        ("/version", serde_json::json!(4)),
         ("/format", serde_json::json!("other")),
         ("/layers/0/appearance/fit", serde_json::json!("unknown")),
         ("/layers/0/appearance/input_size/0", serde_json::json!(0)),

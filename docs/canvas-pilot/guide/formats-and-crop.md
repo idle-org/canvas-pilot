@@ -206,6 +206,20 @@ Projects/recovery preserve the mode. Pixel rounding is approximate pending the
 
 ## Masking without resizing
 
+**Mask from** selects the reference:
+
+- **Layer** (default): edges are measured from the layer boundary and stay
+  proportional to the layer when resized.
+- **Source**: edges are measured from the usable source picture, after local input
+  cropping but before layer crop/zoom and fit. The magenta guide can extend outside
+  the layer and follows the picture when panning or zooming. A faded source preview
+  helps position it. Only the intersection with the visible layer is rendered.
+
+Switching reference keeps the edge percentages, so it can change the visible result.
+Numeric fields use output pixels for Layer and source pixels for Source. **Reset mask**
+clears all edges while keeping the selected reference.
+
+
 Open **Layer properties → Mask**, or right-click a selected layer and choose
 **Adjust layer mask**. Or double-click a layer to enter crop mode, then **hold Alt**
 (**Option** on macOS) with the Select tool to temporarily show and edit the mask
@@ -221,16 +235,18 @@ are blanked transparently. It works with normal crop and every advanced fit.
 - Drag anywhere inside the layer to move the reveal window without resizing it.
 - Arrow keys move one output pixel; Shift+arrows move ten.
 - Enter Left/Right/Top/Bottom distances in output pixels.
-- The alignment menu aligns the mask window to the layer’s edges or center.
+- The alignment menu aligns the mask window to the selected reference’s edges or center.
 - **Center mask** preserves its size; **Reset mask** removes all blanking.
 - Undo restores a complete drag; Escape cancels the active drag.
 
 Opposite edges can meet to blank the whole layer, and remain draggable afterwards.
 Masking never modifies the crop, fit, image scale or layer bounds. Blank areas
 reveal lower layers. A mask over already cropped or transparent pixels has no
-visible effect. Resizing the layer keeps mask proportions. Project files and
+visible effect. Mask proportions stay relative to the selected reference. Project files and
 embedded snapshots retain masks; plain geometry exports omit them. Midra load/send
-supports masking; Aquilon masking remains unavailable.
+supports the resulting blanking for either mode. Loading from Midra returns a
+layer-relative mask because the device does not store the editor’s source reference.
+Aquilon masking remains unavailable.
 
 <!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
 ![Mask tab showing left-edge blanking and a smaller magenta reveal window inside the layer](../images/07-guide-mask.png)

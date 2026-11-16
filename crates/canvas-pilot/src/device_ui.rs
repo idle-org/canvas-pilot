@@ -1158,8 +1158,11 @@ fn send_review(
         ));
         let mask = layout.formats().masks[i];
         if snapshot.profile == device::Profile::Midra4k {
-            let g = layout.layers()[i];
-            ui.label(format!("Mask: left {:.1}, right {:.1}, top {:.1}, bottom {:.1} output px (zero clears destination masking)",mask.left*g.width,mask.right*g.width,mask.top*g.height,mask.bottom*g.height));
+            let g = layout
+                .formats()
+                .mask_reference(i, layout.layers()[i])
+                .unwrap_or(layout.layers()[i]);
+            ui.label(format!("Mask ({:?} reference): left {:.1}, right {:.1}, top {:.1}, bottom {:.1} output px (zero clears destination masking)",mask.origin,mask.left*g.width,mask.right*g.width,mask.top*g.height,mask.bottom*g.height));
         }
         if let Some(fit) = layout.formats().layer_fit[i] {
             ui.label(format!("Explicit fit: {}. Editor bounds are the device container; sizing strategy is not applied.", fit.label()));

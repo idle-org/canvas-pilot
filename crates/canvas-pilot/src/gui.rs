@@ -1175,7 +1175,13 @@ impl Editor {
             {
                 if self.mask_editing() {
                     self.layout.formats().masks[i]
-                        .translated(d, self.layout.layers()[i])
+                        .translated(
+                            d,
+                            self.layout
+                                .formats()
+                                .mask_reference(i, self.layout.layers()[i])
+                                .unwrap_or(self.layout.layers()[i]),
+                        )
                         .and_then(|mask| self.layout.set_mask(i, mask))
                 } else if self.layout.formats().layer_fit[i]
                     == Some(canvas_pilot::formats::LayerFit::OneToOne)
@@ -1355,7 +1361,7 @@ impl Editor {
                             }
                             egui::CollapsingHeader::new(tr(ui.ctx(), "ui.geometry-before-after")).id_salt("Geometry · before / after").show(ui, |ui| {
                             ui.small(bounds(shape.geometry));
-                            if let Some(a) = shape.appearance { ui.small(format!("Fit: {} · crop L/R/T/B: {} / {} / {} / {} px", a.fit.map(|f| f.label()).unwrap_or("Normal crop"), a.crop.left, a.crop.right, a.crop.top, a.crop.bottom)); ui.small(format!("Blanking L/R/T/B: {:.2}% / {:.2}% / {:.2}% / {:.2}%", a.mask.left*100., a.mask.right*100., a.mask.top*100., a.mask.bottom*100.)); }
+                            if let Some(a) = shape.appearance { ui.small(format!("Fit: {} · crop L/R/T/B: {} / {} / {} / {} px", a.fit.map(|f| f.label()).unwrap_or("Normal crop"), a.crop.left, a.crop.right, a.crop.top, a.crop.bottom)); ui.small(format!("Blanking ({:?}) L/R/T/B: {:.2}% / {:.2}% / {:.2}% / {:.2}%", a.mask.origin, a.mask.left*100., a.mask.right*100., a.mask.top*100., a.mask.bottom*100.)); }
                             if let Some(zoom) = shape.zoom { ui.small(format!("Crop zoom: {:.1}%", zoom * 100.0)); }
                             if let Some(target)=p.mapping[row].filter(|&i| i < self.layout.layers().len()) {
                                 let before=self.layout.layers()[target];
@@ -1777,7 +1783,13 @@ impl Editor {
                 "reset-visual-crop",
             ) {
                 let result = if self.mask_editing() {
-                    self.layout.set_mask(i, Default::default())
+                    self.layout.set_mask(
+                        i,
+                        canvas_pilot::formats::Mask {
+                            origin: self.layout.formats().masks[i].origin,
+                            ..Default::default()
+                        },
+                    )
                 } else if let Some(mode) = self.layout.formats().layer_fit[i] {
                     self.layout
                         .set_layer_fit(i, Some(mode), canvas_pilot::formats::Crop::default())
@@ -2502,7 +2514,11 @@ impl Editor {
             return None;
         }
         if self.mask_editing() {
-            return rect.contains(pointer).then_some(i);
+            return (rect.contains(pointer)
+                || self
+                    .crop_bounds(origin, scale)
+                    .is_some_and(|bounds| bounds.contains(pointer)))
+            .then_some(i);
         }
         if self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne) {
             return (rect.contains(pointer)
@@ -2528,7 +2544,11 @@ impl Editor {
         }
         let i = self.layout.selected()?;
         if self.mask_editing() {
-            let g = self.layout.formats().masks[i].bounds(self.layout.layers()[i]);
+            let g = self
+                .layout
+                .formats()
+                .mask_bounds(i, self.layout.layers()[i])
+                .ok()?;
             return Some(Rect::from_min_size(
                 origin + Vec2::new(g.x as f32, g.y as f32) * scale,
                 Vec2::new(g.width as f32, g.height as f32) * scale,
@@ -3515,6 +3535,29 @@ impl Editor {
         screen_labels(&screen, output);
         if self.references.is_empty() {
             screen_reference_hint(&screen, output);
+        }
+        if self.edit_content
+            && self.mask_editing()
+            && let Some(i) = self.layout.selected()
+            && self.layout.formats().masks[i].origin == canvas_pilot::formats::MaskOrigin::Source
+            && let Ok(reference) = self
+                .layout
+                .formats()
+                .mask_reference(i, self.layout.layers()[i])
+        {
+            let rect = Rect::from_min_size(
+                origin + Vec2::new(reference.x as f32, reference.y as f32) * scale,
+                Vec2::new(reference.width as f32, reference.height as f32) * scale,
+            );
+            let mut ghost = screen.painter.clone();
+            ghost.multiply_opacity(0.3);
+            format_ui::paint_source(
+                &ghost,
+                rect,
+                self.layout.formats().sources[self.layout.formats().source_for[i]],
+                Default::default(),
+                self.layer_preview(i),
+            );
         }
         if self.edit_content
             && !self.mask_editing()
@@ -4807,6 +4850,66 @@ mod tests {
         );
         frame(app, ctx, vec![mouse(pos, false)]);
     }
+    #[test]
+    fn source_mask_guide_can_be_hit_outside_layer() {
+        let mut app = Editor::default();
+        app.layout.select(Some(0));
+        app.layout
+            .set_framing(
+                0,
+                canvas_pilot::formats::Framing {
+                    zoom: 2.0,
+                    offset: [0.0; 2],
+                },
+            )
+            .unwrap();
+        app.layout
+            .set_mask(
+                0,
+                canvas_pilot::formats::Mask {
+                    origin: canvas_pilot::formats::MaskOrigin::Source,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        app.edit_content = true;
+        app.edit_mask = true;
+        let g = app.layout.layers()[0];
+        let guide = app.crop_bounds(Pos2::ZERO, 1.0).unwrap();
+        assert!(guide.width() > g.width as f32);
+        let point = guide.left_center() + Vec2::new(1.0, 0.0);
+        assert!(point.x < g.x as f32);
+        assert_eq!(app.content_hit(point, Pos2::ZERO, 1.0), Some(0));
+        let ctx = egui::Context::default();
+        app.layout
+            .set_mask(
+                0,
+                canvas_pilot::formats::Mask {
+                    origin: canvas_pilot::formats::MaskOrigin::Source,
+                    left: 0.2,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        frame(&mut app, &ctx, vec![]);
+        let reset = ctx
+            .read_response(egui::Id::new("reset-visual-crop"))
+            .unwrap()
+            .rect
+            .center();
+        frame(
+            &mut app,
+            &ctx,
+            vec![egui::Event::PointerMoved(reset), mouse(reset, true)],
+        );
+        frame(&mut app, &ctx, vec![mouse(reset, false)]);
+        assert!(app.layout.formats().masks[0].is_empty());
+        assert_eq!(
+            app.layout.formats().masks[0].origin,
+            canvas_pilot::formats::MaskOrigin::Source
+        );
+    }
+
     #[test]
     fn pivot_snap_modifiers_and_linked_markers_preserve_geometry() {
         let mut app = Editor {
@@ -6172,6 +6275,7 @@ mod tests {
             .set_mask(
                 1,
                 canvas_pilot::formats::Mask {
+                    origin: Default::default(),
                     left: 0.1,
                     right: 0.1,
                     top: 0.1,
@@ -6386,6 +6490,7 @@ mod tests {
         let ctx = egui::Context::default();
         let rect = layer_rects(&frame(&mut app, &ctx, vec![]))[1];
         let mask = canvas_pilot::formats::Mask {
+            origin: Default::default(),
             left: 0.25,
             right: 0.25,
             top: 0.25,
@@ -7025,6 +7130,7 @@ mod tests {
                 .set_mask(
                     0,
                     Mask {
+                        origin: Default::default(),
                         left: 0.1,
                         right: 0.2,
                         top: 0.05,

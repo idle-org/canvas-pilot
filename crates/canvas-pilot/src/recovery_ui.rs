@@ -219,6 +219,18 @@ mod tests {
                 },
             )
             .unwrap();
+        app.layout
+            .set_mask(
+                0,
+                canvas_pilot::formats::Mask {
+                    origin: canvas_pilot::formats::MaskOrigin::Source,
+                    left: 0.2,
+                    right: 0.1,
+                    top: 0.05,
+                    bottom: 0.15,
+                },
+            )
+            .unwrap();
         app.layout.set_layer_pivots(&[(1, [0.2, 0.7])]).unwrap();
         app.corner = PositionPoint::BottomRight;
         app.position_layer_point = Some(PositionPoint::Center);

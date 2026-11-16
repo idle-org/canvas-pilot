@@ -2,7 +2,7 @@
 
 Audited against the editor, project loader, application settings, capture controls,
 layer tree, format properties, import/export controls and device transfer state.
-Current ownership for [project version 16](canvas-pilot.md). This is an ownership audit:
+Current ownership for [project version 17](canvas-pilot.md). This is an ownership audit:
 not every control should become document data.
 
 | Parameters | Owner and decision |
@@ -33,7 +33,7 @@ not every control should become document data.
 
 The [application settings contract](canvas-pilot-settings.md) is unchanged (v8).
 The [recovery envelope](canvas-pilot-recovery.md) is unchanged (v1); its nested
-project migrates to v16. Geometry export representations are unchanged and omit
+project migrates to v17. Geometry export representations are unchanged and omit
 capture images/settings; optional fixed-reference backgrounds retain their
 existing behavior.
 

@@ -70,7 +70,7 @@ pub fn encode(layout: &Layout, indices: &[usize], summary: &str) -> Result<Strin
     }
     let json = serde_json::to_string_pretty(&Payload {
         format: "canvas-pilot.layers".into(),
-        version: 2,
+        version: 3,
         layers,
     })
     .map_err(|e| e.to_string())?;
@@ -84,11 +84,27 @@ pub fn parse(json: &str) -> Result<ImportDocument, String> {
     if json.len() > crate::exchange::MAX_EXCHANGE_BYTES {
         return Err("Clipboard exceeds 16 MiB.".into());
     }
-    let payload: Payload =
+    let mut value: serde_json::Value =
         serde_json::from_str(json).map_err(|e| format!("Invalid Canvas Pilot clipboard: {e}"))?;
-    if payload.format != "canvas-pilot.layers" || !matches!(payload.version, 1 | 2) {
+    if value["version"] == 1 || value["version"] == 2 {
+        for layer in value["layers"]
+            .as_array_mut()
+            .ok_or("Missing clipboard layers")?
+        {
+            let mask = layer["appearance"]["mask"]
+                .as_object_mut()
+                .ok_or("Missing clipboard mask")?;
+            if mask.contains_key("origin") {
+                return Err("Unexpected mask origin in old clipboard.".into());
+            }
+            mask.insert("origin".into(), "layer".into());
+        }
+    }
+    let payload: Payload = serde_json::from_value(value)
+        .map_err(|e| format!("Invalid Canvas Pilot clipboard: {e}"))?;
+    if payload.format != "canvas-pilot.layers" || !matches!(payload.version, 1..=3) {
         return Err(
-            "Unsupported Canvas Pilot clipboard format/version; expected version 1 or 2.".into(),
+            "Unsupported Canvas Pilot clipboard format/version; expected version 1, 2 or 3.".into(),
         );
     }
     if payload.layers.is_empty() || payload.layers.len() > 256 {
@@ -102,7 +118,7 @@ pub fn parse(json: &str) -> Result<ImportDocument, String> {
         layer.bounds.validate()?;
         layer.appearance.validate(layer.bounds)?;
         shapes.push(DetectedShape {
-            name: (payload.version == 2).then(|| layer.name.clone()),
+            name: (payload.version >= 2).then(|| layer.name.clone()),
             id: layer.name,
             geometry: layer.bounds,
             outline: [0.; 2],

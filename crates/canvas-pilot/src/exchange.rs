@@ -104,7 +104,12 @@ fn placeholder(project: &Project, layer: &Layer) -> Result<String, String> {
     } else {
         layer.bounds
     };
-    let masked = layer.mask.bounds(layer.bounds);
+    let masked = layer.mask.bounds(layer.mask.reference(
+        input,
+        layer.advanced_crop,
+        layer.layer_fit,
+        layer.bounds,
+    )?);
     let [w, h] = thumbnail_size(layer.bounds.width, layer.bounds.height, 512.0);
     let image = RgbaImage::from_fn(w, h, |x, y| {
         let ox = layer.bounds.x + (x as f64 + 0.5) / w as f64 * layer.bounds.width;
@@ -361,6 +366,62 @@ mod fit_tests {
     };
 
     #[test]
+    fn source_mask_artwork_uses_source_edges_before_layer_crop() {
+        let mut layout = crate::Layout::default();
+        layout
+            .set_framing(
+                0,
+                crate::formats::Framing {
+                    zoom: 2.0,
+                    offset: [0.0; 2],
+                },
+            )
+            .unwrap();
+        let render = |layout: &crate::Layout| {
+            let p = Project::from_layout(layout);
+            placeholder(&p, &p.layers[0]).unwrap()
+        };
+        let unmasked = render(&layout);
+        layout
+            .set_mask(
+                0,
+                crate::formats::Mask {
+                    origin: crate::formats::MaskOrigin::Source,
+                    left: 0.2,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            render(&layout),
+            unmasked,
+            "mask before the crop has no visible effect"
+        );
+        layout
+            .set_mask(
+                0,
+                crate::formats::Mask {
+                    origin: crate::formats::MaskOrigin::Source,
+                    left: 0.375,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        let source_masked = render(&layout);
+        layout
+            .set_mask(
+                0,
+                crate::formats::Mask {
+                    left: 0.25,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(render(&layout), source_masked);
+        assert_ne!(source_masked, unmasked);
+    }
+
+    #[test]
     fn mask_artwork_blanks_without_resampling_and_embedded_metadata_preserves_it() {
         let mut layout = Layout::default();
         for fit in [
@@ -384,6 +445,7 @@ mod fit_tests {
                 .set_mask(
                     0,
                     crate::formats::Mask {
+                        origin: Default::default(),
                         left: 0.25,
                         right: 0.25,
                         top: 0.25,

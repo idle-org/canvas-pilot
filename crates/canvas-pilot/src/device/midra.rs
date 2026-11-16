@@ -130,6 +130,7 @@ pub(super) fn parse(identity: String, raw: &Value) -> Result<Snapshot, String> {
                 Ok(v / 65535.0)
             };
             let mask = crate::formats::Mask {
+                origin: Default::default(),
                 left: mask_edge("left")?,
                 right: mask_edge("right")?,
                 top: mask_edge("top")?,

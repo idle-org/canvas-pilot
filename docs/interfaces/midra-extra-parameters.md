@@ -27,7 +27,7 @@ external editor moves/resizes a shape without updating the embedded snapshot.
 | FigCraft FIGCRAFT | First page node `plugin_data.beffroi_midra_parameters` in native v1 `document.json` | ZIP and bare JSON restore supported. Native FigCraft 0.5.1 load/save preserves the field. Duplicate payloads are rejected; document JSON reads are bounded to 16 MiB. Other ZIP members are preserved. |
 | Figma FIG | Not enabled | Figma has plugin data, but the installed FigCraft 0.5.1 native exporter explicitly warns `plugin data was left out`. Its model field is not evidence of native preservation. |
 | Illustrator | Not enabled | PDF-compatible Illustrator can have document metadata, but the current VectorCraft SVG↔Illustrator conversion path has no verified application-payload preservation. No unverified PDF/Illustrator trailer changes are made. |
-| Midra project JSON | Already complete | Project v16 remains the authoritative full-fidelity save. |
+| Midra project JSON | Already complete | Project v17 remains the authoritative full-fidelity save. |
 
 Unsupported codecs disable the option with an explanation. Programmatic attempts
 to request the extension on those codecs fail explicitly, never silently discard
@@ -36,7 +36,7 @@ it. Vendor availability and the `no_proprietary` build flag still apply.
 ## Payload contract (extension version 1)
 
 `BASE64` is standard padded RFC 4648 base64 of UTF-8, pretty-printed
-[project JSON](canvas-pilot.md), currently version 16. It is inert data, not an
+[project JSON](canvas-pilot.md), currently version 17. It is inert data, not an
 executable instruction, URL or file path. Project format/version and validation
 remain authoritative. Future incompatible carrier/payload meanings require a new
 extension version and explicit migration or rejection.

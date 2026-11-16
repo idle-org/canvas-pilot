@@ -5,6 +5,7 @@ use canvas_pilot::{
 };
 fn mask() -> Mask {
     Mask {
+        origin: Default::default(),
         left: 0.2,
         right: 0.1,
         top: 0.15,
@@ -102,7 +103,7 @@ fn mask_schema_migration_validation_reorder_resize_and_atomic_import() {
     assert_eq!(Project::from_json(&p.to_json().unwrap()).unwrap(), p);
     let old = include_str!("../../../docs/interfaces/canvas-pilot-v14.example.json");
     let migrated = Project::from_json(old).unwrap();
-    assert_eq!(migrated.version, 16);
+    assert_eq!(migrated.version, 17);
     assert!(migrated.layers.iter().all(|l| l.mask == Mask::default()));
     let mut json = serde_json::to_value(&p).unwrap();
     json["layers"][0].as_object_mut().unwrap().remove("mask");
@@ -112,14 +113,17 @@ fn mask_schema_migration_validation_reorder_resize_and_atomic_import() {
     assert!(Project::from_json(&json.to_string()).is_err());
     for invalid in [
         Mask {
+            origin: Default::default(),
             left: -0.1,
             ..mask()
         },
         Mask {
+            origin: Default::default(),
             left: f64::INFINITY,
             ..mask()
         },
         Mask {
+            origin: Default::default(),
             left: 0.95,
             ..mask()
         },
@@ -138,6 +142,7 @@ fn mask_schema_migration_validation_reorder_resize_and_atomic_import() {
             &[LayerAppearance {
                 fit: None,
                 mask: Mask {
+                    origin: Default::default(),
                     left: 2.0,
                     ..mask()
                 }
@@ -187,4 +192,183 @@ fn mask_alignment_moves_only_the_reveal_window() {
         l.undo();
         assert_eq!(Project::from_layout(&l), before);
     }
+}
+
+#[test]
+fn source_mask_reference_tracks_crop_fit_and_source_input_crop() {
+    use canvas_pilot::formats::MaskOrigin;
+    let mask = Mask {
+        origin: MaskOrigin::Source,
+        left: 0.2,
+        right: 0.1,
+        top: 0.1,
+        bottom: 0.2,
+    };
+    let layer = Geometry {
+        x: 100.0,
+        y: 200.0,
+        width: 400.0,
+        height: 200.0,
+    };
+    let crop = Crop {
+        left: 100.0,
+        right: 100.0,
+        top: 50.0,
+        bottom: 50.0,
+    };
+    let full = mask.reference([1000.0, 500.0], crop, None, layer).unwrap();
+    assert_eq!(
+        full,
+        Geometry {
+            x: 50.0,
+            y: 175.0,
+            width: 500.0,
+            height: 250.0
+        }
+    );
+    let reveal = mask.bounds(full);
+    assert_eq!([reveal.x, reveal.y, reveal.height], [150.0, 200.0, 175.0]);
+    assert!((reveal.width - 350.0).abs() < 1e-8);
+    let tall = Geometry {
+        height: 300.0,
+        ..layer
+    };
+    for (fit, expected) in [
+        (
+            LayerFit::OneToOne,
+            Geometry {
+                x: -200.0,
+                y: 100.0,
+                width: 1000.0,
+                height: 500.0,
+            },
+        ),
+        (
+            LayerFit::Centered,
+            Geometry {
+                x: 50.0,
+                y: 225.0,
+                width: 500.0,
+                height: 250.0,
+            },
+        ),
+        (
+            LayerFit::Cropped,
+            Geometry {
+                x: -75.0,
+                y: 162.5,
+                width: 750.0,
+                height: 375.0,
+            },
+        ),
+        (
+            LayerFit::Fullscreen,
+            Geometry {
+                x: 50.0,
+                y: 162.5,
+                width: 500.0,
+                height: 375.0,
+            },
+        ),
+    ] {
+        assert_eq!(
+            mask.reference([1000.0, 500.0], crop, Some(fit), tall)
+                .unwrap(),
+            expected
+        );
+    }
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    layout
+        .set_framing(
+            0,
+            canvas_pilot::formats::Framing {
+                zoom: 2.0,
+                offset: [0.0; 2],
+            },
+        )
+        .unwrap();
+    layout.set_mask(0, mask).unwrap();
+    let before = Project::from_layout(&layout);
+    let reference = layout
+        .formats()
+        .mask_reference(0, layout.layers()[0])
+        .unwrap();
+    assert!(reference.width > layout.layers()[0].width);
+    layout.start_mask_drag(0, [0.0; 2], None);
+    layout.drag_to([20.0, 10.0]);
+    layout.finish_drag();
+    assert_eq!(
+        layout.formats().masks[0],
+        mask.translated([20.0, 10.0], reference).unwrap()
+    );
+    layout.undo();
+    assert_eq!(Project::from_layout(&layout), before);
+    let source = canvas_pilot::formats::Source {
+        input_crop: Crop {
+            left: 100.0,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    assert_eq!(source.input().unwrap(), [1820.0, 1080.0]);
+    let reference = mask
+        .reference(
+            source.input().unwrap(),
+            Crop::default(),
+            Some(LayerFit::Fullscreen),
+            layer,
+        )
+        .unwrap();
+    assert_eq!(reference, layer);
+}
+
+#[test]
+fn mask_origin_migrates_strictly_and_survives_project_save() {
+    use canvas_pilot::formats::MaskOrigin;
+    Project::from_json(include_str!(
+        "../../../docs/interfaces/canvas-pilot-v17.example.json"
+    ))
+    .unwrap();
+    let clipboard = include_str!("../../../docs/interfaces/canvas-pilot-clipboard-v3.example.txt");
+    let (_, json) = clipboard
+        .rsplit_once(canvas_pilot::clipboard::MARKER)
+        .unwrap();
+    assert_eq!(
+        canvas_pilot::clipboard::parse(json).unwrap().shapes[0]
+            .appearance
+            .unwrap()
+            .mask
+            .origin,
+        MaskOrigin::Source
+    );
+    let old = include_str!("../../../docs/interfaces/canvas-pilot-v16.example.json");
+    let migrated = Project::from_json(old).unwrap();
+    assert!(
+        migrated
+            .layers
+            .iter()
+            .all(|l| l.mask.origin == MaskOrigin::Layer)
+    );
+    let mut value = serde_json::to_value(&migrated).unwrap();
+    value["layers"][0]["mask"]["origin"] = "source".into();
+    let project = Project::from_json(&value.to_string()).unwrap();
+    assert_eq!(project.layers[0].mask.origin, MaskOrigin::Source);
+    assert_eq!(
+        Project::from_json(&project.to_json().unwrap()).unwrap(),
+        project
+    );
+    for bad in [serde_json::json!("unknown"), serde_json::Value::Null] {
+        let mut invalid = value.clone();
+        invalid["layers"][0]["mask"]["origin"] = bad;
+        assert!(Project::from_json(&invalid.to_string()).is_err());
+    }
+    let mut missing = value.clone();
+    missing["layers"][0]["mask"]
+        .as_object_mut()
+        .unwrap()
+        .remove("origin");
+    assert!(Project::from_json(&missing.to_string()).is_err());
+    value["version"] = 16.into();
+    assert!(Project::from_json(&value.to_string()).is_err());
 }

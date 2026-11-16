@@ -468,5 +468,11 @@
   "language.name.zh-CN": "Simpligita ĉina",
   "language.name.es": "Hispana",
   "language.name.grc": "Antikva greka",
-  "language.name.eo": "Esperanto"
+  "language.name.eo": "Esperanto",
+  "mask.origin": "Masko rilate al",
+  "mask.layer": "Tavolo",
+  "mask.source": "Fonto",
+  "mask.origin-help": "Tavolo sekvas la tavolajn limojn. Fonto sekvas la uzeblan bildon antaŭ tavola tondado/zomo. Ŝanĝo konservas la randajn procentojn.",
+  "mask.source-px": " fontaj px",
+  "mask.proportions-help": "Maskaj proporcioj sekvas la elektitan referencon. Kaŝi bilderojn ekster la videbla tavolo ne efikas."
 }

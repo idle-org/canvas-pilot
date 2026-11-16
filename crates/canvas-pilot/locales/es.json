@@ -468,5 +468,11 @@
   "language.name.zh-CN": "Chino simplificado",
   "language.name.es": "Español",
   "language.name.grc": "Griego antiguo",
-  "language.name.eo": "Esperanto"
+  "language.name.eo": "Esperanto",
+  "mask.origin": "Máscara desde",
+  "mask.layer": "Capa",
+  "mask.source": "Fuente",
+  "mask.origin-help": "Capa sigue los límites de la capa. Fuente sigue la imagen utilizable antes del recorte/zoom de la capa. El cambio conserva los porcentajes de los bordes.",
+  "mask.source-px": " px de fuente",
+  "mask.proportions-help": "Las proporciones siguen la referencia seleccionada. Ocultar píxeles fuera de la capa visible no tiene efecto."
 }

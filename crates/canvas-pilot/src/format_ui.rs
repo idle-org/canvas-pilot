@@ -488,14 +488,26 @@ impl Editor {
                 let old=self.layout.formats().masks[i];
                 let mut mask=old;
                 let g=self.layout.layers()[i];
+                ui.horizontal(|ui| {
+                    ui.label(tr(ui.ctx(), "mask.origin"));
+                    egui::ComboBox::from_id_salt("mask-origin")
+                        .selected_text(tr(ui.ctx(), if mask.origin == canvas_pilot::formats::MaskOrigin::Layer { "mask.layer" } else { "mask.source" }))
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut mask.origin, canvas_pilot::formats::MaskOrigin::Layer, tr(ui.ctx(), "mask.layer"));
+                            ui.selectable_value(&mut mask.origin, canvas_pilot::formats::MaskOrigin::Source, tr(ui.ctx(), "mask.source"));
+                        });
+                });
+                ui.small(tr(ui.ctx(), "mask.origin-help"));
+                let source_relative = mask.origin == canvas_pilot::formats::MaskOrigin::Source;
+                let size = if source_relative { self.layout.formats().input(i).unwrap_or([g.width,g.height]) } else { [g.width,g.height] };
                 ui.horizontal_wrapped(|ui| {
-                    for (label,edge,opposite,size) in [("Left ",&mut mask.left,old.right,g.width),("Right ",&mut mask.right,old.left,g.width),("Top ",&mut mask.top,old.bottom,g.height),("Bottom ",&mut mask.bottom,old.top,g.height)] {
+                    for (label,edge,opposite,size) in [("Left ",&mut mask.left,old.right,size[0]),("Right ",&mut mask.right,old.left,size[0]),("Top ",&mut mask.top,old.bottom,size[1]),("Bottom ",&mut mask.bottom,old.top,size[1])] {
                         let mut pixels=*edge*size;
-                        if ui.add(egui::DragValue::new(&mut pixels).range(0.0..=(1.0-opposite)*size).speed(1.0).prefix(label).suffix(tr(ui.ctx(), "ui.output-px"))).changed() { *edge=(pixels/size).clamp(0.0,1.0-opposite); }
+                        if ui.add(egui::DragValue::new(&mut pixels).range(0.0..=(1.0-opposite)*size).speed(1.0).prefix(label).suffix(tr(ui.ctx(), if source_relative { "mask.source-px" } else { "ui.output-px" }))).changed() { *edge=(pixels/size).clamp(0.0,1.0-opposite); }
                     }
                 });
                 ui.horizontal(|ui| {
-                    if ui.button(tr(ui.ctx(), "ui.reset-mask")).clicked() {mask=Default::default();}
+                    if ui.button(tr(ui.ctx(), "ui.reset-mask")).clicked() {mask=canvas_pilot::formats::Mask { origin: mask.origin, ..Default::default() };}
                     if ui.button(tr(ui.ctx(), "ui.center-mask")).clicked() {let x=(mask.left+mask.right)/2.0;let y=(mask.top+mask.bottom)/2.0;mask.left=x;mask.right=x;mask.top=y;mask.bottom=y;}
                 });
                 if mask != old {
@@ -506,7 +518,7 @@ impl Editor {
                 }
                 if !ui.input(|input|input.pointer.primary_down()) { d.mask_before=None; }
                 ui.small(tr(ui.ctx(), "ui.drag-any-edge-or-corner-independently-drag-inside-the-layer-to-move-the-window-arrows"));
-                ui.small(tr(ui.ctx(), "ui.mask-proportions-follow-layer-resizing-masking-transparent-or-already-cropped-pixels"));
+                ui.small(tr(ui.ctx(), "mask.proportions-help"));
                 let (_,area)=ui.allocate_space(Vec2::new(ui.available_width(),170.0));
                 paint_layer_source(ui.painter(),fit_rect(area,[g.width,g.height]),&self.layout,i,self.layer_preview(i));
             }
@@ -697,22 +709,35 @@ pub(super) fn paint_layer_source(
 ) {
     let formats = layout.formats();
     let mask = formats.masks[i];
-    let clip = Rect::from_min_max(
+    let Ok(reference) = formats.mask_reference(i, layout.layers()[i]) else {
+        return;
+    };
+    let layer = layout.layers()[i];
+    let k = rect.width() as f64 / layer.width;
+    let mask_rect = Rect::from_min_size(
         rect.min
             + Vec2::new(
-                rect.width() * mask.left as f32,
-                rect.height() * mask.top as f32,
+                ((reference.x - layer.x) * k) as f32,
+                ((reference.y - layer.y) * k) as f32,
             ),
-        rect.max
+        Vec2::new((reference.width * k) as f32, (reference.height * k) as f32),
+    );
+    let clip = Rect::from_min_max(
+        mask_rect.min
+            + Vec2::new(
+                mask_rect.width() * mask.left as f32,
+                mask_rect.height() * mask.top as f32,
+            ),
+        mask_rect.max
             - Vec2::new(
-                rect.width() * mask.right as f32,
-                rect.height() * mask.bottom as f32,
+                mask_rect.width() * mask.right as f32,
+                mask_rect.height() * mask.bottom as f32,
             ),
     );
     if !clip.is_positive() {
         return;
     }
-    let clipped = painter.with_clip_rect(painter.clip_rect().intersect(clip));
+    let clipped = painter.with_clip_rect(painter.clip_rect().intersect(clip).intersect(rect));
     let painter = &clipped;
     let source = formats.sources[formats.source_for[i]];
     let crop = formats.advanced[i];
@@ -782,7 +807,7 @@ fn paint_source_clipped(
             ),
         );
         painter
-            .with_clip_rect(painter.clip_rect().intersect(clip))
+            .with_clip_rect(painter.clip_rect().intersect(clip).intersect(rect))
             .image(
                 texture,
                 native,
@@ -813,7 +838,7 @@ fn paint_pattern_clipped(
     };
     let k = rect.width() as f64 / retained[0];
     let ky = rect.height() as f64 / retained[1];
-    let p = painter.with_clip_rect(painter.clip_rect().intersect(clip));
+    let p = painter.with_clip_rect(painter.clip_rect().intersect(clip).intersect(rect));
     let point = |x: f64, y: f64| {
         rect.min
             + Vec2::new(

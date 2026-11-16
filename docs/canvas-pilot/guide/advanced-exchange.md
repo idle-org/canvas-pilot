@@ -26,7 +26,7 @@ means a supported exchange format exported with extra parameters and reopened th
 | Input crop edges | ✅ | ❌ | ✅ |
 | Normal layer crop zoom and offsets | ✅ | ❌ | ✅ |
 | Advanced fit modes and their crop edges | ✅ | ❌ | ✅ |
-| Editable blanking masks | ✅ | ❌ | ✅ |
+| Editable blanking masks (Layer / Source) | ✅ | ❌ | ✅ |
 | Resize pivots and group resize settings | ✅ | ❌ | ✅ |
 | Saved device screen/layer links (not physical source routing) | ✅ | ❌ | ✅ |
 | Opt-in saved device input correction proposals, restored inactive | ✅ | ❌ | ✅ |
@@ -90,7 +90,7 @@ Keep a `.pilot.json` companion when using these Bronze formats. Clipboard geomet
 also does not restore embedded snapshots. Use **Restore parameters from export**
 for Silver; use ordinary geometry import for the artwork's latest positions.
 
-Automated round trips cover all fit modes, fractional crops and masks, shared
+Automated round trips cover all fit modes, fractional crops, both mask references, shared
 inputs, mappings, saved proposals and workspace state through every Silver codec.
 FigCraft metadata is also tested through its native load/save cycle. External
 application resaves can strip metadata; this is not a promise of lossless round

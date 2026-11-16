@@ -7,7 +7,7 @@ These are offline editor formats, not Analog Way REST payloads. Implementation:
 [`project.rs`](../../crates/canvas-pilot/tests/project.rs). Update this contract,
 examples and tests in the same change as any save/export schema change.
 
-## Project JSON, version 16
+## Project JSON, version 17
 
 Suggested filename: `layout.pilot.json`. **Open project** accepts any `.json`
 filename, including legacy `.midra.json` projects, and validates the project
@@ -27,10 +27,10 @@ and `next_layer_id: 3`; other values are preserved.
 The [version 1 example](canvas-pilot-v1.example.json) remains a migration fixture.
 Version 4 adds `editor.outline_layers: false`, and reference `native_size: false`
 and `offset: [0, 0]` when migrating versions 1–3. Old fitting behavior is preserved.
-Version 5 adds required `midra_link` to every layer. Versions 1–4 migrate with null links; links cannot be supplied under an older version. Version 6 renames `editor.position_corner` to `editor.position_point` and adds `center`. Versions 1–5 retain their original corner; center and the new field are rejected in those older schemas. Version 7 adds `editor.backdrop_title`; versions 1–6 gain `"Example Conference Name"` and cannot supply this field under the old schema. Version 8 adds required `editor.position_layer_point`: null keeps matched points; a point enables independent measurement. Versions 1–7 migrate to null and cannot supply this field. Version 9 adds required `layers[].pivot`; versions 1–8 migrate to `[0.5, 0.5]` and cannot supply this field. Version 10 replaces `reference` with the required ordered `references` array. Versions 1–9 migrate null to `[]` and a single image to a one-element array, preserving all image settings. Version 11 adds required `workspace` settings and embedded layer previews. Versions 1–10 gain the documented workspace defaults, with no captures or collapsed folders; supplying `workspace` in an older schema is rejected. Version 12 adds required `folders`, the explicit folder names that survive without members. Versions 1–11 gain `folders: []`, preserving their existing implicit layer grouping; supplying this field under an older version is rejected. Version 13 replaces `midra_link` with required `device_link`, adding the explicit device family. Versions 1–12 migrate numeric links to `family: "midra4k"`; null remains null, and legacy decimal IDs with leading zeros are canonicalized. Unknown legacy fields are rejected. Version 14 adds required `layers[].layer_fit`: versions 1–13 migrate to null, preserving normal crop/zoom behavior; supplying this field under an older schema is rejected. Version 15 adds required `layers[].mask`; versions 1–14 migrate with four zero edges and reject masks supplied under an older version. Version 16 adds required root `input_proposals`; versions 1–15 migrate to an empty array and reject this field if supplied under an older version. Saving always writes version 16; older applications reject it.
+Version 5 adds required `midra_link` to every layer. Versions 1–4 migrate with null links; links cannot be supplied under an older version. Version 6 renames `editor.position_corner` to `editor.position_point` and adds `center`. Versions 1–5 retain their original corner; center and the new field are rejected in those older schemas. Version 7 adds `editor.backdrop_title`; versions 1–6 gain `"Example Conference Name"` and cannot supply this field under the old schema. Version 8 adds required `editor.position_layer_point`: null keeps matched points; a point enables independent measurement. Versions 1–7 migrate to null and cannot supply this field. Version 9 adds required `layers[].pivot`; versions 1–8 migrate to `[0.5, 0.5]` and cannot supply this field. Version 10 replaces `reference` with the required ordered `references` array. Versions 1–9 migrate null to `[]` and a single image to a one-element array, preserving all image settings. Version 11 adds required `workspace` settings and embedded layer previews. Versions 1–10 gain the documented workspace defaults, with no captures or collapsed folders; supplying `workspace` in an older schema is rejected. Version 12 adds required `folders`, the explicit folder names that survive without members. Versions 1–11 gain `folders: []`, preserving their existing implicit layer grouping; supplying this field under an older version is rejected. Version 13 replaces `midra_link` with required `device_link`, adding the explicit device family. Versions 1–12 migrate numeric links to `family: "midra4k"`; null remains null, and legacy decimal IDs with leading zeros are canonicalized. Unknown legacy fields are rejected. Version 14 adds required `layers[].layer_fit`: versions 1–13 migrate to null, preserving normal crop/zoom behavior; supplying this field under an older schema is rejected. Version 15 adds required `layers[].mask`; versions 1–14 migrate with four zero edges and reject masks supplied under an older version. Version 16 adds required root `input_proposals`; versions 1–15 migrate to an empty array and reject this field if supplied under an older version. Version 17 adds required `mask.origin` (`layer` or `source`). Versions 1–16 migrate to `layer`; older versions containing `origin` are rejected. See the [version 17 example](canvas-pilot-v17.example.json); v16 remains a migration fixture. Saving always writes version 17; older applications reject it.
 Incompatible files are never partially applied.
 
-[Complete example](canvas-pilot-v16.example.json) is a valid project with an empty `Memory A` folder, a Midra link and an inactive input correction proposal,
+[Complete example](canvas-pilot-v17.example.json) is a valid project with an empty `Memory A` folder, a Midra link and an inactive input correction proposal,
 with an unlinked Fullscreen example layer and no reference image. New projects label the lower layer `02 / Slides` and
 the upper layer `01 / Presenter`; existing projects retain their saved IDs/names.
 It is loaded by the regression tests.
@@ -38,7 +38,7 @@ It is loaded by the regression tests.
 | Root field | Representation / meaning |
 | --- | --- |
 | `format` | Exactly `"beffroi.midra-layout"` |
-| `version` | Integer `16` |
+| `version` | Integer `17` |
 | `input_proposals` | Required array, 0–256 inactive correction proposals; at most one per existing layer, with an exactly matching `device_link`. See below. |
 | `folders` | Required array of 0–256 unique explicit folder names, each trimmed and 1–128 characters. Explicit folders remain even with no members; layer folder labels also form implicit groups. |
 | `next_layer_id` | Positive integer strictly greater than every layer ID; not rewound by undo |
@@ -101,7 +101,7 @@ Layer objects:
 | `folder` | Local folder name, at most 128 characters; empty means ungrouped |
 | `source_id` | Existing input slot ID; multiple layers may share an input |
 | `bounds` | `{ "x": number, "y": number, "width": number, "height": number }`, visible box for normal crop/zoom, container for explicit `layer_fit`, in screen pixels; x/y are its top-left position |
-| `mask` | Required `{ "left": number, "right": number, "top": number, "bottom": number }`: finite fractions of layer width/height, each 0–1 and opposite sums ≤1. Zero means no blanking; meeting edges blank the entire layer. Independent of source crop/fit. Values remain proportional on resize and retain full floating-point precision. |
+| `mask` | Required `{ "origin": "layer" or "source", "left": number, "right": number, "top": number, "bottom": number }`: finite fractions of the selected reference width/height, each 0–1 and opposite sums ≤1. Zero means no blanking; meeting edges blank the entire layer. Layer-relative masks are independent of crop/fit. Source-relative masks follow the usable source before layer crop/fit. Values remain proportional on resize and retain full floating-point precision. |
 | `advanced_crop` | Four nonnegative edges in usable input pixels, after input cropping |
 | `visible` | Boolean editor visibility |
 | `locked` | Boolean editor selection/movement protection |
@@ -180,7 +180,7 @@ files require explicit replacement confirmation for Save/exports. Measurement-po
 clicks and the independent-point toggle are an exception: they reread the current
 project and atomically update only `editor.position_point` and
 `editor.position_layer_point`, preserving its other stored values (including external edits).
-Older schemas migrate to v16 on this write. No project path is stored in settings;
+Older schemas migrate to v17 on this write. No project path is stored in settings;
 new documents require a first Save. Geometry exports never change the active project path.
 Missing/invalid/unwritable projects are left untouched and an error is shown;
 active in-memory choices remain available for a manual Save. A failed no-overwrite write
@@ -260,7 +260,7 @@ and `viewBox="0 0 W H"` equal to the output screen. The root carries
 
 ## Compatibility changes
 
-Project version 16 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
+Project version 17 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
 `version` and either implement a tested migration or clearly reject older/newer
 files. Changing rectangle/marker semantics requires a corresponding documented
 exchange-interface revision and importer tests. Update this document and its example
@@ -278,7 +278,7 @@ retarget existing links; choosing a destination there explicitly replaces that
 layer's saved link. Direct send/load actions use each layer's saved screen,
 independently of the screen currently displayed in the configuration window.
 
-Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 16.
+Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 17.
 
 ## Folder-scoped Midra transfers
 
@@ -344,7 +344,7 @@ background export behavior.
 For the complete persistence audit and the reasons for keeping other controls
 out of project files, see [Project persistence audit](canvas-pilot-persistence-audit.md).
 
-Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 16 and use the same migration on import.
+Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 17 and use the same migration on import.
 
 ### Explicit layer fit (v14)
 
@@ -361,16 +361,19 @@ projects preserve them; optional exported artwork renders crop/fit with transpar
 margins. Midra can transfer explicit modes; Aquilon sends reject them pending a
 separate adapter implementation. See [device conversion](midra-device-send.md).
 
-### Layer mask (v15)
+### Layer and source masks (v17)
 
-The reveal rectangle is `(x + left*w, y + top*h, (1-left-right)*w,
+The reference is the layer rectangle for `layer`, or the full usable source mapped
+into output coordinates for `source` (local input crop happens first). Source
+reference bounds can extend outside the layer. The reveal rectangle is `(x + left*w, y + top*h, (1-left-right)*w,
 (1-top-bottom)*h)` in output pixels. Intersect this rectangle with the rendered
 image after crop and fit. Outside pixels are transparent; no image translation,
 resampling or container resizing occurs. Blanking already absent pixels has no
 additional effect. Empty reveal rectangles are valid. Project, recovery and
-embedded-project exchanges preserve all four fractions; geometry-only SVG and
+embedded-project exchanges preserve the reference mode and all four fractions; geometry-only SVG and
 rectangle exchanges intentionally omit masking. Exported placeholder artwork
 includes transparent blanking without changing its retained image samples.
-Numeric UI fields show output-pixel edge distances, converted to fractions using
-the current layer dimensions. Mask helper movement changes opposite edges by
-equal amounts, clamped to the container, preserving reveal size.
+Numeric UI fields show output-pixel distances for layer mode and usable-source
+pixel distances for source mode. Switching modes keeps the fractions, so the
+visible result can change. Reset clears edges while keeping the mode. Mask helper movement changes opposite edges by
+equal amounts, clamped to the selected reference, preserving reveal size.

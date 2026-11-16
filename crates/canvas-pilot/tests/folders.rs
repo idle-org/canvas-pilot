@@ -134,7 +134,7 @@ fn explicit_empty_folders_survive_history_save_rename_and_membership_changes() {
 fn version_12_explicit_folder_validation_and_v11_migration() {
     let old = include_str!("../../../docs/interfaces/canvas-pilot-v11.example.json");
     let p = Project::from_json(old).unwrap();
-    assert_eq!(p.version, 16);
+    assert_eq!(p.version, 17);
     assert!(p.folders.is_empty());
     let example = include_str!("../../../docs/interfaces/canvas-pilot-v12.example.json");
     assert_eq!(

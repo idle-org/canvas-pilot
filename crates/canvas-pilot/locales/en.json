@@ -468,5 +468,11 @@
   "language.name.zh-CN": "Simplified Chinese",
   "language.name.es": "Spanish",
   "language.name.grc": "Ancient Greek",
-  "language.name.eo": "Esperanto"
+  "language.name.eo": "Esperanto",
+  "mask.origin": "Mask from",
+  "mask.layer": "Layer",
+  "mask.source": "Source",
+  "mask.origin-help": "Layer follows the layer bounds. Source follows the usable picture before layer crop/zoom. Switching keeps the edge percentages.",
+  "mask.source-px": " source px",
+  "mask.proportions-help": "Mask proportions follow the selected reference. Blanking pixels outside the visible layer has no effect."
 }

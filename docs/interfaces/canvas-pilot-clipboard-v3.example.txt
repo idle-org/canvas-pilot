@@ -1,0 +1,43 @@
+01 / Presenter — visible box (device container unverified)
+Horizontal: 440 px
+Vertical: 361 px
+Width: 640 px
+Height: 360 px
+Crop zoom: 200 %
+
+Canvas Pilot layer data:
+{
+  "format": "canvas-pilot.layers",
+  "version": 3,
+  "layers": [
+    {
+      "name": "Presenter",
+      "bounds": {
+        "x": 120.125,
+        "y": 180.5,
+        "width": 640.0,
+        "height": 360.0
+      },
+      "appearance": {
+        "input_size": [
+          1920.0,
+          1080.0
+        ],
+        "crop": {
+          "left": 600.0,
+          "right": 360.0,
+          "top": 240.0,
+          "bottom": 300.0
+        },
+        "fit": null,
+        "mask": {
+          "left": 0.125,
+          "right": 0.0625,
+          "top": 0.25,
+          "bottom": 0.125,
+          "origin": "source"
+        }
+      }
+    }
+  ]
+}

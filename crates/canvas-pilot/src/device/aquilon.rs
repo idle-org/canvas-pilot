@@ -248,7 +248,7 @@ pub(super) fn prepare(
         let i = (0..layout.layers().len())
             .find(|&i| layout.layer_info(i).id == *id)
             .ok_or("An editor layer was removed.")?;
-        if layout.formats().masks[i] != Default::default() {
+        if !layout.formats().masks[i].is_empty() {
             return Err(format!(
                 "Layer {destination}: Aquilon masking conversion is not supported yet."
             ));

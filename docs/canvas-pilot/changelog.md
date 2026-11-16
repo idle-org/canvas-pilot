@@ -4,6 +4,19 @@
 
 ## Unreleased
 
+### v0.9.3
+
+- Added Layer/Source mask references. Source masks follow the usable source before
+  layer crop/zoom, with an external magenta guide, source-pixel fields and the same
+  drag, nudge, alignment and undo controls. Existing masks stay layer-relative.
+- Project v17 and clipboard v3 preserve the reference, with strict legacy migration.
+  Recovery, embedded export snapshots and optional preview artwork retain both
+  modes. Midra sends convert either mode to blanking; device loads remain
+  layer-relative. Aquilon’s existing nonzero-mask limitation remains unchanged.
+  Automated checks cover both references across all fit modes, supported snapshot
+  codecs, clipboard, recovery and Midra state readback. Native UI inspected offline;
+  no live-device or physical-output acceptance is claimed.
+
 ### v0.9.2
 
 - Language choices show the native name followed by its name in the current

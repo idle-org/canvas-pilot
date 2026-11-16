@@ -181,7 +181,7 @@ impl Project {
             folders: layout.folders.clone(),
             workspace: Workspace::default(),
             format: FORMAT.into(),
-            version: 16,
+            version: 17,
             input_proposals: Vec::new(),
             next_layer_id: layout.next_id,
             output_resolution: layout.formats.output.into(),
@@ -233,9 +233,9 @@ impl Project {
     }
     /// Build a fresh document only after validating the entire file. No history is restored.
     pub fn layout(&self) -> Result<Layout, String> {
-        if self.format != FORMAT || self.version != 16 {
+        if self.format != FORMAT || self.version != 17 {
             return Err(
-                "Unsupported project format/version; expected beffroi.midra-layout version 16."
+                "Unsupported project format/version; expected beffroi.midra-layout version 17."
                     .into(),
             );
         }
@@ -447,8 +447,8 @@ impl Project {
         }
         let header: Header =
             serde_json::from_str(text).map_err(|e| format!("Invalid project JSON: {e}"))?;
-        if !(1..=16).contains(&header.version) {
-            return Err("Unsupported project version; expected versions 1–16.".into());
+        if !(1..=17).contains(&header.version) {
+            return Err("Unsupported project version; expected versions 1–17.".into());
         }
         let mut migrated: serde_json::Value = if header.version == 1 || header.version == 2 {
             let mut value: serde_json::Value =
@@ -678,6 +678,16 @@ impl Project {
             }
             migrated["input_proposals"] = serde_json::json!([]);
             migrated["version"] = 16.into();
+        }
+        if header.version <= 16 {
+            for layer in migrated["layers"].as_array_mut().ok_or("Missing layers")? {
+                let mask = layer["mask"].as_object_mut().ok_or("Missing mask")?;
+                if header.version >= 15 && mask.contains_key("origin") {
+                    return Err("Unexpected mask origin in old project.".into());
+                }
+                mask.insert("origin".into(), "layer".into());
+            }
+            migrated["version"] = 17.into();
         }
         let p: Self =
             serde_json::from_value(migrated).map_err(|e| format!("Invalid project JSON: {e}"))?;

@@ -468,5 +468,11 @@
   "language.name.zh-CN": "简体中文",
   "language.name.es": "西班牙语",
   "language.name.grc": "古希腊语",
-  "language.name.eo": "世界语"
+  "language.name.eo": "世界语",
+  "mask.origin": "遮罩基准",
+  "mask.layer": "图层",
+  "mask.source": "源",
+  "mask.origin-help": "图层模式以图层边界为基准。源模式以图层裁剪或缩放前的有效图像为基准。切换时保留各边的百分比。",
+  "mask.source-px": " 源像素",
+  "mask.proportions-help": "遮罩比例跟随所选基准。遮挡可见图层以外的像素不会影响显示。"
 }

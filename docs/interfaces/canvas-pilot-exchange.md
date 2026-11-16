@@ -477,3 +477,7 @@ or device links. A names-only edit is supported, and geometry/appearance/names
 commit atomically as one undo step. Invalid or stale mappings, locked destinations
 or invalid selected names reject the entire batch. The [clipboard contract](canvas-pilot-clipboard.md)
 versions the separate Canvas Pilot clipboard name semantics.
+
+Source- and layer-relative masks retain their reference and exact fractions through
+embedded project v17 snapshots. Plain geometry still omits both modes. Optional
+placeholder artwork uses the same source-to-output mask conversion as the editor.

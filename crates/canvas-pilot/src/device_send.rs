@@ -221,12 +221,12 @@ impl Plan {
                 requested.push((path, json!(quantized[j])));
             }
             let mask = layout.formats().masks[i].validate()?;
-            let reveal = mask.bounds(g);
+            let reveal = layout.formats().mask_bounds(i, g)?;
             let device_left = center[0] - size[0] as f64 / 2.0;
             let device_top = center[1] - size[1] as f64 / 2.0;
             // Normal source-aspect sizing can use a larger container than the
             // editor visible box. Convert the reveal window into that container.
-            let edges = if mask == Default::default() {
+            let edges = if mask.is_empty() {
                 [0.0; 4]
             } else {
                 [
@@ -777,74 +777,95 @@ mod tests {
     #[test]
     fn masks_roundtrip_with_every_fit_and_release_opposite_edges_before_increasing() {
         use crate::formats::{LayerFit, Mask};
-        for fit in [
-            None,
-            Some(LayerFit::OneToOne),
-            Some(LayerFit::Centered),
-            Some(LayerFit::Cropped),
-            Some(LayerFit::Fullscreen),
+        for origin in [
+            crate::formats::MaskOrigin::Layer,
+            crate::formats::MaskOrigin::Source,
         ] {
-            for sizing in [Sizing::OutputBox, Sizing::SourceAspect] {
-                let mut state = snapshot();
-                let mut editor = layout();
-                if let Some(fit) = fit {
+            for fit in [
+                None,
+                Some(LayerFit::OneToOne),
+                Some(LayerFit::Centered),
+                Some(LayerFit::Cropped),
+                Some(LayerFit::Fullscreen),
+            ] {
+                for sizing in [Sizing::OutputBox, Sizing::SourceAspect] {
+                    let mut state = snapshot();
+                    let mut editor = layout();
+                    if let Some(fit) = fit {
+                        editor
+                            .set_layer_fit(0, Some(fit), Default::default())
+                            .unwrap();
+                    }
                     editor
-                        .set_layer_fit(0, Some(fit), Default::default())
+                        .set_mask(
+                            0,
+                            Mask {
+                                origin,
+                                left: 0.2,
+                                right: 0.1,
+                                top: 0.3,
+                                bottom: 0.2,
+                            },
+                        )
                         .unwrap();
-                }
-                editor
-                    .set_mask(
-                        0,
-                        Mask {
-                            left: 0.2,
-                            right: 0.1,
-                            top: 0.3,
-                            bottom: 0.2,
-                        },
-                    )
-                    .unwrap();
-                let path = "/device/screenList/items/1/presetList/items/UP/liveLayerList/items/1";
-                *state
-                    .raw
-                    .pointer_mut(&format!("{path}/mask/pp/right"))
-                    .unwrap() = json!(50000);
-                let plan = Plan::prepare(
-                    &state,
-                    &editor,
-                    0,
-                    &[(2, "1".into())],
-                    Target::Preview,
-                    sizing,
-                )
-                .unwrap();
-                let mask_changes = plan
-                    .changes
-                    .iter()
-                    .filter(|c| c.path.get(10).is_some_and(|p| p == "mask"))
-                    .collect::<Vec<_>>();
-                assert_eq!(mask_changes[0].path.last().unwrap(), "right");
-                for change in &plan.changes {
+                    let path =
+                        "/device/screenList/items/1/presetList/items/UP/liveLayerList/items/1";
                     *state
                         .raw
-                        .pointer_mut(&format!("/{}", change.path.join("/")))
-                        .unwrap() = change.after.clone();
-                }
-                let identity = serde_json::json!({"type":"Eikos 4K","version":{"major":3,"minor":3,"patch":10}});
-                let read = Snapshot::parse(&identity, &state.raw).unwrap();
-                let layer = &read.screens[0].layers[0];
-                assert!(layer.unsupported.is_none());
-                let expected = editor.formats().masks[0].bounds(editor.layers()[0]);
-                let actual = layer.mask.bounds(layer.geometry);
-                assert!((expected.x - actual.x).abs() < 1.0 && (expected.y - actual.y).abs() < 1.0);
-                assert!(
-                    (expected.width - actual.width).abs() < 1.0
-                        && (expected.height - actual.height).abs() < 1.0
-                );
-                assert!(
-                    plan.changes
+                        .pointer_mut(&format!("{path}/mask/pp/right"))
+                        .unwrap() = json!(50000);
+                    let plan = Plan::prepare(
+                        &state,
+                        &editor,
+                        0,
+                        &[(2, "1".into())],
+                        Target::Preview,
+                        sizing,
+                    )
+                    .unwrap();
+                    let mask_changes = plan
+                        .changes
                         .iter()
-                        .all(|c| !c.path.iter().any(|p| p == "source" || p == "opacity"))
-                );
+                        .filter(|c| c.path.get(10).is_some_and(|p| p == "mask"))
+                        .collect::<Vec<_>>();
+                    assert_eq!(mask_changes[0].path.last().unwrap(), "right");
+                    for change in &plan.changes {
+                        *state
+                            .raw
+                            .pointer_mut(&format!("/{}", change.path.join("/")))
+                            .unwrap() = change.after.clone();
+                    }
+                    let identity = serde_json::json!({"type":"Eikos 4K","version":{"major":3,"minor":3,"patch":10}});
+                    let read = Snapshot::parse(&identity, &state.raw).unwrap();
+                    let layer = &read.screens[0].layers[0];
+                    assert!(layer.unsupported.is_none());
+                    let expected = editor.formats().mask_bounds(0, editor.layers()[0]).unwrap();
+                    let clip = |r: crate::Geometry| {
+                        let g = layer.geometry;
+                        let x = r.x.clamp(g.x, g.x + g.width);
+                        let y = r.y.clamp(g.y, g.y + g.height);
+                        crate::Geometry {
+                            x,
+                            y,
+                            width: (r.x + r.width).clamp(g.x, g.x + g.width) - x,
+                            height: (r.y + r.height).clamp(g.y, g.y + g.height) - y,
+                        }
+                    };
+                    let expected = clip(expected);
+                    let actual = clip(layer.mask.bounds(layer.geometry));
+                    assert!(
+                        (expected.x - actual.x).abs() < 1.0 && (expected.y - actual.y).abs() < 1.0
+                    );
+                    assert!(
+                        (expected.width - actual.width).abs() < 1.0
+                            && (expected.height - actual.height).abs() < 1.0
+                    );
+                    assert!(
+                        plan.changes
+                            .iter()
+                            .all(|c| !c.path.iter().any(|p| p == "source" || p == "opacity"))
+                    );
+                }
             }
         }
     }

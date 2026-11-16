@@ -161,17 +161,54 @@ pub struct LayerAppearance {
     pub fit: Option<LayerFit>,
     pub mask: Mask,
 }
-/// Independent blanking, measured as fractions of the layer container.
+#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MaskOrigin {
+    #[default]
+    Layer,
+    Source,
+}
+/// Independent blanking, measured as fractions of the selected reference box.
 /// Opposite edges may meet (fully blank), but may not cross.
 #[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Mask {
+    pub origin: MaskOrigin,
     pub left: f64,
     pub right: f64,
     pub top: f64,
     pub bottom: f64,
 }
 impl Mask {
+    /// Reference box in output pixels; the usable source precedes layer cropping.
+    pub fn reference(
+        self,
+        input: [f64; 2],
+        crop: Crop,
+        fit: Option<LayerFit>,
+        layer: Geometry,
+    ) -> Result<Geometry, String> {
+        if self.origin == MaskOrigin::Layer {
+            return Ok(layer);
+        }
+        let retained = crop.remaining(input)?;
+        let image = match fit {
+            Some(fit) => fit.image(retained, layer)?,
+            None => layer,
+        };
+        let sx = image.width / retained[0];
+        let sy = image.height / retained[1];
+        Ok(Geometry {
+            x: image.x - crop.left * sx,
+            y: image.y - crop.top * sy,
+            width: input[0] * sx,
+            height: input[1] * sy,
+        })
+    }
+    pub fn is_empty(self) -> bool {
+        self.left == 0.0 && self.right == 0.0 && self.top == 0.0 && self.bottom == 0.0
+    }
+
     pub fn validate(self) -> Result<Self, String> {
         if [self.left, self.right, self.top, self.bottom]
             .iter()
@@ -207,6 +244,7 @@ impl Mask {
             right: self.right - dx,
             top: self.top + dy,
             bottom: self.bottom - dy,
+            ..self
         })
     }
 }
@@ -416,6 +454,13 @@ impl Default for Formats {
     }
 }
 impl Formats {
+    pub fn mask_reference(&self, i: usize, g: Geometry) -> Result<Geometry, String> {
+        self.masks[i].reference(self.input(i)?, self.advanced[i], self.layer_fit[i], g)
+    }
+    pub fn mask_bounds(&self, i: usize, g: Geometry) -> Result<Geometry, String> {
+        Ok(self.masks[i].bounds(self.mask_reference(i, g)?))
+    }
+
     pub fn input(&self, i: usize) -> Result<[f64; 2], String> {
         self.sources[self.source_for[i]].input()
     }
