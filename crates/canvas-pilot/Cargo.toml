@@ -18,6 +18,8 @@ vendor_formats = ["dep:craft-dwg", "dep:deckcraft-pptx", "dep:deckcraft-model", 
 no_proprietary = []
 
 [dependencies]
+rust-i18n = "4.2.4"
+sys-locale = "0.3"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 craft-dxf = { git = "https://github.com/storytold/craft-libs", rev = "79e97b6febcb62de406e5bcf5a724bd3f7333065" }
 craft-dwg = { git = "https://github.com/storytold/craft-libs", rev = "79e97b6febcb62de406e5bcf5a724bd3f7333065", optional = true }

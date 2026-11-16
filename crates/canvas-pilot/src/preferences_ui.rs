@@ -11,11 +11,11 @@ pub(super) enum Section {
 }
 impl Section {
     const ALL: [(Self, &'static str); 5] = [
-        (Self::Appearance, "Appearance"),
-        (Self::Editing, "Editing"),
-        (Self::Reference, "Reference images"),
-        (Self::Storage, "Files & settings"),
-        (Self::Device, "Device integration"),
+        (Self::Appearance, "ui.appearance"),
+        (Self::Editing, "ui.editing"),
+        (Self::Reference, "ui.reference-images"),
+        (Self::Storage, "ui.files-settings"),
+        (Self::Device, "ui.device-integration"),
     ];
 }
 impl Editor {
@@ -25,78 +25,107 @@ impl Editor {
         }
         let before = self.application_settings(ctx);
         let mut open = self.preferences_open;
-        egui::Window::new("Settings")
+        egui::Window::new(tr(ctx, "ui.settings")).id(egui::Id::new("Settings"))
             .open(&mut open)
             .default_width(660.0)
             .min_width(540.0)
             .collapsible(false)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
+                    ui.label(tr(ctx, "language.label"));
+                    egui::ComboBox::from_id_salt("settings-language")
+                        .selected_text(match self.language {
+                            localization::Language::System => tr(ctx, "language.system"),
+                            localization::Language::En => "English".into(),
+                            localization::Language::Fr => "Français".into(),
+                        })
+                        .show_ui(ui, |ui| {
+                            for language in localization::Language::ALL {
+                                let name = match language {
+                                    localization::Language::System => tr(ctx, "language.system"),
+                                    localization::Language::En => "English".into(),
+                                    localization::Language::Fr => "Français".into(),
+                                };
+                                if ui.selectable_value(&mut self.language, language, name).changed() {
+                                    self.language.apply(ctx);
+                                }
+                            }
+                        });
+                });
+                ui.weak(tr(ctx, "language.preview"));
+                ui.separator();
+                ui.horizontal(|ui| {
                     ui.vertical(|ui| {
                         ui.set_width(145.0);
                         for (section, name) in Section::ALL {
-                            ui.selectable_value(&mut self.preferences_section, section, name);
+                            ui.selectable_value(&mut self.preferences_section, section, tr(ctx, name));
                         }
                     });
                     ui.separator();
-                    ui.vertical(|ui| {
+                    egui::ScrollArea::vertical().id_salt("settings-content")
+                        .max_height((ctx.screen_rect().height() - 260.0).max(180.0))
+                        .min_scrolled_height((ctx.screen_rect().height() - 260.0).clamp(265.0, 540.0))
+                        .show(ui, |ui| {
+                        ui.vertical(|ui| {
                         ui.set_min_height(265.0);
                         match self.preferences_section {
                             Section::Appearance => {
-                                ui.heading("Appearance");
-                                ui.label(format!("Current theme: {}", theme::Theme::current(ctx).name()));
-                                if ui.button("Browse all themes…").clicked() { self.themes_open = true; }
-                                ui.label("Recently used");
+                                ui.heading(tr(ui.ctx(), "ui.appearance"));
+                                ui.label(rust_i18n::t!("theme.current", locale = localization::locale(ctx), name = theme::Theme::current(ctx).name()).into_owned());
+                                if ui.button(tr(ui.ctx(), "ui.browse-all-themes")).clicked() { self.themes_open = true; }
+                                ui.label(tr(ui.ctx(), "ui.recently-used"));
                                 for choice in theme::Theme::recent(ctx) {
                                     if ui.selectable_label(choice == theme::Theme::current(ctx), choice.name()).clicked() {
                                         choice.apply(ctx);
                                     }
                                 }
                                 ui.separator();
-                                ui.checkbox(&mut self.show_toolbar_icon_names, "Show toolbar icon names");
-                                ui.checkbox(&mut self.show_pattern, "Show source patterns on other layers while cropping");
-                                ui.weak("Themes also apply to the viewport. Imported pictures retain their colors.");
+                                ui.checkbox(&mut self.show_toolbar_icon_names, tr(ui.ctx(), "ui.show-toolbar-icon-names"));
+                                ui.checkbox(&mut self.show_pattern, tr(ui.ctx(), "ui.show-source-patterns-on-other-layers-while-cropping"));
+                                ui.weak(tr(ui.ctx(), "ui.themes-also-apply-to-the-viewport-imported-pictures-retain-their-colors"));
                             }
                             Section::Editing => {
-                                ui.heading("Editing");
+                                ui.heading(tr(ui.ctx(), "ui.editing"));
                                 self.resize_ratio_option(ui);
-                                ui.label("Applies to layer handles and numeric width/height edits. Crop zoom always keeps the source proportions.");
+                                ui.label(tr(ui.ctx(), "ui.applies-to-layer-handles-and-numeric-width-height-edits-crop-zoom-always-keeps-the-so"));
                                 ui.separator();
                                 self.snapping_options(ui);
-                                ui.weak("Applies to layer movement/resize, not numeric entry or crop-content handles.");
+                                ui.weak(tr(ui.ctx(), "ui.applies-to-layer-movement-resize-not-numeric-entry-or-crop-content-handles"));
                                 ui.separator();
-                                ui.label("Overlay grid");
+                                ui.label(tr(ui.ctx(), "ui.overlay-grid"));
                                 self.overlay_grid_options(ui);
                                 ui.separator();
-                                ui.label("Ctrl: temporarily invert Pivot tool · Drag pivot to position");
-                                ui.label("Double-click pivot: reset to center · Shift/Ctrl+Shift: invert matching grid tool");
-                                ui.label("Arrow keys: move 1 pixel · Shift-arrow: move 10 pixels");
-                                ui.label("Shift-click: add/remove a layer from selection");
-                                ui.label("Tools: V Move · H Pan · Z Zoom (outside text fields)");
-                                ui.label("Space-drag or middle button: pan · Scroll: zoom");
-                                ui.label("Double-click a layer: adjust crop · Escape: cancel gesture");
+                                ui.label(tr(ui.ctx(), "ui.ctrl-temporarily-invert-pivot-tool-drag-pivot-to-position"));
+                                ui.label(tr(ui.ctx(), "ui.double-click-pivot-reset-to-center-shift-ctrl-shift-invert-matching-grid-tool"));
+                                ui.label(tr(ui.ctx(), "ui.arrow-keys-move-1-pixel-shift-arrow-move-10-pixels"));
+                                ui.label(tr(ui.ctx(), "ui.shift-click-add-remove-a-layer-from-selection"));
+                                ui.label(tr(ui.ctx(), "ui.tools-v-move-h-pan-z-zoom-outside-text-fields"));
+                                ui.label(tr(ui.ctx(), "ui.space-drag-or-middle-button-pan-scroll-zoom"));
+                                ui.label(tr(ui.ctx(), "ui.double-click-a-layer-adjust-crop-escape-cancel-gesture"));
                             }
                             Section::Reference => {
-                                ui.heading("Reference images");
+                                ui.heading(tr(ui.ctx(), "ui.reference-images"));
                                 self.backdrop_options(ui);
                                 ui.separator();
-                                ui.label("Image placement, visibility and opacity belong to the current project.");
-                                if ui.button("Reference image settings…").clicked() { self.reference_open = true; }
-                                if ui.button("Import reference picture…").clicked() { self.import_reference_file(ctx); }
-                                ui.weak("PNG, JPEG and BMP. Drop a picture into the viewport to import it.");
+                                ui.label(tr(ui.ctx(), "ui.image-placement-visibility-and-opacity-belong-to-the-current-project"));
+                                if ui.button(tr(ui.ctx(), "ui.reference-image-settings")).clicked() { self.reference_open = true; }
+                                if ui.button(tr(ui.ctx(), "ui.import-reference-picture")).clicked() { self.import_reference_file(ctx); }
+                                ui.weak(tr(ui.ctx(), "ui.png-jpeg-and-bmp-drop-a-picture-into-the-viewport-to-import-it"));
                             }
                             Section::Storage => {
-                                ui.heading("Files & settings");
-                                ui.label("Application settings save automatically when changed.");
+                                ui.heading(tr(ui.ctx(), "ui.files-settings"));
+                                ui.label(tr(ui.ctx(), "ui.application-settings-save-automatically-when-changed"));
                                 if let Some(path) = &self.settings.path {
                                     ui.label(path.display().to_string());
-                                    if ui.button("Copy settings path").clicked() { ctx.copy_text(path.display().to_string()); }
-                                } else { ui.label("No configuration location is available."); }
+                                    if ui.button(tr(ui.ctx(), "ui.copy-settings-path")).clicked() { ctx.copy_text(path.display().to_string()); }
+                                } else { ui.label(tr(ui.ctx(), "ui.no-configuration-location-is-available")); }
                                 ui.separator();
-                                ui.label("Project JSON stores layout, sources, crops and the reference picture. Exchange exports store layer geometry.");
-                                ui.weak("Opening a project may restore its viewport options without rewriting your startup defaults.");
-                                if ui.button("Restore default settings").clicked() {
+                                ui.label(tr(ui.ctx(), "ui.project-json-stores-layout-sources-crops-and-the-reference-picture-exchange-exports-s"));
+                                ui.weak(tr(ui.ctx(), "ui.opening-a-project-may-restore-its-viewport-options-without-rewriting-your-startup-def"));
+                                if ui.button(tr(ui.ctx(), "ui.restore-default-settings")).clicked() {
                                     let defaults = settings::Settings::default();
+                                    self.language = defaults.language;
+                                    self.language.apply(ctx);
                                     theme::Theme::restore_recent(ctx, defaults.recent_themes);
                                     defaults.theme.apply(ctx);
                                     self.device.allow_program = false;
@@ -108,23 +137,24 @@ impl Editor {
                                 }
                             }
                             Section::Device => {
-                                ui.heading("Device integration");
-                                ui.checkbox(&mut self.device.autoconnect_at_startup, "Try autoconnecting at startup");
-                                ui.checkbox(&mut self.device.allow_program, "Allow sending to Program");
-                                ui.label("Read Preview layer containers from a supported Midra 4K or Aquilon device and review their mapping before import.");
-                                if ui.button("Open device connection…").clicked() { self.device.connection_open = true; }
-                                ui.weak("Read snapshots and explicitly send reviewed size, position and crop changes.");
+                                ui.heading(tr(ui.ctx(), "ui.device-integration"));
+                                ui.checkbox(&mut self.device.autoconnect_at_startup, tr(ui.ctx(), "ui.try-autoconnecting-at-startup"));
+                                ui.checkbox(&mut self.device.allow_program, tr(ui.ctx(), "ui.allow-sending-to-program"));
+                                ui.label(tr(ui.ctx(), "ui.read-preview-layer-containers-from-a-supported-midra-4k-or-aquilon-device-and-review"));
+                                if ui.button(tr(ui.ctx(), "ui.open-device-connection")).clicked() { self.device.connection_open = true; }
+                                ui.weak(tr(ui.ctx(), "ui.read-snapshots-and-explicitly-send-reviewed-size-position-and-crop-changes"));
                             }
                         }
+                        });
                     });
                 });
                 ui.separator();
-                ui.label("Changes take effect immediately and save automatically.");
+                ui.label(tr(ui.ctx(), "ui.changes-take-effect-immediately-and-save-automatically"));
                 if let Some(error) = &self.settings.error { ui.colored_label(ui.visuals().error_fg_color, error); }
-                if self.settings.can_retry() && ui.button("Retry saving settings").clicked() {
+                if self.settings.can_retry() && ui.button(tr(ui.ctx(), "ui.retry-saving-settings")).clicked() {
                     self.settings.save(&self.application_settings(ctx));
                 }
-                if ui.button("Close").clicked() { self.preferences_open = false; }
+                if ui.button(tr(ui.ctx(), "ui.close")).clicked() { self.preferences_open = false; }
             });
         self.preferences_open &= open;
         let after = self.application_settings(ctx);
@@ -183,6 +213,84 @@ mod tests {
         click_label(&mut app, &ctx, "Close");
         assert!(!app.preferences_open);
     }
+    #[test]
+    fn language_switch_is_immediate_persistent_and_keeps_project_and_drafts() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let (store, mut saved) = settings::Store::at(path.clone());
+        saved.language = localization::Language::En;
+        let ctx = egui::Context::default();
+        let mut app = Editor::with_settings(&ctx, store, saved);
+        app.fields[0] = "-".into();
+        app.fields_edited = true;
+        let project = app.project().to_json().unwrap();
+        let draft = app.fields.clone();
+        app.preferences_open = true;
+        click_label(&mut app, &ctx, "English");
+        click_label(&mut app, &ctx, "Français");
+        assert_eq!(localization::locale(&ctx), "fr");
+        assert_eq!(
+            settings::Store::at(path.clone()).1.language,
+            localization::Language::Fr
+        );
+        assert_eq!(app.project().to_json().unwrap(), project);
+        assert_eq!(app.fields, draft);
+        assert!(!app.device.sending);
+        click_label(&mut app, &ctx, "Fermer");
+        assert!(!app.preferences_open);
+        let (store, saved) = settings::Store::at(path);
+        let restored_ctx = egui::Context::default();
+        let mut restored = Editor::with_settings(&restored_ctx, store, saved);
+        assert_eq!(localization::locale(&restored_ctx), "fr");
+        restored.preferences_open = true;
+        click_label(&mut restored, &restored_ctx, "Français");
+        click_label(&mut restored, &restored_ctx, "English");
+        assert_eq!(localization::locale(&restored_ctx), "en");
+    }
+
+    #[test]
+    fn settings_language_and_close_stay_visible_at_minimum_window_size() {
+        let screen = Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 720.0));
+        for language in [localization::Language::En, localization::Language::Fr] {
+            for (section, _) in Section::ALL {
+                let ctx = egui::Context::default();
+                language.apply(&ctx);
+                let mut app = Editor {
+                    language,
+                    preferences_open: true,
+                    preferences_section: section,
+                    ..Editor::default()
+                };
+                let mut output = egui::FullOutput::default();
+                for _ in 0..3 {
+                    output = ctx.run(
+                        egui::RawInput {
+                            screen_rect: Some(screen),
+                            ..Default::default()
+                        },
+                        |ctx| app.preferences_window(ctx),
+                    );
+                }
+                for label in [tr(&ctx, "language.label"), tr(&ctx, "ui.close")] {
+                    let rect = output
+                        .shapes
+                        .iter()
+                        .find_map(|shape| match &shape.shape {
+                            egui::Shape::Text(text) if text.galley.text() == label => {
+                                Some(Rect::from_min_size(text.pos, text.galley.size()))
+                            }
+                            _ => None,
+                        })
+                        .unwrap_or_else(|| panic!("Missing {label}"));
+                    assert!(
+                        screen.contains_rect(rect),
+                        "Control outside window: {label}: {rect:?}"
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn command_comma_opens_preferences() {
         let ctx = egui::Context::default();

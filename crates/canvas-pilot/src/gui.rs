@@ -44,6 +44,7 @@ pub struct Editor {
     capture: capture_ui::CaptureUi,
     layer_ui: layers_ui::LayerUi,
     settings: settings::Store,
+    language: localization::Language,
     recovery: recovery_ui::Recovery,
     themes_open: bool,
     preferences_open: bool,
@@ -108,11 +109,16 @@ enum ImportScope {
     Folder(String),
 }
 impl ImportScope {
-    fn label(&self) -> String {
+    fn label(&self, ctx: &egui::Context) -> String {
         match self {
-            Self::All => "All layers".into(),
-            Self::Selected => "Selected layers".into(),
-            Self::Folder(name) => format!("Folder: {name}"),
+            Self::All => tr(ctx, "ui.all-layers"),
+            Self::Selected => tr(ctx, "ui.selected-layers"),
+            Self::Folder(name) => rust_i18n::t!(
+                "scope.folder",
+                locale = localization::locale(ctx),
+                name = name
+            )
+            .into_owned(),
         }
     }
 }
@@ -356,6 +362,7 @@ impl Default for Editor {
             device: Default::default(),
             capture: Default::default(),
             layer_ui: Default::default(),
+            language: localization::Language::default(),
             settings: settings::Store::default(),
             recovery: recovery_ui::Recovery::default(),
             themes_open: false,
@@ -477,6 +484,7 @@ impl Editor {
     ) -> Self {
         theme::Theme::restore_recent(ctx, saved.recent_themes.clone());
         saved.theme.apply(ctx);
+        saved.language.apply(ctx);
         let mut device = device_ui::DeviceUi::with_connection_preferences(
             saved.midra_host,
             saved.allow_sending_to_program,
@@ -486,6 +494,7 @@ impl Editor {
         Self {
             device,
             settings: store,
+            language: saved.language,
             snapping: saved.snapping,
             keep_aspect_ratio: saved.keep_aspect_ratio,
             show_pattern: saved.show_source_pattern,
@@ -495,6 +504,7 @@ impl Editor {
     }
     fn application_settings(&self, ctx: &egui::Context) -> settings::Settings {
         settings::Settings {
+            language: self.language,
             midra_host: self.device.host.clone(),
             recent_midra_hosts: self.device.recent_hosts.clone(),
             autoconnect_at_startup: self.device.autoconnect_at_startup,
@@ -578,18 +588,25 @@ impl Editor {
     fn reference_window(&mut self, ctx: &egui::Context) {
         let palette = theme::palette(ctx);
         let mut open = self.reference_open;
-        egui::Window::new("Reference image")
+        egui::Window::new(tr(ctx, "ui.reference-image"))
+            .id(egui::Id::new("Reference image"))
             .open(&mut open)
             .default_width(420.0)
             .show(ctx, |ui| {
-                if ui.button("Import picture…").clicked() {
+                if ui.button(tr(ui.ctx(), "ui.import-picture")).clicked() {
                     self.import_reference_file(ctx);
                 }
-                ui.label("Or drag PNG, JPEG or BMP images into the window.");
+                ui.label(tr(
+                    ui.ctx(),
+                    "ui.or-drag-png-jpeg-or-bmp-images-into-the-window",
+                ));
                 if !self.reference_pending.is_empty() {
                     ui.spinner();
-                    ui.label("Loading image… current reference remains available.");
-                    if ui.button("Cancel image import").clicked() {
+                    ui.label(tr(
+                        ui.ctx(),
+                        "ui.loading-image-current-reference-remains-available",
+                    ));
+                    if ui.button(tr(ui.ctx(), "ui.cancel-image-import")).clicked() {
                         self.reference_pending.clear();
                     }
                 }
@@ -604,7 +621,10 @@ impl Editor {
                         });
                     self.reference_selected = Some(index);
                 }
-                ui.checkbox(&mut self.outline_layers, "Outline-only layers");
+                ui.checkbox(
+                    &mut self.outline_layers,
+                    tr(ui.ctx(), "ui.outline-only-layers"),
+                );
                 let mut remove = false;
                 if let Some(reference) = self
                     .reference_selected
@@ -614,23 +634,26 @@ impl Editor {
                         "{} · {} × {} px",
                         reference.name, reference.size[0], reference.size[1]
                     ));
-                    ui.checkbox(&mut reference.visible, "Show reference");
-                    ui.add(egui::Slider::new(&mut reference.opacity, 0.0..=1.0).text("Opacity"));
+                    ui.checkbox(&mut reference.visible, tr(ui.ctx(), "ui.show-reference"));
+                    ui.add(
+                        egui::Slider::new(&mut reference.opacity, 0.0..=1.0)
+                            .text(tr(ui.ctx(), "ui.opacity")),
+                    );
                     ui.checkbox(
                         &mut reference.native_size,
-                        "Native pixels (1 image pixel = 1 screen pixel)",
+                        tr(ui.ctx(), "ui.native-pixels-1-image-pixel-1-screen-pixel"),
                     );
                     ui.horizontal(|ui| {
-                        ui.label("Offset in screen pixels");
+                        ui.label(tr(ui.ctx(), "ui.offset-in-screen-pixels"));
                         ui.add(
                             egui::DragValue::new(&mut reference.offset[0])
-                                .prefix("X ")
+                                .prefix(tr(ui.ctx(), "ui.x"))
                                 .range(-1_000_000.0..=1_000_000.0)
                                 .max_decimals(1),
                         );
                         ui.add(
                             egui::DragValue::new(&mut reference.offset[1])
-                                .prefix("Y ")
+                                .prefix(tr(ui.ctx(), "ui.y"))
                                 .range(-1_000_000.0..=1_000_000.0)
                                 .max_decimals(1),
                         );
@@ -638,7 +661,7 @@ impl Editor {
                     if ui
                         .add_enabled(
                             reference.offset != [0.0; 2],
-                            egui::Button::new("Reset image offset"),
+                            egui::Button::new(tr(ui.ctx(), "ui.reset-image-offset")),
                         )
                         .clicked()
                     {
@@ -647,12 +670,12 @@ impl Editor {
                     ui.radio_value(
                         &mut reference.preserve_ratio,
                         false,
-                        "Fill screen (stretch if needed)",
+                        tr(ui.ctx(), "ui.fill-screen-stretch-if-needed"),
                     );
                     ui.radio_value(
                         &mut reference.preserve_ratio,
                         true,
-                        "Fit inside (preserve proportions)",
+                        tr(ui.ctx(), "ui.fit-inside-preserve-proportions"),
                     );
                     if let Some((severe, warning)) = reference.warning(self.layout.formats().output)
                     {
@@ -665,7 +688,7 @@ impl Editor {
                             warning,
                         );
                     }
-                    remove = ui.button("Remove reference").clicked();
+                    remove = ui.button(tr(ui.ctx(), "ui.remove-reference")).clicked();
                 }
                 if remove && let Some(i) = self.reference_selected {
                     self.remove_reference(i);
@@ -673,7 +696,10 @@ impl Editor {
                 if !self.reference_error.is_empty() {
                     ui.colored_label(ui.visuals().error_fg_color, &self.reference_error);
                 }
-                ui.label("Reference stays fixed behind layers. Warnings never block placement.");
+                ui.label(tr(
+                    ui.ctx(),
+                    "ui.reference-stays-fixed-behind-layers-warnings-never-block-placement",
+                ));
             });
         self.reference_open = open;
     }
@@ -1163,27 +1189,27 @@ impl Editor {
         let mut close = false;
         let response=egui::Modal::new(egui::Id::new("layer-values-import")).show(ctx,|ui| {
             ui.set_width(600.0);
-            ui.heading("Import layer values");
-            if p.import_job.is_some() { ui.spinner(); ui.label("Reading document…"); }
+            ui.heading(tr(ui.ctx(), "ui.import-layer-values"));
+            if p.import_job.is_some() { ui.spinner(); ui.label(tr(ui.ctx(), "ui.reading-document")); }
             if p.pages.len() == 1 { ui.label(&p.pages[0].name); }
             if p.pages.len() > 1 {
                 let previous = p.page_index;
-                egui::ComboBox::from_label("File / page / frame / slide").selected_text(&p.pages[p.page_index].name).show_ui(ui, |ui| {
+                egui::ComboBox::new("File / page / frame / slide", tr(ui.ctx(), "ui.file-page-frame-slide")).selected_text(&p.pages[p.page_index].name).show_ui(ui, |ui| {
                     for (index, page) in p.pages.iter().enumerate() { ui.selectable_value(&mut p.page_index, index, &page.name); }
                 });
                 if previous != p.page_index { p.set_document(p.pages[p.page_index].document.clone()); }
             }
             if p.clipboard_entry && p.shapes.is_empty() && p.import_job.is_none() {
-                ui.label("Paste layer values to review their geometry and destinations.");
+                ui.label(tr(ui.ctx(), "ui.paste-layer-values-to-review-their-geometry-and-destinations"));
                 ui.add(egui::TextEdit::multiline(&mut p.text).desired_rows(4).desired_width(f32::INFINITY));
-                if ui.button("Review pasted values").clicked() { p.parse(); }
+                if ui.button(tr(ui.ctx(), "ui.review-pasted-values")).clicked() { p.parse(); }
             }
             egui::ScrollArea::vertical().id_salt("import-review").max_height((ctx.screen_rect().height()-260.0).max(150.0)).show(ui,|ui| {
                 if !p.error.is_empty() {ui.colored_label(palette.amber,&p.error);}
                 if p.shapes.is_empty() {return;}
                 ui.small(format!("{} detected items · review mappings before importing", p.shapes.len()));
                 if !p.text.is_empty() {
-                    egui::CollapsingHeader::new("Clipboard data").show(ui, |ui| {
+                    egui::CollapsingHeader::new(tr(ui.ctx(), "ui.clipboard-data")).id_salt("Clipboard data").show(ui, |ui| {
                         egui::ScrollArea::vertical().id_salt("clipboard-preview").max_height(100.0).show(ui, |ui| {
                             ui.add(egui::TextEdit::multiline(&mut p.text).interactive(false).desired_width(f32::INFINITY));
                         });
@@ -1192,9 +1218,9 @@ impl Editor {
                 ui.add_space(8.0);
                 ui.strong("Destination layers");
                 let mut scope = p.scope.clone();
-                egui::ComboBox::from_id_salt("import-scope").width(280.0).selected_text(scope.label()).show_ui(ui, |ui| {
-                    ui.selectable_value(&mut scope, ImportScope::All, "All layers");
-                    ui.selectable_value(&mut scope, ImportScope::Selected, "Selected layers");
+                egui::ComboBox::from_id_salt("import-scope").width(280.0).selected_text(scope.label(ui.ctx())).show_ui(ui, |ui| {
+                    ui.selectable_value(&mut scope, ImportScope::All, tr(ui.ctx(), "ui.all-layers"));
+                    ui.selectable_value(&mut scope, ImportScope::Selected, tr(ui.ctx(), "ui.selected-layers"));
                     ui.separator();
                     for folder in self.layout.folders() {
                         ui.selectable_value(&mut scope, ImportScope::Folder(folder.clone()), format!("Folder: {folder}"));
@@ -1205,16 +1231,16 @@ impl Editor {
                     ui.colored_label(palette.amber, warning);
                 }
                 ui.small(format!("{} available destinations · hidden and locked layers are excluded", p.candidates(&self.layout).len()));
-                ui.small("Choose a destination for each item below. Other layers stay unchanged.");
+                ui.small(tr(ui.ctx(), "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged"));
                 ui.add_space(8.0);
                 ui.strong("Values to apply");
                 ui.horizontal(|ui| {
-                    ui.checkbox(&mut p.include_size,"Format (width / height)");
-                    ui.checkbox(&mut p.include_position,"Position");
-                    if p.zoom_available() { ui.checkbox(&mut p.include_zoom,"Crop zoom"); }
+                    ui.checkbox(&mut p.include_size,tr(ui.ctx(), "ui.format-width-height"));
+                    ui.checkbox(&mut p.include_position,tr(ui.ctx(), "ui.position"));
+                    if p.zoom_available() { ui.checkbox(&mut p.include_zoom,tr(ui.ctx(), "ui.crop-zoom")); }
                 });
                 if p.names_available() {
-                    ui.checkbox(&mut p.include_names, "Rename destination layers").on_hover_text("Use supplied source names. Unnamed items and destination folders stay unchanged.");
+                    ui.checkbox(&mut p.include_names, tr(ui.ctx(), "ui.rename-destination-layers")).on_hover_text(tr(ui.ctx(), "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged"));
                 }
                 if p.appearance_available() {
                     let summary = match (p.include_crop_fit, p.include_masks) {
@@ -1224,24 +1250,24 @@ impl Editor {
                         (false, false) => "Appearance · keep destination",
                     };
                     egui::CollapsingHeader::new(summary).id_salt("paste-appearance").show(ui, |ui| {
-                        ui.checkbox(&mut p.include_crop_fit, "Crop & fit").on_hover_text("Copy exact crop edges, offsets and fit mode. Source dimensions after input crop must match; source assignments remain unchanged.");
-                        ui.checkbox(&mut p.include_masks, "Blanking").on_hover_text("Copy the four proportional mask edges without resizing the layer.");
+                        ui.checkbox(&mut p.include_crop_fit, tr(ui.ctx(), "ui.crop-fit")).on_hover_text(tr(ui.ctx(), "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma"));
+                        ui.checkbox(&mut p.include_masks, tr(ui.ctx(), "ui.blanking")).on_hover_text(tr(ui.ctx(), "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer"));
                     });
                 }
-                ui.small("Unchecked values keep the destination settings. Format changes may adjust existing crops to fit.");
+                ui.small(tr(ui.ctx(), "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro"));
                 if p.shapes.iter().any(|s|s.outline.iter().any(|v|*v>0.0)) {
                     ui.indent("outline-option", |ui| {
                         ui.add_enabled(p.include_size,egui::Checkbox::new(&mut p.include_outline,"Include outline in bounds"));
                     });
                 }
-                egui::CollapsingHeader::new("Import details").show(ui, |ui| {
+                egui::CollapsingHeader::new(tr(ui.ctx(), "ui.import-details")).id_salt("Import details").show(ui, |ui| {
                     ui.label(&p.note);
                     ui.small(if p.appearance_available() { "Source assignments, device links and input proposals are not imported. Crop & fit requires matching source dimensions." } else { "Source format, crop offsets, colors and outline appearance are not imported." });
                 });
-                if !p.include_size {ui.small("Outline adjustment requires Format. Position uses the source top-left when enabled.");}
+                if !p.include_size {ui.small(tr(ui.ctx(), "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled"));}
                 ui.separator();
                 ui.strong("Map source items to destination layers");
-                ui.small("Each included item needs a different destination.");
+                ui.small(tr(ui.ctx(), "ui.each-included-item-needs-a-different-destination"));
                 let mut reset_mapping=false;
                 for row in 0..p.shapes.len() {
                     let shape=p.shapes[row].clone();
@@ -1252,7 +1278,7 @@ impl Editor {
                             ui.strong(format!("{} · {}",row+1,shape.id));
                         });
                         if shape.background_only {
-                            ui.small("Background artwork · excluded from layer mapping");
+                            ui.small(tr(ui.ctx(), "ui.background-artwork-excluded-from-layer-mapping"));
                         } else {
                             let mut include = !p.ignored[row];
                             if ui.checkbox(&mut include, if shape.background { "Include full-page background" } else { "Include item" }).changed() {
@@ -1264,7 +1290,7 @@ impl Editor {
                             ui.horizontal(|ui| {
                             ui.strong("Destination");
                             egui::ComboBox::from_id_salt("destination").width(330.0).selected_text(p.mapping[row].map(|i| self.layout.layer_label(i)).unwrap_or_else(|| "Choose destination…".into())).show_ui(ui,|ui| {
-                                ui.selectable_value(&mut p.mapping[row], None, "Choose destination…");
+                                ui.selectable_value(&mut p.mapping[row], None, tr(ui.ctx(), "ui.choose-destination"));
                                 let candidates = p.candidates(&self.layout);
                                 for target in candidates {
                                     ui.add_enabled_ui(self.layout.visible(target) && !self.layout.locked(target), |ui| {
@@ -1275,16 +1301,16 @@ impl Editor {
                             });
                             if p.include_names {
                                 if let Some(name) = &shape.name { ui.label(format!("New name: {name}")); }
-                                else { ui.small("No source name; destination name stays unchanged."); }
+                                else { ui.small(tr(ui.ctx(), "ui.no-source-name-destination-name-stays-unchanged")); }
                             }
-                            egui::CollapsingHeader::new("Geometry · before / after").show(ui, |ui| {
+                            egui::CollapsingHeader::new(tr(ui.ctx(), "ui.geometry-before-after")).id_salt("Geometry · before / after").show(ui, |ui| {
                             ui.small(bounds(shape.geometry));
                             if let Some(a) = shape.appearance { ui.small(format!("Fit: {} · crop L/R/T/B: {} / {} / {} / {} px", a.fit.map(|f| f.label()).unwrap_or("Normal crop"), a.crop.left, a.crop.right, a.crop.top, a.crop.bottom)); ui.small(format!("Blanking L/R/T/B: {:.2}% / {:.2}% / {:.2}% / {:.2}%", a.mask.left*100., a.mask.right*100., a.mask.top*100., a.mask.bottom*100.)); }
                             if let Some(zoom) = shape.zoom { ui.small(format!("Crop zoom: {:.1}%", zoom * 100.0)); }
                             if let Some(target)=p.mapping[row].filter(|&i| i < self.layout.layers().len()) {
                                 let before=self.layout.layers()[target];
                                 if let Ok(after)=p.geometry(&shape,before) {
-                                    ui.columns(2,|cols| {cols[0].label("Before");cols[0].small(bounds(before));cols[1].label("After");cols[1].small(bounds(after));});
+                                    ui.columns(2,|cols| {cols[0].label(tr(ctx, "ui.before"));cols[0].small(bounds(before));cols[1].label(tr(ctx, "ui.after"));cols[1].small(bounds(after));});
                                     if after.outside_on(self.layout.formats().output) {ui.colored_label(palette.amber,"Outside the screen; imported coordinates will be preserved.");}
                                 }
                             }
@@ -1308,12 +1334,12 @@ impl Editor {
                     ui.colored_label(palette.amber,e);
                 }
                 ui.horizontal(|ui| {
-                    if apply_button(ui,"Import mapped values", valid.is_ok() && (preview.layers()!=self.layout.layers() || preview.formats()!=self.layout.formats() || (0..preview.layers().len()).any(|i| preview.layer_info(i).name != self.layout.layer_info(i).name))).clicked() {
+                    if apply_button(ui,&tr(ui.ctx(), "action.import-values"), valid.is_ok() && (preview.layers()!=self.layout.layers() || preview.formats()!=self.layout.formats() || (0..preview.layers().len()).any(|i| preview.layer_info(i).name != self.layout.layer_info(i).name))).clicked() {
                         match p.apply(&mut self.layout) {Ok(())=>{self.sync();close=true;},Err(e)=>p.error=e}
                     }
-                    if ui.button("Cancel").clicked() {close=true;}
+                    if ui.button(tr(ui.ctx(), "ui.cancel")).clicked() {close=true;}
                 });
-            } else if ui.button("Cancel").clicked() {close=true;}
+            } else if ui.button(tr(ui.ctx(), "ui.cancel")).clicked() {close=true;}
         });
         if response.should_close() && !close && !p.shapes.is_empty() {
             p.closing = true;
@@ -1357,7 +1383,13 @@ impl Editor {
         );
         let ink = Ink::new(ui, r);
         let w = r.width();
-        ink.text(0.0, 2.0, "LAYERS", 11.0, palette.muted);
+        ink.text(
+            0.0,
+            2.0,
+            &tr(ink.painter.ctx(), "ui.layers-394772"),
+            11.0,
+            palette.muted,
+        );
         if toolbar_icon(
             ui,
             Rect::from_min_size(ink.point(w - 28.0, -5.0), Vec2::new(28.0, 24.0)),
@@ -1470,9 +1502,10 @@ impl Editor {
                     egui::Id::new(("layer", self.layout.layer_info(i).id)),
                     egui::Sense::click_and_drag(),
                 )
-                .on_hover_text(
-                    "Drag to reorder · double-click to rename · right-click for actions",
-                );
+                .on_hover_text(tr(
+                    ui.ctx(),
+                    "ui.drag-to-reorder-double-click-to-rename-right-click-for-actions",
+                ));
             let layer_id = self.layout.layer_info(i).id;
             row.context_menu(|ui| self.layer_actions_menu(ui, layer_id));
             row.dnd_set_drag_payload(layers_ui::LayerDrag(layer_id));
@@ -1558,11 +1591,20 @@ impl Editor {
                 .reference_selected
                 .is_some_and(|i| i < self.references.len())
             {
-                ink.text(0.0, 153.0, "REFERENCE IMAGE", 16.0, palette.purple);
+                ink.text(
+                    0.0,
+                    153.0,
+                    &tr(ink.painter.ctx(), "ui.reference-image-f74875"),
+                    16.0,
+                    palette.purple,
+                );
                 ink.text(
                     0.0,
                     182.0,
-                    "Fixed guide · double-click its row for settings.",
+                    &tr(
+                        ink.painter.ctx(),
+                        "ui.fixed-guide-double-click-its-row-for-settings",
+                    ),
                     12.0,
                     palette.muted,
                 );
@@ -1571,14 +1613,17 @@ impl Editor {
             ink.text(
                 0.0,
                 153.0,
-                "Select a layer, or drag a selection box.",
+                &tr(
+                    ink.painter.ctx(),
+                    "ui.select-a-layer-or-drag-a-selection-box",
+                ),
                 16.0,
                 palette.text,
             );
             ink.text(
                 0.0,
                 182.0,
-                "Shift-click to add or remove layers.",
+                &tr(ink.painter.ctx(), "ui.shift-click-to-add-or-remove-layers"),
                 13.0,
                 palette.muted,
             );
@@ -1589,7 +1634,10 @@ impl Editor {
         ink.text(
             0.0,
             191.0,
-            "LAYER RESOLUTION · CLICK FOR LAYER PROPERTIES",
+            &tr(
+                ink.painter.ctx(),
+                "ui.layer-resolution-click-for-layer-properties",
+            ),
             11.0,
             palette.muted,
         );
@@ -1634,19 +1682,31 @@ impl Editor {
             );
         }
         let edit_label = if self.edit_content && self.edit_mask {
-            "Done adjusting mask"
+            "crop.done-mask"
         } else if self.edit_content {
-            "Done adjusting crop"
+            "crop.done"
         } else {
-            "Adjust layer crop"
+            "crop.adjust"
         };
         let edit_width = if self.edit_content { w - 120.0 } else { w };
         let automatic_fit = self.automatic_layer_fit(i) && !self.edit_mask;
         if automatic_fit {
             ink.card(0.0, 275.0, edit_width, 34.0, palette.field, palette.line);
-            ink.text(12.0, 284.0, "Crop helper unavailable", 13.0, palette.muted);
+            ink.text(
+                12.0,
+                284.0,
+                &tr(ink.painter.ctx(), "ui.crop-helper-unavailable"),
+                13.0,
+                palette.muted,
+            );
         } else {
-            ink.button(0.0, 275.0, edit_width, edit_label, self.edit_content);
+            ink.button(
+                0.0,
+                275.0,
+                edit_width,
+                &tr(ui.ctx(), edit_label),
+                self.edit_content,
+            );
         }
         if self.edit_content {
             ink.button(
@@ -1698,26 +1758,43 @@ impl Editor {
         }
         ui.put(
             Rect::from_min_size(ink.point(0.0, 317.0), Vec2::new(w, 48.0)),
-            egui::Label::new(egui::RichText::new(
-                if self.edit_mask {
-                    "Mask blanks pixels without moving or scaling the image. Drag the magenta edges or move the window inside the layer."
-                } else if automatic_fit {
-                    "Centered and Cropped fit automatically. Edit numeric crop edges in Crop properties if needed."
-                } else if self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne) {
-                    "Drag edges to trim; drag anywhere inside the layer to reposition the crop. Movement preserves crop size, pixel scale and the container."
-                } else if self.layout.formats().layer_fit[i].is_some() {
-                    "Opens advanced crop edges and fit mode. The rectangle defines the container."
-                } else {
-                    "Changes the crop values inside this layer. Drag content to reposition it; the visible box stays fixed."
-                }
-            ).size(12.0).color(palette.muted)).wrap().halign(egui::Align::Min),
+            egui::Label::new(
+                egui::RichText::new(tr(
+                    ui.ctx(),
+                    if self.edit_mask {
+                        "crop.help-mask"
+                    } else if automatic_fit {
+                        "crop.help-auto"
+                    } else if self.layout.formats().layer_fit[i]
+                        == Some(canvas_pilot::formats::LayerFit::OneToOne)
+                    {
+                        "crop.help-native"
+                    } else if self.layout.formats().layer_fit[i].is_some() {
+                        "crop.help-advanced"
+                    } else {
+                        "crop.help-normal"
+                    },
+                ))
+                .size(12.0)
+                .color(palette.muted),
+            )
+            .wrap()
+            .halign(egui::Align::Min),
         );
-        ink.text(0.0, 375.0, "MEASURE POSITION FROM", 11.0, palette.muted);
-        let label = format!(
-            "{} to {}",
-            position_point_name(self.corner),
-            position_point_name(self.position_layer_point.unwrap_or(self.corner))
+        ink.text(
+            0.0,
+            375.0,
+            &tr(ink.painter.ctx(), "ui.measure-position-from"),
+            11.0,
+            palette.muted,
         );
+        let label = rust_i18n::t!(
+            "position.from-to",
+            locale = localization::locale(ui.ctx()),
+            from = position_point_name(ui.ctx(), self.corner),
+            to = position_point_name(ui.ctx(), self.position_layer_point.unwrap_or(self.corner))
+        )
+        .into_owned();
         let button = ui.put(
             Rect::from_min_size(ink.point(0.0, 394.0), Vec2::new(w, 34.0)),
             egui::Button::new(label),
@@ -1746,11 +1823,11 @@ impl Editor {
             },
         );
         let (horizontal, vertical) = match self.corner {
-            PositionPoint::Center => ("Center X offset", "Center Y offset"),
-            PositionPoint::TopLeft => ("From left", "From top"),
-            PositionPoint::TopRight => ("From right", "From top"),
-            PositionPoint::BottomLeft => ("From left", "From bottom"),
-            PositionPoint::BottomRight => ("From right", "From bottom"),
+            PositionPoint::Center => ("position.center-x", "position.center-y"),
+            PositionPoint::TopLeft => ("position.left", "position.top"),
+            PositionPoint::TopRight => ("position.right", "position.top"),
+            PositionPoint::BottomLeft => ("position.left", "position.bottom"),
+            PositionPoint::BottomRight => ("position.right", "position.bottom"),
         };
         let ink = Ink::new(ui, r.translate(Vec2::new(0.0, 88.0)));
         let half = (w - 12.0) / 2.0;
@@ -1758,10 +1835,10 @@ impl Editor {
         for (index, x, y, title) in [
             (0, 0.0, 368.0, horizontal),
             (1, half + 12.0, 368.0, vertical),
-            (2, 0.0, 449.0, "Layer width"),
-            (3, half + 12.0, 449.0, "Layer height"),
+            (2, 0.0, 449.0, "position.width"),
+            (3, half + 12.0, 449.0, "position.height"),
         ] {
-            ink.text(x, y, title, 12.0, palette.muted);
+            ink.text(x, y, &tr(ui.ctx(), title), 12.0, palette.muted);
             let rect = Rect::from_min_size(ink.point(x, y + 23.0), Vec2::new(half, 42.0));
             self.field_rects[index] = rect;
             let response = ui.put(
@@ -1823,7 +1900,7 @@ impl Editor {
         ink.text(
             0.0,
             663.0,
-            "VISIBLE BOX / CENTER POSITION",
+            &tr(ink.painter.ctx(), "ui.visible-box-center-position"),
             11.0,
             palette.cyan,
         );
@@ -1833,7 +1910,10 @@ impl Editor {
         ink.text(
             0.0,
             776.0,
-            "Layer properties: crops / provisional device mapping",
+            &tr(
+                ink.painter.ctx(),
+                "ui.layer-properties-crops-provisional-device-mapping",
+            ),
             12.0,
             palette.muted,
         );
@@ -1848,7 +1928,10 @@ impl Editor {
         ink.text(
             0.0,
             912.0,
-            "Or Ctrl/Cmd-V with the viewport focused",
+            &tr(
+                ink.painter.ctx(),
+                "ui.or-ctrl-cmd-v-with-the-viewport-focused",
+            ),
             12.0,
             palette.muted,
         );
@@ -1865,7 +1948,7 @@ impl Editor {
                 "ALIGN CONTENT TO LAYER BOX"
             });
         } else {
-            ui.label("ALIGN TO");
+            ui.label(tr(ui.ctx(), "ui.align-to"));
             if self.align_target == AlignTarget::Screen
                 || matches!(self.align_target, AlignTarget::Layer(i) if i >= self.layout.layers().len())
             {
@@ -1961,7 +2044,7 @@ impl Editor {
             "Moves selected layers; keeps their sizes."
         });
         if self.layout.selected_indices().is_empty() {
-            ui.label("Select layers to align.");
+            ui.label(tr(ui.ctx(), "ui.select-layers-to-align"));
         }
         if !self.error.is_empty() {
             ui.colored_label(palette.amber, &self.error);
@@ -1999,17 +2082,18 @@ impl Editor {
         let changed = ui
             .checkbox(
                 &mut self.keep_aspect_ratio,
-                "Keep aspect ratio when resizing",
+                tr(ui.ctx(), "ui.keep-aspect-ratio-when-resizing"),
             )
-            .on_hover_text(
-                "Applies to layer sizing. Crop zoom always keeps the source proportions.",
-            )
+            .on_hover_text(tr(
+                ui.ctx(),
+                "ui.applies-to-layer-sizing-crop-zoom-always-keeps-the-source-proportions",
+            ))
             .changed();
         let edited = if let Some(i) = self.layout.selected() {
             let g = self.layout.layers()[i];
             let edited = self.ratio_edit.show(ui, g.width / g.height);
             if !self.keep_aspect_ratio && self.ratio_edit.target.is_some() {
-                ui.small("Ratio ready; enable the lock to resize.");
+                ui.small(tr(ui.ctx(), "ui.ratio-ready-enable-the-lock-to-resize"));
             }
             edited
         } else {
@@ -2030,25 +2114,28 @@ impl Editor {
         let mut independent = self.position_layer_point.is_some();
         ui.horizontal(|ui| {
             ui.vertical(|ui| {
-                ui.label("From · screen");
+                ui.label(tr(ui.ctx(), "ui.from-screen"));
                 position_point_square(ui, &mut self.corner, "corner");
-                ui.label(position_point_name(self.corner));
+                ui.label(position_point_name(ui.ctx(), self.corner));
             });
             ui.add_space(16.0);
             ui.vertical(|ui| {
-                ui.label("To · layer");
+                ui.label(tr(ui.ctx(), "ui.to-layer"));
                 let mut point = self.position_layer_point.unwrap_or(self.corner);
                 ui.add_enabled_ui(independent, |ui| {
                     position_point_square(ui, &mut point, "layer-point");
                 });
-                ui.label(position_point_name(point));
+                ui.label(position_point_name(ui.ctx(), point));
                 if independent {
                     self.position_layer_point = Some(point);
                 }
             });
         });
         if ui
-            .checkbox(&mut independent, "Use a different measure point")
+            .checkbox(
+                &mut independent,
+                tr(ui.ctx(), "ui.use-a-different-measure-point"),
+            )
             .changed()
         {
             self.position_layer_point = independent.then_some(self.corner);
@@ -2072,13 +2159,16 @@ impl Editor {
         }
         let selected = self.layout.selected_indices();
         if !selected.is_empty() {
-            if ui.button("Copy layer values").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.copy-layer-values")).clicked() {
                 self.copy(ui.ctx());
                 ui.close_menu();
             }
             if ui
-                .button("Paste layer values")
-                .on_hover_text("Read the clipboard and review which values and layers to apply.")
+                .button(tr(ui.ctx(), "ui.paste-layer-values"))
+                .on_hover_text(tr(
+                    ui.ctx(),
+                    "ui.read-the-clipboard-and-review-which-values-and-layers-to-apply",
+                ))
                 .clicked()
             {
                 ui.close_menu();
@@ -2088,7 +2178,7 @@ impl Editor {
         }
         if let Some(i) = self.layout.selected() {
             ui.weak(self.layout.layer_label(i));
-            if ui.button("Adjust layer mask").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.adjust-layer-mask")).clicked() {
                 self.property_tab = PropertyTab::Mask;
                 if self
                     .format_draft
@@ -2102,22 +2192,22 @@ impl Editor {
                 ui.close_menu();
             }
             let crop_label = if self.edit_content && !self.edit_mask {
-                "Done adjusting crop"
+                "crop.done"
             } else {
-                "Adjust layer crop"
+                "crop.adjust"
             };
             if ui
                 .add_enabled(!self.automatic_layer_fit(i), egui::Button::new(crop_label))
                 .on_disabled_hover_text("Centered and Cropped fit automatically; use Crop properties for numeric crop edges.")
                 .on_hover_text(
-                    "Change crop zoom and offset inside the layer; keep its visible box fixed.",
+                    tr(ui.ctx(), "ui.change-crop-zoom-and-offset-inside-the-layer-keep-its-visible-box-fixed"),
                 )
                 .clicked()
             {
                 self.toggle_crop_edit();
                 ui.close_menu();
             }
-            if ui.button("Reset crop").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.reset-crop")).clicked() {
                 let result = if let Some(mode) = self.layout.formats().layer_fit[i] {
                     self.layout
                         .set_layer_fit(i, Some(mode), canvas_pilot::formats::Crop::default())
@@ -2133,7 +2223,7 @@ impl Editor {
             }
         } else if !selected.is_empty() {
             ui.weak(format!("{} layers selected", selected.len()));
-            ui.menu_button("Resize together", |ui| {
+            ui.menu_button(tr(ui.ctx(), "ui.resize-together"), |ui| {
                 for (mode, name) in [
                     (ResizeMode::Individual, "Individual layers"),
                     (ResizeMode::Same, "Same handles"),
@@ -2157,10 +2247,10 @@ impl Editor {
         }
         if !selected.is_empty() {
             self.resize_ratio_option(ui);
-            ui.menu_button("Align…", |ui| self.alignment_menu(ui));
+            ui.menu_button(tr(ui.ctx(), "ui.align"), |ui| self.alignment_menu(ui));
             ui.separator();
             if let Some(i) = self.layout.selected() {
-                ui.menu_button("Properties", |ui| {
+                ui.menu_button(tr(ui.ctx(), "ui.properties"), |ui| {
                     for (title, tab) in [
                         ("Source properties…", PropertyTab::Source),
                         ("Layer properties…", PropertyTab::Layer),
@@ -2176,8 +2266,8 @@ impl Editor {
                         }
                     }
                 });
-                ui.menu_button("Input preview & crop guides", |ui| {
-                    if ui.button("Configure capture…").clicked() {
+                ui.menu_button(tr(ui.ctx(), "ui.input-preview-crop-guides"), |ui| {
+                    if ui.button(tr(ui.ctx(), "ui.configure-capture")).clicked() {
                         if self.format_draft.as_ref().is_none_or(|d| !d.is_for(i)) {
                             self.format_draft = Some(FormatDraft::new(&self.layout, i));
                         }
@@ -2188,7 +2278,7 @@ impl Editor {
                 });
                 ui.separator();
             }
-            if ui.button("Lock selected layers").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.lock-selected-layers")).clicked() {
                 for &i in &selected {
                     self.layout.set_locked(i, true);
                 }
@@ -2196,7 +2286,7 @@ impl Editor {
                 self.sync();
                 ui.close_menu();
             }
-            if ui.button("Hide selected layers").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.hide-selected-layers")).clicked() {
                 for &i in &selected {
                     self.layout.set_visible(i, false);
                 }
@@ -2212,8 +2302,10 @@ impl Editor {
             ui.separator();
         }
         self.snapping_menu(ui);
-        ui.menu_button("Reference images", |ui| self.reference_actions_menu(ui));
-        if ui.button("Output format…").clicked() {
+        ui.menu_button(tr(ui.ctx(), "ui.reference-images"), |ui| {
+            self.reference_actions_menu(ui)
+        });
+        if ui.button(tr(ui.ctx(), "ui.output-format")).clicked() {
             self.output_draft = Some(OutputDraft::new(self.layout.formats().output));
             ui.close_menu();
         }
@@ -2221,18 +2313,30 @@ impl Editor {
 
     fn alignment_inspector(&mut self, ui: &mut egui::Ui, ink: &Ink, w: f32) {
         let palette = theme::palette(ui.ctx());
-        ink.text(0.0, 150.0, "2 layers selected", 25.0, palette.text);
+        ink.text(
+            0.0,
+            150.0,
+            &tr(ink.painter.ctx(), "ui.2-layers-selected"),
+            25.0,
+            palette.text,
+        );
         ink.text(
             0.0,
             187.0,
-            "Drag or nudge to move the selection together.",
+            &tr(
+                ink.painter.ctx(),
+                "ui.drag-or-nudge-to-move-the-selection-together",
+            ),
             12.0,
             palette.muted,
         );
         ink.text(
             0.0,
             225.0,
-            "Use the toolbar alignment menu to align layers.",
+            &tr(
+                ink.painter.ctx(),
+                "ui.use-the-toolbar-alignment-menu-to-align-layers",
+            ),
             12.0,
             palette.muted,
         );
@@ -2254,23 +2358,23 @@ impl Editor {
                         ui.selectable_value(
                             &mut self.resize_mode,
                             ResizeMode::Individual,
-                            "Resize: individual layer",
+                            tr(ui.ctx(), "ui.resize-individual-layer"),
                         );
                         ui.selectable_value(
                             &mut self.resize_mode,
                             ResizeMode::Same,
-                            "Same handles",
+                            tr(ui.ctx(), "ui.same-handles"),
                         );
                         ui.add_enabled_ui(self.layout.selected_indices().len() == 2, |ui| {
                             ui.selectable_value(
                                 &mut self.resize_mode,
                                 ResizeMode::Mirror,
-                                "Mirror horizontally (two layers)",
+                                tr(ui.ctx(), "ui.mirror-horizontally-two-layers"),
                             );
                             ui.selectable_value(
                                 &mut self.resize_mode,
                                 ResizeMode::Opposite,
-                                "Opposite handles (two layers)",
+                                tr(ui.ctx(), "ui.opposite-handles-two-layers"),
                             );
                         });
                     });
@@ -2294,7 +2398,7 @@ impl Editor {
         ink.text(
             0.0,
             341.0,
-            "VISIBLE BOX / CENTER POSITIONS",
+            &tr(ink.painter.ctx(), "ui.visible-box-center-positions"),
             11.0,
             palette.cyan,
         );
@@ -2317,7 +2421,10 @@ impl Editor {
         ink.text(
             0.0,
             609.0,
-            "Numeric edits require one selected layer.",
+            &tr(
+                ink.painter.ctx(),
+                "ui.numeric-edits-require-one-selected-layer",
+            ),
             12.0,
             palette.muted,
         );
@@ -2622,8 +2729,10 @@ impl Editor {
                         Stroke::new(1.0_f32, color),
                     );
                 }
-                menu.response
-                    .on_hover_text("Overlay grid — visibility, subdivisions and snapping");
+                menu.response.on_hover_text(tr(
+                    ui.ctx(),
+                    "ui.overlay-grid-visibility-subdivisions-and-snapping",
+                ));
                 if before != self.snapping {
                     self.settings.save(&self.application_settings(ui.ctx()));
                 }
@@ -2637,7 +2746,7 @@ impl Editor {
             |ui| {
                 ui.spacing_mut().interact_size.y = 32.0;
                 let response = toolbar_menu(ui, SNAP_MENU_TITLE, |ui| {
-                    ui.label("Grid tools");
+                    ui.label(tr(ui.ctx(), "ui.grid-tools"));
                     for (spacing, label, shortcut) in [(10, "10 px", "Shift"), (100, "100 px", "Ctrl+Shift")] {
                         ui.horizontal(|ui| {
                             let (_, rect) = ui.allocate_space(Vec2::splat(32.0));
@@ -2661,7 +2770,7 @@ impl Editor {
                     if let Some(error) = &self.settings.error {
                         ui.colored_label(ui.visuals().error_fg_color, error);
                     }
-                }).response.on_hover_text("Snapping tools and options. Shift: 10 px · Ctrl+Shift: 100 px · Alt: invert snapping.");
+                }).response.on_hover_text(tr(ui.ctx(), "ui.snapping-tools-and-options-shift-10-px-ctrl-shift-100-px-alt-invert-snapping"));
                 response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Snapping"));
                 let chevron = response.rect.right_center() - Vec2::new(8.0, 0.0);
                 ui.painter().add(egui::Shape::line(
@@ -2698,7 +2807,7 @@ impl Editor {
         );
         let pivot_rect = button(12);
         if edit_tool_icon(ui, pivot_rect, None, "Pivot", self.pivot_tool, self.effective_pivot(modifiers))
-            .on_hover_text("Pivot resize — click to toggle. Hold Ctrl for the same effect; if selected, Ctrl temporarily disables it. Combines with either grid. Drag the pivot: snaps to 9 layer anchors and enabled grids/edges; Alt bypasses anchors. Double-click to center. Applies to layer and crop/zoom handles.")
+            .on_hover_text(tr(ui.ctx(), "ui.pivot-resize-click-to-toggle-hold-ctrl-for-the-same-effect-if-selected-ctrl-temporari"))
             .clicked()
         {
             self.pivot_tool = !self.pivot_tool;
@@ -2735,7 +2844,7 @@ impl Editor {
                 ui.painter().text(
                     rect.center_bottom() + Vec2::new(0.0, 7.0),
                     Align2::CENTER_TOP,
-                    name,
+                    tr(ui.ctx(), icon.title_key()),
                     FontId::proportional(11.0),
                     palette.muted,
                 );
@@ -2771,7 +2880,9 @@ impl Editor {
                 ui.spacing_mut().interact_size = Vec2::new(36.0, 32.0);
                 ui.spacing_mut().button_padding.x = 11.0;
                 let menu = toolbar_menu(ui, "    ", |ui| self.alignment_menu(ui));
-                let response = menu.response.on_hover_text("Align selected layers");
+                let response = menu
+                    .response
+                    .on_hover_text(tr(ui.ctx(), "ui.align-selected-layers"));
                 response.widget_info(|| {
                     egui::WidgetInfo::labeled(
                         egui::WidgetType::Button,
@@ -2813,7 +2924,7 @@ impl Editor {
                 let menu = toolbar_menu(ui, "    ", |ui| self.import_menu(ui));
                 let response = menu
                     .response
-                    .on_hover_text("Import layer values or reference image");
+                    .on_hover_text(tr(ui.ctx(), "ui.import-layer-values-or-reference-image"));
                 response.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Import")
                 });
@@ -2853,7 +2964,9 @@ impl Editor {
                 .layout(egui::Layout::left_to_right(egui::Align::Center)),
             |ui| {
                 ui.spacing_mut().interact_size.y = 32.0;
-                toolbar_menu(ui, "Menu", |ui| self.application_menu(ui));
+                toolbar_menu(ui, &tr(ui.ctx(), "menu.title"), |ui| {
+                    self.application_menu(ui)
+                });
             },
         );
         ui.scope_builder(
@@ -2862,7 +2975,7 @@ impl Editor {
                 .layout(egui::Layout::left_to_right(egui::Align::Center)),
             |ui| {
                 ui.spacing_mut().interact_size.y = 32.0;
-                toolbar_menu(ui, "Project", |ui| self.project_menu(ui));
+                toolbar_menu(ui, &tr(ui.ctx(), "ui.project"), |ui| self.project_menu(ui));
             },
         );
         ui.scope_builder(
@@ -2873,7 +2986,9 @@ impl Editor {
                 ui.spacing_mut().interact_size = Vec2::new(36.0, 32.0);
                 ui.spacing_mut().button_padding.x = 11.0;
                 let menu = toolbar_menu(ui, "    ", |ui| self.viewport_options_menu(ui));
-                let response = menu.response.on_hover_text("Viewport options");
+                let response = menu
+                    .response
+                    .on_hover_text(tr(ui.ctx(), "ui.viewport-options"));
                 response.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Viewport options")
                 });
@@ -3722,14 +3837,17 @@ fn click_shift_modifier(ui: &egui::Ui) -> bool {
             .unwrap_or(input.modifiers.shift)
     })
 }
-fn position_point_name(point: PositionPoint) -> &'static str {
-    match point {
-        PositionPoint::TopLeft => "Top left",
-        PositionPoint::TopRight => "Top right",
-        PositionPoint::BottomLeft => "Bottom left",
-        PositionPoint::BottomRight => "Bottom right",
-        PositionPoint::Center => "Center",
-    }
+fn position_point_name(ctx: &egui::Context, point: PositionPoint) -> String {
+    tr(
+        ctx,
+        match point {
+            PositionPoint::TopLeft => "anchor.top-left",
+            PositionPoint::TopRight => "anchor.top-right",
+            PositionPoint::BottomLeft => "anchor.bottom-left",
+            PositionPoint::BottomRight => "anchor.bottom-right",
+            PositionPoint::Center => "anchor.center",
+        },
+    )
 }
 
 fn position_point_square(ui: &mut egui::Ui, point: &mut PositionPoint, prefix: &str) {
@@ -3761,7 +3879,7 @@ fn position_point_square(ui: &mut egui::Ui, point: &mut PositionPoint, prefix: &
                 egui::Id::new(format!("{prefix}-{candidate:?}")),
                 egui::Sense::click(),
             )
-            .on_hover_text(position_point_name(candidate));
+            .on_hover_text(position_point_name(ui.ctx(), candidate));
         if response.clicked() {
             *point = candidate;
         }
@@ -3849,9 +3967,21 @@ impl Editor {
                 }
                 let r = ui.max_rect();
                 let ink = Ink::new(ui, r);
-                ink.text(24.0, 11.0, "MIDRA / LAYOUT", 18.0, palette.text);
+                ink.text(
+                    24.0,
+                    11.0,
+                    &tr(ink.painter.ctx(), "ui.midra-layout"),
+                    18.0,
+                    palette.text,
+                );
                 ink.line([206.0, 13.0], [206.0, 31.0], palette.line);
-                ink.text(222.0, 15.0, "Layer positioning helper", 13.0, palette.muted);
+                ink.text(
+                    222.0,
+                    15.0,
+                    &tr(ink.painter.ctx(), "ui.layer-positioning-helper"),
+                    13.0,
+                    palette.muted,
+                );
                 ink.painter.text(
                     ink.point(r.width() - 24.0, 22.0),
                     egui::Align2::RIGHT_CENTER,
@@ -4044,14 +4174,14 @@ fn alignment_icon(
 fn pending_close(ctx: &egui::Context, id: &str, error: &str) -> Option<bool> {
     egui::Modal::new(egui::Id::new(id))
         .show(ctx, |ui| {
-            ui.heading("Would you like to apply changes?");
+            ui.heading(tr(ui.ctx(), "ui.would-you-like-to-apply-changes"));
             if !error.is_empty() {
                 ui.colored_label(ui.visuals().error_fg_color, error);
             }
             ui.horizontal(|ui| {
-                if apply_button(ui, "Apply", true).clicked() {
+                if apply_button(ui, &tr(ui.ctx(), "action.apply"), true).clicked() {
                     Some(true)
-                } else if ui.button("Discard").clicked() {
+                } else if ui.button(tr(ui.ctx(), "ui.discard")).clicked() {
                     Some(false)
                 } else {
                     None
@@ -4140,6 +4270,25 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 17], Vec<Rect>, f32) {
         x += group_width + 10.0;
     }
     (buttons, groups, y + height)
+}
+
+impl ToolbarIcon {
+    fn title_key(self) -> &'static str {
+        match self {
+            Self::AddFolder => "toolbar.addfolder",
+            Self::AddImage => "toolbar.addimage",
+            Self::ManageLayers => "toolbar.managelayers",
+            Self::Select => "toolbar.select",
+            Self::Move => "toolbar.move",
+            Self::Pan => "toolbar.pan",
+            Self::Zoom => "toolbar.zoom",
+            Self::Output => "toolbar.output",
+            Self::Screen => "toolbar.screen",
+            Self::Selection => "toolbar.selection",
+            Self::Undo => "toolbar.undo",
+            Self::Redo => "toolbar.redo",
+        }
+    }
 }
 
 const SNAP_MENU_TITLE: &str = "          ";
@@ -4352,7 +4501,13 @@ fn toolbar_icon(ui: &mut egui::Ui, rect: Rect, label: &str, icon: ToolbarIcon) -
         ui.id().with(("toolbar", label))
     };
     let response = ui.interact(rect, id, egui::Sense::click());
-    response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, label));
+    response.widget_info(|| {
+        egui::WidgetInfo::labeled(
+            egui::WidgetType::Button,
+            true,
+            tr(ui.ctx(), icon.title_key()),
+        )
+    });
     let painter = ui.painter();
     let focused = response.hovered() || response.has_focus();
     if focused || response.is_pointer_button_down_on() {

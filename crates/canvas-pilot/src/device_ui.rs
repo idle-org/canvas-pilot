@@ -71,11 +71,16 @@ impl TransferScope {
             Self::Folder(folder) => layout.folder_members(folder),
         }
     }
-    fn label(&self) -> String {
+    fn label(&self, ctx: &egui::Context) -> String {
         match self {
-            Self::All => "All layers".into(),
-            Self::Selected => "Only selected layers".into(),
-            Self::Folder(folder) => format!("Folder: {folder}"),
+            Self::All => tr(ctx, "ui.all-layers"),
+            Self::Selected => tr(ctx, "ui.only-selected-layers"),
+            Self::Folder(folder) => rust_i18n::t!(
+                "scope.folder",
+                locale = localization::locale(ctx),
+                name = folder
+            )
+            .into_owned(),
         }
     }
 }
@@ -374,8 +379,8 @@ impl Editor {
     pub(super) fn layer_mapping_controls(&mut self, ui: &mut egui::Ui, i: usize) {
         let original = self.layout.layer_info(i).device_link.clone();
         let mut link = original.clone();
-        ui.label("Device screen / layer");
-        ui.small("Saved with this layer. Linked sends and loads use this screen and layer. Editing the link does not contact the device.");
+        ui.label(tr(ui.ctx(), "ui.device-screen-layer"));
+        ui.small(tr(ui.ctx(), "ui.saved-with-this-layer-linked-sends-and-loads-use-this-screen-and-layer-editing-the-li"));
         if let Some(mapped) = &mut link {
             if let Some(snapshot) = &self.device.snapshot {
                 egui::ComboBox::from_id_salt("property-midra-screen")
@@ -419,9 +424,10 @@ impl Editor {
                         }
                     });
             } else {
-                ui.small(
-                    "Offline: choose the device family and enter its native screen/layer IDs.",
-                );
+                ui.small(tr(
+                    ui.ctx(),
+                    "ui.offline-choose-the-device-family-and-enter-its-native-screen-layer-ids",
+                ));
                 egui::ComboBox::from_id_salt("offline-family")
                     .selected_text(format!("{:?}", mapped.family))
                     .show_ui(ui, |ui| {
@@ -446,8 +452,8 @@ impl Editor {
                     egui::ComboBox::from_id_salt("offline-screen-kind")
                         .selected_text(if prefix == "A" { "Auxiliary" } else { "Screen" })
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut prefix, "S", "Screen");
-                            ui.selectable_value(&mut prefix, "A", "Auxiliary");
+                            ui.selectable_value(&mut prefix, "S", tr(ui.ctx(), "ui.screen-6e5613"));
+                            ui.selectable_value(&mut prefix, "A", tr(ui.ctx(), "ui.auxiliary"));
                         });
                 }
                 let screen_digits = if mapped.family == device::Family::Aquilon {
@@ -461,12 +467,12 @@ impl Editor {
                     ui.add(
                         egui::DragValue::new(&mut screen_number)
                             .range(1..=9_999_999_999_999_999_u64)
-                            .prefix("Screen "),
+                            .prefix(tr(ui.ctx(), "ui.screen")),
                     );
                     ui.add(
                         egui::DragValue::new(&mut layer_number)
                             .range(1..=9_999_999_999_999_999_u64)
-                            .prefix("Layer "),
+                            .prefix(tr(ui.ctx(), "ui.layer")),
                     );
                 });
                 mapped.screen = if mapped.family == device::Family::Aquilon {
@@ -476,12 +482,15 @@ impl Editor {
                 };
                 mapped.layer = layer_number.to_string();
             }
-            if ui.button("Unmap").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.unmap")).clicked() {
                 link = None;
             }
         } else {
-            ui.label("Unmapped — excluded from linked sends and loads.");
-            if ui.button("Link to device layer").clicked() {
+            ui.label(tr(
+                ui.ctx(),
+                "ui.unmapped-excluded-from-linked-sends-and-loads",
+            ));
+            if ui.button(tr(ui.ctx(), "ui.link-to-device-layer")).clicked() {
                 link = self.device.snapshot.as_ref().and_then(|snapshot| {
                     snapshot.screens.iter().find_map(|screen| {
                         screen.layers.first().map(|layer| canvas_pilot::DeviceLink {
@@ -524,21 +533,22 @@ impl Editor {
     fn device_load_control(&mut self, ui: &mut egui::Ui, icon: bool) {
         let enabled = self.device.online() && self.device.pending.is_none();
         let tooltip = if self.device.message.is_empty() {
-            "Read fresh Preview geometry and cropping from the device into the linked editor layers. Undo restores the previous layout."
+            tr(ui.ctx(), "transfer.read-help")
         } else {
-            &self.device.message
+            self.device.message.clone()
         };
         let label = if self.device.loading.is_some() {
-            "Loading…"
+            "transfer.loading"
         } else {
             match self.device.scope {
-                TransferScope::All => "Load linked layers",
-                TransferScope::Selected => "Load selected links",
-                TransferScope::Folder(_) => "Load folder links",
+                TransferScope::All => "transfer.load-all",
+                TransferScope::Selected => "transfer.load-selected",
+                TransferScope::Folder(_) => "transfer.load-folder",
             }
         };
+        let label = tr(ui.ctx(), label);
         let response = if icon {
-            transfer_button(ui, label, enabled, false)
+            transfer_button(ui, &label, enabled, false)
         } else {
             ui.add_enabled(enabled, egui::Button::new(label))
         };
@@ -563,15 +573,15 @@ impl Editor {
         let before = self.device.scope.clone();
         egui::ComboBox::from_id_salt("midra-transfer-scope")
             .width(175.0)
-            .selected_text(self.device.scope.label())
+            .selected_text(self.device.scope.label(ui.ctx()))
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.device.scope, TransferScope::All, "All layers");
-                ui.selectable_value(&mut self.device.scope, TransferScope::Selected, "Only selected layers");
+                ui.selectable_value(&mut self.device.scope, TransferScope::All, tr(ui.ctx(), "ui.all-layers"));
+                ui.selectable_value(&mut self.device.scope, TransferScope::Selected, tr(ui.ctx(), "ui.only-selected-layers"));
                 ui.separator();
                 for folder in self.layout.folders() {
                     ui.selectable_value(&mut self.device.scope, TransferScope::Folder(folder.clone()), format!("Folder: {folder}"));
                 }
-            }).response.on_hover_text("Scope for both device send and load. In Folder mode, clicking a folder in the layer list switches the scope.");
+            }).response.on_hover_text(tr(ui.ctx(), "ui.scope-for-both-device-send-and-load-in-folder-mode-clicking-a-folder-in-the-layer-lis"));
         if before != self.device.scope {
             self.device.destinations.fill(Destination::Skip);
             self.device.mapping_scope = None;
@@ -634,8 +644,11 @@ impl Editor {
     }
     pub(super) fn device_apply_button(&mut self, ui: &mut egui::Ui) {
         if ui
-            .button("Device mapping & transfer…")
-            .on_hover_text("Open connection settings, layer links and send/load options.")
+            .button(tr(ui.ctx(), "ui.device-mapping-transfer"))
+            .on_hover_text(tr(
+                ui.ctx(),
+                "ui.open-connection-settings-layer-links-and-send-load-options",
+            ))
             .clicked()
         {
             self.open_device_export();
@@ -662,23 +675,22 @@ impl Editor {
                 Err(e) => e.clone(),
             }
         };
-        if transfer_button(
-            ui,
-            if self.device.sending {
-                "Applying…"
-            } else {
+        let send_label = if self.device.sending {
+            tr(ui.ctx(), "transfer.applying")
+        } else {
+            tr(
+                ui.ctx(),
                 match self.device.scope {
-                    TransferScope::All => "Send all linked layers",
-                    TransferScope::Selected => "Send selected links",
-                    TransferScope::Folder(_) => "Send folder links",
-                }
-            },
-            enabled,
-            true,
-        )
-        .on_hover_text(&tooltip)
-        .on_disabled_hover_text(&tooltip)
-        .clicked()
+                    TransferScope::All => "transfer.send-all",
+                    TransferScope::Selected => "transfer.send-selected",
+                    TransferScope::Folder(_) => "transfer.send-folder",
+                },
+            )
+        };
+        if transfer_button(ui, &send_label, enabled, true)
+            .on_hover_text(&tooltip)
+            .on_disabled_hover_text(&tooltip)
+            .clicked()
         {
             match plans {
                 Ok(plans) => {
@@ -700,9 +712,9 @@ impl Editor {
         }
         let mut open = true;
         let before = self.device.host.clone();
-        egui::Window::new("Device connection").open(&mut open).collapsible(false)
+        egui::Window::new(tr(ctx, "ui.device-connection")).id(egui::Id::new("Device connection")).open(&mut open).collapsible(false)
             .default_width(420.0).show(ctx, |ui| {
-                ui.label("Device IP / port");
+                ui.label(tr(ui.ctx(), "ui.device-ip-port"));
                 if ui.add_enabled(self.device.pending.is_none(), egui::TextEdit::singleline(&mut self.device.host).hint_text("192.168.10.146:3000")).changed() {
                     self.device.snapshot = None;
                     self.device.input_edits.clear();
@@ -711,9 +723,9 @@ impl Editor {
                     self.device.message.clear();
                 }
                 ui.add_enabled_ui(self.device.pending.is_none() && !self.device.recent_hosts.is_empty(), |ui| {
-                    ui.menu_button("Recent machines…", |ui| {
+                    ui.menu_button(tr(ui.ctx(), "ui.recent-machines"), |ui| {
                         for host in self.device.recent_hosts.clone() {
-                            if ui.button(&host).on_hover_text("Connect to this machine (read only)").clicked() {
+                            if ui.button(&host).on_hover_text(tr(ui.ctx(), "ui.connect-to-this-machine-read-only")).clicked() {
                                 self.device.host = host;
                                 self.device.input_edits.clear();
                                 self.device.reset_mappings();
@@ -721,12 +733,12 @@ impl Editor {
                                 ui.close_menu();
                             }
                         }
-                    }).response.on_hover_text("Last four successful connections; choose one to connect");
+                    }).response.on_hover_text(tr(ui.ctx(), "ui.last-four-successful-connections-choose-one-to-connect"));
                 });
-                ui.weak("Address saved automatically in application settings. Connect reads device data; it does not change layers.");
+                ui.weak(tr(ui.ctx(), "ui.address-saved-automatically-in-application-settings-connect-reads-device-data-it-does"));
                 ui.horizontal(|ui| {
                     if ui.add_enabled(self.device.pending.is_none(), egui::Button::new(if self.device.online() { "Refresh connection" } else { "Connect" })).clicked() { self.device.fetch(ctx); }
-                    if ui.add_enabled(self.device.online() && self.device.pending.is_none(), egui::Button::new("Disconnect")).clicked() {
+                    if ui.add_enabled(self.device.online() && self.device.pending.is_none(), egui::Button::new(tr(ui.ctx(), "ui.disconnect"))).clicked() {
                         self.device.snapshot = None;
                         self.device.input_edits.clear();
                         self.device.reset_mappings();
@@ -736,10 +748,10 @@ impl Editor {
                 if self.device.pending.is_some() {
                     ui.spinner();
                     ui.label(if self.device.sending { "Sending and checking readback…" } else { "Connecting…" });
-                    if !self.device.sending && ui.button("Cancel connection").clicked() { self.device.cancel_read(); }
+                    if !self.device.sending && ui.button(tr(ui.ctx(), "ui.cancel-connection")).clicked() { self.device.cancel_read(); }
                 }
                 if let Some(snapshot) = &self.device.snapshot { ui.label(format!("Online · {}", snapshot.identity)); }
-                else { ui.label("Offline"); }
+                else { ui.label(tr(ui.ctx(), "ui.offline")); }
                 if !self.device.message.is_empty() { ui.label(&self.device.message); }
                 if !self.device.error.is_empty() { ui.colored_label(ui.visuals().error_fg_color, &self.device.error); }
                 if let Some(error) = &self.settings.error { ui.colored_label(ui.visuals().error_fg_color, error); }
@@ -777,7 +789,7 @@ impl Editor {
             .show(ctx, |ui| {
                 if self.device.online() {
                     ui.horizontal(|ui| {
-                        ui.label("Apply to");
+                        ui.label(tr(ui.ctx(), "ui.apply-to"));
                         self.device_scope_picker(ui);
                     });
                     if self.device.scope == TransferScope::Selected {
@@ -789,13 +801,13 @@ impl Editor {
                     ui.weak(format!("{} editor layers in scope · {} saved links. Unlinked layers are skipped by linked send/load.", scope_indices.len(), self.device.scoped_links(&self.layout).len()));
                 }
                 ui.horizontal(|ui| {
-                    if ui.button("Connection settings…").clicked() { self.device.connection_open = true; }
-                    if ui.add_enabled(self.device.online() && self.device.pending.is_none(), egui::Button::new("Refresh layers")).clicked() { self.device.fetch(ctx); }
+                    if ui.button(tr(ui.ctx(), "ui.connection-settings")).clicked() { self.device.connection_open = true; }
+                    if ui.add_enabled(self.device.online() && self.device.pending.is_none(), egui::Button::new(tr(ui.ctx(), "ui.refresh-layers"))).clicked() { self.device.fetch(ctx); }
                 });
-                if !self.device.online() && self.device.pending.is_none() { ui.label("Connect to a device in Connection settings before transferring layers."); }
+                if !self.device.online() && self.device.pending.is_none() { ui.label(tr(ui.ctx(), "ui.connect-to-a-device-in-connection-settings-before-transferring-layers")); }
                 if self.device.pending.is_some() {
                     ui.horizontal(|ui| { ui.spinner(); ui.label(if self.device.sending { "Sending and checking readback…" } else { "Reading device… editing remains available." }); });
-                    if !self.device.sending && ui.button("Cancel read").clicked() { self.device.cancel_read(); }
+                    if !self.device.sending && ui.button(tr(ui.ctx(), "ui.cancel-read")).clicked() { self.device.cancel_read(); }
                 }
                 if !self.device.error.is_empty() { ui.colored_label(ui.visuals().error_fg_color, &self.device.error); }
                 if !self.device.message.is_empty() { ui.label(&self.device.message); }
@@ -837,8 +849,8 @@ impl Editor {
                         ui.horizontal(|ui| {
                             self.device_load_control(ui, true);
                             let enabled = prepared_plan.is_some() && self.device.pending.is_none();
-                            if transfer_button(ui, "Send mapped layers", enabled, true)
-                                .on_hover_text("Send the mapped editor layers to the selected device target")
+                            if transfer_button(ui, &tr(ui.ctx(), "transfer.send-mapped"), enabled, true)
+                                .on_hover_text(tr(ui.ctx(), "ui.send-the-mapped-editor-layers-to-the-selected-device-target"))
                                 .clicked() {
                                 send_plan = prepared_plan;
                             }
@@ -846,11 +858,11 @@ impl Editor {
                         return;
                     }
                     ui.horizontal(|ui| {
-                        if ui.button("Use saved links").clicked() {
+                        if ui.button(tr(ui.ctx(), "ui.use-saved-links")).clicked() {
                             self.device.destinations.fill(Destination::Skip);
                             self.device.mapping_scope = None;
                         }
-                        if ui.add_enabled(self.device.scope != TransferScope::Selected, egui::Button::new("Import unmapped as new layers")).clicked() {
+                        if ui.add_enabled(self.device.scope != TransferScope::Selected, egui::Button::new(tr(ui.ctx(), "ui.import-unmapped-as-new-layers"))).clicked() {
                             for (i, layer) in screen.layers.iter().enumerate() {
                                 if self.device.destinations[i] == Destination::Skip && layer.unsupported.is_none() { self.device.destinations[i] = Destination::New; }
                             }
@@ -887,13 +899,13 @@ impl Editor {
                             if let Some(reason) = &layer.unsupported { ui.weak(reason); }
                         }
                     });
-                    ui.weak("Supported layers import geometry and appearance. Midra explicit fits include crop and mask; Aquilon supports centered crop. Source routing and shared input settings stay on the device.");
+                    ui.weak(tr(ui.ctx(), "ui.supported-layers-import-geometry-and-appearance-midra-explicit-fits-include-crop-and"));
                     let selected: Vec<_> = self.device.destinations.iter().enumerate().filter_map(|(i, dest)| (*dest != Destination::Skip).then_some(i)).collect();
                     ui.label(format!("{} device layers to import", selected.len()));
-                    if apply_button(ui, "Import layers", matches && !selected.is_empty()).clicked() {
+                    if apply_button(ui, &tr(ui.ctx(), "action.import-layers"), matches && !selected.is_empty()).clicked() {
                         match self.apply_device_import() { Ok(()) => imported = true, Err(e) => self.device.error = e }
                     }
-                    ui.weak("Choose an existing destination or New layer beside each device layer. The scope limits available destinations; each mapping can still be changed.");
+                    ui.weak(tr(ui.ctx(), "ui.choose-an-existing-destination-or-new-layer-beside-each-device-layer-the-scope-limits"));
                 }
 
                 ui.separator();
@@ -1056,14 +1068,14 @@ fn send_review(
         *target_mode = Target::Preview;
     }
     ui.horizontal(|ui| {
-        ui.label("Target");
+        ui.label(tr(ui.ctx(), "ui.target"));
         ui.selectable_value(target_mode, Target::Preview, "Preview");
         if allow_program {
             ui.selectable_value(target_mode, Target::Program, "Program");
         }
     });
     ui.horizontal(|ui| {
-        ui.label("Device container");
+        ui.label(tr(ui.ctx(), "ui.device-container"));
         ui.selectable_value(sizing, Sizing::OutputBox, "Output-sized");
         ui.selectable_value(sizing, Sizing::SourceAspect, "Source aspect");
     });
@@ -1075,7 +1087,10 @@ fn send_review(
         screen.id
     ));
     if selected.is_empty() {
-        ui.label("No layers in this scope. Choose All layers, select layers, or choose a folder.");
+        ui.label(tr(
+            ui.ctx(),
+            "ui.no-layers-in-this-scope-choose-all-layers-select-layers-or-choose-a-folder",
+        ));
     }
     for &i in selected {
         let info = layout.layer_info(i);
@@ -1211,7 +1226,10 @@ fn send_review(
                 }
             });
             if plan.changes.is_empty() {
-                ui.weak("Geometry matches the stored values. Send applies them to the hardware.");
+                ui.weak(tr(
+                    ui.ctx(),
+                    "ui.geometry-matches-the-stored-values-send-applies-them-to-the-hardware",
+                ));
             }
             return (!busy).then_some(plan);
         }

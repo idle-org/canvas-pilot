@@ -1,4 +1,5 @@
 fn main() {
+    println!("cargo:rerun-if-changed=locales");
     println!("cargo:rerun-if-changed=assets/app-icon.ico");
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         winresource::WindowsResource::new()

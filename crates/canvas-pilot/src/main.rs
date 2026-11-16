@@ -39,6 +39,10 @@ fn main() -> eframe::Result {
     )
 }
 
+rust_i18n::i18n!("locales", fallback = "en");
+mod localization;
+use localization::tr;
+
 mod gui;
 mod reference;
 mod settings;
@@ -137,7 +141,7 @@ fn screen_labels(ink: &Ink, output: [u32; 2]) {
     ink.text(
         0.0,
         -SCREEN_LABEL_TOP * k,
-        "SCREEN 1",
+        &tr(ink.painter.ctx(), "viewport.screen"),
         12.0 * k,
         palette.muted,
     );

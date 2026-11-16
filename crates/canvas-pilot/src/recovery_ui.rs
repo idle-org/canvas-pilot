@@ -148,14 +148,14 @@ impl Editor {
         let mut save = false;
         let mut discard = false;
         let mut cancel = false;
-        egui::Window::new("New project?").collapsible(false).open(&mut open).show(ctx, |ui| {
-            ui.label("Starting a new project replaces the recovery autosave. Current edits will be lost unless saved to a separate project file.");
+        egui::Window::new(tr(ctx, "ui.new-project")).id(egui::Id::new("New project?")).collapsible(false).open(&mut open).show(ctx, |ui| {
+            ui.label(tr(ui.ctx(), "ui.starting-a-new-project-replaces-the-recovery-autosave-current-edits-will-be-lost-unle"));
             ui.label(self.manual_save_age());
-            ui.small("Autosave does not count as a manual save. Only applied edits are saved; pending drafts will be discarded.");
+            ui.small(tr(ui.ctx(), "ui.autosave-does-not-count-as-a-manual-save-only-applied-edits-are-saved-pending-drafts"));
             ui.horizontal(|ui| {
-                save = ui.button("Save and create new…").clicked();
-                discard = ui.button("Discard and create new").clicked();
-                cancel = ui.button("Cancel").clicked();
+                save = ui.button(tr(ui.ctx(), "ui.save-and-create-new")).clicked();
+                discard = ui.button(tr(ui.ctx(), "ui.discard-and-create-new")).clicked();
+                cancel = ui.button(tr(ui.ctx(), "ui.cancel")).clicked();
             });
         });
         if !open || cancel {

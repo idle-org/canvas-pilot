@@ -1,4 +1,5 @@
 //! Editable session-only aspect ratios; geometry remains the saved source of truth.
+use crate::tr;
 use eframe::egui;
 
 pub(super) fn label(ratio: f64) -> String {
@@ -64,7 +65,7 @@ impl RatioEdit {
         ui.horizontal(|ui| {
             ui.label(format!("Ratio {}", label(current)));
             let response = ui.add(egui::TextEdit::singleline(&mut self.text).desired_width(90.0))
-                .on_hover_text("Enter width:height, width/height or a decimal. With aspect lock on, keeps width and adjusts height.");
+                .on_hover_text(tr(ui.ctx(), "ui.enter-width-height-width-height-or-a-decimal-with-aspect-lock-on-keeps-width-and-adju"));
             self.dirty |= response.changed();
             if response.has_focus() && ui.input(|i| i.key_pressed(egui::Key::Escape)) {
                 *self = Self::default();

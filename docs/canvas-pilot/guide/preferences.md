@@ -21,6 +21,24 @@ Enable **Options → Show toolbar icon names** (also available from the toolbar 
 to display captions beneath the icons. It is off by default and saved with the
 project; older projects open with captions off.
 
+### Interface language
+
+Open **Menu → Open all settings…** and use **Language / Langue** at the top.
+Choose **System default**, **English** or **Français**. The change takes effect
+immediately, saves automatically and survives restarting. In French, the route is
+**Menu → Ouvrir tous les réglages…**; language names stay recognizable in either UI.
+
+System default uses French for French regional locales and English otherwise.
+French is a translation preview; some advanced controls and technical diagnostics
+remain in English. The book's [French quick start](fr/quickstart.md) remains an
+unverified machine translation. Screenshots and its quoted commands use English;
+select English to follow those labels exactly.
+
+Changing language preserves the open project, pending edits and device connections.
+It does not rename layers, change file contents or send device commands. Numeric
+fields continue to use a decimal point in both languages. Projects do not carry
+language preferences to another workstation.
+
 ### Application themes
 
 **Menu → Options → Theme** (also in the toolbar cog) shows up to three recently

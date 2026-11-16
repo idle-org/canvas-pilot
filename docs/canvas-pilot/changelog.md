@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+- Added embedded English/French UI catalogs using rust-i18n, with an immediate
+  System default / English / Français selector at the top of Settings. Settings v9
+  migrates older preferences; projects and device operations retain their semantics.
+  French is a preview, with some advanced controls and diagnostics still in English.
+  Regression tests cover locale fallback, catalog consistency and switching without
+  changing project data or pending numeric edits. Settings content scrolls at small
+  window sizes while the language selector and Close button remain visible.
+
 - Added a French quick-start pilot with English fallback links and an explicit
   unverified machine-translation notice. Screenshots and application labels remain
   English; the source revision and update workflow are recorded for maintenance.

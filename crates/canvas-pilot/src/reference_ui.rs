@@ -16,14 +16,14 @@ impl Editor {
         self.reference_error.clear();
     }
     pub(super) fn reference_actions_menu(&mut self, ui: &mut egui::Ui) {
-        if ui.button("Add reference images…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.add-reference-images")).clicked() {
             ui.close_menu();
             self.import_reference_file(ui.ctx());
         }
         if ui
             .add_enabled(
                 self.device.online(),
-                egui::Button::new("Import input snapshot…"),
+                egui::Button::new(tr(ui.ctx(), "ui.import-input-snapshot-5eff8b")),
             )
             .on_disabled_hover_text("Connect to a device first.")
             .clicked()
@@ -43,15 +43,21 @@ impl Editor {
                 }
             });
         self.reference_selected = Some(selected);
-        if ui.button("Reference settings…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.reference-settings")).clicked() {
             self.reference_open = true;
             ui.close_menu();
         }
-        if ui.button("Show only this reference").clicked() {
+        if ui
+            .button(tr(ui.ctx(), "ui.show-only-this-reference"))
+            .clicked()
+        {
             self.show_only_reference(selected);
             ui.close_menu();
         }
-        if ui.button("Remove reference image").clicked() {
+        if ui
+            .button(tr(ui.ctx(), "ui.remove-reference-image"))
+            .clicked()
+        {
             self.remove_reference(selected);
             ui.close_menu();
         }
@@ -66,11 +72,17 @@ impl Editor {
             return;
         }
         let palette = theme::palette(ui.ctx());
-        ink.text(0., y + 8., "REFERENCE IMAGES", 11., palette.purple);
+        ink.text(
+            0.,
+            y + 8.,
+            &tr(ink.painter.ctx(), "ui.reference-images-3d62ad"),
+            11.,
+            palette.purple,
+        );
         if ui
             .put(
                 Rect::from_min_size(ink.point(w - 65., y), Vec2::new(65., 28.)),
-                egui::Button::new("+ Add…"),
+                egui::Button::new(tr(ui.ctx(), "ui.add")),
             )
             .clicked()
         {
@@ -112,9 +124,10 @@ impl Editor {
                     egui::Id::new(("reference-row", i)),
                     egui::Sense::click(),
                 )
-                .on_hover_text(
-                    "Fixed reference image · double-click for settings · right-click for actions",
-                );
+                .on_hover_text(tr(
+                    ui.ctx(),
+                    "ui.fixed-reference-image-double-click-for-settings-right-click-for-actions",
+                ));
             if row.clicked() || row.secondary_clicked() {
                 self.reference_selected = Some(i);
                 self.layout.select(None);
@@ -125,16 +138,22 @@ impl Editor {
                 self.reference_open = true;
             }
             row.context_menu(|ui| {
-                if ui.button("Reference settings…").clicked() {
+                if ui.button(tr(ui.ctx(), "ui.reference-settings")).clicked() {
                     self.reference_selected = Some(i);
                     self.reference_open = true;
                     ui.close_menu();
                 }
-                if ui.button("Show only this reference").clicked() {
+                if ui
+                    .button(tr(ui.ctx(), "ui.show-only-this-reference"))
+                    .clicked()
+                {
                     self.show_only_reference(i);
                     ui.close_menu();
                 }
-                if ui.button("Remove reference image").clicked() {
+                if ui
+                    .button(tr(ui.ctx(), "ui.remove-reference-image"))
+                    .clicked()
+                {
                     remove = Some(i);
                     ui.close_menu();
                 }
@@ -163,7 +182,7 @@ impl Editor {
                     egui::Id::new(("reference-remove", i)),
                     egui::Sense::click(),
                 )
-                .on_hover_text("Remove reference image");
+                .on_hover_text(tr(ui.ctx(), "ui.remove-reference-image"));
             let color = if response.hovered() {
                 palette.purple
             } else {

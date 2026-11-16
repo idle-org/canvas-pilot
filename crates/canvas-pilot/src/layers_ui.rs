@@ -94,7 +94,7 @@ impl Editor {
         else {
             return;
         };
-        if ui.button("Rename layer…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.rename-layer")).clicked() {
             self.layer_ui.rename = Some((id, self.layout.layer_info(i).name.clone()));
             self.layer_ui.rename_focus = true;
             ui.close_menu();
@@ -108,8 +108,8 @@ impl Editor {
         } else {
             vec![id]
         };
-        ui.menu_button("Move to folder", |ui| {
-            if ui.button("No folder").clicked() {
+        ui.menu_button(tr(ui.ctx(), "ui.move-to-folder"), |ui| {
+            if ui.button(tr(ui.ctx(), "ui.no-folder")).clicked() {
                 self.layer_ui.assign = Some((ids.clone(), String::new()));
                 ui.close_menu();
             }
@@ -119,7 +119,7 @@ impl Editor {
                     ui.close_menu();
                 }
             }
-            if ui.button("New folder…").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.new-folder")).clicked() {
                 self.layer_ui.folder_rename = Some((None, "New folder".into(), ids.clone()));
                 self.layer_ui.rename_focus = true;
                 ui.close_menu();
@@ -134,8 +134,11 @@ impl Editor {
         let can_delete =
             self.layout.layers().len() > 1 && self.layout.visible(i) && !self.layout.locked(i);
         if ui
-            .add_enabled(can_delete, egui::Button::new("Delete layer"))
-            .on_hover_text("Delete this layer. Undo restores it.")
+            .add_enabled(
+                can_delete,
+                egui::Button::new(tr(ui.ctx(), "ui.delete-layer")),
+            )
+            .on_hover_text(tr(ui.ctx(), "ui.delete-this-layer-undo-restores-it"))
             .on_disabled_hover_text(
                 "Keep at least one layer; show and unlock this layer before deleting it.",
             )
@@ -232,7 +235,8 @@ impl Editor {
         let mut open = true;
         let mut apply = false;
         let mut cancel = false;
-        egui::Window::new("Rename layer")
+        egui::Window::new(tr(ctx, "ui.rename-layer-e78352"))
+            .id(egui::Id::new("Rename layer"))
             .open(&mut open)
             .collapsible(false)
             .resizable(false)
@@ -251,7 +255,7 @@ impl Editor {
                         valid && name.trim() != self.layout.layer_info(i).name,
                     )
                     .clicked();
-                    cancel |= ui.button("Cancel").clicked();
+                    cancel |= ui.button(tr(ui.ctx(), "ui.cancel")).clicked();
                 });
             });
         if !open && name.trim() != self.layout.layer_info(i).name {
@@ -302,33 +306,33 @@ impl Editor {
         let mut sync = false;
         let mut reorder = None;
         let mut commit_names = false;
-        egui::Window::new("Layers & folders").enabled(!self.format_draft.as_ref().is_some_and(|d| d.pending(&self.layout))).open(&mut open).default_width(740.0).show(ctx, |ui| {
+        egui::Window::new(tr(ctx, "ui.layers-folders")).id(egui::Id::new("Layers & folders")).enabled(!self.format_draft.as_ref().is_some_and(|d| d.pending(&self.layout))).open(&mut open).default_width(740.0).show(ctx, |ui| {
             ui.horizontal(|ui| {
-                add = ui.add_enabled(self.layout.layers().len() < 256, egui::Button::new("Add layer")).clicked();
+                add = ui.add_enabled(self.layout.layers().len() < 256, egui::Button::new(tr(ui.ctx(), "ui.add-layer"))).clicked();
                 let count = self.layout.selected_indices().len();
-                remove = ui.add_enabled(count > 0 && count < self.layout.layers().len(), egui::Button::new("Remove selected")).clicked();
-                ui.weak("Add, remove, rename and reorder support Undo.");
+                remove = ui.add_enabled(count > 0 && count < self.layout.layers().len(), egui::Button::new(tr(ui.ctx(), "ui.remove-selected"))).clicked();
+                ui.weak(tr(ui.ctx(), "ui.add-remove-rename-and-reorder-support-undo"));
             });
             let stale = self.layer_ui.drafts.len() != self.layout.layers().len() || self.layer_ui.drafts.iter().enumerate().any(|(i, d)| self.layout.layer_info(i).id != d.0);
             if stale {
-                ui.label("The layer list changed. Reload this editor before applying names.");
-                refresh = ui.button("Reload layer list").clicked();
+                ui.label(tr(ui.ctx(), "ui.the-layer-list-changed-reload-this-editor-before-applying-names"));
+                refresh = ui.button(tr(ui.ctx(), "ui.reload-layer-list")).clicked();
                 return;
             }
             let folders: std::collections::BTreeSet<_> = (0..self.layout.layers().len()).map(|i| self.layout.layer_info(i).folder.clone()).collect();
             egui::ComboBox::from_id_salt("layer-folder-filter").selected_text(self.layer_ui.folder_filter.as_deref().filter(|s| !s.is_empty()).unwrap_or(if self.layer_ui.folder_filter.is_some() { "No folder" } else { "All folders" })).show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.layer_ui.folder_filter, None, "All folders");
+                ui.selectable_value(&mut self.layer_ui.folder_filter, None, tr(ui.ctx(), "ui.all-folders"));
                 for folder in folders { let label = if folder.is_empty() { "No folder" } else { &folder }; ui.selectable_value(&mut self.layer_ui.folder_filter, Some(folder.clone()), label); }
             });
             egui::ScrollArea::vertical().max_height(400.0).show(ui, |ui| {
                 egui::Grid::new("layer-management").striped(true).show(ui, |ui| {
-                    ui.label("Order"); ui.label("Select / ID"); ui.label("Name"); ui.label("Folder (optional)"); ui.label("Visibility"); ui.label("Protection"); ui.end_row();
+                    ui.label(tr(ui.ctx(), "ui.order")); ui.label(tr(ui.ctx(), "ui.select-id")); ui.label(tr(ui.ctx(), "ui.name")); ui.label(tr(ui.ctx(), "ui.folder-optional")); ui.label(tr(ui.ctx(), "ui.visibility")); ui.label(tr(ui.ctx(), "ui.protection")); ui.end_row();
                     for (i, (id, name, folder)) in self.layer_ui.drafts.iter_mut().enumerate().rev() {
                         if self.layer_ui.folder_filter.as_ref().is_some_and(|folder| *folder != self.layout.layer_info(i).folder) { continue; }
                         ui.horizontal(|ui| {
                             let unfiltered = self.layer_ui.folder_filter.is_none();
-                            if order_button(ui, *id, true, unfiltered && i + 1 < self.layout.layers().len()).on_hover_text("Move up / bring forward").on_disabled_hover_text("Show all folders to reorder; the top layer cannot move up.").clicked() { reorder = Some((*id, i + 1)); }
-                            if order_button(ui, *id, false, unfiltered && i > 0).on_hover_text("Move down / send backward").on_disabled_hover_text("Show all folders to reorder; the bottom layer cannot move down.").clicked() { reorder = Some((*id, i - 1)); }
+                            if order_button(ui, *id, true, unfiltered && i + 1 < self.layout.layers().len()).on_hover_text(tr(ui.ctx(), "ui.move-up-bring-forward")).on_disabled_hover_text("Show all folders to reorder; the top layer cannot move up.").clicked() { reorder = Some((*id, i + 1)); }
+                            if order_button(ui, *id, false, unfiltered && i > 0).on_hover_text(tr(ui.ctx(), "ui.move-down-send-backward")).on_disabled_hover_text("Show all folders to reorder; the bottom layer cannot move down.").clicked() { reorder = Some((*id, i - 1)); }
                         });
                         let selected = self.layout.selection_mask()[i];
                         if ui.selectable_label(selected, format!("{id:02}")).clicked() { self.layout.toggle(i); sync = true; }
@@ -344,8 +348,8 @@ impl Editor {
                     }
                 });
             });
-            ui.weak("Folder names organize the layer list locally; they do not create hardware layers. IDs remain stable when layers are removed.");
-            ui.small("Names and folders save on Enter or when leaving the field. Undo restores previous values.");
+            ui.weak(tr(ui.ctx(), "ui.folder-names-organize-the-layer-list-locally-they-do-not-create-hardware-layers-ids-r"));
+            ui.small(tr(ui.ctx(), "ui.names-and-folders-save-on-enter-or-when-leaving-the-field-undo-restores-previous-valu"));
             if !self.layer_ui.error.is_empty() { ui.colored_label(ui.visuals().error_fg_color, &self.layer_ui.error); }
         });
         if (commit_names || !open || add || remove || refresh || reorder.is_some())
@@ -474,7 +478,10 @@ impl Editor {
         if let Some(payload) = root.dnd_release_payload::<LayerDrag>() {
             self.layer_ui.assign = Some((vec![payload.0], String::new()));
         }
-        root.on_hover_text("Drop a layer here to move it out of its folder.");
+        root.on_hover_text(tr(
+            ui.ctx(),
+            "ui.drop-a-layer-here-to-move-it-out-of-its-folder",
+        ));
     }
 
     pub(super) fn folder_drop_on_layer(&mut self, row: &egui::Response, i: usize) {
@@ -620,18 +627,24 @@ impl Editor {
                 Some((payload.0.clone(), self.layout.layer_info(index).id, above));
         }
         row.context_menu(|ui| {
-            if ui.button("Select folder contents").clicked() {
+            if ui
+                .button(tr(ui.ctx(), "ui.select-folder-contents"))
+                .clicked()
+            {
                 self.device.follow_folder(folder);
                 self.layout.select_folder(folder, false);
                 self.sync();
                 ui.close_menu();
             }
-            if ui.button("Use folder for device transfers").clicked() {
+            if ui
+                .button(tr(ui.ctx(), "ui.use-folder-for-device-transfers"))
+                .clicked()
+            {
                 self.device
                     .set_scope(device_ui::TransferScope::Folder(folder.into()));
                 ui.close_menu();
             }
-            if ui.button("Rename folder…").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.rename-folder")).clicked() {
                 self.layer_ui.folder_rename = Some((Some(folder.into()), folder.into(), vec![]));
                 self.layer_ui.rename_focus = true;
                 ui.close_menu();
@@ -695,14 +708,14 @@ impl Editor {
                 } else {
                     "Ungroup folder"
                 })
-                .on_hover_text("Keep all layers and move them to the root.")
+                .on_hover_text(tr(ui.ctx(), "ui.keep-all-layers-and-move-them-to-the-root"))
                 .clicked()
             {
                 self.layer_ui.folder_remove = Some(folder.into());
                 ui.close_menu();
             }
         });
-        row.on_hover_text("Click: select contents · Shift-click: toggle selection · double-click: rename · drag: reorder folder");
+        row.on_hover_text(tr(ui.ctx(), "ui.click-select-contents-shift-click-toggle-selection-double-click-rename-drag-reorder-f"));
         for (kind, x, active) in [("lock", w - 72.0, locked), ("visibility", w - 36.0, hidden)] {
             let rect = Rect::from_min_size(ink.point(x, y + 5.0), Vec2::splat(28.0));
             if layer_state_icon(
@@ -773,7 +786,7 @@ impl Editor {
                     .any(|folder| folder == name.trim())
                     || old.as_deref() == Some(name.trim()));
             if !valid {
-                ui.weak("Use a nonempty, unique folder name.");
+                ui.weak(tr(ui.ctx(), "ui.use-a-nonempty-unique-folder-name"));
             }
             apply = valid && ui.input(|i| i.key_pressed(egui::Key::Enter));
             cancel = ui.input(|i| i.key_pressed(egui::Key::Escape));
@@ -788,7 +801,7 @@ impl Editor {
                         }),
                     )
                     .clicked();
-                cancel |= ui.button("Cancel").clicked();
+                cancel |= ui.button(tr(ui.ctx(), "ui.cancel")).clicked();
             });
         });
         if apply {

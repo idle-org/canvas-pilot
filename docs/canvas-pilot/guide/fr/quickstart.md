@@ -8,8 +8,8 @@
 > par une personne francophone. Le [manuel anglais](../../introduction.md) fait
 > référence et peut évoluer avant cette traduction. En cas de doute ou de différence,
 > consultez la version anglaise. Seul ce démarrage rapide est traduit pour le moment.
-> L’application et les captures restent en anglais ; les noms des commandes sont
-> conservés tels qu’ils apparaissent à l’écran. Les liens vers les autres chapitres
+> Les captures et les noms des commandes restent en anglais. Pour retrouver ces
+> libellés, choisissez **English** dans **Language / Langue**, en haut des réglages. Les liens vers les autres chapitres
 > mènent à des pages en anglais.
 
 <!-- Translation source: docs/canvas-pilot/guide/quickstart.md at 1ac01cbf65dbad206f5b989f24924333e688f646. Machine translated; human review pending. -->

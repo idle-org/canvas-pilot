@@ -7,6 +7,7 @@ use std::{io::Read, path::PathBuf};
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     pub version: u32,
+    pub language: crate::localization::Language,
     pub midra_host: String,
     pub recent_midra_hosts: Vec<String>,
     pub autoconnect_at_startup: bool,
@@ -21,7 +22,8 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            version: 8,
+            version: 9,
+            language: Default::default(),
             autoconnect_at_startup: false,
             allow_sending_to_program: false,
             midra_host: String::new(),
@@ -107,12 +109,19 @@ impl Settings {
             value["recent_midra_hosts"] = serde_json::json!([]);
             value["version"] = 8.into();
         }
+        if value["version"] == 8 {
+            if value.get("language").is_some() {
+                return Err("Unexpected language in version 8 settings".into());
+            }
+            value["language"] = "system".into();
+            value["version"] = 9.into();
+        }
         let settings: Self = serde_json::from_value(value).map_err(|e| e.to_string())?;
         settings.validate()?;
         Ok(settings)
     }
     fn validate(&self) -> Result<(), String> {
-        if self.version != 8 {
+        if self.version != 9 {
             return Err(format!("unsupported settings version {}", self.version));
         }
         if self.recent_midra_hosts.len() > 4
@@ -242,6 +251,36 @@ impl Store {
 mod tests {
     use super::*;
     #[test]
+    fn language_settings_migrate_and_validate_without_touching_other_preferences() {
+        use crate::localization::Language;
+        let old = include_str!("../../../docs/interfaces/canvas-pilot-settings-v8.example.json");
+        let migrated = Settings::parse(old).unwrap();
+        assert_eq!(migrated.language, Language::System);
+        assert_eq!(migrated.version, 9);
+        let current =
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v9.example.json");
+        assert_eq!(Settings::parse(current).unwrap(), migrated);
+        for language in Language::ALL {
+            let saved = Settings {
+                language,
+                ..migrated.clone()
+            };
+            assert_eq!(
+                Settings::parse(&serde_json::to_string(&saved).unwrap()).unwrap(),
+                saved
+            );
+        }
+        let mut value: serde_json::Value = serde_json::from_str(current).unwrap();
+        value["language"] = "unsupported".into();
+        assert!(Settings::parse(&value.to_string()).is_err());
+        value.as_object_mut().unwrap().remove("language");
+        assert!(Settings::parse(&value.to_string()).is_err());
+        value["version"] = 8.into();
+        value["language"] = "fr".into();
+        assert!(Settings::parse(&value.to_string()).is_err());
+    }
+
+    #[test]
     fn connection_history_migrates_and_round_trips_strictly() {
         let old = include_str!("../../../docs/interfaces/canvas-pilot-settings-v7.example.json");
         assert!(Settings::parse(old).unwrap().recent_midra_hosts.is_empty());
@@ -309,7 +348,7 @@ mod tests {
         for text in [
             "broken".to_string(),
             serde_json::to_string(&Settings {
-                version: 9,
+                version: 10,
                 ..Default::default()
             })
             .unwrap(),

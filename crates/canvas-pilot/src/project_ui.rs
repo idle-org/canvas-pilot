@@ -338,7 +338,10 @@ impl Editor {
     }
     pub(super) fn project_menu(&mut self, ui: &mut egui::Ui) {
         if ui
-            .add_enabled(!self.device.sending, egui::Button::new("New project…"))
+            .add_enabled(
+                !self.device.sending,
+                egui::Button::new(tr(ui.ctx(), "ui.new-project-cf8d3c")),
+            )
             .clicked()
         {
             self.files.new_requested = true;
@@ -347,7 +350,7 @@ impl Editor {
         if let Some(error) = &self.recovery.error {
             ui.colored_label(ui.visuals().error_fg_color, error);
         }
-        if self.recovery.error.is_some() && ui.button("Retry recovery").clicked() {
+        if self.recovery.error.is_some() && ui.button(tr(ui.ctx(), "ui.retry-recovery")).clicked() {
             if self.recovery.restore_failed {
                 if let Some(path) = self.recovery.path.clone() {
                     self.restore_recovery(ui.ctx(), path);
@@ -366,7 +369,7 @@ impl Editor {
             .on_hover_text(path.display().to_string());
         }
         ui.small(self.manual_save_age());
-        if ui.button("Open project…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.open-project")).clicked() {
             ui.close_menu();
             if let Some(path) = rfd::FileDialog::new()
                 .add_filter("Canvas Pilot project", &["json"])
@@ -375,7 +378,10 @@ impl Editor {
                 self.files.opening = Some(path);
             }
         }
-        if ui.button("Restore parameters from export…").clicked() {
+        if ui
+            .button(tr(ui.ctx(), "ui.restore-parameters-from-export"))
+            .clicked()
+        {
             ui.close_menu();
             if let Some(path) = rfd::FileDialog::new()
                 .add_filter(
@@ -389,18 +395,21 @@ impl Editor {
                 self.files.opening = Some(path);
             }
         }
-        if ui.button("Save project…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.save-project")).clicked() {
             ui.close_menu();
             self.save_project_as();
         }
-        ui.small("Saves applied values and reference images.");
+        ui.small(tr(ui.ctx(), "ui.saves-applied-values-and-reference-images"));
         ui.separator();
         if ui
             .add_enabled(
                 self.device.online(),
-                egui::Button::new("Device mapping & transfer…"),
+                egui::Button::new(tr(ui.ctx(), "ui.device-mapping-transfer")),
             )
-            .on_hover_text("Map editor layers, review device changes and send explicitly.")
+            .on_hover_text(tr(
+                ui.ctx(),
+                "ui.map-editor-layers-review-device-changes-and-send-explicitly",
+            ))
             .on_disabled_hover_text(
                 "Read the device connection first; layers can be chosen in the review.",
             )
@@ -409,7 +418,7 @@ impl Editor {
             self.open_device_export();
             ui.close_menu();
         }
-        ui.menu_button("Export", |ui| self.export_menu(ui));
+        ui.menu_button(tr(ui.ctx(), "ui.export"), |ui| self.export_menu(ui));
     }
     pub(super) fn export_menu(&mut self, ui: &mut egui::Ui) {
         self.device_scope_picker(ui);
@@ -417,7 +426,7 @@ impl Editor {
         self.device_send_button(ui);
         self.device_load_button(ui);
         ui.separator();
-        if ui.button("Export layers…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.export-layers")).clicked() {
             self.files.export_open = true;
             ui.close_menu();
         }
@@ -436,7 +445,7 @@ impl Editor {
             .collect()
     }
     fn exchange_menu(&mut self, ui: &mut egui::Ui, format: canvas_pilot::interchange::Codec) {
-        egui::ComboBox::from_label("Layers")
+        egui::ComboBox::new("Layers", tr(ui.ctx(), "ui.layers"))
             .selected_text(self.files.export_scope.label())
             .show_ui(ui, |ui| {
                 for scope in [
@@ -467,7 +476,7 @@ impl Editor {
                 .find(|&i| Some(self.layout.layer_info(i).id) == self.files.export_layer)
                 .map(|i| self.layout.layer_label(i))
                 .unwrap_or_default();
-            egui::ComboBox::from_label("Layer")
+            egui::ComboBox::new("Layer", tr(ui.ctx(), "ui.layer-ac9ffc"))
                 .selected_text(label)
                 .show_ui(ui, |ui| {
                     for i in 0..self.layout.layers().len() {
@@ -495,21 +504,21 @@ impl Editor {
         };
         egui::CollapsingHeader::new(if format.artwork() { pictures } else if options.background { "Background · included" } else { "Background · none" })
             .id_salt("export-pictures").show(ui, |ui| {
-                ui.checkbox(&mut options.background, "Include background layer")
+                ui.checkbox(&mut options.background, tr(ui.ctx(), "ui.include-background-layer"))
                     .on_hover_text(if format.artwork() { "Use the visible reference images, or a plain background when none is visible." } else { "Include a screen-sized rectangle. This format cannot embed pictures." });
                 if format.artwork() {
-                    ui.checkbox(&mut options.placeholders, "Include placeholder pictures")
-                        .on_hover_text("Show source patterns with the current crop and mask. These are not live captures.");
+                    ui.checkbox(&mut options.placeholders, tr(ui.ctx(), "ui.include-placeholder-pictures"))
+                        .on_hover_text(tr(ui.ctx(), "ui.show-source-patterns-with-the-current-crop-and-mask-these-are-not-live-captures"));
                 }
             });
         egui::CollapsingHeader::new(if options.extra_parameters { "Canvas Pilot settings · included" } else { "Canvas Pilot settings · not included" })
             .id_salt("export-settings").show(ui, |ui| {
                 if metadata {
-                    ui.checkbox(&mut options.extra_parameters, "Include extra Canvas Pilot parameters (experimental)");
-                    ui.small("Keep an editable snapshot of these layers. Restore it from the Project menu; other editors may remove it.");
-                    ui.label("What is saved?").on_hover_text("Source settings, crop, fit, blanking, mappings, inactive input proposals and workspace settings. Reference images and captured previews are excluded. The snapshot stays at its original values if artwork is edited elsewhere.");
+                    ui.checkbox(&mut options.extra_parameters, tr(ui.ctx(), "ui.include-extra-canvas-pilot-parameters-experimental"));
+                    ui.small(tr(ui.ctx(), "ui.keep-an-editable-snapshot-of-these-layers-restore-it-from-the-project-menu-other-edit"));
+                    ui.label(tr(ui.ctx(), "ui.what-is-saved")).on_hover_text(tr(ui.ctx(), "ui.source-settings-crop-fit-blanking-mappings-inactive-input-proposals-and-workspace-set"));
                 } else {
-                    ui.small("This format cannot carry editable settings. Save a .pilot.json project alongside it.");
+                    ui.small(tr(ui.ctx(), "ui.this-format-cannot-carry-editable-settings-save-a-pilot-json-project-alongside-it"));
                 }
             });
         ui.separator();
@@ -520,7 +529,10 @@ impl Editor {
             if ids.len() == 1 { "layer" } else { "layers" }
         ));
         if ui
-            .add_enabled(!ids.is_empty(), egui::Button::new("Export…"))
+            .add_enabled(
+                !ids.is_empty(),
+                egui::Button::new(tr(ui.ctx(), "ui.export-4a4c59")),
+            )
             .on_disabled_hover_text("Choose at least one layer to export.")
             .clicked()
         {
@@ -563,14 +575,20 @@ impl Editor {
     }
     pub(super) fn project_windows(&mut self, ctx: &egui::Context) {
         if self.files.loading.is_some() {
-            egui::Window::new("Loading project")
+            egui::Window::new(tr(ctx, "ui.loading-project"))
+                .id(egui::Id::new("Loading project"))
                 .collapsible(false)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
                         ui.spinner();
-                        ui.label("Reading project and decoding reference images…");
+                        ui.label(tr(
+                            ui.ctx(),
+                            "ui.reading-project-and-decoding-reference-images",
+                        ));
                     });
-                    if !self.files.loading_recovery && ui.button("Cancel loading").clicked() {
+                    if !self.files.loading_recovery
+                        && ui.button(tr(ui.ctx(), "ui.cancel-loading")).clicked()
+                    {
                         self.files.loading = None;
                     }
                 });
@@ -582,11 +600,12 @@ impl Editor {
                 Err(std::sync::mpsc::TryRecvError::Empty) => {
                     self.files.export_job = Some(job);
                     ctx.request_repaint_after(std::time::Duration::from_millis(100));
-                    egui::Window::new("Exporting layers")
+                    egui::Window::new(tr(ctx, "ui.exporting-layers"))
+                        .id(egui::Id::new("Exporting layers"))
                         .collapsible(false)
                         .show(ctx, |ui| {
                             ui.spinner();
-                            ui.label("Preparing the document…");
+                            ui.label(tr(ui.ctx(), "ui.preparing-the-document"));
                         });
                 }
                 Err(_) => {
@@ -596,11 +615,12 @@ impl Editor {
         }
         if self.files.export_open {
             let mut open = true;
-            egui::Window::new("Export layers")
+            egui::Window::new(tr(ctx, "ui.export-layers-c8fcde"))
+                .id(egui::Id::new("Export layers"))
                 .open(&mut open)
                 .resizable(false)
                 .show(ctx, |ui| {
-                    egui::ComboBox::from_label("Format")
+                    egui::ComboBox::new("Format", tr(ui.ctx(), "ui.format"))
                         .selected_text(self.files.export_codec.label())
                         .show_ui(ui, |ui| {
                             for codec in canvas_pilot::interchange::Codec::available() {
@@ -621,11 +641,11 @@ impl Editor {
             let mut open = true;
             let mut load = false;
             let mut cancel = false;
-            egui::Window::new("Open project?").collapsible(false).open(&mut open).show(ctx,|ui| {
+            egui::Window::new(tr(ctx, "ui.open-project-a77d12")).id(egui::Id::new("Open project?")).collapsible(false).open(&mut open).show(ctx,|ui| {
                 ui.label(path.display().to_string());
-                ui.label("Opening replaces the current work, undo history and recovery autosave. Embedded parameters restore the original export snapshot, not later artwork edits. Cancel and save a separate project first if needed.");
+                ui.label(tr(ui.ctx(), "ui.opening-replaces-the-current-work-undo-history-and-recovery-autosave-embedded-paramet"));
                 ui.label(self.manual_save_age());
-                ui.horizontal(|ui| {load=ui.button("Open project").clicked();cancel=ui.button("Cancel").clicked();});
+                ui.horizontal(|ui| {load=ui.button(tr(ui.ctx(), "ui.open-project-5e5eba")).clicked();cancel=ui.button(tr(ui.ctx(), "ui.cancel")).clicked();});
             });
             if load {
                 self.start_project_job(ctx, false, move || {
@@ -642,14 +662,15 @@ impl Editor {
             let mut open = true;
             let mut replace = false;
             let mut cancel = false;
-            egui::Window::new("Replace existing file?")
+            egui::Window::new(tr(ctx, "ui.replace-existing-file"))
+                .id(egui::Id::new("Replace existing file?"))
                 .collapsible(false)
                 .open(&mut open)
                 .show(ctx, |ui| {
                     ui.label(path.display().to_string());
                     ui.horizontal(|ui| {
-                        replace = ui.button("Replace file").clicked();
-                        cancel = ui.button("Cancel").clicked();
+                        replace = ui.button(tr(ui.ctx(), "ui.replace-file")).clicked();
+                        cancel = ui.button(tr(ui.ctx(), "ui.cancel")).clicked();
                     });
                 });
             if replace {
@@ -663,12 +684,13 @@ impl Editor {
         if let Some(message) = self.files.message.take() {
             let mut open = true;
             let mut done = false;
-            egui::Window::new("Project file")
+            egui::Window::new(tr(ctx, "ui.project-file"))
+                .id(egui::Id::new("Project file"))
                 .collapsible(false)
                 .open(&mut open)
                 .show(ctx, |ui| {
                     ui.label(&message);
-                    done = ui.button("OK").clicked();
+                    done = ui.button(tr(ui.ctx(), "ui.ok")).clicked();
                 });
             if open && !done {
                 self.files.message = Some(message);

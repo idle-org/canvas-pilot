@@ -105,8 +105,9 @@ Publication is pending an issue-enabled token; the current token lacks
   [localization roadmap](../development/localization.md) for language selection,
   translation workflow, publishing, UI catalogs and compatibility checks. Detailed
   tasks and acceptance criteria live there. A French quick-start pilot is available
-  as an unverified machine translation; the rest of the book and application remain
-  English. Human review and broader localization are still pending.
+  as an unverified machine translation; the rest of the book remains English. The application has an English/French
+  language selector with system detection and a French UI preview. Human review,
+  remaining advanced controls/diagnostics and broader localization are pending.
 
 - [ ] **Video showcase, manual and optional chapter demonstrations.** Record a
   short showcase for the README and book introduction, then a guided video manual

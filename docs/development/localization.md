@@ -6,8 +6,8 @@
 
 The [French quick start](../canvas-pilot/guide/fr/quickstart.md) is an explicitly
 unverified machine translation, requested as a small first step. English remains
-authoritative. No application translation, screenshot changes or human review is
-claimed. The rest of the manual remains English, with explicit fallback links.
+authoritative. The application now also has a French UI preview (see below); screenshot changes
+and human review are not claimed. The rest of the manual remains English, with explicit fallback links.
 
 For this one-chapter pilot, use translated Markdown in `guide/fr/` and the existing
 mdBook build. The summary and reciprocal chapter links expose the language choice;
@@ -40,6 +40,60 @@ both Markdown and gettext as competing maintained translation sources.
 The checklist below describes that broader future work. The pilot intentionally
 ships without a reviewer, with the explicit warning above; the later reviewed-book
 publication criteria do not describe its current status.
+
+## Application implementation
+
+The desktop UI uses [rust-i18n](https://docs.rs/rust-i18n/) with embedded English and
+French JSON catalogs in `crates/canvas-pilot/locales/`. `sys-locale` obtains the desktop
+language. There is no custom translation parser, language-file loader, lookup cache
+or network translation service. The lockfile pins the dependency versions.
+
+`src/localization.rs` only resolves the supported language preference and passes an
+explicit locale to rust-i18n. Each egui context holds its own resolved language;
+there is no process-global `set_locale`, avoiding cross-window/test interference.
+Catalogs compile into the binary, so portable releases need no additional files.
+The build script watches `locales/`, including catalog-only edits and newly added
+files; translators do not need to touch Rust code to trigger a rebuild.
+
+Settings v9 adds `system`, `en`, `fr`; v1–v8 migrate with System default. The always
+visible **Language / Langue** selector at the top of Settings applies immediately.
+Project, export, clipboard and device contracts are unchanged. French is a preview,
+not a human-reviewed complete translation: technical diagnostics, some advanced
+controls, device-supplied labels and native file dialogs can still be English.
+Native dialogs follow the OS, not this application's preference.
+
+### Maintaining UI messages
+
+- Use stable descriptive keys and complete messages in `locales/en.json` and
+  `locales/fr.json`. Keep existing keys when polishing wording; do not derive keys
+  from runtime text or translate arbitrary document/device names.
+- Call `tr(ui.ctx(), "ui.message-key")` for simple text. It delegates to rust-i18n.
+  For values, call `rust_i18n::t!("key", locale = localization::locale(ctx), name = value)`
+  and convert to an owned string for egui. Use named `%{name}` placeholders, never
+  concatenate grammatical sentence fragments. Numeric summaries should avoid
+  English-only singular/plural assumptions; evaluate plural-aware messages before
+  adding inflected count-dependent wording.
+- Add both languages together. English is the fallback; catalog tests check key and
+  placeholder parity and direct UI references. Do not translate serialization keys,
+  protocol values, keyboard shortcut identities, project names, user input or IDs.
+- Give windows and controls stable IDs separate from translated display text.
+  Preserve semantic action dispatch; never match translated button text to decide
+  what operation to execute.
+- Existing diagnostic strings remain English until they can be modeled as structured
+  errors with localization at display time. Do not perform string replacement on
+  errors from devices, converters or external libraries.
+- Follow the Rust gates in [CI](ci.md). Localization tests cover regional fallback,
+  independent contexts, catalog completeness, settings migrations and interactive
+  switching/restart without changing project bytes, drafts or device-send state.
+  A layout regression test checks that language selection and Close remain visible
+  in every section at 1000 × 720, in both languages. French Settings and menus were
+  also visually checked in the Linux desktop app at normal and minimum sizes.
+  Native Windows/macOS visual acceptance and human language review remain pending.
+- Technical validation does not constitute human linguistic review. Keep preview
+  status until terminology and actual workflows have been reviewed.
+
+The broader checklist below remains the roadmap for full localization, review and
+additional languages; these foundation tasks do not mark the whole goal complete.
 
 ## 1. Localize the book
 
@@ -76,7 +130,7 @@ publication criteria do not describe its current status.
 - [ ] Reuse the existing template files, ZIP, icons and applicable screenshots.
   Translate the catalog labels and instructions, without creating language-specific
   copies of identical downloads. Preserve existing client-facing download URLs.
-- [ ] Translate captions and alt text. While the app is English-only, keep its
+- [ ] Translate captions and alt text. While screenshots and the walkthrough use English, keep their
   exact English control labels alongside translated instructions. Identify the
   language shown in screenshots; replace or supplement them after app localization.
 - [ ] Extend publication and cleanup tests to cover all language directories while

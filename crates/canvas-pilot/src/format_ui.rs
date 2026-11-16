@@ -223,13 +223,13 @@ fn dimensions(ui: &mut egui::Ui, size: &mut [f64; 2], prefix: &str) {
             egui::DragValue::new(&mut size[0])
                 .speed(1.0)
                 .custom_formatter(|v, _| number(v))
-                .prefix("W "),
+                .prefix(tr(ui.ctx(), "ui.w")),
         );
         ui.add(
             egui::DragValue::new(&mut size[1])
                 .speed(1.0)
                 .custom_formatter(|v, _| number(v))
-                .prefix("H "),
+                .prefix(tr(ui.ctx(), "ui.h")),
         );
         if size[0] > 0.0 && size[1] > 0.0 {
             ui.label(format!("Ratio {}", ratio_ui::label(size[0] / size[1])));
@@ -240,14 +240,22 @@ fn resolution(ui: &mut egui::Ui, size: &mut [u32; 2], prefix: &str, ratio: Optio
     ui.horizontal_wrapped(|ui| {
         ui.label(prefix);
         if ui
-            .add(egui::DragValue::new(&mut size[0]).speed(1).prefix("W "))
+            .add(
+                egui::DragValue::new(&mut size[0])
+                    .speed(1)
+                    .prefix(tr(ui.ctx(), "ui.w")),
+            )
             .changed()
             && let Some(r) = ratio
         {
             size[1] = (size[0] as f64 / r).round() as u32;
         }
         if ui
-            .add(egui::DragValue::new(&mut size[1]).speed(1).prefix("H "))
+            .add(
+                egui::DragValue::new(&mut size[1])
+                    .speed(1)
+                    .prefix(tr(ui.ctx(), "ui.h")),
+            )
             .changed()
             && let Some(r) = ratio
         {
@@ -286,14 +294,14 @@ impl Editor {
             d.locked = locked;
         }
         let mut open = true;
-        egui::Window::new("Output format / viewport resolution").open(&mut open).default_width(470.0).show(ctx,|ui| {
+        egui::Window::new(tr(ctx, "ui.output-format-viewport-resolution")).id(egui::Id::new("Output format / viewport resolution")).open(&mut open).default_width(470.0).show(ctx,|ui| {
             ui.horizontal_wrapped(|ui| {for (name,value) in [("HD",[1280.0,720.0]),("Full HD",[1920.0,1080.0]),("UHD 4K",[3840.0,2160.0])] {
                 if ui.button(name).clicked() {d.size=value;d.aspect=Aspect::SixteenNine;}
             }});
             ui.horizontal(|ui| {
-                ui.label("Output format");
+                ui.label(tr(ui.ctx(), "ui.output-format"));
                 if aspect_combo(ui,"output-aspect",&mut d.aspect) && let Some(r)=d.aspect.ratio() { d.size[1]=(d.size[0]/r).round(); d.locked=true; }
-                ui.checkbox(&mut d.locked,"Link dimensions");
+                ui.checkbox(&mut d.locked,tr(ui.ctx(), "ui.link-dimensions"));
             });
             let before=d.size;
             dimensions(ui,&mut d.size,"Custom resolution");
@@ -303,19 +311,19 @@ impl Editor {
                 else if before[1]!=d.size[1] {d.size[0]=(d.size[1]*ratio).round();}
             }
             ui.label(format!("Proposed output: {:.1} × {:.1} px. Linked dimensions round the other side to whole pixels.",d.size[0],d.size[1]));
-            ui.label("Changing output preserves layer positions and sizes. Custom dimensions are planning sizes, not verified device modes.");
+            ui.label(tr(ui.ctx(), "ui.changing-output-preserves-layer-positions-and-sizes-custom-dimensions-are-planning-si"));
             if d.size != d.observed_size {
                 d.observed_size = d.size;
                 match canvas_pilot::formats::resolution_from_values(d.size).and_then(|size|self.layout.set_output(size)) { Ok(())=>{ self.zoom=1.0;self.pan=Vec2::ZERO;self.sync(); d.error.clear(); },Err(e)=>d.error=e }
             }
             if !d.error.is_empty() { ui.colored_label(theme::palette(ui.ctx()).amber,&d.error); }
             ui.separator();
-            ui.label("Viewport camera (does not change layer or crop geometry)");
+            ui.label(tr(ui.ctx(), "ui.viewport-camera-does-not-change-layer-or-crop-geometry"));
             ui.horizontal(|ui| {
                 let mut zoom=self.zoom*100.0;
-                if ui.add(egui::DragValue::new(&mut zoom).range(0.01..=25600.0).suffix("% of fit-to-screen")).changed() { self.zoom=zoom/100.0; }
-                if ui.button("Fit screen").clicked() {self.zoom=1.0;self.pan=Vec2::ZERO;}
-                if ui.button("1:1 display pixels").clicked() {self.camera_one_to_one=true;}
+                if ui.add(egui::DragValue::new(&mut zoom).range(0.01..=25600.0).suffix(tr(ui.ctx(), "ui.of-fit-to-screen"))).changed() { self.zoom=zoom/100.0; }
+                if ui.button(tr(ui.ctx(), "ui.fit-screen")).clicked() {self.zoom=1.0;self.pan=Vec2::ZERO;}
+                if ui.button(tr(ui.ctx(), "ui.1-1-display-pixels")).clicked() {self.camera_one_to_one=true;}
             });
         });
         if open {
@@ -352,35 +360,35 @@ impl Editor {
         }
         let i = d.layer;
         let mut open = true;
-        egui::Window::new(format!("Layer properties · {}",self.layout.layer_label(i))).open(&mut open).default_width(540.0).default_height(720.0).min_height(380.0).vscroll(true).show(ctx,|ui| {
+        egui::Window::new(rust_i18n::t!("layer.properties-title", locale = localization::locale(ctx), name = self.layout.layer_label(i)).into_owned()).id(egui::Id::new(("layer-properties", self.layout.layer_info(i).id))).open(&mut open).default_width(540.0).default_height(720.0).min_height(380.0).vscroll(true).show(ctx,|ui| {
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Source,"Source");
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Layer,"Layer");
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Crop,"Crop");
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Mask,"Mask");
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Mapping,"Mapping");
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Preview,"Preview");
+                ui.selectable_value(&mut self.property_tab,PropertyTab::Source,tr(ui.ctx(), "ui.source"));
+                ui.selectable_value(&mut self.property_tab,PropertyTab::Layer,tr(ui.ctx(), "ui.layer-ac9ffc"));
+                ui.selectable_value(&mut self.property_tab,PropertyTab::Crop,tr(ui.ctx(), "ui.crop"));
+                ui.selectable_value(&mut self.property_tab,PropertyTab::Mask,tr(ui.ctx(), "ui.mask"));
+                ui.selectable_value(&mut self.property_tab,PropertyTab::Mapping,tr(ui.ctx(), "ui.mapping"));
+                ui.selectable_value(&mut self.property_tab,PropertyTab::Preview,tr(ui.ctx(), "ui.preview"));
             });
             ui.separator();
             if self.property_tab == PropertyTab::Mapping {
-                ui.heading("Layer mapping");
+                ui.heading(tr(ui.ctx(), "ui.layer-mapping"));
                 self.layer_mapping_controls(ui, i);
                 ui.separator();
             }
             if self.property_tab == PropertyTab::Source {
-            ui.heading("Advanced source / input settings");
+            ui.heading(tr(ui.ctx(), "ui.advanced-source-input-settings"));
             self.advanced_input_controls(ui, i);
             ui.separator();
-            ui.label("Editor source model (local geometry)");
-            ui.small("These dimensions describe the editor source, not a device timing command. Local input correction is currently folded into exported layer crop; use the device controls above for the actual shared device input settings.");
+            ui.label(tr(ui.ctx(), "ui.editor-source-model-local-geometry"));
+            ui.small(tr(ui.ctx(), "ui.these-dimensions-describe-the-editor-source-not-a-device-timing-command-local-input-c"));
             ui.add_enabled_ui(self.device.input_edits.enabled, |ui| {
             ui.horizontal(|ui| {
-                ui.label("Editor input");
+                ui.label(tr(ui.ctx(), "ui.editor-input"));
                 egui::ComboBox::from_id_salt("source-id").selected_text(format!("Input {}",d.source_id+1)).show_ui(ui,|ui| {
                     let count = self.layout.formats().sources.len().max(8).max(d.source_id + 1);
                     for id in 0..count { if ui.selectable_value(&mut d.source_id,id,format!("Input {}",id+1)).changed() { d.source=self.layout.formats().sources.get(id).copied().unwrap_or_default();d.input_size=d.source.input().unwrap(); } }
                     ui.separator();
-                    if ui.add_enabled(count < 1024, egui::Button::new("New editor input")).clicked() {
+                    if ui.add_enabled(count < 1024, egui::Button::new(tr(ui.ctx(), "ui.new-editor-input"))).clicked() {
                         d.source_id = count;
                         d.source = Default::default();
                         d.input_size = d.source.input().unwrap();
@@ -388,19 +396,19 @@ impl Editor {
                     }
                 });
             });
-                ui.small("Editor inputs share source format and input crop between editor layers. Inputs 1–8 are offered initially; add more as needed. This local identity does not select a physical device input or change routing.");
+                ui.small(tr(ui.ctx(), "ui.editor-inputs-share-source-format-and-input-crop-between-editor-layers-inputs-1-8-are"));
 
             let affected:Vec<_>=(0..self.layout.layers().len()).filter(|j| *j==i || self.layout.formats().source_for[*j]==d.source_id).map(|j|self.layout.layer_label(j)).collect();
             ui.label(format!("Input edits affect: {}",affected.join(", ")));
             let old_native=d.source.native;
             ui.horizontal(|ui| {
-                ui.label("Source format");
+                ui.label(tr(ui.ctx(), "ui.source-format"));
                 if aspect_combo(ui,"source-aspect",&mut d.source.aspect) && let Some(r)=d.source.aspect.ratio() { d.source.native[1]=(d.source.native[0] as f64/r).round() as u32; }
             });
             presets(ui,&mut d.source.native,&mut d.source.aspect);
             resolution(ui,&mut d.source.native,"Native pixels",d.source.aspect.ratio());
             if old_native!=d.source.native { d.source.input_crop=Crop::default();d.input_size=d.source.native.map(f64::from); }
-            ui.label("Custom input resolution retains the Source format above.");
+            ui.label(tr(ui.ctx(), "ui.custom-input-resolution-retains-the-source-format-above"));
             let old_input_size=d.input_size;
             dimensions(ui,&mut d.input_size,"Input resolution");
             if old_input_size!=d.input_size {
@@ -409,37 +417,37 @@ impl Editor {
                 }
             }
             ui.horizontal(|ui| {
-                if ui.button("Center input crop to this size").clicked() {
+                if ui.button(tr(ui.ctx(), "ui.center-input-crop-to-this-size")).clicked() {
                     match Crop::centered(d.source.native.map(f64::from),d.input_size) { Ok(c)=>{d.source.input_crop=c;d.error.clear();},Err(e)=>d.error=e }
                 }
-                if ui.button("Use full input").clicked() { d.source.input_crop=Crop::default();d.input_size=d.source.native.map(f64::from); }
+                if ui.button(tr(ui.ctx(), "ui.use-full-input")).clicked() { d.source.input_crop=Crop::default();d.input_size=d.source.native.map(f64::from); }
             });
             let old_crop=d.source.input_crop;
             ui.horizontal_wrapped(|ui| {
                 for (title,value) in [("L ",&mut d.source.input_crop.left),("R ",&mut d.source.input_crop.right),("T ",&mut d.source.input_crop.top),("B ",&mut d.source.input_crop.bottom)] { ui.add(egui::DragValue::new(value).range(0.0..=f64::MAX).custom_parser(nonnegative_number).speed(1.0).custom_formatter(|v,_|number(v)).prefix(title)); }
             });
             if old_crop!=d.source.input_crop && let Ok(size)=d.source.input() { d.input_size=size; }
-            ui.label("Input crop edges: native source pixels. Native-size changes reset the draft input crop before review.");
+            ui.label(tr(ui.ctx(), "ui.input-crop-edges-native-source-pixels-native-size-changes-reset-the-draft-input-crop"));
             });
             }
             if self.property_tab == PropertyTab::Layer {
             let before_size = d.size;
-            ui.heading("Layer resolution / final visible box");
-            ui.label("Resizing automatically adjusts the layer crop to fit the new dimensions.");
+            ui.heading(tr(ui.ctx(), "ui.layer-resolution-final-visible-box"));
+            ui.label(tr(ui.ctx(), "ui.resizing-automatically-adjusts-the-layer-crop-to-fit-the-new-dimensions"));
             ui.horizontal(|ui| {
-                ui.label("Format");
+                ui.label(tr(ui.ctx(), "ui.format"));
                 if aspect_combo(ui,"layer-aspect",&mut d.layer_aspect) && let Some(r)=d.layer_aspect.ratio() {
                     d.ratio_edit.text=ratio_ui::label(r);d.ratio_edit.target=Some(r);d.ratio_edit.dirty=false;
                     if let Err(error)=d.commit_ratio(self.keep_aspect_ratio) {d.error=error;}
                 }
             });
-            let lock_changed=ui.checkbox(&mut self.keep_aspect_ratio,"Keep aspect ratio when resizing").changed();
+            let lock_changed=ui.checkbox(&mut self.keep_aspect_ratio,tr(ui.ctx(), "ui.keep-aspect-ratio-when-resizing")).changed();
             let ratio_changed=d.ratio_edit.show(ui,d.size[0]/d.size[1]);
             if ratio_changed {d.layer_aspect=Aspect::Custom;}
             if ratio_changed || (lock_changed && self.keep_aspect_ratio) {
                 match d.commit_ratio(self.keep_aspect_ratio) {Ok(())=>d.error.clear(),Err(error)=>d.error=error}
             }
-            if !self.keep_aspect_ratio && d.ratio_edit.target.is_some() {ui.small("Ratio ready; enable the lock to resize.");}
+            if !self.keep_aspect_ratio && d.ratio_edit.target.is_some() {ui.small(tr(ui.ctx(), "ui.ratio-ready-enable-the-lock-to-resize"));}
             if lock_changed {self.settings.save(&self.application_settings(ui.ctx()));}
             let old=d.size;
             dimensions(ui,&mut d.size,"Visible pixels");
@@ -453,7 +461,7 @@ impl Editor {
                     Err(error) => d.error = error,
                 }
             }
-            ui.small("Layer size changes apply as you edit. Undo restores earlier values.");
+            ui.small(tr(ui.ctx(), "ui.layer-size-changes-apply-as-you-edit-undo-restores-earlier-values"));
             }
             if !ui.input(|input| input.pointer.primary_down()) { d.layer_before = None; }
             if self.property_tab == PropertyTab::Source {
@@ -469,26 +477,26 @@ impl Editor {
                 _=>{}
             }
             let pending = d.pending(&self.layout);
-            if apply_button(ui,"Apply source changes", pending && self.device.input_edits.enabled).clicked() {
+            if apply_button(ui,&tr(ui.ctx(), "action.apply-source"), pending && self.device.input_edits.enabled).clicked() {
                 match d.apply(&mut self.layout, position_reference, self.keep_aspect_ratio) { Ok(())=>{self.sync();d=FormatDraft::new(&self.layout,i);},Err(e)=>d.error=e }
             }
-            ui.small("Source changes require Apply. Switching tabs keeps pending source edits.");
+            ui.small(tr(ui.ctx(), "ui.source-changes-require-apply-switching-tabs-keeps-pending-source-edits"));
             }
             if self.property_tab == PropertyTab::Mask {
-                ui.heading("Layer mask / blanking");
-                ui.label("The magenta box reveals pixels. Everything outside it is blanked; image scale, crop and layer bounds stay unchanged.");
+                ui.heading(tr(ui.ctx(), "ui.layer-mask-blanking"));
+                ui.label(tr(ui.ctx(), "ui.the-magenta-box-reveals-pixels-everything-outside-it-is-blanked-image-scale-crop-and"));
                 let old=self.layout.formats().masks[i];
                 let mut mask=old;
                 let g=self.layout.layers()[i];
                 ui.horizontal_wrapped(|ui| {
                     for (label,edge,opposite,size) in [("Left ",&mut mask.left,old.right,g.width),("Right ",&mut mask.right,old.left,g.width),("Top ",&mut mask.top,old.bottom,g.height),("Bottom ",&mut mask.bottom,old.top,g.height)] {
                         let mut pixels=*edge*size;
-                        if ui.add(egui::DragValue::new(&mut pixels).range(0.0..=(1.0-opposite)*size).speed(1.0).prefix(label).suffix(" output px")).changed() { *edge=(pixels/size).clamp(0.0,1.0-opposite); }
+                        if ui.add(egui::DragValue::new(&mut pixels).range(0.0..=(1.0-opposite)*size).speed(1.0).prefix(label).suffix(tr(ui.ctx(), "ui.output-px"))).changed() { *edge=(pixels/size).clamp(0.0,1.0-opposite); }
                     }
                 });
                 ui.horizontal(|ui| {
-                    if ui.button("Reset mask").clicked() {mask=Default::default();}
-                    if ui.button("Center mask").clicked() {let x=(mask.left+mask.right)/2.0;let y=(mask.top+mask.bottom)/2.0;mask.left=x;mask.right=x;mask.top=y;mask.bottom=y;}
+                    if ui.button(tr(ui.ctx(), "ui.reset-mask")).clicked() {mask=Default::default();}
+                    if ui.button(tr(ui.ctx(), "ui.center-mask")).clicked() {let x=(mask.left+mask.right)/2.0;let y=(mask.top+mask.bottom)/2.0;mask.left=x;mask.right=x;mask.top=y;mask.bottom=y;}
                 });
                 if mask != old {
                     let dragging=ui.input(|input|input.pointer.primary_down());
@@ -497,15 +505,15 @@ impl Editor {
                     if let Err(e)=next.set_mask(i,mask) { d.error=e; } else {self.layout=next;self.sync();d.error.clear();}
                 }
                 if !ui.input(|input|input.pointer.primary_down()) { d.mask_before=None; }
-                ui.small("Drag any edge or corner independently; drag inside the layer to move the window. Arrows move 1 output pixel, Shift+arrows 10. Opposite edges may meet to blank everything. Escape cancels a drag; Undo restores it.");
-                ui.small("Mask proportions follow layer resizing. Masking transparent or already cropped pixels has no visible effect.");
+                ui.small(tr(ui.ctx(), "ui.drag-any-edge-or-corner-independently-drag-inside-the-layer-to-move-the-window-arrows"));
+                ui.small(tr(ui.ctx(), "ui.mask-proportions-follow-layer-resizing-masking-transparent-or-already-cropped-pixels"));
                 let (_,area)=ui.allocate_space(Vec2::new(ui.available_width(),170.0));
                 paint_layer_source(ui.painter(),fit_rect(area,[g.width,g.height]),&self.layout,i,self.layer_preview(i));
             }
             if self.property_tab == PropertyTab::Crop {
-            ui.heading("Layer crop / zoom & position");
+            ui.heading(tr(ui.ctx(), "ui.layer-crop-zoom-position"));
             let mut advanced_fit = self.layout.formats().layer_fit[i].is_some();
-            if ui.checkbox(&mut advanced_fit, "Advanced layer fit").changed() {
+            if ui.checkbox(&mut advanced_fit, tr(ui.ctx(), "ui.advanced-layer-fit")).changed() {
                 let mode = advanced_fit.then_some(canvas_pilot::formats::LayerFit::Centered);
                 let crop = self.layout.formats().advanced[i];
                 match self.layout.set_layer_fit(i, mode, crop) {
@@ -518,16 +526,16 @@ impl Editor {
                 egui::ComboBox::from_id_salt("explicit-layer-fit").selected_text(fit.label()).show_ui(ui, |ui| {
                     for option in canvas_pilot::formats::LayerFit::ALL { ui.selectable_value(&mut fit, option, option.label()); }
                 });
-                ui.label("Crop first, then fit into the layer rectangle. Resize changes the container; 1:1 keeps the image pixel-for-pixel.");
+                ui.label(tr(ui.ctx(), "ui.crop-first-then-fit-into-the-layer-rectangle-resize-changes-the-container-1-1-keeps-t"));
                 let old_crop = self.layout.formats().advanced[i];
                 let mut crop = old_crop;
                 let input = self.layout.formats().input(i).unwrap();
                 ui.horizontal_wrapped(|ui| {
                     for (label, edge, bound) in [("Left ",&mut crop.left,input[0]-old_crop.right), ("Right ",&mut crop.right,input[0]-old_crop.left), ("Top ",&mut crop.top,input[1]-old_crop.bottom), ("Bottom ",&mut crop.bottom,input[1]-old_crop.top)] {
-                        ui.add(egui::DragValue::new(edge).range(0.0..=(bound-0.001).max(0.0)).speed(1.0).prefix(label).suffix(" source px"));
+                        ui.add(egui::DragValue::new(edge).range(0.0..=(bound-0.001).max(0.0)).speed(1.0).prefix(label).suffix(tr(ui.ctx(), "ui.source-px")));
                     }
                 });
-                if ui.button("Reset layer crop").clicked() { crop = Crop::default(); }
+                if ui.button(tr(ui.ctx(), "ui.reset-layer-crop")).clicked() { crop = Crop::default(); }
                 if fit != current_fit || crop != old_crop {
                     match self.layout.set_layer_fit(i, Some(fit), crop) {
                         Ok(()) => { self.sync(); d.refresh_fit(&self.layout); }
@@ -538,20 +546,20 @@ impl Editor {
                 let (_, area) = ui.allocate_space(Vec2::new(ui.available_width(),170.0));
                 paint_layer_source(ui.painter(),fit_rect(area,[current.width,current.height]), &self.layout, i, self.layer_preview(i));
                 if current_fit == canvas_pilot::formats::LayerFit::OneToOne {
-                    ui.small("Drag helper edges to trim without zooming; drag anywhere inside the layer, including empty margins, to reposition the crop without resizing it. Arrow keys move by 1 source pixel, Shift+arrows by 10. Movement stops at the usable source edges. Double-click toggles the helper.");
+                    ui.small(tr(ui.ctx(), "ui.drag-helper-edges-to-trim-without-zooming-drag-anywhere-inside-the-layer-including-em"));
                 } else if matches!(current_fit, canvas_pilot::formats::LayerFit::Centered | canvas_pilot::formats::LayerFit::Cropped) {
-                    ui.small("This mode fits automatically. The canvas crop helper is disabled; numeric crop edges remain available here.");
+                    ui.small(tr(ui.ctx(), "ui.this-mode-fits-automatically-the-canvas-crop-helper-is-disabled-numeric-crop-edges-re"));
                 } else {
-                    ui.small("Edit crop edges here; visual zoom/drag controls are for normal crop mode.");
+                    ui.small(tr(ui.ctx(), "ui.edit-crop-edges-here-visual-zoom-drag-controls-are-for-normal-crop-mode"));
                 }
-                ui.small("Disabling advanced fit restores normal cover framing. Device subpixel rendering is approximate.");
+                ui.small(tr(ui.ctx(), "ui.disabling-advanced-fit-restores-normal-cover-framing-device-subpixel-rendering-is-app"));
             } else {
 
-            ui.label("Zoom and position change the crop values inside this layer, keeping its visible box fixed. 100% is the minimum crop that fills the box.");
+            ui.label(tr(ui.ctx(), "ui.zoom-and-position-change-the-crop-values-inside-this-layer-keeping-its-visible-box-fi"));
             let before_framing=d.framing;
             let mut percent=d.framing.zoom*100.0;
             ui.horizontal(|ui| {
-                if ui.add(egui::DragValue::new(&mut percent).range(100.0..=10000.0).custom_parser(nonnegative_number).speed(1.0).custom_formatter(|v,_|number(v)).suffix("% content zoom")).changed() {d.framing.zoom=percent/100.0;}
+                if ui.add(egui::DragValue::new(&mut percent).range(100.0..=10000.0).custom_parser(nonnegative_number).speed(1.0).custom_formatter(|v,_|number(v)).suffix(tr(ui.ctx(), "ui.content-zoom"))).changed() {d.framing.zoom=percent/100.0;}
                 match d.clamp_offsets(&self.layout) {
                     Ok(bounds) => {
                         for (axis, bound) in bounds.into_iter().enumerate() {
@@ -567,8 +575,8 @@ impl Editor {
             }
             ui.horizontal(|ui| {
                 let apply=d.framing != before_framing;
-                let recenter=ui.button("Recenter").clicked();
-                let reset=ui.button("Reset crop").clicked();
+                let recenter=ui.button(tr(ui.ctx(), "ui.recenter")).clicked();
+                let reset=ui.button(tr(ui.ctx(), "ui.reset-crop")).clicked();
                 if recenter { d.framing=self.layout.formats().mapping(i,current).unwrap().framing; d.framing.offset=[0.0;2]; }
                 if reset {d.framing=Framing::default();}
                 if apply||recenter||reset {
@@ -576,23 +584,23 @@ impl Editor {
                 }
             });
             if !ui.input(|input| input.pointer.primary_down()) { d.crop_before = None; }
-            ui.small("Crop zoom and offsets apply as you edit. Offsets stop at the content edges and adjust when zoom decreases. Undo restores earlier values.");
+            ui.small(tr(ui.ctx(), "ui.crop-zoom-and-offsets-apply-as-you-edit-offsets-stop-at-the-content-edges-and-adjust"));
             }
             }
             if self.property_tab == PropertyTab::Preview {
-            ui.heading("Input preview & crop guides");
+            ui.heading(tr(ui.ctx(), "ui.input-preview-crop-guides"));
             self.crop_preview_controls(ui, i);
             let current = self.layout.layers()[i];
             let (_,rect)=ui.allocate_space(Vec2::new(ui.available_width(),170.0));
             let preview_rect=fit_rect(rect,[current.width,current.height]);
             paint_layer_source(ui.painter(),preview_rect,&self.layout,i,self.layer_preview(i));
-            ui.label("Captured stills follow this layer’s input and dynamic crops. Guides are drawn above the image; screen references are separate.");
+            ui.label(tr(ui.ctx(), "ui.captured-stills-follow-this-layer-s-input-and-dynamic-crops-guides-are-drawn-above-th"));
             }
             if !d.error.is_empty() {ui.colored_label(theme::palette(ui.ctx()).amber,&d.error);}
             ui.collapsing("Calculated crops / provisional WebRCS mapping",|ui| {
                 if let Ok(report)=self.layout.calculation_report(i) {
                     ui.label(&report);
-                    if ui.button("Copy provisional calculation").clicked() && let Ok(export)=self.layout.calculation_export(i) {ctx.copy_text(export);}
+                    if ui.button(tr(ui.ctx(), "ui.copy-provisional-calculation")).clicked() && let Ok(export)=self.layout.calculation_export(i) {ctx.copy_text(export);}
                 }
             });
         });

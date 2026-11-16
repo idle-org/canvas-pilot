@@ -69,7 +69,10 @@ impl InputEdits {
             let can_stage =
                 self.enabled && snapshot.is_some_and(|s| Self::proposal_matches(&saved, s, link));
             if ui
-                .add_enabled(can_stage, egui::Button::new("Stage saved input proposal"))
+                .add_enabled(
+                    can_stage,
+                    egui::Button::new(tr(ui.ctx(), "ui.stage-saved-input-proposal")),
+                )
                 .clicked()
                 && let Some(snapshot) = snapshot
             {
@@ -78,8 +81,11 @@ impl InputEdits {
                     Err(error) => error,
                 });
             }
-            ui.small("To stage: connect, match this layer's saved mapping and routed input/plug, then enable advanced input edits. Send remains a separate action.");
-            if ui.button("Remove saved input proposal").clicked() {
+            ui.small(tr(ui.ctx(), "ui.to-stage-connect-match-this-layer-s-saved-mapping-and-routed-input-plug-then-enable-a"));
+            if ui
+                .button(tr(ui.ctx(), "ui.remove-saved-input-proposal"))
+                .clicked()
+            {
                 self.saved.retain(|p| p.layer_id != layer_id);
             }
         }
@@ -87,32 +93,36 @@ impl InputEdits {
             ui.label(message);
         }
         if snapshot.is_some_and(|s| !s.profile.advanced_inputs()) {
-            ui.label("Shared input corrections for this adapter are managed in WebRCS. Layer crop and zoom remain available in the editor.");
+            ui.label(tr(ui.ctx(), "ui.shared-input-corrections-for-this-adapter-are-managed-in-webrcs-layer-crop-and-zoom-r"));
             return;
         }
-        ui.label(
-            "Advanced — use only when you need to correct an input and understand the effect.",
-        );
-        ui.label("These device controls map one-for-one to WebRCS Advanced Input settings. Content ratio / Transform to change the input's aspect before layer framing. Usually leave them set on the Midra.");
-        ui.label("Input crop removes source edges before dynamic layer crop / zoom. It does not resize the layer's bounding box. This processing is a Midra feature, not an editor-only effect.");
+        ui.label(tr(
+            ui.ctx(),
+            "ui.advanced-use-only-when-you-need-to-correct-an-input-and-understand-the-effect",
+        ));
+        ui.label(tr(ui.ctx(), "ui.these-device-controls-map-one-for-one-to-webrcs-advanced-input-settings-content-ratio"));
+        ui.label(tr(ui.ctx(), "ui.input-crop-removes-source-edges-before-dynamic-layer-crop-zoom-it-does-not-resize-the"));
         if ui
             .checkbox(
                 &mut self.enabled,
-                "Edit advanced input settings and include my edits when sending",
+                tr(
+                    ui.ctx(),
+                    "ui.edit-advanced-input-settings-and-include-my-edits-when-sending",
+                ),
             )
             .changed()
             && !self.enabled
         {
             self.values.clear();
         }
-        ui.small("Off by default. Only edited device fields are sent, and only with layers using that input. Inputs are shared: edits can affect other layers and Program too. Uncheck to discard staged edits. This opt-in lasts for this session only.");
+        ui.small(tr(ui.ctx(), "ui.off-by-default-only-edited-device-fields-are-sent-and-only-with-layers-using-that-inp"));
         let Some((snapshot, base)) = snapshot.and_then(|snapshot| {
             let link = link?;
             let screen = snapshot.screens.iter().find(|s| s.id == link.screen)?;
             input_path(snapshot, &link.screen, &screen.preview_bank, &link.layer)
                 .map(|base| (snapshot, base))
         }) else {
-            ui.small("Connect and map this layer to a Midra input source to inspect its advanced settings. No device input edits are staged offline.");
+            ui.small(tr(ui.ctx(), "ui.connect-and-map-this-layer-to-a-midra-input-source-to-inspect-its-advanced-settings-n"));
             return;
         };
         ui.small(format!(
@@ -251,7 +261,10 @@ impl InputEdits {
         if ui
             .add_enabled(
                 !settings.is_empty(),
-                egui::Button::new("Save staged input edits as a project proposal"),
+                egui::Button::new(tr(
+                    ui.ctx(),
+                    "ui.save-staged-input-edits-as-a-project-proposal",
+                )),
             )
             .clicked()
             && let Some(link) = link
@@ -268,8 +281,8 @@ impl InputEdits {
                 self.saved.push(proposal);
             }
         }
-        ui.small("Saving a proposal is opt-in. Project saves and extra-parameter exports retain it; reopening never stages or sends it.");
-        ui.small("Edits wait for Send; opening this tab or enabling the checkbox sends nothing. Refresh/load after sending to inspect the device's resulting content dimensions.");
+        ui.small(tr(ui.ctx(), "ui.saving-a-proposal-is-opt-in-project-saves-and-extra-parameter-exports-retain-it-reope"));
+        ui.small(tr(ui.ctx(), "ui.edits-wait-for-send-opening-this-tab-or-enabling-the-checkbox-sends-nothing-refresh-l"));
     }
     fn proposal_matches(
         proposal: &canvas_pilot::input_proposal::InputProposal,

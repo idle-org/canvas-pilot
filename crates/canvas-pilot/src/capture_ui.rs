@@ -26,7 +26,10 @@ fn input_picker(
         .selected_text(input_label(inputs, *selected))
         .show_ui(ui, |ui| {
             ui.checkbox(show_empty, "Show inputs without signal")
-                .on_hover_text("Signal status comes from the last connection refresh.");
+                .on_hover_text(tr(
+                    ui.ctx(),
+                    "ui.signal-status-comes-from-the-last-connection-refresh",
+                ));
             ui.separator();
             let mut any = false;
             for input in inputs.iter().filter(|input| *show_empty || input.signal) {
@@ -372,11 +375,14 @@ impl Editor {
     pub(super) fn crop_preview_quick_controls(&mut self, ui: &mut egui::Ui, i: usize) {
         let id = self.layout.layer_info(i).id;
         let Some(preview) = self.capture.layers.get_mut(&id) else {
-            ui.weak("Configure capture to choose an input.");
+            ui.weak(tr(ui.ctx(), "ui.configure-capture-to-choose-an-input"));
             return;
         };
         ui.separator();
-        ui.checkbox(&mut preview.enabled, "Enable input preview");
+        ui.checkbox(
+            &mut preview.enabled,
+            tr(ui.ctx(), "ui.enable-input-preview"),
+        );
         let has_image = preview.enabled
             && preview.texture.is_some()
             && preview.source == self.layout.formats().source_for[i];
@@ -389,7 +395,7 @@ impl Editor {
             .add_enabled(
                 has_image,
                 egui::Slider::new(&mut opacity, 0.0..=100.0)
-                    .text("Crop guide opacity")
+                    .text(tr(ui.ctx(), "ui.crop-guide-opacity"))
                     .suffix("%"),
             )
             .changed()
@@ -435,7 +441,10 @@ impl Editor {
             preview.automatic = false;
             preview.capture_on_selection = false;
         }
-        ui.checkbox(&mut preview.enabled, "Enable input preview");
+        ui.checkbox(
+            &mut preview.enabled,
+            tr(ui.ctx(), "ui.enable-input-preview"),
+        );
         let mut capture = false;
         ui.add_enabled_ui(preview.enabled, |ui| {
             let before = preview.input;
@@ -450,32 +459,32 @@ impl Editor {
                 ui.ctx().request_repaint();
             }
             let available = online && inputs.iter().any(|input| input.id == preview.input && input.enabled);
-            capture = ui.add_enabled(available && idle && !cooling, egui::Button::new("Capture still"))
-                .on_hover_text("Fetch the selected input and replace this layer's preview directly.").clicked();
+            capture = ui.add_enabled(available && idle && !cooling, egui::Button::new(tr(ui.ctx(), "ui.capture-still")))
+                .on_hover_text(tr(ui.ctx(), "ui.fetch-the-selected-input-and-replace-this-layer-s-preview-directly")).clicked();
             if ui.add_enabled(available || preview.automatic, egui::Checkbox::new(&mut preview.automatic, "Auto-refresh this preview")).changed() {
                 preview.paused = false;
                 preview.host = self.device.host.clone();
             }
             if preview.paused && preview.automatic {
-                ui.small("Saved auto-refresh is paused.");
-                if ui.add_enabled(available, egui::Button::new("Resume auto-refresh")).clicked() {
+                ui.small(tr(ui.ctx(), "ui.saved-auto-refresh-is-paused"));
+                if ui.add_enabled(available, egui::Button::new(tr(ui.ctx(), "ui.resume-auto-refresh"))).clicked() {
                     preview.paused = false;
                     preview.host = self.device.host.clone();
                 }
             }
-            ui.add_enabled(preview.automatic, egui::Slider::new(&mut self.capture.refresh.seconds, 5..=300).text("Request interval").suffix(" s"));
-            ui.small("One input per interval across automatic previews; shared inputs use one request. Leave auto-refresh off to keep a still.");
+            ui.add_enabled(preview.automatic, egui::Slider::new(&mut self.capture.refresh.seconds, 5..=300).text(tr(ui.ctx(), "ui.request-interval")).suffix(tr(ui.ctx(), "ui.s")));
+            ui.small(tr(ui.ctx(), "ui.one-input-per-interval-across-automatic-previews-shared-inputs-use-one-request-leave"));
             let has_image = preview.enabled && preview.texture.is_some();
             let mut opacity = if has_image { preview.guides * 100.0 } else { 100.0 };
-            if ui.add_enabled(has_image, egui::Slider::new(&mut opacity, 0.0..=100.0).text("Crop guide opacity").suffix("%")).changed() {
+            if ui.add_enabled(has_image, egui::Slider::new(&mut opacity, 0.0..=100.0).text(tr(ui.ctx(), "ui.crop-guide-opacity")).suffix("%")).changed() {
                 preview.guides = opacity / 100.0;
             }
             if !preview.name.is_empty() { ui.small(&preview.name); }
-            if !online { ui.small("Connect to a device to choose and capture an input."); }
-            else if preview.input == 0 { ui.small("Choose an input to capture its first still automatically."); }
-            else if !available { ui.small("Input snapshots are unavailable. Enable snapshots in WebRCS, then refresh the connection."); }
-            if !idle { ui.spinner(); ui.small("Fetching an input snapshot…"); }
-            else if cooling { ui.small("Capture available again shortly."); ui.ctx().request_repaint_after(std::time::Duration::from_secs(1)); }
+            if !online { ui.small(tr(ui.ctx(), "ui.connect-to-a-device-to-choose-and-capture-an-input")); }
+            else if preview.input == 0 { ui.small(tr(ui.ctx(), "ui.choose-an-input-to-capture-its-first-still-automatically")); }
+            else if !available { ui.small(tr(ui.ctx(), "ui.input-snapshots-are-unavailable-enable-snapshots-in-webrcs-then-refresh-the-connectio")); }
+            if !idle { ui.spinner(); ui.small(tr(ui.ctx(), "ui.fetching-an-input-snapshot")); }
+            else if cooling { ui.small(tr(ui.ctx(), "ui.capture-available-again-shortly")); ui.ctx().request_repaint_after(std::time::Duration::from_secs(1)); }
         });
         if !self.capture.error.is_empty() {
             ui.colored_label(ui.visuals().error_fg_color, &self.capture.error);
@@ -619,9 +628,9 @@ impl Editor {
         let mut capture = false;
         let mut add = false;
         let mut use_layer = false;
-        egui::Window::new("Import input snapshot").open(&mut open).default_width(560.0).collapsible(false).show(ctx, |ui| {
-            ui.label("Capture an input snapshot, then import it into a layer or add it as a fixed reference image.");
-            ui.small("Snapshots are reduced-resolution images, not a live feed. Their size depends on the device's snapshot settings.");
+        egui::Window::new(tr(ctx, "ui.import-input-snapshot")).id(egui::Id::new("Import input snapshot")).open(&mut open).default_width(560.0).collapsible(false).show(ctx, |ui| {
+            ui.label(tr(ui.ctx(), "ui.capture-an-input-snapshot-then-import-it-into-a-layer-or-add-it-as-a-fixed-reference"));
+            ui.small(tr(ui.ctx(), "ui.snapshots-are-reduced-resolution-images-not-a-live-feed-their-size-depends-on-the-dev"));
             let before = self.capture.input;
             ui.add_enabled_ui(self.capture.pending.is_none(), |ui| {
             input_picker(ui, "import-snapshot-input", &mut self.capture.input, &inputs, &mut self.capture.show_empty_inputs);
@@ -629,34 +638,34 @@ impl Editor {
             if before != self.capture.input { self.capture.preview = None; self.capture.capture_on_selection = true; self.capture.error.clear(); ctx.request_repaint(); }
             let input = inputs.iter().find(|i| i.id == self.capture.input);
             if input.is_some_and(|i| !i.enabled) {
-                ui.label("Snapshots are disabled for this input. Enable input snapshots in WebRCS and refresh the connection.");
+                ui.label(tr(ui.ctx(), "ui.snapshots-are-disabled-for-this-input-enable-input-snapshots-in-webrcs-and-refresh-th"));
             }
-            ui.label("Destination");
+            ui.label(tr(ui.ctx(), "ui.destination"));
             egui::ComboBox::from_id_salt("snapshot-destination").selected_text(
                 self.capture.target_layer.and_then(|id| (0..self.layout.layers().len()).find(|&i| self.layout.layer_info(i).id == id))
                     .map(|i| format!("Layer: {}", self.layout.layer_label(i))).unwrap_or_else(|| "Reference image".into())
             ).show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.capture.target_layer, None, "Reference image");
+                ui.selectable_value(&mut self.capture.target_layer, None, tr(ui.ctx(), "ui.reference-image"));
                 for i in 0..self.layout.layers().len() {
                     ui.selectable_value(&mut self.capture.target_layer, Some(self.layout.layer_info(i).id), format!("Layer: {}", self.layout.layer_label(i)));
                 }
             });
             if self.capture.target_layer.is_some() {
-                ui.checkbox(&mut self.capture.keep_refreshing, "Keep refreshing this layer");
-                ui.add_enabled(self.capture.keep_refreshing, egui::Slider::new(&mut self.capture.refresh.seconds, 5..=300).text("Request interval").suffix(" s"));
+                ui.checkbox(&mut self.capture.keep_refreshing, tr(ui.ctx(), "ui.keep-refreshing-this-layer"));
+                ui.add_enabled(self.capture.keep_refreshing, egui::Slider::new(&mut self.capture.refresh.seconds, 5..=300).text(tr(ui.ctx(), "ui.request-interval")).suffix(tr(ui.ctx(), "ui.s")));
             } else {
-                ui.small("Reference images are fixed stills and never auto-refresh.");
+                ui.small(tr(ui.ctx(), "ui.reference-images-are-fixed-stills-and-never-auto-refresh"));
             }
             ui.horizontal(|ui| {
-                capture = ui.add_enabled(!cooling_down && self.capture.pending.is_none() && input.is_some_and(|i| i.enabled), egui::Button::new("Capture still")).clicked();
+                capture = ui.add_enabled(!cooling_down && self.capture.pending.is_none() && input.is_some_and(|i| i.enabled), egui::Button::new(tr(ui.ctx(), "ui.capture-still"))).clicked();
                 if self.capture.pending.is_some() {
                     ui.spinner();
-                    if ui.button("Cancel capture").clicked() { self.capture.discard_result = true; }
+                    if ui.button(tr(ui.ctx(), "ui.cancel-capture")).clicked() { self.capture.discard_result = true; }
                 }
             });
-            ui.small("At most one request at a time, with at least 5 seconds between requests.");
+            ui.small(tr(ui.ctx(), "ui.at-most-one-request-at-a-time-with-at-least-5-seconds-between-requests"));
 
-            if cooling_down { ui.small("Capture available again shortly."); ctx.request_repaint_after(std::time::Duration::from_secs(1)); }
+            if cooling_down { ui.small(tr(ui.ctx(), "ui.capture-available-again-shortly")); ctx.request_repaint_after(std::time::Duration::from_secs(1)); }
             if let Some(reference) = &self.capture.preview {
                 ui.label(format!("{} · {} × {} px", reference.name, reference.size[0], reference.size[1]));
                 ui.add(egui::Image::new(&reference.texture).max_size(Vec2::new(512.0, 320.0)));
@@ -664,9 +673,9 @@ impl Editor {
                     ui.colored_label(if severe { ui.visuals().error_fg_color } else { theme::palette(ctx).amber }, warning);
                 }
                 if self.capture.target_layer.is_some() {
-                    use_layer = ui.button("Import into layer").clicked();
+                    use_layer = ui.button(tr(ui.ctx(), "ui.import-into-layer")).clicked();
                 } else {
-                    add = ui.button("Add as reference").clicked();
+                    add = ui.button(tr(ui.ctx(), "ui.add-as-reference")).clicked();
                 }
             }
             if !self.capture.error.is_empty() { ui.colored_label(ui.visuals().error_fg_color, &self.capture.error); }

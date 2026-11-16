@@ -42,61 +42,88 @@ impl Editor {
 
     pub(super) fn import_menu(&mut self, ui: &mut egui::Ui) {
         ui.set_min_width(225.0);
-        if ui.button("Device layers…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.device-layers")).clicked() {
             self.device.prepare_send = false;
             self.device.open = true;
             ui.close_menu();
         }
         ui.separator();
-        ui.weak("Layer values");
+        ui.weak(tr(ui.ctx(), "ui.layer-values"));
         self.transfer_layer_picker(ui, "Choose destination layers…");
-        if ui.button("Geometry file…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.geometry-file")).clicked() {
             ui.close_menu();
             self.import_geometry_file();
         }
         if ui
-            .button("Clipboard values")
-            .on_hover_text("Read the clipboard and review layer mapping. Ctrl/Cmd-V also works.")
+            .button(tr(ui.ctx(), "ui.clipboard-values"))
+            .on_hover_text(tr(
+                ui.ctx(),
+                "ui.read-the-clipboard-and-review-layer-mapping-ctrl-cmd-v-also-works",
+            ))
             .clicked()
         {
             ui.close_menu();
             Self::request_layer_paste(ui.ctx());
         }
         ui.separator();
-        ui.weak("Images & input snapshots");
+        ui.weak(tr(ui.ctx(), "ui.images-input-snapshots"));
         self.reference_actions_menu(ui);
     }
     pub(super) fn overlay_grid_options(&mut self, ui: &mut egui::Ui) {
-        ui.checkbox(&mut self.snapping.show_grid, "Show overlay grid");
-        ui.checkbox(&mut self.snapping.grid, "Snap to overlay grid");
+        ui.checkbox(
+            &mut self.snapping.show_grid,
+            tr(ui.ctx(), "ui.show-overlay-grid"),
+        );
+        ui.checkbox(
+            &mut self.snapping.grid,
+            tr(ui.ctx(), "ui.snap-to-overlay-grid"),
+        );
         if self.snapping.grid && !self.snapping.enabled {
-            ui.weak("Enable snapping with the magnet options to snap to the grid.");
+            ui.weak(tr(
+                ui.ctx(),
+                "ui.enable-snapping-with-the-magnet-options-to-snap-to-the-grid",
+            ));
         }
         ui.horizontal(|ui| {
-            ui.label("Columns");
+            ui.label(tr(ui.ctx(), "ui.columns"));
             ui.add(egui::DragValue::new(&mut self.snapping.grid_divisions[0]).range(1..=64));
         });
         ui.horizontal(|ui| {
-            ui.label("Rows");
+            ui.label(tr(ui.ctx(), "ui.rows"));
             ui.add(egui::DragValue::new(&mut self.snapping.grid_divisions[1]).range(1..=64));
         });
-        ui.weak("Equal divisions of the output. Visibility and snapping are independent.");
+        ui.weak(tr(
+            ui.ctx(),
+            "ui.equal-divisions-of-the-output-visibility-and-snapping-are-independent",
+        ));
     }
     pub(super) fn snapping_options(&mut self, ui: &mut egui::Ui) {
-        ui.checkbox(&mut self.snapping.enabled, "Snap movement & resizing");
+        ui.checkbox(
+            &mut self.snapping.enabled,
+            tr(ui.ctx(), "ui.snap-movement-resizing"),
+        );
         ui.add_enabled_ui(self.snapping.enabled, |ui| {
-            ui.checkbox(&mut self.snapping.pixels, "Pixel edges");
+            ui.checkbox(&mut self.snapping.pixels, tr(ui.ctx(), "ui.pixel-edges"));
             ui.checkbox(
                 &mut self.snapping.screen_edges,
-                "Screen edges, center & quarters",
+                tr(ui.ctx(), "ui.screen-edges-center-quarters"),
             );
-            ui.checkbox(&mut self.snapping.layer_edges, "Visible layer edges")
-                .on_hover_text("Includes contact between mirrored/opposite resizing layers.");
+            ui.checkbox(
+                &mut self.snapping.layer_edges,
+                tr(ui.ctx(), "ui.visible-layer-edges"),
+            )
+            .on_hover_text(tr(
+                ui.ctx(),
+                "ui.includes-contact-between-mirrored-opposite-resizing-layers",
+            ));
         });
-        ui.weak("Alt: invert snapping · Shift: 10 px · Ctrl+Shift: 100 px");
+        ui.weak(tr(
+            ui.ctx(),
+            "ui.alt-invert-snapping-shift-10-px-ctrl-shift-100-px",
+        ));
     }
     pub(super) fn snapping_menu(&mut self, ui: &mut egui::Ui) {
-        ui.menu_button("Snapping", |ui| {
+        ui.menu_button(tr(ui.ctx(), "ui.snapping"), |ui| {
             let before = self.snapping;
             self.snapping_options(ui);
             if before != self.snapping {
@@ -108,7 +135,7 @@ impl Editor {
         });
     }
     pub(super) fn backdrop_options(&mut self, ui: &mut egui::Ui) {
-        ui.label("Example backdrop title (saved in project)");
+        ui.label(tr(ui.ctx(), "ui.example-backdrop-title-saved-in-project"));
         if ui
             .add(
                 egui::TextEdit::singleline(&mut self.backdrop_title)
@@ -119,22 +146,30 @@ impl Editor {
         {
             self.backdrop_title.retain(|c| !c.is_control());
         }
-        ui.small("Updates immediately. Leave blank to hide the title.");
-        if ui.button("Reset example title").clicked() {
+        ui.small(tr(
+            ui.ctx(),
+            "ui.updates-immediately-leave-blank-to-hide-the-title",
+        ));
+        if ui.button(tr(ui.ctx(), "ui.reset-example-title")).clicked() {
             self.backdrop_title = canvas_pilot::project::DEFAULT_BACKDROP_TITLE.into();
         }
         if !self.references.is_empty() {
-            ui.weak("The reference image replaces this example backdrop.");
+            ui.weak(tr(
+                ui.ctx(),
+                "ui.the-reference-image-replaces-this-example-backdrop",
+            ));
         }
     }
     pub(super) fn viewport_options_menu(&mut self, ui: &mut egui::Ui) {
-        if ui.button("Open all settings…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.open-all-settings")).clicked() {
             self.preferences_open = true;
             ui.close_menu();
         }
         ui.separator();
         self.snapping_menu(ui);
-        ui.menu_button("Example backdrop", |ui| self.backdrop_options(ui));
+        ui.menu_button(tr(ui.ctx(), "ui.example-backdrop"), |ui| {
+            self.backdrop_options(ui)
+        });
         let before = self.application_settings(ui.ctx());
         let current = theme::Theme::current(ui.ctx());
         ui.menu_button(format!("Theme: {}", current.name()), |ui| {
@@ -148,7 +183,7 @@ impl Editor {
                 }
             }
             ui.separator();
-            if ui.button("More themes…").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.more-themes")).clicked() {
                 self.themes_open = true;
                 ui.close_menu();
             }
@@ -156,13 +191,19 @@ impl Editor {
         ui.separator();
         ui.checkbox(
             &mut self.outline_layers,
-            "Outline-only layers (this project)",
+            tr(ui.ctx(), "ui.outline-only-layers-this-project"),
         );
-        ui.checkbox(&mut self.show_toolbar_icon_names, "Show toolbar icon names");
+        ui.checkbox(
+            &mut self.show_toolbar_icon_names,
+            tr(ui.ctx(), "ui.show-toolbar-icon-names"),
+        );
         self.resize_ratio_option(ui);
         ui.checkbox(
             &mut self.show_pattern,
-            "Show source patterns on other layers while cropping",
+            tr(
+                ui.ctx(),
+                "ui.show-source-patterns-on-other-layers-while-cropping",
+            ),
         );
         let after = self.application_settings(ui.ctx());
         if before != after {
@@ -175,7 +216,9 @@ impl Editor {
         }
         if let Some(error) = &self.settings.error {
             ui.colored_label(ui.visuals().error_fg_color, error);
-            if self.settings.can_retry() && ui.button("Retry saving options").clicked() {
+            if self.settings.can_retry()
+                && ui.button(tr(ui.ctx(), "ui.retry-saving-options")).clicked()
+            {
                 self.settings.save(&after);
             }
         }
@@ -186,13 +229,17 @@ impl Editor {
         }
         let current = theme::Theme::current(ctx);
         let mut selected = None;
-        egui::Window::new("All themes")
+        egui::Window::new(tr(ctx, "ui.all-themes"))
+            .id(egui::Id::new("All themes"))
             .open(&mut self.themes_open)
             .default_width(540.0)
             .resizable(false)
             .collapsible(false)
             .show(ctx, |ui| {
-                ui.label("Choose a theme. Your three most recent choices stay in the menu.");
+                ui.label(tr(
+                    ui.ctx(),
+                    "ui.choose-a-theme-your-three-most-recent-choices-stay-in-the-menu",
+                ));
                 ui.separator();
                 ui.columns(2, |columns| {
                     for (index, choice) in theme::Theme::ALL.into_iter().enumerate() {
@@ -239,25 +286,25 @@ impl Editor {
     }
     pub(super) fn application_menu(&mut self, ui: &mut egui::Ui) {
         ui.set_min_width(185.0);
-        if ui.button("Open all settings…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.open-all-settings")).clicked() {
             self.preferences_open = true;
             ui.close_menu();
         }
         ui.separator();
-        if ui.button("Device connection…").clicked() {
+        if ui.button(tr(ui.ctx(), "ui.device-connection")).clicked() {
             self.device.connection_open = true;
             ui.close_menu();
         }
-        ui.menu_button("Project", |ui| self.project_menu(ui));
-        ui.menu_button("Import", |ui| self.import_menu(ui));
-        ui.menu_button("Export", |ui| self.export_menu(ui));
-        ui.menu_button("Edit", |ui| {
-            if ui.button("Undo").clicked() {
+        ui.menu_button(tr(ui.ctx(), "ui.project"), |ui| self.project_menu(ui));
+        ui.menu_button(tr(ui.ctx(), "ui.import"), |ui| self.import_menu(ui));
+        ui.menu_button(tr(ui.ctx(), "ui.export"), |ui| self.export_menu(ui));
+        ui.menu_button(tr(ui.ctx(), "ui.edit"), |ui| {
+            if ui.button(tr(ui.ctx(), "ui.undo")).clicked() {
                 self.layout.undo();
                 self.sync();
                 ui.close_menu();
             }
-            if ui.button("Redo").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.redo")).clicked() {
                 self.layout.redo();
                 self.sync();
                 ui.close_menu();
@@ -266,14 +313,17 @@ impl Editor {
             if ui
                 .add_enabled(
                     !self.layout.selected_indices().is_empty(),
-                    egui::Button::new("Copy layer values"),
+                    egui::Button::new(tr(ui.ctx(), "ui.copy-layer-values")),
                 )
                 .clicked()
             {
                 self.copy(ui.ctx());
                 ui.close_menu();
             }
-            if ui.button("Select all editable layers").clicked() {
+            if ui
+                .button(tr(ui.ctx(), "ui.select-all-editable-layers"))
+                .clicked()
+            {
                 self.layout.set_selection(
                     (0..self.layout.layers().len())
                         .map(|i| self.layout.visible(i) && !self.layout.locked(i))
@@ -282,48 +332,54 @@ impl Editor {
                 self.sync();
                 ui.close_menu();
             }
-            if ui.button("Deselect all").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.deselect-all")).clicked() {
                 self.layout.select(None);
                 self.edit_content = false;
                 self.sync();
                 ui.close_menu();
             }
         });
-        ui.menu_button("View", |ui| {
-            if ui.button("Fit screen").clicked() {
+        ui.menu_button(tr(ui.ctx(), "ui.view"), |ui| {
+            if ui.button(tr(ui.ctx(), "ui.fit-screen")).clicked() {
                 self.fit_screen();
                 ui.close_menu();
             }
             if ui
                 .add_enabled(
                     self.layout.selection_bounds().is_some(),
-                    egui::Button::new("Zoom to selection"),
+                    egui::Button::new(tr(ui.ctx(), "ui.zoom-to-selection")),
                 )
                 .clicked()
             {
                 self.fit_selection();
                 ui.close_menu();
             }
-            if ui.button("1:1 display pixels").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.1-1-display-pixels")).clicked() {
                 self.camera_one_to_one = true;
                 ui.close_menu();
             }
             ui.separator();
-            if ui.button("Output format…").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.output-format")).clicked() {
                 self.output_draft = Some(OutputDraft::new(self.layout.formats().output));
                 ui.close_menu();
             }
-            if ui.button("Reference image settings…").clicked() {
+            if ui
+                .button(tr(ui.ctx(), "ui.reference-image-settings"))
+                .clicked()
+            {
                 self.reference_open = true;
                 ui.close_menu();
             }
         });
-        ui.menu_button("Layers", |ui| {
-            if ui.button("Manage layers & folders…").clicked() {
+        ui.menu_button(tr(ui.ctx(), "ui.layers"), |ui| {
+            if ui
+                .button(tr(ui.ctx(), "ui.manage-layers-folders"))
+                .clicked()
+            {
                 self.manage_layers();
                 ui.close_menu();
             }
-            if ui.button("Add layer").clicked() {
+            if ui.button(tr(ui.ctx(), "ui.add-layer")).clicked() {
                 self.add_layer();
                 ui.close_menu();
             }
@@ -331,7 +387,7 @@ impl Editor {
                 .add_enabled(
                     !self.layout.selected_indices().is_empty()
                         && self.layout.selected_indices().len() < self.layout.layers().len(),
-                    egui::Button::new("Remove selected layers"),
+                    egui::Button::new(tr(ui.ctx(), "ui.remove-selected-layers")),
                 )
                 .clicked()
             {
@@ -339,9 +395,9 @@ impl Editor {
                 ui.close_menu();
             }
             ui.separator();
-            ui.menu_button("Selected layer actions", |ui| {
+            ui.menu_button(tr(ui.ctx(), "ui.selected-layer-actions"), |ui| {
                 if self.layout.selected_indices().is_empty() {
-                    ui.weak("Select a layer to edit its properties.");
+                    ui.weak(tr(ui.ctx(), "ui.select-a-layer-to-edit-its-properties"));
                 }
                 self.layer_context_menu(ui);
             });
@@ -351,7 +407,7 @@ impl Editor {
                     if ui
                         .add_enabled(
                             self.layout.visible(i) && !self.layout.locked(i),
-                            egui::Button::new("Select layer"),
+                            egui::Button::new(tr(ui.ctx(), "ui.select-layer")),
                         )
                         .clicked()
                     {
@@ -361,19 +417,27 @@ impl Editor {
                         ui.close_menu();
                     }
                     let mut visible = self.layout.visible(i);
-                    if ui.checkbox(&mut visible, "Visible").changed() {
+                    if ui
+                        .checkbox(&mut visible, tr(ui.ctx(), "ui.visible"))
+                        .changed()
+                    {
                         self.layout.set_visible(i, visible);
                         self.sync();
                     }
                     let mut locked = self.layout.locked(i);
-                    if ui.checkbox(&mut locked, "Locked").changed() {
+                    if ui
+                        .checkbox(&mut locked, tr(ui.ctx(), "ui.locked"))
+                        .changed()
+                    {
                         self.layout.set_locked(i, locked);
                         self.sync();
                     }
                 });
             }
         });
-        ui.menu_button("Options", |ui| self.viewport_options_menu(ui));
+        ui.menu_button(tr(ui.ctx(), "ui.options"), |ui| {
+            self.viewport_options_menu(ui)
+        });
     }
 }
 
