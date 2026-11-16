@@ -8,10 +8,16 @@ No changes yet.
 
 ## v0.8.0 — 2026-11-16
 
+- Published Windows, Linux, Apple Silicon and Intel macOS binaries and portable
+  bundles, with templates, an offline manual, checksums and build provenance.
+  macOS uses the documented Rust 1.100 compiler-image recipe because the original
+  pinned image is too old for the locked CAD dependencies. Linux startup was
+  checked; native Windows/macOS runtime acceptance remains separate.
+
 Standalone Canvas Pilot and advanced exchange milestone. See the
 [release notes](../development/release-notes/v0.8.0.md) for highlights,
-compatibility and remaining release validation. This version is prepared for
-release; downloadable binaries are not yet published.
+compatibility and remaining release validation. See the [release page](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.8.0)
+for published downloads and platform validation.
 
 - Import/paste can optionally rename destination layers from supplied editor names,
   with proposed names shown before applying and a name-only mode. Folders and IDs

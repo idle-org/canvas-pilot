@@ -1,25 +1,56 @@
 # Release preparation
 
-## Current milestone: v0.8.0
+## Published milestone: v0.8.0
 
-[Release notes](release-notes/v0.8.0.md) record the standalone Canvas Pilot and
-advanced exchange milestone. The workspace and lockfile use version 0.8.0.
-The annotated local `v0.8.0` tag identifies the committed release preparation.
-Tags and commits are not pushed automatically, and no binaries are published by
-this preparation task.
+[Download v0.8.0](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.8.0).
+The annotated tag identifies source commit `eb82dc7cc91105793d2d31552da71763d2218df5`;
+subsequent publication documentation does not move that tag. The release has 21
+assets: four portable bundles, four canonical cargo-binstall archives, four raw
+binaries, the artifact manifest/checksums, and seven manual/template/build extras.
+The [release notes](release-notes/v0.8.0.md) describe compatibility and downloads.
 
-On a capable build host with this tagged commit checked out:
+All four builds passed. Linux GUI startup/render passed with isolated settings.
+Both macOS binaries passed Mach-O architecture, minimum macOS 13.0, system-library,
+archive-layout and checksum checks. Native Windows/macOS runtime testing was not
+available. All 21 assets were downloaded and hash-checked before publication and
+again anonymously after publication. cargo-binstall retrieved all four targets
+from the public release; each installed binary matched the built artifact SHA-256.
+
+### Required macOS compiler override
+
+The original pinned SDK image contains Rust 1.93, but the locked CAD dependencies
+require Rust 1.95 or newer. The first real release build exposed this mismatch;
+the earlier dry run could not detect it. v0.8.0 keeps its application source and
+lockfile unchanged and uses Rust 1.100.0 for all targets.
+
+The [compiler recipe](../../scripts/release/Containerfile.apple) extends the original
+immutable image with Rust 1.100.0 and both Apple target libraries. Its built digest,
+Cross image digests and validation boundaries are in the release's
+`build-provenance.json`. The macOS configuration used is attached as
+`rust-release-v0.8.0.toml`; the image is locally built, not a public registry upload.
+
+For a fresh build host, download `Containerfile.apple`, `BUILDING-v0.8.0.md` and
+`rust-release-v0.8.0.toml` from the release. Build the recipe, then set the supplied
+configuration's `build.apple.image` to your local image's immutable digest, as
+explained in the build instructions. A rebuilt image's digest can differ because
+of build timestamps. From a clean tagged checkout:
 
 ```sh
-rust_realease . --package canvas-pilot --tag v0.8.0 --dry-run
-rust_realease . --package canvas-pilot --tag v0.8.0 --compile-only
+rust_realease . --package canvas-pilot --tag v0.8.0 --dry-run --config /path/to/rust-release-v0.8.0.toml
+rust_realease . --package canvas-pilot --tag v0.8.0 --compile-only --artifact-format both --config /path/to/rust-release-v0.8.0.toml
 ```
 
-The second command performs the expensive four-target builds and packaging; it
-creates no remote release. Keep default features enabled for vendor formats.
-After target-platform smoke tests, a separately authorized publishing run can
-use `--message-file docs/development/release-notes/v0.8.0.md` and the configured
-credential mechanism. Do not use `--replace-assets` for a first publication.
+Keep default features enabled for vendor formats. The second command builds and
+packages all targets without publishing. For this publication, the successful
+Linux/Windows binaries were retained after the first macOS failure; macOS was
+rerun with the compatible compiler. Retained binaries were packaged to the same
+configured layouts with entry/hash/permission/architecture verification. The
+combined artifact manifest records this rather than claiming one uninterrupted run.
+
+Release assets were uploaded as a draft using the authorized token, verified, then
+published through Gitea. Credentials and generated archives remain outside Git.
+Do not replace existing public assets or move the release tag for future fixes;
+prepare a new version instead.
 
 ## Packaging configuration
 
@@ -52,7 +83,7 @@ artifacts. Run it later on a capable build host:
 rust_realease . --package canvas-pilot --compile-only
 ```
 
-### Readiness audit — 2026-11-16
+### Historical readiness audit — 2026-11-16 (before the milestone)
 
 Checked with `rust_realease 0.1.6-rc.3`, without compiling or publishing:
 

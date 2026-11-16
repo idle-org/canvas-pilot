@@ -8,3 +8,4 @@ __pycache__/
 /gitea-token.txt
 .env
 /.rust-release/
+/dist/

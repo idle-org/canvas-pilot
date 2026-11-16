@@ -13,7 +13,7 @@ device readback and physical-screen acceptance.
 
 ## Release milestone
 
-**v0.8.0 — Standalone and advanced exchange** is prepared as a source milestone.
+**v0.8.0 — Standalone and advanced exchange** is published with four-platform binaries.
 See its [release notes](../development/release-notes/v0.8.0.md) and
 [build/publication procedure](../development/releases.md). Remaining acceptance
 checks and stretch goals below remain open; the tag does not mark them complete.
