@@ -164,6 +164,10 @@ with either. A cyan outline marks the selected toggle; the fill shows its curren
 effect, including temporary modifier changes. Tooltips explain the shortcuts.
 Icons wrap onto another row when the window is narrow.
 
+In double-click crop editing, **Tab** switches between crop and mask (normal crop
+and 1:1, Select tool). Tab retains focus navigation in property windows and other
+controls. See [mask editing](formats-and-crop.md#masking-without-resizing).
+
 | Held modifier | Temporary effect |
 | --- | --- |
 | Shift | 10 px grid; disables it if that grid is already selected |

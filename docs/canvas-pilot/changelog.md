@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.5
+
+- Tab toggles crop/mask in double-click canvas editing, avoiding desktop Alt-mouse
+  interception. Alt remains available for temporary masking. Text fields, property
+  windows and other controls retain Tab navigation; repeats and active drags do not
+  switch modes. Updated guide hints and added interaction/focus regression tests.
+
+
 ### v0.9.4
 
 - Added five practical conversion-loss examples for Figma, draw.io, SVG and Canvas

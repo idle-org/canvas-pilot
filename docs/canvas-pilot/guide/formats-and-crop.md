@@ -221,7 +221,17 @@ clears all edges while keeping the selected reference.
 
 
 Open **Layer properties → Mask**, or right-click a selected layer and choose
-**Adjust layer mask**. Or double-click a layer to enter crop mode, then **hold Alt**
+**Adjust layer mask**. For keyboard editing, double-click a layer to enter crop
+mode, then press **Tab** to switch to the mask; press **Tab** again to return to crop.
+This works with normal crop and 1:1 editing using the Select tool. It avoids Alt
+mouse gestures that some Wayland desktops/window managers intercept.
+
+Tab switches only in the canvas editing mode, with no control focused or property
+window open. In settings and text fields it retains normal keyboard navigation;
+Shift+Tab is unchanged. Holding Tab does not repeatedly toggle, and active drags
+keep their mode. No crop or mask values change just by switching.
+
+You can also **hold Alt**
 (**Option** on macOS) with the Select tool to temporarily show and edit the mask
 instead. Release Alt to return to crop; mask changes are kept. No properties window
 opens. If you release Alt during a drag, the mask guide stays active until that drag
