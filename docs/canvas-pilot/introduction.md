@@ -77,7 +77,7 @@ a format for your editor and see which settings it preserves.
 - **Save your work:** use **Project → Save project…** for a `.pilot.json` file
   that retains the full editor project.
 - **Work with another application:** drop a supported geometry file into the window,
-  use **Import → Geometry file…**, or **Project → Export → Export layers…**. The [starter-file catalog](../templates/canvas-pilot/catalog.md)
+  use **Import → Geometry file…**, or **Menu → Export → Export layers…**. The [starter-file catalog](../templates/canvas-pilot/catalog.md)
   has matching Full HD and 4K files in SVG, draw.io, geometry JSON, CSV, DXF/DWG,
   HTML, PPTX, Figma FIG, FigCraft and Illustrator. Prefer SVG for Illustrator
   exchange: Illustrator requires a separately installed VectorCraft CLI for both import

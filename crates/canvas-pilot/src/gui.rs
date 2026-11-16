@@ -2284,6 +2284,19 @@ impl Editor {
     }
 
     fn layer_context_menu(&mut self, ui: &mut egui::Ui) {
+        self.layer_editing_menu(ui);
+        let selected = self.layout.selected_indices();
+        if !selected.is_empty() || self.layer_ui.context_layer.is_some() {
+            ui.separator();
+            ui.menu_button(tr(ui.ctx(), "ui.canvas"), |ui| {
+                self.canvas_context_options(ui)
+            });
+        } else {
+            self.canvas_context_options(ui);
+        }
+    }
+
+    fn layer_editing_menu(&mut self, ui: &mut egui::Ui) {
         ui.set_min_width(210.0);
         if let Some(id) = self.layer_ui.context_layer {
             self.layer_organize_menu(ui, id);
@@ -2391,14 +2404,6 @@ impl Editor {
         }
         if let Some(id) = self.layer_ui.context_layer {
             self.layer_delete_menu(ui, id);
-        }
-        if !selected.is_empty() || self.layer_ui.context_layer.is_some() {
-            ui.separator();
-            ui.menu_button(tr(ui.ctx(), "ui.canvas"), |ui| {
-                self.canvas_context_options(ui)
-            });
-        } else {
-            self.canvas_context_options(ui);
         }
     }
 

@@ -4,6 +4,18 @@
 
 ## Unreleased
 
+### v0.9.15
+
+- Removed nested Export and duplicate device mapping/transfer entries from Project;
+  use Menu → Export or the bottom transfer controls. Project keeps file lifecycle
+  and recovery actions.
+- Removed workspace Canvas controls from Menu → Layers → Selected-layer actions,
+  where View and Options already provide them. Right-click Canvas controls remain.
+  Reviewed toolbar, main, layer, reference and device menus; retained direct toolbar
+  shortcuts and contextual duplicates that save navigation.
+- Native Project, Export, selected-layer and right-click menus verified. Required
+  validation passed; whole-application line coverage is 91.60%.
+
 ### v0.9.14
 
 - Removed the duplicate Open all settings entry from Menu → Options. Full settings

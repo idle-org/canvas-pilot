@@ -203,7 +203,7 @@ undo history. Existing files require confirmation before replacement.
 The [starter-file catalog](../../templates/canvas-pilot/catalog.md) contains all eleven
 exchange formats, with two layers for 1920 × 1080 and 3840 × 2160 canvases.
 
-**Project → Export → Export layers…** opens one shared window:
+**Menu → Export → Export layers…** opens one shared window:
 
 1. Choose the **Format**.
 2. Choose **Layers**: Selected layers, All layers, Visible layers only, or Specific

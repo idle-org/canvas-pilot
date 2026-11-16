@@ -60,7 +60,7 @@ Use **Project → Open project…** to load it later.
 
 ## 5. Export the layer geometry
 
-Choose **Project → Export → Export layers…**, select **SVG** and **All layers**,
+Choose **Menu → Export → Export layers…**, select **SVG** and **All layers**,
 then click **Export…** and save the file. For plain layer boxes, leave the background and placeholder
 pictures disabled. The SVG can be opened in a vector editor.
 

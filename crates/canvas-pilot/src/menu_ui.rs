@@ -395,7 +395,7 @@ impl Editor {
                 if self.layout.selected_indices().is_empty() {
                     ui.weak(tr(ui.ctx(), "ui.select-a-layer-to-edit-its-properties"));
                 }
-                self.layer_context_menu(ui);
+                self.layer_editing_menu(ui);
             });
             ui.separator();
             for i in 0..self.layout.layers().len() {

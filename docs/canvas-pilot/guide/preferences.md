@@ -7,7 +7,8 @@
 The header’s **Menu** brings the application’s commands together:
 
 - **Open all settings…**: the full preferences window.
-- **Project**: open/save JSON and export SVG.
+- **Project**: new/open/save projects and restore parameters from exports.
+- **Export**: device mapping/transfers and the file export window.
 - **Import**: SVG, clipboard layer values, and reference images.
 - **Edit**: undo/redo, copy values, select all editable layers, or deselect.
 - **View**: fit screen/selection, 1:1 pixels, output format, and reference settings.
@@ -19,6 +20,9 @@ The header’s **Menu** brings the application’s commands together:
 
 The toolbar, cog and right-click shortcuts use the same commands and preferences.
 The standalone cog also provides **Open all settings…** above its quick controls.
+Project no longer repeats Export or device transfers. Selected-layer actions in
+Menu contain layer editing only; workspace controls remain under View and Options.
+The canvas right-click menu keeps its Canvas group for access beside the pointer.
 Detailed numeric controls remain in their existing properties dialogs.
 
 Enable **Options → Show toolbar icon names** (also available from the toolbar cog)

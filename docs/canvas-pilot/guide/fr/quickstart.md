@@ -92,7 +92,7 @@ Utilisez **Projet → Ouvrir un projet…** pour le charger ultérieurement.
 
 ## 5. Exporter la géométrie des calques
 
-Choisissez **Projet → Exporter → Exporter les calques…**, sélectionnez **SVG** et
+Choisissez **Menu → Exporter → Exporter les calques…**, sélectionnez **SVG** et
 **Tous les calques**, puis cliquez sur **Exporter…** et enregistrez le fichier. Pour exporter
 uniquement les rectangles des calques, laissez désactivées les images d’arrière-plan
 et les images de substitution. Le SVG peut être ouvert dans un éditeur vectoriel.

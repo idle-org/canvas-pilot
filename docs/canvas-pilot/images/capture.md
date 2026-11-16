@@ -115,7 +115,7 @@ client window. XTest pointer events operated only the isolated session.
 | `05-guide-layer-properties.png` | Click the selected layer's resolution card and leave the Layer tab open. |
 | `06-guide-crop.png` | Switch to Crop; retain normal fit, 100% zoom and zero offsets. |
 | `07-guide-mask.png` | Switch to Mask, then drag the left magenta edge inward about 61 display pixels (116.19 output pixels). Keep the layer bounds unchanged. |
-| `08-guide-export.png` | Start a clean session with Presenter selected; open Project → Export → Export layers. Leave SVG, Selected layers, and both optional groups collapsed at their defaults. |
+| `08-guide-export.png` | Start a clean session with Presenter selected; open Menu → Export → Export layers. Leave SVG, Selected layers, and both optional groups collapsed at their defaults. |
 | `09-guide-settings.png` | Close export; open the toolbar settings cog → Open all settings. Leave Appearance selected. |
 | `10-guide-grid.png` | With Slides selected and other dialogs closed, open the overlay-grid control; keep the default eight columns and six rows, visibility on and grid snapping off. |
 

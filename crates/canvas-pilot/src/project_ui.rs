@@ -404,25 +404,6 @@ impl Editor {
             self.save_project_as();
         }
         ui.small(tr(ui.ctx(), "ui.saves-applied-values-and-reference-images"));
-        ui.separator();
-        if ui
-            .add_enabled(
-                self.device.online(),
-                egui::Button::new(tr(ui.ctx(), "ui.device-mapping-transfer")),
-            )
-            .on_hover_text(tr(
-                ui.ctx(),
-                "ui.map-editor-layers-review-device-changes-and-send-explicitly",
-            ))
-            .on_disabled_hover_text(
-                "Read the device connection first; layers can be chosen in the review.",
-            )
-            .clicked()
-        {
-            self.open_device_export();
-            ui.close();
-        }
-        ui.menu_button(tr(ui.ctx(), "ui.export"), |ui| self.export_menu(ui));
     }
     pub(super) fn export_menu(&mut self, ui: &mut egui::Ui) {
         self.device_scope_picker(ui);
