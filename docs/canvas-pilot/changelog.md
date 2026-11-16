@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Prepared issue drafts for all untracked stretch goals and linked the existing
+  adapter issue. Gitea publication awaits a token with issue permissions.
+
 - Clarified that Gold ranks preservation within Canvas Pilot: `.pilot.json` is
   application-specific, not an industry-standard format for other editors.
 

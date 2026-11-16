@@ -88,6 +88,12 @@ device readback and physical-screen acceptance.
 
 ### Stretch goals (distant future)
 
+Issue tracking: the adapter goal is already tracked in
+[Gitea #1](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/issues/1).
+The other four have [ready-to-publish issue drafts](../development/stretch-goal-issues.md).
+Publication is pending an issue-enabled token; the current token lacks
+`read:issue` and `write:issue`. Preparing an issue does not complete its goal.
+
 - [ ] **Localization: book first, application second.** Follow the
   [localization roadmap](../development/localization.md) for language selection,
   translation workflow, publishing, UI catalogs and compatibility checks. Detailed
