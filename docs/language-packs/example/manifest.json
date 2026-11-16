@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "id": "example-uk-bho",
+  "languages": [
+    {
+      "locale": "uk",
+      "name": "Ukrainian",
+      "native_name": "Українська"
+    },
+    {
+      "locale": "bho",
+      "name": "Bhojpuri",
+      "native_name": "भोजपुरी"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 use eframe::egui;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Language {
     #[default]
@@ -21,6 +21,7 @@ pub enum Language {
     Th,
     Hi,
     Tok,
+    Pack(String),
 }
 impl Language {
     pub const ALL: [Self; 13] = [
@@ -39,8 +40,17 @@ impl Language {
         Self::Tok,
     ];
 
-    pub fn name(self, ctx: &egui::Context) -> String {
+    pub fn name(&self, ctx: &egui::Context) -> String {
         let (native, key) = match self {
+            Self::Pack(id) => {
+                return crate::language_packs::available(ctx)
+                    .into_iter()
+                    .find(|p| p.locale == *id)
+                    .map_or_else(
+                        || format!("{id} (pack unavailable — English)"),
+                        |p| format!("{} — {}", p.native_name, p.name),
+                    );
+            }
             Self::System => return tr(ctx, "language.system"),
             Self::En => ("English", "language.name.en"),
             Self::Fr => ("Français", "language.name.fr"),
@@ -58,8 +68,24 @@ impl Language {
         format!("{native} — {}", tr(ctx, key))
     }
 
-    pub fn apply(self, ctx: &egui::Context) {
+    pub fn apply(&self, ctx: &egui::Context) {
         let locale = match self {
+            Self::Pack(id) => {
+                let locale = if crate::language_packs::available(ctx)
+                    .iter()
+                    .any(|p| p.locale == *id)
+                {
+                    format!("pack:{id}")
+                } else {
+                    "en".into()
+                };
+                ctx.set_fonts(font_definitions("en"));
+                ctx.data_mut(|data| {
+                    data.insert_temp(egui::Id::new("application-locale"), locale.to_owned())
+                });
+                ctx.request_repaint();
+                return;
+            }
             Self::En => "en",
             Self::Fr => "fr",
             Self::Ja => "ja",
@@ -75,7 +101,9 @@ impl Language {
             Self::System => system_language(sys_locale::get_locale().as_deref()),
         };
         ctx.set_fonts(font_definitions(locale));
-        ctx.data_mut(|data| data.insert_temp(egui::Id::new("application-locale"), locale));
+        ctx.data_mut(|data| {
+            data.insert_temp(egui::Id::new("application-locale"), locale.to_owned())
+        });
         ctx.request_repaint();
     }
 }
@@ -156,13 +184,13 @@ fn font_definitions(locale: &str) -> egui::FontDefinitions {
     fonts
 }
 
-pub fn locale(ctx: &egui::Context) -> &'static str {
-    ctx.data(|data| data.get_temp::<&'static str>(egui::Id::new("application-locale")))
-        .unwrap_or("en")
+pub fn locale(ctx: &egui::Context) -> String {
+    ctx.data(|data| data.get_temp::<String>(egui::Id::new("application-locale")))
+        .unwrap_or_else(|| "en".into())
 }
 
 pub fn tr(ctx: &egui::Context, key: &str) -> String {
-    rust_i18n::t!(key, locale = locale(ctx)).into_owned()
+    rust_i18n::t!(key, locale = &locale(ctx)).into_owned()
 }
 
 #[cfg(test)]
@@ -222,6 +250,14 @@ mod tests {
     #[test]
     fn embedded_fonts_cover_catalogs_endonyms_and_mixed_text() {
         let catalogs = [
+            (
+                Language::Pack("uk".into()),
+                include_str!("../../../docs/language-packs/example/uk.json"),
+            ),
+            (
+                Language::Pack("bho".into()),
+                include_str!("../../../docs/language-packs/example/bho.json"),
+            ),
             (Language::PtPt, include_str!("../locales/pt-PT.json")),
             (Language::Ne, include_str!("../locales/ne.json")),
             (Language::Th, include_str!("../locales/th.json")),

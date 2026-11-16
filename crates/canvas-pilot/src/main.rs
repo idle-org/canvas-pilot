@@ -39,7 +39,12 @@ fn main() -> eframe::Result {
     )
 }
 
-rust_i18n::i18n!("locales", fallback = "en");
+rust_i18n::i18n!(
+    "locales",
+    fallback = "en",
+    backend = language_packs::Backend
+);
+mod language_packs;
 mod localization;
 use localization::tr;
 

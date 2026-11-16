@@ -1,15 +1,15 @@
-# Canvas Pilot application settings, version 12
+# Canvas Pilot application settings, version 13
 
 Canvas Pilot was formerly named Midra Layout. The rename preserves existing wire-format identifiers, `.midra.json` projects, settings/recovery locations and `MIDRA_VECTORCRAFT_CLI` configuration. No schema version changes are needed. New exports use Canvas Pilot in human-readable titles; legacy files remain readable.
 
 Implementation: `crates/canvas-pilot/src/settings.rs`. This per-user JSON file is
 independent of the [project JSON and SVG contracts](canvas-pilot.md).
-[Complete default example](canvas-pilot-settings-v12.example.json).
+[Complete default example](canvas-pilot-settings-v13.example.json).
 Version 1 files migrate automatically: the saved theme becomes the only entry in
 `recent_themes`, with all other preferences preserved. The [version 1 example](canvas-pilot-settings-v1.example.json)
 remains a migration fixture. Version 2 files then migrate by adding disabled
 snapping with all target types enabled. The [version 2 example](canvas-pilot-settings-v2.example.json)
-remains a migration fixture too. Version 3 files migrate by adding an empty `midra_host`; the [version 3 example](canvas-pilot-settings-v3.example.json) remains a migration fixture. Version 4 files migrate by adding `allow_sending_to_program: false`; the [version 4 example](canvas-pilot-settings-v4.example.json) remains a migration fixture. Version 5 files migrate with `autoconnect_at_startup: false`; the [version 5 example](canvas-pilot-settings-v5.example.json) remains a migration fixture. Version 6 files migrate with the overlay grid visible, snapping to it disabled, and `grid_divisions: [8, 6]`; the [version 6 example](canvas-pilot-settings-v6.example.json) remains a migration fixture. Version 7 migrates with an empty `recent_midra_hosts` list; the [version 7 example](canvas-pilot-settings-v7.example.json) remains a migration fixture. Version 8 migrates with `language: "system"`; the [version 8 example](canvas-pilot-settings-v8.example.json) remains a migration fixture. Version 9 migrates without changing any preferences; its `system`, `en` and `fr` values remain valid. The [version 9 example](canvas-pilot-settings-v9.example.json) remains a migration fixture. Version 10 adds language choices. Version 11 adds `ui_scale` and `text_scale`; v1–v10 settings migrate to 100% interface scale with separate text scaling disabled, preserving all existing preferences. The [version 10 example](canvas-pilot-settings-v10.example.json) remains a migration fixture. Version 12 adds `pt-PT`, `ne`, `th`, `hi` and `tok`; v1–v11 settings migrate without changing existing preferences. Values outside each old version’s language set are rejected before migration. The [version 11 example](canvas-pilot-settings-v11.example.json) remains a migration fixture. Saving writes version 12, which older applications reject.
+remains a migration fixture too. Version 3 files migrate by adding an empty `midra_host`; the [version 3 example](canvas-pilot-settings-v3.example.json) remains a migration fixture. Version 4 files migrate by adding `allow_sending_to_program: false`; the [version 4 example](canvas-pilot-settings-v4.example.json) remains a migration fixture. Version 5 files migrate with `autoconnect_at_startup: false`; the [version 5 example](canvas-pilot-settings-v5.example.json) remains a migration fixture. Version 6 files migrate with the overlay grid visible, snapping to it disabled, and `grid_divisions: [8, 6]`; the [version 6 example](canvas-pilot-settings-v6.example.json) remains a migration fixture. Version 7 migrates with an empty `recent_midra_hosts` list; the [version 7 example](canvas-pilot-settings-v7.example.json) remains a migration fixture. Version 8 migrates with `language: "system"`; the [version 8 example](canvas-pilot-settings-v8.example.json) remains a migration fixture. Version 9 migrates without changing any preferences; its `system`, `en` and `fr` values remain valid. The [version 9 example](canvas-pilot-settings-v9.example.json) remains a migration fixture. Version 10 adds language choices. Version 11 adds `ui_scale` and `text_scale`; v1–v10 settings migrate to 100% interface scale with separate text scaling disabled, preserving all existing preferences. The [version 10 example](canvas-pilot-settings-v10.example.json) remains a migration fixture. Version 12 adds `pt-PT`, `ne`, `th`, `hi` and `tok`; v1–v11 settings migrate without changing existing preferences. Values outside each old version’s language set are rejected before migration. The [version 11 example](canvas-pilot-settings-v11.example.json) remains a migration fixture. Version 13 adds installed language choices; v12 preferences migrate unchanged. The [version 12 example](canvas-pilot-settings-v12.example.json) remains a fixture. Saving writes version 13, which older applications reject.
 
 The `directories` 6 crate resolves `ProjectDirs::from("org", "beffroi", "midra-layout")`.
 The filename is `settings.json` beneath `config_dir()`:
@@ -26,10 +26,10 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 
 | Field | Values / default |
 | --- | --- |
-| `version` | Integer `12` |
+| `version` | Integer `13` |
 | `ui_scale` | Finite number, 0.5–4.0 inclusive; default 1.0. egui interface zoom relative to the OS display scale. |
 | `text_scale` | `null` (default, disabled) or finite number 0.5–2.0 inclusive. Additional standard-widget text multiplier. |
-| `language` | `"system"` (default), `"en"`, `"fr"`, `"ja"`, `"zh-CN"`, `"es"`, `"grc"`, `"eo"`, `"pt-PT"`, `"ne"`, `"th"`, `"hi"`, `"tok"`. Unknown values are rejected. |
+| `language` | `"system"` (default), `"en"`, `"fr"`, `"ja"`, `"zh-CN"`, `"es"`, `"grc"`, `"eo"`, `"pt-PT"`, `"ne"`, `"th"`, `"hi"`, `"tok"`, or `{"pack":"uk"}` for an installed language. Pack identifiers use 1–63 lowercase ASCII letters, digits and hyphens, without a leading/trailing hyphen. Unknown built-in string values are rejected. |
 | `autoconnect_at_startup` | Boolean; default false. Try one background connection at application startup if the saved address is nonblank. |
 | `allow_sending_to_program` | Boolean; default false. Enables the Program destination in the exporter. Turning it off restores Preview; applies to quick Apply too. |
 | `midra_host` | Device IP address text with optional TCP port (e.g. `192.168.10.146:3000`, `[::1]:3000`; default port 80); default `""`. Saved as typed, including incomplete drafts; validated when connecting. |
@@ -200,3 +200,8 @@ the saved address, clears old device state/staged input edits, and starts a read
 connection. The picker is disabled during a pending operation. History belongs
 to application settings, not project files; migration starts empty because older
 settings do not record whether their last address connected successfully.
+
+Installed language choices are described by the [language-pack contract](language-packs.md).
+They are allowed only in v13; older versions reject object-valued language fields.
+Unavailable packs preserve the identifier and render English rather than discarding
+preferences. Installation re-applies a saved missing-pack choice.

@@ -47,13 +47,14 @@ The accepted French interface vocabulary does not imply review of other language
 
 The desktop UI uses [rust-i18n](https://docs.rs/rust-i18n/) with embedded English, French, Japanese, Simplified Chinese, Spanish, Ancient Greek,
 Esperanto, European Portuguese, Nepali, Thai, Hindi and Toki Pona JSON catalogs in `crates/canvas-pilot/locales/`. `sys-locale` obtains the desktop
-language. There is no custom translation parser, language-file loader, lookup cache
-or network translation service. The lockfile pins the dependency versions.
+language. Built-in catalogs remain embedded. Runtime ZIP packs use the rust-i18n backend
+extension and serde JSON parsing; no network translation service is involved. The lockfile pins the dependency versions.
 
 `src/localization.rs` only resolves the supported language preference and passes an
 explicit locale to rust-i18n. Each egui context holds its own resolved language;
 there is no process-global `set_locale`, avoiding cross-window/test interference.
-Catalogs compile into the binary, so portable releases need no additional files.
+Built-in catalogs compile into the binary, so portable releases need no additional
+files for those languages. Optional packs persist beside user settings.
 The build script watches `locales/`, including catalog-only edits and newly added
 files; translators do not need to touch Rust code to trigger a rebuild.
 
@@ -334,3 +335,32 @@ Begin after the book workflow and glossary have been validated.
 - [ ] Add translated video captions and transcripts when the planned videos exist.
 - [ ] Consider a hosted translation platform only when contributor volume makes
   the repository-based workflow difficult to maintain.
+
+## Runtime language-pack example (v0.9.7)
+
+Settings now imports bounded ZIP packs and lists their languages immediately. The
+[manual walkthrough](../canvas-pilot/guide/language-packs.md) is the user-facing
+authoring tutorial; the [contract](../interfaces/language-packs.md) owns schema,
+limits, persistence and compatibility. The example adds Ukrainian and Bhojpuri,
+39 messages each, without adding either language to the compiled enum/catalogs.
+The same built-in fonts cover both examples. This demonstrates external catalogs;
+external font packs and reducing the release size remain future work.
+
+Settings v13 keeps built-in strings and adds an installed-language object. Missing
+packs preserve the requested language while falling back to English. Catalogs
+are registered with rust-i18n's runtime backend; the current locale remains per
+context. Unknown keys/placeholders, malformed ZIPs and collisions reject the whole
+installation. Existing files and projects are preserved. Example translations are
+partial and unreviewed.
+
+Validation: default Rust suite 444 passed / two manual checks ignored; all-features
+and restricted suites each 438 passed / one manual check ignored. Formatting,
+Clippy in both configurations and warnings-denied rustdoc passed. Whole-application
+line coverage: 91.38%. The pinned manual build validates 24 HTML pages and the new
+ZIP/JSON downloads. Scripted native X11 clicks scrolled to both installed languages,
+selected/confirmed Ukrainian and inspected Bhojpuri with the previous-language
+cancellation prompt. Saved settings contained the installed locale in v13 form.
+The desktop portal file chooser was unavailable on the isolated display; archive
+installation is covered by filesystem tests, and the native walkthrough used the
+manual-copy/startup discovery path. Windows/macOS native chooser acceptance remains
+unverified. Temporary screenshots/profiles are outside Git.

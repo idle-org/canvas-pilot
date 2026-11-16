@@ -4,6 +4,20 @@
 
 ## Unreleased
 
+### v0.9.7
+
+- Added runtime ZIP language-pack installation in Settings, dynamic language choices,
+  English fallback and settings v13 migration. Confirmed installed languages persist
+  across restart; missing packs preserve the choice and fall back to English.
+- Added a downloadable Ukrainian/Bhojpuri example and a manual authoring walkthrough.
+  Both are partial, unreviewed translations using existing bundled fonts. Packs do
+  not yet supply fonts or reduce application download size.
+- Bounded ZIP/catalog validation rejects malformed packs and placeholder mismatches;
+  installation preserves source archives and never overwrites installed packs.
+- Rust gates and manual validation passed, with 91.38% whole-application coverage.
+  Native clicks verified installed-language selection and confirmation; automated
+  tests cover installation, restart, removal and rejected packs.
+
 ### v0.9.6
 
 - Added European Portuguese, Nepali, Thai, Hindi and Latin-script Toki Pona UI

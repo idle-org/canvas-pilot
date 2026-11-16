@@ -479,5 +479,6 @@
   "language.name.ne": "尼泊尔语",
   "language.name.th": "泰语",
   "language.name.hi": "印地语",
-  "language.name.tok": "道本语"
+  "language.name.tok": "道本语",
+  "language.install-pack": "安装语言包…"
 }

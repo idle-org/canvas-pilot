@@ -3,9 +3,16 @@
 //! in a browser or Pango. Editing the samples never modifies a project.
 use eframe::egui;
 
+#[path = "../src/language_packs.rs"]
+#[allow(dead_code)]
+mod language_packs;
 #[path = "../src/localization.rs"]
 mod localization;
-rust_i18n::i18n!("locales", fallback = "en");
+rust_i18n::i18n!(
+    "locales",
+    fallback = "en",
+    backend = language_packs::Backend
+);
 
 struct Probe {
     language: localization::Language,
@@ -46,13 +53,14 @@ impl eframe::App for Probe {
         egui::CentralPanel::default().show(ui, |ui| {
             ui.heading("Canvas Pilot — text shaping");
             ui.label("Offline diagnostic: compare labels, wrapping and editable Unicode text. No device connection.");
-            let before = self.language;
+            let before = self.language.clone();
             egui::ComboBox::from_id_salt("probe-language")
                 .height(440.0)
                 .selected_text(self.language.name(ui.ctx()))
                 .show_ui(ui, |ui| {
                     for language in localization::Language::ALL {
-                        ui.selectable_value(&mut self.language, language, language.name(ui.ctx()));
+                        let name = language.name(ui.ctx());
+                        ui.selectable_value(&mut self.language, language, name);
                     }
                 });
             if before != self.language { self.language.apply(ui.ctx()); }

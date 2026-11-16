@@ -57,7 +57,7 @@ impl Section {
 }
 pub(super) struct LanguagePreview {
     pub(super) previous: localization::Language,
-    previous_locale: &'static str,
+    previous_locale: String,
     deadline: std::time::Instant,
 }
 
@@ -69,17 +69,17 @@ impl Editor {
         let previous = self
             .language_preview
             .as_ref()
-            .map_or(self.language, |p| p.previous);
+            .map_or_else(|| self.language.clone(), |p| p.previous.clone());
         let previous_locale = self
             .language_preview
             .as_ref()
-            .map_or(localization::locale(ctx), |p| p.previous_locale);
+            .map_or_else(|| localization::locale(ctx), |p| p.previous_locale.clone());
         self.language_preview = Some(LanguagePreview {
             previous,
             previous_locale,
             deadline: std::time::Instant::now() + std::time::Duration::from_secs(20),
         });
-        self.language = language;
+        self.language = language.clone();
         language.apply(ctx);
     }
 
@@ -113,7 +113,7 @@ impl Editor {
             ui.label(
                 rust_i18n::t!(
                     "language.rollback",
-                    locale = localization::locale(ctx),
+                    locale = &localization::locale(ctx),
                     seconds = remaining.as_secs() + 1
                 )
                 .into_owned(),
@@ -123,7 +123,7 @@ impl Editor {
                 ui.label(
                     rust_i18n::t!(
                         "language.rollback",
-                        locale = preview.previous_locale,
+                        locale = &preview.previous_locale,
                         seconds = remaining.as_secs() + 1
                     )
                     .into_owned(),
@@ -132,7 +132,8 @@ impl Editor {
             let keep = ui.button(tr(ctx, "language.keep")).clicked();
             let cancel = ui
                 .button(
-                    rust_i18n::t!("language.cancel", locale = preview.previous_locale).into_owned(),
+                    rust_i18n::t!("language.cancel", locale = &preview.previous_locale)
+                        .into_owned(),
                 )
                 .clicked();
             (keep, cancel)
@@ -162,7 +163,7 @@ impl Editor {
                         .height(440.0)
                         .selected_text(self.language.name(ctx))
                         .show_ui(ui, |ui| {
-                            for language in localization::Language::ALL {
+                            for language in localization::Language::ALL.into_iter().chain(crate::language_packs::available(ctx).into_iter().map(|p| localization::Language::Pack(p.locale))) {
                                 let name = language.name(ctx);
                                 if ui.selectable_label(self.language == language, name).clicked() {
                                     self.preview_language(ctx, language);
@@ -178,6 +179,11 @@ impl Editor {
                     apply_scaling(ctx, self.ui_scale, self.text_scale);
                 }
                 });
+                if ui.button(tr(ctx, "language.install-pack")).clicked()
+                    && let Some(path) = rfd::FileDialog::new().add_filter("Language pack", &["zip"]).pick_file() {
+                        let result = self.settings.path.as_ref().and_then(|p| p.parent()).ok_or_else(|| "Settings directory unavailable".to_owned()).and_then(|directory| crate::language_packs::install(ctx, &directory.join("language-packs"), &path));
+                        match result { Ok(()) => self.language.apply(ctx), Err(error) => self.error = error }
+                }
                 ui.weak(tr(ctx, "language.preview"));
                 ui.separator();
                 egui::ScrollArea::vertical().id_salt("settings-body")
@@ -210,7 +216,7 @@ impl Editor {
                                 if scaling_before != (self.ui_scale, self.text_scale) { apply_scaling(ctx, self.ui_scale, self.text_scale); }
                                 if ui.button(tr(ctx, "access.contrast")).clicked() { theme::Theme::HighContrast.apply(ctx); }
                                 ui.separator();
-                                ui.label(rust_i18n::t!("theme.current", locale = localization::locale(ctx), name = theme::Theme::current(ctx).name()).into_owned());
+                                ui.label(rust_i18n::t!("theme.current", locale = &localization::locale(ctx), name = theme::Theme::current(ctx).name()).into_owned());
                                 if ui.button(tr(ui.ctx(), "ui.browse-all-themes")).clicked() { self.themes_open = true; }
                                 ui.label(tr(ui.ctx(), "ui.recently-used"));
                                 for choice in theme::Theme::recent(ctx) {
@@ -445,7 +451,7 @@ mod tests {
             .skip(2)
             .chain(std::iter::once(localization::Language::En))
         {
-            let previous = app.language;
+            let previous = app.language.clone();
             let current_name = app.language.name(&ctx);
             click_label(&mut app, &ctx, &current_name);
             click_label(&mut app, &ctx, &language.name(&ctx));
@@ -524,6 +530,53 @@ mod tests {
     }
 
     #[test]
+    fn installed_languages_use_confirmation_preserve_project_and_restart() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let (store, saved) = settings::Store::at(path.clone());
+        let ctx = egui::Context::default();
+        let mut app = Editor::with_settings(&ctx, store, saved);
+        let source = dir.path().join("source.zip");
+        std::fs::write(
+            &source,
+            include_bytes!("../../../docs/language-packs/language-pack.zip"),
+        )
+        .unwrap();
+        crate::language_packs::install(&ctx, &dir.path().join("language-packs"), &source).unwrap();
+        let original = app.project();
+        app.preferences_open = true;
+        // The combo scrolls once installed languages extend the built-in list.
+        app.preview_language(&ctx, localization::Language::Pack("uk".into()));
+        let yes = tr(&ctx, "language.keep");
+        click_label(&mut app, &ctx, &yes);
+        assert_eq!(
+            settings::Store::at(path.clone()).1.language,
+            localization::Language::Pack("uk".into())
+        );
+        app.preview_language(&ctx, localization::Language::Pack("bho".into()));
+        assert_eq!(
+            app.application_settings(&ctx).language,
+            localization::Language::Pack("uk".into())
+        );
+        app.language_preview.as_mut().unwrap().deadline = std::time::Instant::now();
+        frame(&mut app, &ctx, vec![]);
+        assert_eq!(localization::locale(&ctx), "pack:uk");
+        assert_eq!(app.project(), original);
+        let (store, saved) = settings::Store::at(path.clone());
+        let restarted_ctx = egui::Context::default();
+        let restored = Editor::with_settings(&restarted_ctx, store, saved);
+        assert_eq!(tr(&restarted_ctx, "ui.settings"), "Налаштування");
+        assert_eq!(restored.project(), original);
+        std::fs::remove_file(dir.path().join("language-packs/example-uk-bho.zip")).unwrap();
+        let (store, saved) = settings::Store::at(path);
+        let missing_ctx = egui::Context::default();
+        let missing = Editor::with_settings(&missing_ctx, store, saved);
+        assert_eq!(localization::locale(&missing_ctx), "en");
+        assert_eq!(missing.language, localization::Language::Pack("uk".into()));
+        assert!(missing.language.name(&missing_ctx).contains("unavailable"));
+    }
+
+    #[test]
     fn opening_project_preserves_language_scaling_and_pending_preview() {
         let dir = tempfile::tempdir().unwrap();
         let (store, mut saved) = settings::Store::at(dir.path().join("settings.json"));
@@ -558,7 +611,7 @@ mod tests {
             apply_scaling(&ctx, 1.0, Some(1.5));
             let screen = Rect::from_min_size(Pos2::ZERO, Vec2::new(500.0, 360.0));
             let mut app = Editor {
-                language,
+                language: language.clone(),
                 ui_scale: 2.0,
                 text_scale: Some(1.5),
                 preferences_open: true,
@@ -599,7 +652,7 @@ mod tests {
                 let ctx = egui::Context::default();
                 language.apply(&ctx);
                 let mut app = Editor {
-                    language,
+                    language: language.clone(),
                     preferences_open: true,
                     preferences_section: section,
                     ..Editor::default()

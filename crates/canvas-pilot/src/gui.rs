@@ -120,7 +120,7 @@ impl ImportScope {
             Self::Selected => tr(ctx, "ui.selected-layers"),
             Self::Folder(name) => rust_i18n::t!(
                 "scope.folder",
-                locale = localization::locale(ctx),
+                locale = &localization::locale(ctx),
                 name = name
             )
             .into_owned(),
@@ -572,6 +572,7 @@ impl Editor {
     pub(super) fn with_saved_settings(ctx: &egui::Context) -> Self {
         let (store, saved) = settings::Store::open();
         let mut editor = Self::with_settings(ctx, store, saved);
+        let startup_error = std::mem::take(&mut editor.error);
         if let Some(path) = editor
             .settings
             .path
@@ -580,6 +581,12 @@ impl Editor {
             .map(|p| p.join("last_project.json"))
         {
             editor.restore_recovery(ctx, path);
+        }
+        if !startup_error.is_empty() {
+            if !editor.error.is_empty() {
+                editor.error.push('\n');
+            }
+            editor.error.push_str(&startup_error);
         }
         editor.device.try_startup_connection(ctx);
         editor
@@ -591,6 +598,12 @@ impl Editor {
     ) -> Self {
         theme::Theme::restore_recent(ctx, saved.recent_themes.clone());
         saved.theme.apply(ctx);
+        let pack_errors = store
+            .path
+            .as_ref()
+            .and_then(|p| p.parent())
+            .map(|directory| crate::language_packs::load(ctx, &directory.join("language-packs")))
+            .unwrap_or_default();
         saved.language.apply(ctx);
         preferences_ui::apply_scaling(ctx, saved.ui_scale, saved.text_scale);
         let mut device = device_ui::DeviceUi::with_connection_preferences(
@@ -602,6 +615,7 @@ impl Editor {
         Self {
             device,
             settings: store,
+            error: pack_errors.join("\n"),
             language: saved.language,
             ui_scale: saved.ui_scale,
             text_scale: saved.text_scale,
@@ -619,7 +633,7 @@ impl Editor {
             language: self
                 .language_preview
                 .as_ref()
-                .map_or(self.language, |preview| preview.previous),
+                .map_or_else(|| self.language.clone(), |preview| preview.previous.clone()),
             midra_host: self.device.host.clone(),
             recent_midra_hosts: self.device.recent_hosts.clone(),
             autoconnect_at_startup: self.device.autoconnect_at_startup,
@@ -1917,7 +1931,7 @@ impl Editor {
         );
         let label = rust_i18n::t!(
             "position.from-to",
-            locale = localization::locale(ui.ctx()),
+            locale = &localization::locale(ui.ctx()),
             from = position_point_name(ui.ctx(), self.corner),
             to = position_point_name(ui.ctx(), self.position_layer_point.unwrap_or(self.corner))
         )

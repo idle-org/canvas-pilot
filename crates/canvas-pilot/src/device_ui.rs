@@ -77,7 +77,7 @@ impl TransferScope {
             Self::Selected => tr(ctx, "ui.only-selected-layers"),
             Self::Folder(folder) => rust_i18n::t!(
                 "scope.folder",
-                locale = localization::locale(ctx),
+                locale = &localization::locale(ctx),
                 name = folder
             )
             .into_owned(),

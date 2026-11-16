@@ -360,7 +360,7 @@ impl Editor {
         }
         let i = d.layer;
         let mut open = true;
-        egui::Window::new(rust_i18n::t!("layer.properties-title", locale = localization::locale(ctx), name = self.layout.layer_label(i)).into_owned()).id(egui::Id::new(("layer-properties", self.layout.layer_info(i).id))).open(&mut open).default_width(540.0).default_height(720.0).min_height(380.0).vscroll(true).show(ctx,|ui| {
+        egui::Window::new(rust_i18n::t!("layer.properties-title", locale = &localization::locale(ctx), name = self.layout.layer_label(i)).into_owned()).id(egui::Id::new(("layer-properties", self.layout.layer_info(i).id))).open(&mut open).default_width(540.0).default_height(720.0).min_height(380.0).vscroll(true).show(ctx,|ui| {
             ui.horizontal(|ui| {
                 ui.selectable_value(&mut self.property_tab,PropertyTab::Source,tr(ui.ctx(), "ui.source"));
                 ui.selectable_value(&mut self.property_tab,PropertyTab::Layer,tr(ui.ctx(), "ui.layer-ac9ffc"));

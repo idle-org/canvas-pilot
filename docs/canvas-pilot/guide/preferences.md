@@ -52,6 +52,11 @@ text for Thai characters such as `ำ` that expand into several glyphs. For thos
 names, avoid relying on End followed by Backspace; select the whole field to
 replace it. This limitation concerns text editing, not interface labels.
 
+Additional languages can be installed from ZIP files with **Install language pack…**.
+See [Add a language pack](language-packs.md) for the Ukrainian/Bhojpuri example and
+instructions for writing a translation. Installed languages appear below the built-in
+choices and use the same confirmation.
+
 The book's [French quick start](fr/quickstart.md) now follows the accepted French
 interface wording and uses French screenshots. It records its machine-translation
 origin and links to the English manual as the authoritative source.

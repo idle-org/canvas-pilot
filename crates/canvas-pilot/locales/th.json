@@ -479,5 +479,6 @@
   "language.name.ne": "เนปาล",
   "language.name.th": "ไทย",
   "language.name.hi": "ฮินดี",
-  "language.name.tok": "โทกิโพนา"
+  "language.name.tok": "โทกิโพนา",
+  "language.install-pack": "ติดตั้งชุดภาษา…"
 }

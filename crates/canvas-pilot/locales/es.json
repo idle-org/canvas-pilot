@@ -479,5 +479,6 @@
   "language.name.ne": "Nepalí",
   "language.name.th": "Tailandés",
   "language.name.hi": "Hindi",
-  "language.name.tok": "Toki Pona"
+  "language.name.tok": "Toki Pona",
+  "language.install-pack": "Instalar paquete de idiomas…"
 }

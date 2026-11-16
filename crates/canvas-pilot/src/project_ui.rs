@@ -170,7 +170,7 @@ impl Editor {
             device: std::mem::take(&mut self.device),
             capture,
             settings: std::mem::take(&mut self.settings),
-            language: self.language,
+            language: self.language.clone(),
             language_preview: self.language_preview.take(),
             ui_scale: self.ui_scale,
             text_scale: self.text_scale,
