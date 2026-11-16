@@ -74,6 +74,11 @@ right-click menu (including multiple selections). These controls share the
 Options setting and save changes automatically. They do not apply or discard
 pending size/position edits. Crop zoom remains proportional.
 
+<!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
+![Settings dialog with Appearance selected and editing, references, files and device categories](../images/09-guide-settings.png)
+
+*Settings are grouped by purpose; appearance changes apply immediately. The header still uses the former Midra Layout name.*
+
 ## Settings window
 
 Open **Menu → Open all settings…**, **Options → Open all settings…**, the toolbar cog's

@@ -4,6 +4,8 @@
 
 Use this guide after the [first-layout walkthrough](quickstart.md), or jump
 directly to the detailed controls, workflows and limitations you need.
+The illustrated chapters show real offline application sessions; screenshots
+retain the former Midra Layout header still displayed by the current interface.
 
 | Chapter | What it covers |
 | --- | --- |

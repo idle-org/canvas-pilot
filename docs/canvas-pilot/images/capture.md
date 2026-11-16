@@ -93,3 +93,32 @@ Do not connect a device or import an input snapshot to reproduce this picture.
 - Preview the [introduction](../introduction.md) and keep its captions and image alt text consistent with the UI.
 - Update the capture date, source commit and any changed steps in this file; keep the adjacent screenshot comments current.
 - Commit the three PNGs and documentation changes together. Temporary settings and captures do not belong in Git.
+
+## Advanced guide captures
+
+Captured on **2026-11-16** from the default-feature debug binary in the standalone
+Canvas Pilot checkout (documentation revision `f4584e0`). The current application
+still renders `MIDRA / LAYOUT` in its header. These are fresh captures, not the
+older introduction images. Full client area: **1440 × 940**, Linux/X11, default
+dark theme, 100% display scaling, pointer and decorations excluded. PNGs are
+unedited. Each guide placement links here with an HTML comment.
+
+The session used separate temporary `XDG_CONFIG_HOME` and `XDG_DATA_HOME`
+directories, the default two-layer 1920 × 1080 layout and built-in backdrop.
+It stayed OFFLINE throughout; no project files or device data were opened.
+The source binary was `target/debug/canvas-pilot`; ImageMagick captured only its
+client window. XTest pointer events operated only the isolated session.
+
+| Image | Reproduce the visible state |
+| --- | --- |
+| `04-guide-workspace.png` | Start a clean session; leave Presenter selected. |
+| `05-guide-layer-properties.png` | Click the selected layer's resolution card and leave the Layer tab open. |
+| `06-guide-crop.png` | Switch to Crop; retain normal fit, 100% zoom and zero offsets. |
+| `07-guide-mask.png` | Switch to Mask, then drag the left magenta edge inward about 61 display pixels (116.19 output pixels). Keep the layer bounds unchanged. |
+| `08-guide-export.png` | Reset the mask and close properties. Select Slides; open Project → Export → Export layers. Leave SVG and all optional checkboxes at their defaults. |
+| `09-guide-settings.png` | Close export; open the toolbar settings cog → Open all settings. Leave Appearance selected. |
+| `10-guide-grid.png` | With Slides selected and other dialogs closed, open the overlay-grid control; keep the default eight columns and six rows, visibility on and grid snapping off. |
+
+Verify each full-size capture before replacing it. Keep its guide caption,
+alt text and actual control state consistent. The original three introduction
+images remain unchanged and retain their earlier provenance above.

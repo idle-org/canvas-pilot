@@ -26,6 +26,11 @@ after the layer-backed groups; stacking movement applies to folders with layers.
 **Manage layers and folders** remains available for bulk name/folder editing. Grouping does
 not affect device links or source assignments. All document edits support Undo.
 
+<!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
+![Layer properties showing the Layer tab, pixel dimensions and aspect-ratio lock](../images/05-guide-layer-properties.png)
+
+*Use the Layer tab for precise dimensions; the inspector keeps the selected layer in view. The header still uses the former Midra Layout name.*
+
 ## Move and edit layers
 
 - Click a layer or its list entry to select it alone. **Shift-click** toggles that

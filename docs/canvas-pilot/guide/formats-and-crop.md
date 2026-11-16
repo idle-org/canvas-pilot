@@ -73,6 +73,11 @@ quantization still require offline firmware verification. No hardware commands
 are generated or sent. See [the resolution model](../resolutions.md)
 for equations and worked examples.
 
+<!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
+![Crop tab and cyan content helper around the selected layer with source pattern visible](../images/06-guide-crop.png)
+
+*The cyan helper frames the content while the visible layer box stays fixed. The header still uses the former Midra Layout name.*
+
 ## Display/export precision and midpoint handles
 
 Geometry in the viewport, inspector and calculation view is shown to the nearest
@@ -219,6 +224,11 @@ reveal lower layers. A mask over already cropped or transparent pixels has no
 visible effect. Resizing the layer keeps mask proportions. Project files and
 embedded snapshots retain masks; plain geometry exports omit them. Midra load/send
 supports masking; Aquilon masking remains unavailable.
+
+<!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
+![Mask tab showing left-edge blanking and a smaller magenta reveal window inside the layer](../images/07-guide-mask.png)
+
+*The left mask edge blanks part of the picture without resizing the gold layer box. The header still uses the former Midra Layout name.*
 
 ## Content ratio versus Transform to
 

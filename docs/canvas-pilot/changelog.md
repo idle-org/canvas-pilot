@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Put portable release downloads first in installation help, with exact archive
+  patterns by platform and optional command-line methods below. Added seven real
+  offline screenshots to advanced guide chapters, with captions and capture recipes.
+
 - Reworded conversational test attributions as manual reviews across the catalog,
   guides and acceptance records, preserving dates and validation boundaries.
 

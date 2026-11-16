@@ -2,57 +2,60 @@
 
 [Introduction](../introduction.md) · [Your first layout](quickstart.md) · [Advanced guide](overview.md)
 
-Choose the installation method that suits your computer:
+## Download the application — recommended
 
-| Method | Compiles on your computer? | Best for |
+**[Open the Canvas Pilot releases page →](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases)**
+
+Download the ready-to-run application for your computer. You do not need to
+install Rust, Cargo or Git.
+
+1. Open the **newest stable release** and find its **Assets** list.
+2. Download the file starting with **`canvas-pilot-portable-`** that matches your
+   computer in the table below. Choose the portable archive, not **Source code**.
+3. Extract the entire archive into a folder you want to keep.
+4. Open the application inside that folder. On Windows, double-click
+   **`canvas-pilot.exe`**. Then follow [your first layout](quickstart.md).
+
+> **Before the first release:** no releases were published when checked on
+> 2026-11-16. If the release page is empty, there is nothing to download yet.
+> The [development build](#run-the-development-version) is available for people
+> comfortable compiling software; otherwise, return when a release is published.
+
+### Which file should I download?
+
+`vX.Y.Z` below stands for the version shown on the release page.
+
+| Your computer | Download this portable archive | Open after extraction |
 | --- | --- | --- |
-| Download a release archive | No | Getting the desktop application with minimal setup |
-| `cargo binstall` | No, with the options below | Installing a released binary into your Cargo tools folder |
-| `cargo install` | Yes | Building a selected release from source |
+| **Windows**, Intel or AMD 64-bit | `canvas-pilot-portable-x86_64-pc-windows-gnu-vX.Y.Z.zip` | `canvas-pilot.exe` |
+| **Linux**, Intel or AMD 64-bit | `canvas-pilot-portable-x86_64-unknown-linux-gnu-vX.Y.Z.tgz` | `canvas-pilot` from your desktop file manager |
+| **Mac with Apple Silicon** (M-series), macOS 13 or later | `canvas-pilot-portable-aarch64-apple-darwin-vX.Y.Z.zip` | `canvas-pilot`; optional app launcher below |
+| **Mac with an Intel processor**, macOS 13 or later | `canvas-pilot-portable-x86_64-apple-darwin-vX.Y.Z.zip` | `canvas-pilot`; optional app launcher below |
 
-**Release availability:** at the documentation check on 2026-11-16, this repository
-had no published releases. The release-based instructions below become usable when
-a release and its assets are published. Until then, use the development build at
-the end of this page. An empty release page is not an installation failure.
+On a Mac, **Apple menu → About This Mac** shows whether it has an Apple chip or
+an Intel processor. Linux downloads target glibc systems; Windows ARM, Linux ARM
+and Alpine/musl are not currently packaged.
 
-## Choose the latest release
+Keep the extracted folder intact: portable archives include icons, launcher
+helpers, license information and a quick-start file. The executable is named
+`canvas-pilot.exe` on Windows, not `release.exe`. Separate archives without
+`portable` in their name are intended for the Cargo installation method below.
 
-Open the [Canvas Pilot releases page](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases)
-and choose the newest stable release, unless you intentionally want a prerelease.
-Its tag identifies the exact source and binaries. Wherever the commands below say
-`vX.Y.Z`, replace it with that release's actual tag, including the `v` prefix.
-Do not type `vX.Y.Z` literally. The `main` branch is ongoing development and may
-contain changes that are not in the latest release.
-
-## Download a compiled application
-
-No Rust compiler, Cargo or Git is needed for this method.
-
-1. Open the release and expand its **Assets** list.
-2. Download the **portable** archive matching your operating system and CPU.
-3. Extract the entire archive to a permanent folder before launching the program.
-
-| Computer | Target in the filename | Portable archive | Launch after extraction |
-| --- | --- | --- | --- |
-| Windows, Intel/AMD 64-bit | `x86_64-pc-windows-gnu` | `.zip` | Double-click `canvas-pilot.exe` |
-| Linux, Intel/AMD 64-bit with glibc | `x86_64-unknown-linux-gnu` | `.tgz` | Run `./canvas-pilot` in a graphical desktop session |
-| macOS 13+, Apple Silicon | `aarch64-apple-darwin` | `.zip` | Run `./canvas-pilot`, or create the launcher below |
-| macOS 13+, Intel | `x86_64-apple-darwin` | `.zip` | Run `./canvas-pilot`, or create the launcher below |
-
-For example, the naming pattern for a Windows portable download is
-`canvas-pilot-portable-x86_64-pc-windows-gnu-vX.Y.Z.zip`. The executable inside is
-`canvas-pilot.exe`, not `release.exe`. Gitea's automatically generated **Source code**
-archives contain source, not a compiled application. The separate canonical `.tgz`
-assets are used by cargo-binstall; portable archives also include icons, launcher
-helpers, license information and a quick-start file.
-
-If release notes list additional runtime requirements, follow those instructions.
-Linux needs the application's desktop/OpenGL runtime libraries. Windows ARM,
-Linux ARM and Alpine/musl are not in the current release target list.
+If your desktop asks for permission to run the downloaded application, follow
+its normal approval process. Some Linux file managers require enabling execution
+in the file's properties or launching it from a terminal. Linux also needs the
+application's desktop/OpenGL runtime libraries. Check the release notes for any
+platform-specific requirements.
 
 ### Desktop shortcut or macOS launcher
 
-Windows users can create a shortcut to the extracted `.exe`. Linux/macOS portable
+On Windows, right-click `canvas-pilot.exe` to create a shortcut using your
+desktop’s shortcut options.
+
+<details>
+<summary>Optional Linux/macOS launcher setup (uses the command line)</summary>
+
+Linux/macOS portable
 archives include an optional launcher helper requiring Python 3.11+. From the
 extracted folder, run the command for your system:
 
@@ -70,6 +73,18 @@ The Linux shortcut points to the extracted folder; keep that folder in place.
 The macOS launcher copies the executable and must be recreated after an update.
 The helper refuses existing launchers and does not sign or notarize the app.
 Follow your operating system's normal approval process for downloaded applications.
+
+</details>
+
+## Command-line installation — optional
+
+The methods below are for people who already use Cargo or want to compile the
+application. Most readers can use the portable download above.
+
+Choose the newest stable release on the
+[release page](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases).
+Replace `vX.Y.Z` in every command with its actual tag, including the `v` prefix.
+The `main` branch may contain changes that are not in that release.
 
 ## Install a compiled release with cargo binstall
 

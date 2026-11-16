@@ -192,6 +192,11 @@ and keeps its proportions, independently of these layer/view preferences.
 The toolbar’s **Import** button uses a downward arrow into a tray. Hover for its
 label; its dropdown contains SVG, clipboard values, and reference-image actions.
 
+<!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
+![Export layers dialog showing SVG, extra parameters, picture options and layer scopes](../images/08-guide-export.png)
+
+*Choose a format, artwork options and which layers to export in one window. The header still uses the former Midra Layout name.*
+
 ## Choose layers inside import and export menus
 
 You can choose layers without returning to the viewport:

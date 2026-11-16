@@ -2,6 +2,11 @@
 
 [Canvas Pilot](../introduction.md) · [Guide contents](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
+<!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
+![Offline canvas with two layers, dimension guides, toolbar and layer inspector](../images/04-guide-workspace.png)
+
+*The default layout shows layer bounds, measurements and the screen canvas together. The header still uses the former Midra Layout name.*
+
 ## Workspace defaults and limits
 
 New projects start with two local rectangles and two source identities;
@@ -172,6 +177,11 @@ Releasing modifiers restores the selected tools, including during a drag. Tools
 stay selected across selection changes and project loads in this session; they
 are not saved to projects/settings and start off on launch. They affect layer
 movement/resize, not numeric edits or crop-content handles.
+
+<!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
+![Overlay grid controls with eight columns, six rows and separate visibility and snapping switches](../images/10-guide-grid.png)
+
+*Grid visibility and snapping are independent controls. The header still uses the former Midra Layout name.*
 
 ### Overlay grid
 
