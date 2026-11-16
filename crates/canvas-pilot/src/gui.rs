@@ -745,7 +745,7 @@ impl Editor {
                         .selected_text(&self.references[index].name)
                         .show_ui(ui, |ui| {
                             for (i, reference) in self.references.iter().enumerate() {
-                                ui.selectable_value(&mut index, i, &reference.name);
+                                ui.stable_selectable_value(&mut index, i, &reference.name);
                             }
                         });
                     self.reference_selected = Some(index);
@@ -1330,7 +1330,7 @@ impl Editor {
             if p.pages.len() > 1 {
                 let previous = p.page_index;
                 egui::ComboBox::new("File / page / frame / slide", tr(ui.ctx(), "ui.file-page-frame-slide")).selected_text(&p.pages[p.page_index].name).show_ui(ui, |ui| {
-                    for (index, page) in p.pages.iter().enumerate() { ui.selectable_value(&mut p.page_index, index, &page.name); }
+                    for (index, page) in p.pages.iter().enumerate() { ui.stable_selectable_value(&mut p.page_index, index, &page.name); }
                 });
                 if previous != p.page_index { p.set_document(p.pages[p.page_index].document.clone()); }
             }
@@ -1354,11 +1354,11 @@ impl Editor {
                 ui.strong("Destination layers");
                 let mut scope = p.scope.clone();
                 egui::ComboBox::from_id_salt("import-scope").width(280.0).selected_text(scope.label(ui.ctx())).show_ui(ui, |ui| {
-                    ui.selectable_value(&mut scope, ImportScope::All, tr(ui.ctx(), "ui.all-layers"));
-                    ui.selectable_value(&mut scope, ImportScope::Selected, tr(ui.ctx(), "ui.selected-layers"));
+                    ui.stable_selectable_value(&mut scope, ImportScope::All, tr(ui.ctx(), "ui.all-layers"));
+                    ui.stable_selectable_value(&mut scope, ImportScope::Selected, tr(ui.ctx(), "ui.selected-layers"));
                     ui.separator();
                     for folder in self.layout.folders() {
-                        ui.selectable_value(&mut scope, ImportScope::Folder(folder.clone()), format!("Folder: {folder}"));
+                        ui.stable_selectable_value(&mut scope, ImportScope::Folder(folder.clone()), format!("Folder: {folder}"));
                     }
                 });
                 if scope != p.scope { p.set_scope(scope, &self.layout); }
@@ -1425,11 +1425,11 @@ impl Editor {
                             ui.horizontal(|ui| {
                             ui.strong("Destination");
                             egui::ComboBox::from_id_salt("destination").width(330.0).selected_text(p.mapping[row].map(|i| self.layout.layer_label(i)).unwrap_or_else(|| "Choose destination…".into())).show_ui(ui,|ui| {
-                                ui.selectable_value(&mut p.mapping[row], None, tr(ui.ctx(), "ui.choose-destination"));
+                                ui.stable_selectable_value(&mut p.mapping[row], None, tr(ui.ctx(), "ui.choose-destination"));
                                 let candidates = p.candidates(&self.layout);
                                 for target in candidates {
                                     ui.add_enabled_ui(self.layout.visible(target) && !self.layout.locked(target), |ui| {
-                                        ui.selectable_value(&mut p.mapping[row],Some(target),self.layout.layer_label(target));
+                                        ui.stable_selectable_value(&mut p.mapping[row],Some(target),self.layout.layer_label(target));
                                     });
                                 }
                             });
@@ -2101,13 +2101,13 @@ impl Editor {
                 .width(210.0)
                 .selected_text(target_name(self.align_target))
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(
+                    ui.stable_selectable_value(
                         &mut self.align_target,
                         AlignTarget::Selection,
                         default_name,
                     );
                     for i in 0..self.layout.layers().len() {
-                        ui.selectable_value(
+                        ui.stable_selectable_value(
                             &mut self.align_target,
                             AlignTarget::Layer(i),
                             target_name(AlignTarget::Layer(i)),
@@ -2480,23 +2480,23 @@ impl Editor {
                         ResizeMode::Opposite => "Opposite handles",
                     })
                     .show_ui(ui, |ui| {
-                        ui.selectable_value(
+                        ui.stable_selectable_value(
                             &mut self.resize_mode,
                             ResizeMode::Individual,
                             tr(ui.ctx(), "ui.resize-individual-layer"),
                         );
-                        ui.selectable_value(
+                        ui.stable_selectable_value(
                             &mut self.resize_mode,
                             ResizeMode::Same,
                             tr(ui.ctx(), "ui.same-handles"),
                         );
                         ui.add_enabled_ui(self.layout.selected_indices().len() == 2, |ui| {
-                            ui.selectable_value(
+                            ui.stable_selectable_value(
                                 &mut self.resize_mode,
                                 ResizeMode::Mirror,
                                 tr(ui.ctx(), "ui.mirror-horizontally-two-layers"),
                             );
-                            ui.selectable_value(
+                            ui.stable_selectable_value(
                                 &mut self.resize_mode,
                                 ResizeMode::Opposite,
                                 tr(ui.ctx(), "ui.opposite-handles-two-layers"),
@@ -2886,7 +2886,7 @@ impl Editor {
                             let selected = self.grid_tool == Some(spacing);
                             let effective = self.effective_grid(modifiers) == Some(spacing);
                             let icon = edit_tool_icon(ui, rect, Some(spacing), label, selected, effective);
-                            let text = ui.selectable_label(selected, format!("{label} grid"));
+                            let text = ui.stable_selectable_label(selected, format!("{label} grid"));
                             let tooltip = format!("Toggle {label} grid. Hold {shortcut} for the same effect; when selected, the modifier temporarily disables it. Alt overrides grids.");
                             if icon.on_hover_text(&tooltip).clicked() || text.on_hover_text(tooltip).clicked() {
                                 self.grid_tool = if selected { None } else { Some(spacing) };

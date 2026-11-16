@@ -411,6 +411,71 @@ mod tests {
     }
 
     #[test]
+    fn selectable_hover_focus_and_selection_keep_rows_and_neighbors_stationary() {
+        for (theme, menu) in Theme::ALL
+            .into_iter()
+            .flat_map(|theme| [(theme, false), (theme, true)])
+        {
+            let ctx = egui::Context::default();
+            theme.apply(&ctx);
+            if menu {
+                ctx.global_style_mut(egui::containers::menu::menu_style);
+            }
+            let mut selected = false;
+            let draw = |events: Vec<egui::Event>, selected: bool| {
+                let mut rects = Vec::new();
+                let mut id = egui::Id::NULL;
+                let _ = ctx.run_ui(
+                    egui::RawInput {
+                        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(900.0, 600.0))),
+                        events,
+                        ..Default::default()
+                    },
+                    |ui| {
+                        let window = egui::Window::new("Choices")
+                            .fixed_pos(Pos2::new(30.0, 30.0))
+                            .auto_sized()
+                            .show(ui.ctx(), |ui| {
+                                ui.horizontal(|ui| {
+                                    let response = ui.stable_selectable_label(
+                                        selected,
+                                        "Português (Portugal) — Portuguese (Portugal)",
+                                    );
+                                    id = response.id;
+                                    rects.push(response.rect);
+                                    rects.push(ui.button("Neighbor").rect);
+                                });
+                                rects.push(ui.stable_selectable_label(false, "Second choice").rect);
+                            })
+                            .unwrap();
+                        rects.push(window.response.rect);
+                    },
+                );
+                (rects, id)
+            };
+            for _ in 0..4 {
+                draw(vec![], selected);
+            }
+            let (baseline, id) = draw(vec![], selected);
+            let pointer = baseline[0].center();
+            draw(vec![egui::Event::PointerMoved(pointer)], selected);
+            for _ in 0..3 {
+                assert_eq!(draw(vec![], selected).0, baseline, "hover: {theme:?}");
+            }
+            draw(vec![egui::Event::PointerGone], selected);
+            ctx.memory_mut(|memory| memory.request_focus(id));
+            for _ in 0..3 {
+                assert_eq!(draw(vec![], selected).0, baseline, "focus: {theme:?}");
+            }
+            ctx.memory_mut(|memory| memory.surrender_focus(id));
+            selected = true;
+            for _ in 0..3 {
+                assert_eq!(draw(vec![], selected).0, baseline, "selected: {theme:?}");
+            }
+        }
+    }
+
+    #[test]
     fn recent_themes_are_unique_newest_first_and_bounded() {
         let ctx = egui::Context::default();
         for theme in [

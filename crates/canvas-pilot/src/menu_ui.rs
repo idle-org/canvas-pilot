@@ -175,7 +175,7 @@ impl Editor {
         ui.menu_button(format!("Theme: {}", current.name()), |ui| {
             for choice in theme::Theme::recent(ui.ctx()) {
                 if ui
-                    .selectable_label(current == choice, choice.name())
+                    .stable_selectable_label(current == choice, choice.name())
                     .clicked()
                 {
                     choice.apply(ui.ctx());
@@ -251,7 +251,7 @@ impl Editor {
                                 ui.painter().rect_filled(rect, 2.0, color);
                             }
                             if ui
-                                .selectable_label(current == choice, choice.name())
+                                .stable_selectable_label(current == choice, choice.name())
                                 .on_hover_text(if choice.is_light() {
                                     "Light theme"
                                 } else {

@@ -321,8 +321,8 @@ impl Editor {
             }
             let folders: std::collections::BTreeSet<_> = (0..self.layout.layers().len()).map(|i| self.layout.layer_info(i).folder.clone()).collect();
             egui::ComboBox::from_id_salt("layer-folder-filter").selected_text(self.layer_ui.folder_filter.as_deref().filter(|s| !s.is_empty()).unwrap_or(if self.layer_ui.folder_filter.is_some() { "No folder" } else { "All folders" })).show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.layer_ui.folder_filter, None, tr(ui.ctx(), "ui.all-folders"));
-                for folder in folders { let label = if folder.is_empty() { "No folder" } else { &folder }; ui.selectable_value(&mut self.layer_ui.folder_filter, Some(folder.clone()), label); }
+                ui.stable_selectable_value(&mut self.layer_ui.folder_filter, None, tr(ui.ctx(), "ui.all-folders"));
+                for folder in folders { let label = if folder.is_empty() { "No folder" } else { &folder }; ui.stable_selectable_value(&mut self.layer_ui.folder_filter, Some(folder.clone()), label); }
             });
             egui::ScrollArea::vertical().max_height(400.0).show(ui, |ui| {
                 egui::Grid::new("layer-management").striped(true).show(ui, |ui| {
@@ -335,7 +335,7 @@ impl Editor {
                             if order_button(ui, *id, false, unfiltered && i > 0).on_hover_text(tr(ui.ctx(), "ui.move-down-send-backward")).on_disabled_hover_text("Show all folders to reorder; the bottom layer cannot move down.").clicked() { reorder = Some((*id, i - 1)); }
                         });
                         let selected = self.layout.selection_mask()[i];
-                        if ui.selectable_label(selected, format!("{id:02}")).clicked() { self.layout.toggle(i); sync = true; }
+                        if ui.stable_selectable_label(selected, format!("{id:02}")).clicked() { self.layout.toggle(i); sync = true; }
                         let name_response = ui.add_sized([170.0,24.0], egui::TextEdit::singleline(name).id(egui::Id::new(("layer-name", *id))).char_limit(128));
                         let folder_response = ui.add_sized([140.0,24.0], egui::TextEdit::singleline(folder).id(egui::Id::new(("layer-folder", *id))).char_limit(128));
                         commit_names |= name_response.lost_focus() || folder_response.lost_focus()

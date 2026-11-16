@@ -388,7 +388,7 @@ impl Editor {
                     .show_ui(ui, |ui| {
                         for screen in &snapshot.screens {
                             if ui
-                                .selectable_value(
+                                .stable_selectable_value(
                                     &mut mapped.screen,
                                     screen.id.clone(),
                                     format!("Screen {}", screen.id),
@@ -415,7 +415,7 @@ impl Editor {
                             .find(|screen| screen.id == mapped.screen)
                         {
                             for layer in &screen.layers {
-                                ui.selectable_value(
+                                ui.stable_selectable_value(
                                     &mut mapped.layer,
                                     layer.id.clone(),
                                     format!("Layer {}", layer.id),
@@ -436,7 +436,7 @@ impl Editor {
                             (device::Family::Aquilon, "Aquilon / LivePremier", "S1"),
                         ] {
                             if ui
-                                .selectable_value(&mut mapped.family, family, label)
+                                .stable_selectable_value(&mut mapped.family, family, label)
                                 .changed()
                             {
                                 mapped.screen = screen.into();
@@ -452,8 +452,16 @@ impl Editor {
                     egui::ComboBox::from_id_salt("offline-screen-kind")
                         .selected_text(if prefix == "A" { "Auxiliary" } else { "Screen" })
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut prefix, "S", tr(ui.ctx(), "ui.screen-6e5613"));
-                            ui.selectable_value(&mut prefix, "A", tr(ui.ctx(), "ui.auxiliary"));
+                            ui.stable_selectable_value(
+                                &mut prefix,
+                                "S",
+                                tr(ui.ctx(), "ui.screen-6e5613"),
+                            );
+                            ui.stable_selectable_value(
+                                &mut prefix,
+                                "A",
+                                tr(ui.ctx(), "ui.auxiliary"),
+                            );
                         });
                 }
                 let screen_digits = if mapped.family == device::Family::Aquilon {
@@ -575,11 +583,11 @@ impl Editor {
             .width(175.0)
             .selected_text(self.device.scope.label(ui.ctx()))
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.device.scope, TransferScope::All, tr(ui.ctx(), "ui.all-layers"));
-                ui.selectable_value(&mut self.device.scope, TransferScope::Selected, tr(ui.ctx(), "ui.only-selected-layers"));
+                ui.stable_selectable_value(&mut self.device.scope, TransferScope::All, tr(ui.ctx(), "ui.all-layers"));
+                ui.stable_selectable_value(&mut self.device.scope, TransferScope::Selected, tr(ui.ctx(), "ui.only-selected-layers"));
                 ui.separator();
                 for folder in self.layout.folders() {
-                    ui.selectable_value(&mut self.device.scope, TransferScope::Folder(folder.clone()), format!("Folder: {folder}"));
+                    ui.stable_selectable_value(&mut self.device.scope, TransferScope::Folder(folder.clone()), format!("Folder: {folder}"));
                 }
             }).response.on_hover_text(tr(ui.ctx(), "ui.scope-for-both-device-send-and-load-in-folder-mode-clicking-a-folder-in-the-layer-lis"));
         if before != self.device.scope {
@@ -819,7 +827,7 @@ impl Editor {
                     egui::ComboBox::from_id_salt("midra_screen")
                         .selected_text(format!("Screen {}", snapshot.screens[self.device.screen].id))
                         .show_ui(ui, |ui| {
-                            for (i, screen) in snapshot.screens.iter().enumerate() { ui.selectable_value(&mut self.device.screen, i, format!("Screen {} · {} × {}", screen.id, screen.resolution[0], screen.resolution[1])); }
+                            for (i, screen) in snapshot.screens.iter().enumerate() { ui.stable_selectable_value(&mut self.device.screen, i, format!("Screen {} · {} × {}", screen.id, screen.resolution[0], screen.resolution[1])); }
                         });
                     let screen = &snapshot.screens[self.device.screen];
                     if previous != self.device.screen {
@@ -882,13 +890,13 @@ impl Editor {
                                             .map(|(j, _)| self.layout.layer_label(j)).unwrap_or("Removed layer — choose again".into()),
                                     };
                                     egui::ComboBox::from_id_salt(("midra_destination", i)).selected_text(label).show_ui(ui, |ui| {
-                                        ui.selectable_value(destination, Destination::Skip, "Do not import");
+                                        ui.stable_selectable_value(destination, Destination::Skip, "Do not import");
                                         ui.add_enabled_ui(self.device.scope != TransferScope::Selected, |ui| {
-                                            ui.selectable_value(destination, Destination::New, "New layer");
+                                            ui.stable_selectable_value(destination, Destination::New, "New layer");
                                         });
                                         for &j in &scope_indices {
                                             ui.add_enabled_ui(self.layout.visible(j) && !self.layout.locked(j), |ui| {
-                                                ui.selectable_value(destination, Destination::Existing(self.layout.layer_info(j).id), self.layout.layer_label(j));
+                                                ui.stable_selectable_value(destination, Destination::Existing(self.layout.layer_info(j).id), self.layout.layer_label(j));
                                             });
                                         }
                                     });
@@ -1069,15 +1077,15 @@ fn send_review(
     }
     ui.horizontal(|ui| {
         ui.label(tr(ui.ctx(), "ui.target"));
-        ui.selectable_value(target_mode, Target::Preview, "Preview");
+        ui.stable_selectable_value(target_mode, Target::Preview, "Preview");
         if allow_program {
-            ui.selectable_value(target_mode, Target::Program, "Program");
+            ui.stable_selectable_value(target_mode, Target::Program, "Program");
         }
     });
     ui.horizontal(|ui| {
         ui.label(tr(ui.ctx(), "ui.device-container"));
-        ui.selectable_value(sizing, Sizing::OutputBox, "Output-sized");
-        ui.selectable_value(sizing, Sizing::SourceAspect, "Source aspect");
+        ui.stable_selectable_value(sizing, Sizing::OutputBox, "Output-sized");
+        ui.stable_selectable_value(sizing, Sizing::SourceAspect, "Source aspect");
     });
     let selected = indices;
     targets.retain(|id, _| selected.iter().any(|&i| layout.layer_info(i).id == *id));
@@ -1112,9 +1120,9 @@ fn send_review(
                     format!("Screen {} · Layer {target}", screen.id)
                 })
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(target, String::new(), "Not linked / skip");
+                    ui.stable_selectable_value(target, String::new(), "Not linked / skip");
                     for layer in &screen.layers {
-                        ui.selectable_value(
+                        ui.stable_selectable_value(
                             target,
                             layer.id.clone(),
                             format!("Screen {} · Layer {}", screen.id, layer.id),

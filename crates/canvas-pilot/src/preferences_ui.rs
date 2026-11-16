@@ -165,7 +165,7 @@ impl Editor {
                         .show_ui(ui, |ui| {
                             for language in localization::Language::ALL.into_iter().chain(crate::language_packs::available(ctx).into_iter().map(|p| localization::Language::Pack(p.locale))) {
                                 let name = language.name(ctx);
-                                if ui.selectable_label(self.language == language, name).clicked() {
+                                if ui.stable_selectable_label(self.language == language, name).clicked() {
                                     self.preview_language(ctx, language);
                                 }
                             }
@@ -193,7 +193,7 @@ impl Editor {
                     ui.vertical(|ui| {
                         ui.set_width(145.0);
                         for (section, name) in Section::ALL {
-                            ui.selectable_value(&mut self.preferences_section, section, tr(ctx, name));
+                            ui.stable_selectable_value(&mut self.preferences_section, section, tr(ctx, name));
                         }
                     });
                     ui.separator();
@@ -220,7 +220,7 @@ impl Editor {
                                 if ui.button(tr(ui.ctx(), "ui.browse-all-themes")).clicked() { self.themes_open = true; }
                                 ui.label(tr(ui.ctx(), "ui.recently-used"));
                                 for choice in theme::Theme::recent(ctx) {
-                                    if ui.selectable_label(choice == theme::Theme::current(ctx), choice.name()).clicked() {
+                                    if ui.stable_selectable_label(choice == theme::Theme::current(ctx), choice.name()).clicked() {
                                         choice.apply(ctx);
                                     }
                                 }

@@ -458,7 +458,7 @@ impl Editor {
                     ExportScope::Visible,
                     ExportScope::Specific,
                 ] {
-                    ui.selectable_value(&mut self.files.export_scope, scope, scope.label());
+                    ui.stable_selectable_value(&mut self.files.export_scope, scope, scope.label());
                 }
             });
         if self.files.export_scope == ExportScope::Selected {
@@ -484,7 +484,7 @@ impl Editor {
                 .selected_text(label)
                 .show_ui(ui, |ui| {
                     for i in 0..self.layout.layers().len() {
-                        ui.selectable_value(
+                        ui.stable_selectable_value(
                             &mut self.files.export_layer,
                             Some(self.layout.layer_info(i).id),
                             self.layout.layer_label(i),
@@ -628,7 +628,7 @@ impl Editor {
                         .selected_text(self.files.export_codec.label())
                         .show_ui(ui, |ui| {
                             for codec in canvas_pilot::interchange::Codec::available() {
-                                ui.selectable_value(
+                                ui.stable_selectable_value(
                                     &mut self.files.export_codec,
                                     codec,
                                     codec.label(),

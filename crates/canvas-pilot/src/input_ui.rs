@@ -181,7 +181,7 @@ impl InputEdits {
                         .selected_text(setting_label(&value))
                         .show_ui(ui, |ui| {
                             for option in options {
-                                ui.selectable_value(
+                                ui.stable_selectable_value(
                                     &mut value,
                                     (*option).into(),
                                     setting_label(option),

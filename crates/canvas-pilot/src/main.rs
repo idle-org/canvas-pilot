@@ -52,6 +52,8 @@ mod gui;
 mod reference;
 mod settings;
 mod theme;
+mod widgets;
+use widgets::StableSelectableUi;
 
 /// Draw in local logical points; viewport artwork alone uses a fitted scale.
 struct Ink {

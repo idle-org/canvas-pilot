@@ -35,7 +35,7 @@ fn input_picker(
             for input in inputs.iter().filter(|input| *show_empty || input.signal) {
                 any = true;
                 if ui
-                    .selectable_value(selected, input.id, input_label(inputs, input.id))
+                    .stable_selectable_value(selected, input.id, input_label(inputs, input.id))
                     .clicked()
                 {
                     ui.close();
@@ -645,9 +645,9 @@ impl Editor {
                 self.capture.target_layer.and_then(|id| (0..self.layout.layers().len()).find(|&i| self.layout.layer_info(i).id == id))
                     .map(|i| format!("Layer: {}", self.layout.layer_label(i))).unwrap_or_else(|| "Reference image".into())
             ).show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.capture.target_layer, None, tr(ui.ctx(), "ui.reference-image"));
+                ui.stable_selectable_value(&mut self.capture.target_layer, None, tr(ui.ctx(), "ui.reference-image"));
                 for i in 0..self.layout.layers().len() {
-                    ui.selectable_value(&mut self.capture.target_layer, Some(self.layout.layer_info(i).id), format!("Layer: {}", self.layout.layer_label(i)));
+                    ui.stable_selectable_value(&mut self.capture.target_layer, Some(self.layout.layer_info(i).id), format!("Layer: {}", self.layout.layer_label(i)));
                 }
             });
             if self.capture.target_layer.is_some() {

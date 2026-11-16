@@ -205,7 +205,7 @@ fn aspect_combo(ui: &mut egui::Ui, id: &str, aspect: &mut Aspect) -> bool {
         .selected_text(aspect.label())
         .show_ui(ui, |ui| {
             for a in Aspect::ALL {
-                ui.selectable_value(aspect, a, a.label());
+                ui.stable_selectable_value(aspect, a, a.label());
             }
         });
     old != *aspect
@@ -362,12 +362,12 @@ impl Editor {
         let mut open = true;
         egui::Window::new(rust_i18n::t!("layer.properties-title", locale = &localization::locale(ctx), name = self.layout.layer_label(i)).into_owned()).id(egui::Id::new(("layer-properties", self.layout.layer_info(i).id))).open(&mut open).default_width(540.0).default_height(720.0).min_height(380.0).vscroll(true).show(ctx,|ui| {
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Source,tr(ui.ctx(), "ui.source"));
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Layer,tr(ui.ctx(), "ui.layer-ac9ffc"));
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Crop,tr(ui.ctx(), "ui.crop"));
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Mask,tr(ui.ctx(), "ui.mask"));
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Mapping,tr(ui.ctx(), "ui.mapping"));
-                ui.selectable_value(&mut self.property_tab,PropertyTab::Preview,tr(ui.ctx(), "ui.preview"));
+                ui.stable_selectable_value(&mut self.property_tab,PropertyTab::Source,tr(ui.ctx(), "ui.source"));
+                ui.stable_selectable_value(&mut self.property_tab,PropertyTab::Layer,tr(ui.ctx(), "ui.layer-ac9ffc"));
+                ui.stable_selectable_value(&mut self.property_tab,PropertyTab::Crop,tr(ui.ctx(), "ui.crop"));
+                ui.stable_selectable_value(&mut self.property_tab,PropertyTab::Mask,tr(ui.ctx(), "ui.mask"));
+                ui.stable_selectable_value(&mut self.property_tab,PropertyTab::Mapping,tr(ui.ctx(), "ui.mapping"));
+                ui.stable_selectable_value(&mut self.property_tab,PropertyTab::Preview,tr(ui.ctx(), "ui.preview"));
             });
             ui.separator();
             if self.property_tab == PropertyTab::Mapping {
@@ -386,7 +386,7 @@ impl Editor {
                 ui.label(tr(ui.ctx(), "ui.editor-input"));
                 egui::ComboBox::from_id_salt("source-id").selected_text(format!("Input {}",d.source_id+1)).show_ui(ui,|ui| {
                     let count = self.layout.formats().sources.len().max(8).max(d.source_id + 1);
-                    for id in 0..count { if ui.selectable_value(&mut d.source_id,id,format!("Input {}",id+1)).changed() { d.source=self.layout.formats().sources.get(id).copied().unwrap_or_default();d.input_size=d.source.input().unwrap(); } }
+                    for id in 0..count { if ui.stable_selectable_value(&mut d.source_id,id,format!("Input {}",id+1)).changed() { d.source=self.layout.formats().sources.get(id).copied().unwrap_or_default();d.input_size=d.source.input().unwrap(); } }
                     ui.separator();
                     if ui.add_enabled(count < 1024, egui::Button::new(tr(ui.ctx(), "ui.new-editor-input"))).clicked() {
                         d.source_id = count;
@@ -493,8 +493,8 @@ impl Editor {
                     egui::ComboBox::from_id_salt("mask-origin")
                         .selected_text(tr(ui.ctx(), if mask.origin == canvas_pilot::formats::MaskOrigin::Layer { "mask.layer" } else { "mask.source" }))
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut mask.origin, canvas_pilot::formats::MaskOrigin::Layer, tr(ui.ctx(), "mask.layer"));
-                            ui.selectable_value(&mut mask.origin, canvas_pilot::formats::MaskOrigin::Source, tr(ui.ctx(), "mask.source"));
+                            ui.stable_selectable_value(&mut mask.origin, canvas_pilot::formats::MaskOrigin::Layer, tr(ui.ctx(), "mask.layer"));
+                            ui.stable_selectable_value(&mut mask.origin, canvas_pilot::formats::MaskOrigin::Source, tr(ui.ctx(), "mask.source"));
                         });
                 });
                 ui.small(tr(ui.ctx(), "mask.origin-help"));
@@ -536,7 +536,7 @@ impl Editor {
             if let Some(current_fit) = self.layout.formats().layer_fit[i] {
                 let mut fit = current_fit;
                 egui::ComboBox::from_id_salt("explicit-layer-fit").selected_text(fit.label()).show_ui(ui, |ui| {
-                    for option in canvas_pilot::formats::LayerFit::ALL { ui.selectable_value(&mut fit, option, option.label()); }
+                    for option in canvas_pilot::formats::LayerFit::ALL { ui.stable_selectable_value(&mut fit, option, option.label()); }
                 });
                 ui.label(tr(ui.ctx(), "ui.crop-first-then-fit-into-the-layer-rectangle-resize-changes-the-container-1-1-keeps-t"));
                 let old_crop = self.layout.formats().advanced[i];

@@ -39,7 +39,7 @@ impl Editor {
             .selected_text(&self.references[selected].name)
             .show_ui(ui, |ui| {
                 for (i, reference) in self.references.iter().enumerate() {
-                    ui.selectable_value(&mut selected, i, &reference.name);
+                    ui.stable_selectable_value(&mut selected, i, &reference.name);
                 }
             });
         self.reference_selected = Some(selected);

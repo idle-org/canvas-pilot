@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### v0.9.8
+
+- Fixed hover/focus outlines changing selectable-row widths and moving surrounding
+  controls. Language choices and shared selectors now reserve the same space in
+  idle, hovered and selected states, retaining their existing visual feedback.
+- Added layout regression coverage across all themes, including High Contrast and
+  borderless menu styling. Native screenshots confirm the hover outline stays within its row,
+  with no popup movement. Required checks passed; application line coverage is 91.38%.
+
 ### v0.9.7
 
 - Added runtime ZIP language-pack installation in Settings, dynamic language choices,
