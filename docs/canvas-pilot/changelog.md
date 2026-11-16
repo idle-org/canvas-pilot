@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Redesigned the repository README with an illustrated introduction, layout workflow,
+  feature overview, format/device guidance and direct setup, template and help links.
+  Existing screenshots are identified as captures from before the rename.
+
+
 - Audited all 165 migrated project files; task lists, stretch goals, advanced guide,
   screenshots, templates and fixtures were retained. Expanded agent guidance and
   documentation navigation, and included the transferred checklists/research in
