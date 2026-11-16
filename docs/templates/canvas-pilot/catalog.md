@@ -14,9 +14,9 @@ otherwise preview a template, including PDF-compatible Illustrator files.
 3. Arrange and resize the layer boxes, save the file, and send it back to the
    person preparing the screen layout. You do not need Canvas Pilot to edit it.
 
-Unsure which format to choose? See the
-[format recommendations and feature matrix](../../canvas-pilot/guide/format-matrix.md).
-Individual downloads are listed below.
+> **Unsure which format to choose?**
+> See the [format recommendations and feature matrix](../../canvas-pilot/guide/format-matrix.md).
+> Individual downloads are listed below.
 
 This folder is the single source for the base files in every supported geometry
 exchange format. Each file contains the same two named 16:9 layer boxes on an

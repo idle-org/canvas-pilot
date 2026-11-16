@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Made the template catalog’s format-choice link more visible with a compact
+  callout and bold introduction, shared by the Markdown page and book.
+
 - Ordered the file feature matrix by preservation support, starting with Canvas
   Pilot projects, and explained capability ties and the AI converter requirement.
 
