@@ -19,7 +19,8 @@ means a supported exchange format exported with extra parameters and reopened th
 | Layer position and size | ✅ | ✅ | ✅ |
 | Full-precision saved coordinates | ✅ | ❌ [1](#editing-notes) | ✅ |
 | Output screen resolution | ✅ | ❌ | ✅ |
-| Layer names and stacking order | ✅ | ❌ | ✅ |
+| Layer names | ✅ | ✅ · opt-in, when supplied | ✅ |
+| Stacking order | ✅ | ❌ | ✅ |
 | Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [2](#editing-notes) |
 | Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [2](#editing-notes) |
 | Input crop edges | ✅ | ❌ | ✅ |
@@ -53,6 +54,7 @@ For a complete editable backup, **Save project** remains the recommended choice.
 Canvas Pilot’s **Copy layer values** also preserves exact geometry, crop edges,
 offsets, fit and blanking through the clipboard. Its mapping review offers an
 optional **Appearance** group; source assignments and device links remain unchanged.
+The separate **Rename destination layers** option applies supplied source names.
 See [clipboard preservation and limits](files.md#canvas-pilot-layer-clipboard).
 This is separate from plain geometry import and export snapshot restoration.
 

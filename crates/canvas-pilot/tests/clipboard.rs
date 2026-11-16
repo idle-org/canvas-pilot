@@ -166,7 +166,7 @@ fn clipboard_schema_is_bounded_versioned_and_never_falls_back_on_invalid_payload
     let (_, json) = text.rsplit_once(clipboard::MARKER).unwrap();
     let good: serde_json::Value = serde_json::from_str(json).unwrap();
     for (pointer, value) in [
-        ("/version", serde_json::json!(2)),
+        ("/version", serde_json::json!(3)),
         ("/format", serde_json::json!("other")),
         ("/layers/0/appearance/fit", serde_json::json!("unknown")),
         ("/layers/0/appearance/input_size/0", serde_json::json!(0)),
@@ -213,4 +213,128 @@ fn documented_fixture_and_multiple_layers_preserve_fractional_bounds() {
     let shape = parse_values(legacy).unwrap().shapes.remove(0);
     assert_eq!(shape.zoom, Some(2.));
     assert!(shape.appearance.is_none());
+}
+
+#[test]
+fn names_are_explicit_optional_atomic_and_preserve_identity_and_folders() {
+    let (mut layout, _) = copied(None);
+    layout
+        .rename_layer(0, "Caméra & <wide>", "Sources")
+        .unwrap();
+    layout
+        .rename_layer(1, "Destination", "Keep this folder")
+        .unwrap();
+    let text = clipboard::encode(&layout, &[0], "Summary").unwrap();
+    let shape = parse_values(&text).unwrap().shapes.remove(0);
+    assert_eq!(shape.name.as_deref(), Some("Caméra & <wide>"));
+    let legacy = include_str!("../../../docs/interfaces/canvas-pilot-clipboard-v1.example.txt");
+    assert!(parse_values(legacy).unwrap().shapes[0].name.is_none());
+    let current = include_str!("../../../docs/interfaces/canvas-pilot-clipboard-v2.example.txt");
+    assert_eq!(
+        parse_values(current).unwrap().shapes[0].name.as_deref(),
+        Some("Presenter")
+    );
+    let before = Project::from_layout(&layout);
+    let g = layout.layers()[1];
+    layout
+        .apply_mapped_clipboard_with_names(
+            &[(1, g)],
+            &[],
+            &[],
+            false,
+            false,
+            &[(1, shape.name.unwrap())],
+        )
+        .unwrap();
+    assert_eq!(layout.layer_info(1).name, "Caméra & <wide>");
+    assert_eq!(layout.layer_info(1).folder, "Keep this folder");
+    assert_eq!(layout.layer_info(1).id, before.layers[1].id);
+    layout.undo();
+    assert_eq!(Project::from_layout(&layout), before);
+    for names in [
+        vec![(1, "".into())],
+        vec![(1, "x".repeat(129))],
+        vec![(1, "One".into()), (1, "Two".into())],
+        vec![(999, "No".into())],
+    ] {
+        assert!(
+            layout
+                .apply_mapped_clipboard_with_names(&[(1, g)], &[], &[], false, false, &names)
+                .is_err()
+        );
+        assert_eq!(Project::from_layout(&layout), before);
+    }
+}
+
+#[test]
+fn external_names_survive_exchange_without_promoting_generated_ids() {
+    use canvas_pilot::{
+        exchange::Options,
+        interchange::{self, Codec},
+    };
+    let mut layout = Layout::default();
+    layout.rename_layer(0, "Caméra & wide", "").unwrap();
+    let project = Project::from_layout(&layout);
+    for codec in Codec::available()
+        .into_iter()
+        .filter(|c| *c != Codec::Illustrator)
+    {
+        let bytes =
+            interchange::export(&project, &[project.layers[0].id], codec, Options::default())
+                .unwrap();
+        let pages = interchange::import(&bytes, &format!("test.{}", codec.extension())).unwrap();
+        assert_eq!(
+            pages[0].document.shapes[0].name.as_deref(),
+            Some("Caméra & wide"),
+            "{codec:?}"
+        );
+    }
+    for (svg, name) in [
+        (
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="100" height="50"/></svg>"#,
+            None,
+        ),
+        (
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect id="Camera" width="100" height="50"/></svg>"#,
+            Some("Camera"),
+        ),
+        (
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect id="path1" width="100" height="50"><title>Presenter</title></rect></svg>"#,
+            Some("Presenter"),
+        ),
+    ] {
+        assert_eq!(parse_values(svg).unwrap().shapes[0].name.as_deref(), name);
+    }
+    let xml = |value: &str, style: &str| {
+        format!(
+            r#"<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="generated-id" value="{value}" style="{style}" vertex="1" parent="1"><mxGeometry width="100" height="50" as="geometry"/></mxCell></root></mxGraphModel>"#
+        )
+    };
+    for (value, style, name) in [
+        ("", "html=0", None),
+        ("Caméra &amp; wide", "html=0", Some("Caméra & wide")),
+        ("&lt;b&gt;Presenter&lt;/b&gt;", "html=1", Some("Presenter")),
+    ] {
+        assert_eq!(
+            parse_values(&xml(value, style)).unwrap().shapes[0]
+                .name
+                .as_deref(),
+            name
+        );
+    }
+}
+
+#[test]
+fn svg_group_names_and_labels_are_used_but_document_titles_are_not() {
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="500" height="500"><title>Document title</title><g id="Camera"><rect width="100" height="50"/></g><rect id="path2" inkscape:label="Lectern" width="100" height="50"><title>Other title</title></rect><rect width="100" height="50"/></svg>"#;
+    let names: Vec<_> = parse_values(svg)
+        .unwrap()
+        .shapes
+        .into_iter()
+        .map(|s| s.name)
+        .collect();
+    assert_eq!(
+        names,
+        vec![Some("Camera".into()), Some("Lectern".into()), None]
+    );
 }

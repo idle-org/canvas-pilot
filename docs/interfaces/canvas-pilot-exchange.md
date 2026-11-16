@@ -225,7 +225,7 @@ UTF-8 SVG; SVG namespace and optional XLink namespace. Root attributes:
 
 Each layer is a `<rect>` (plain) or `<image>` (placeholder), with `id="layer-N"`,
 `data-midra-role="layer"`, `x`, `y`, `width`, `height`. A `<title>` carries its name
-for external viewers; Midra import does not rename destinations. Images use
+for external viewers and optional destination renaming. Images use
 `xlink:href="data:image/png;base64,..."` and `preserveAspectRatio="none"`.
 The optional background is an `<image>` with `data-midra-role="background"` and
 full-page bounds. No visible text geometry, transforms, clipping or CSS is needed.
@@ -365,7 +365,7 @@ changes when still eligible. Clipboard text and per-item geometry details are
 collapsed, read-only previews. These review choices are session-only and do not
 change any file schema. Import with
 size and position enabled restores the rounded geometry in one Undo step. Output
-screen resolution is not imported. Mapped names, sources and Midra links stay with
+screen resolution is not imported. Mapped sources and Midra links stay with
 the destination layers. File replacement retains the existing explicit overwrite
 confirmation and atomic-write path.
 
@@ -456,3 +456,24 @@ to the container, including transparent margins for Centered or small 1:1 conten
 Project v15 also preserves normalized layer masks in embedded snapshots. Placeholder
 artwork blanks pixels transparently without resampling. Plain rectangle geometry
 continues to omit mask appearance; use project JSON for exact round trips.
+
+
+## Optional destination naming
+
+Geometry import now offers **Rename destination layers**, off by default. Names
+are separate from generated review identifiers. SVG uses a shape's Inkscape label,
+child title, `data-name`, or explicit ID, with the nearest named group as fallback.
+Draw.io XML uses `value` (plain text, or inert text extracted from well-formed XML
+markup for HTML labels); malformed markup supplies no name. Draw.io-rendered SVG
+cell identifiers are not promoted to names. JSON/CSV use `name`, HTML uses
+`data-name`, PPTX uses shape names and FIG/FIGCRAFT uses node names. DXF/DWG reads
+CAD layer descriptions with layer names as fallback. Illustrator depends on the
+SVG conversion preserving labels. No exchange file schema changes are needed.
+
+A supplied name is trimmed and must contain 1–128 characters when applied; longer
+names may still be read for geometry-only imports. Unnamed or excluded items do
+not rename anything. Names never alter identity, folders, order, source assignments
+or device links. A names-only edit is supported, and geometry/appearance/names
+commit atomically as one undo step. Invalid or stale mappings, locked destinations
+or invalid selected names reject the entire batch. The [clipboard contract](canvas-pilot-clipboard.md)
+versions the separate Canvas Pilot clipboard name semantics.

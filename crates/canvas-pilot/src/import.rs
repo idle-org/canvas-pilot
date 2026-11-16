@@ -6,6 +6,8 @@ use std::str::FromStr;
 #[derive(Clone, Debug)]
 pub struct DetectedShape {
     pub id: String,
+    /// Explicit source name; generated review identifiers are not names.
+    pub name: Option<String>,
     pub geometry: Geometry,
     pub outline: [f64; 2],
     pub background: bool,
@@ -96,6 +98,7 @@ pub fn parse_values(text: &str) -> Result<ImportDocument, String> {
         shapes: parse_drawio(text)?
             .into_iter()
             .map(|s| DetectedShape {
+                name: s.name,
                 id: s.id,
                 geometry: s.geometry,
                 outline: [s.stroke_width; 2],
@@ -176,6 +179,7 @@ fn parse_midra_values(text: &str) -> Result<ImportDocument, String> {
         }
         .validate()?;
         shapes.push(DetectedShape {
+            name: None,
             id: id.into(),
             geometry,
             outline: [0.0; 2],
@@ -511,7 +515,23 @@ fn walk(
         })
         .map(str::to_owned)
         .unwrap_or_else(|| format!("{tag} {}", out.len() + 1));
+    let name = node
+        .ancestors()
+        .filter(|n| *n == node || n.has_tag_name("g"))
+        .find_map(|n| {
+            source_name(n.attribute(("http://www.inkscape.org/namespaces/inkscape", "label")))
+                .or_else(|| {
+                    source_name(
+                        n.children()
+                            .find(|c| c.has_tag_name("title"))
+                            .and_then(|c| c.text()),
+                    )
+                })
+                .or_else(|| source_name(n.attribute("data-name")))
+                .or_else(|| source_name(n.attribute("id")))
+        });
     out.push(DetectedShape {
+        name,
         id,
         geometry,
         outline: [stroke * matrix.x.abs(), stroke * matrix.y.abs()],
@@ -609,6 +629,7 @@ fn drawio_svg_shapes(
         }
         let background = id == "midra-background";
         out.push(DetectedShape {
+            name: None,
             id: id.to_owned(),
             geometry,
             outline: [stroke * cell_matrix.x.abs(), stroke * cell_matrix.y.abs()],
@@ -735,4 +756,32 @@ pub fn parse_svg(text: &str) -> Result<ImportDocument, String> {
             crate::view_pixels(page[1])
         ),
     })
+}
+
+/// Keep supplied names separate from generated mapping identifiers.
+pub(crate) fn source_name(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+}
+/// Draw.io HTML labels are read as inert XML text when well formed.
+pub(crate) fn drawio_name(value: Option<&str>, html: bool) -> Option<String> {
+    let value = value?;
+    if !html || !value.contains('<') {
+        return source_name(Some(value));
+    }
+    let wrapped = format!("<label>{value}</label>");
+    let doc = roxmltree::Document::parse(&wrapped).ok()?;
+    let text = doc
+        .descendants()
+        .filter(|n| n.is_text())
+        .filter(|n| {
+            !n.ancestors()
+                .any(|p| matches!(p.tag_name().name(), "script" | "style"))
+        })
+        .filter_map(|n| n.text())
+        .collect::<Vec<_>>()
+        .join(" ");
+    source_name(Some(&text))
 }

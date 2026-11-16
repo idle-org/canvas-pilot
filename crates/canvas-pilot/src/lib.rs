@@ -2123,6 +2123,7 @@ impl Layout {
 #[derive(Clone, Debug)]
 pub struct DrawioShape {
     pub id: String,
+    pub name: Option<String>,
     pub geometry: Geometry,
     /// Effective visible outline thickness, in diagram pixels (default 1).
     pub stroke_width: f64,
@@ -2289,6 +2290,7 @@ pub fn parse_drawio(input: &str) -> Result<Vec<DrawioShape>, String> {
         }
         .validate()?;
         result.push(DrawioShape {
+            name: import::drawio_name(cell.attribute("value"), styles.get("html") == Some(&"1")),
             id: id.to_owned(),
             geometry,
             stroke_width,

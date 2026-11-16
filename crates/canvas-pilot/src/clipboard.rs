@@ -63,14 +63,14 @@ pub fn encode(layout: &Layout, indices: &[usize], summary: &str) -> Result<Strin
         bounds.validate()?;
         appearance.validate(bounds)?;
         layers.push(Layer {
-            name: layout.layer_label(i),
+            name: layout.layer_info(i).name.clone(),
             bounds,
             appearance,
         });
     }
     let json = serde_json::to_string_pretty(&Payload {
         format: "canvas-pilot.layers".into(),
-        version: 1,
+        version: 2,
         layers,
     })
     .map_err(|e| e.to_string())?;
@@ -86,9 +86,9 @@ pub fn parse(json: &str) -> Result<ImportDocument, String> {
     }
     let payload: Payload =
         serde_json::from_str(json).map_err(|e| format!("Invalid Canvas Pilot clipboard: {e}"))?;
-    if payload.format != "canvas-pilot.layers" || payload.version != 1 {
+    if payload.format != "canvas-pilot.layers" || !matches!(payload.version, 1 | 2) {
         return Err(
-            "Unsupported Canvas Pilot clipboard format/version; expected version 1.".into(),
+            "Unsupported Canvas Pilot clipboard format/version; expected version 1 or 2.".into(),
         );
     }
     if payload.layers.is_empty() || payload.layers.len() > 256 {
@@ -102,6 +102,7 @@ pub fn parse(json: &str) -> Result<ImportDocument, String> {
         layer.bounds.validate()?;
         layer.appearance.validate(layer.bounds)?;
         shapes.push(DetectedShape {
+            name: (payload.version == 2).then(|| layer.name.clone()),
             id: layer.name,
             geometry: layer.bounds,
             outline: [0.; 2],
@@ -111,7 +112,7 @@ pub fn parse(json: &str) -> Result<ImportDocument, String> {
             appearance: Some(layer.appearance),
         });
     }
-    Ok(ImportDocument { shapes, svg: false, note: "Canvas Pilot layer values include exact crop, fit and blanking. Source assignments, names and device links stay unchanged.".into() })
+    Ok(ImportDocument { shapes, svg: false, note: "Canvas Pilot layer values include exact crop, fit and blanking. Names can be applied separately; source assignments and device links stay unchanged.".into() })
 }
 impl Layout {
     /// Apply geometry and optional appearance atomically, preserving selection and source identity.
@@ -123,6 +124,32 @@ impl Layout {
         crop_fit: bool,
         masks: bool,
     ) -> Result<(), String> {
+        self.apply_mapped_clipboard_with_names(values, zooms, appearances, crop_fit, masks, &[])
+    }
+    /// Apply optional explicit names in the same atomic edit as geometry/appearance.
+    pub fn apply_mapped_clipboard_with_names(
+        &mut self,
+        values: &[(usize, Geometry)],
+        zooms: &[(usize, f64)],
+        appearances: &[(usize, Appearance)],
+        crop_fit: bool,
+        masks: bool,
+        names: &[(usize, String)],
+    ) -> Result<(), String> {
+        let mut named = std::collections::BTreeSet::new();
+        for (i, name) in names {
+            if *i >= self.layers.len()
+                || !self.selectable(*i)
+                || !values.iter().any(|(target, _)| target == i)
+                || !named.insert(*i)
+                || name.trim().is_empty()
+                || name.chars().count() > 128
+            {
+                return Err(
+                    "Each name needs one editable destination and 1–128 characters.".into(),
+                );
+            }
+        }
         let mut seen = std::collections::BTreeSet::new();
         for &(i, a) in appearances {
             if i >= self.layers.len() || !self.selectable(i) {
@@ -160,6 +187,9 @@ impl Layout {
             if masks {
                 draft.formats.masks[i] = appearance.mask.validate()?;
             }
+        }
+        for (i, name) in names {
+            draft.info[*i].name = name.trim().to_owned();
         }
         self.finish_drag();
         let before = self.snapshot();

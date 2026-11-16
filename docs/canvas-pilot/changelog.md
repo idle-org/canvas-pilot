@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Import/paste can optionally rename destination layers from supplied editor names,
+  with proposed names shown before applying and a name-only mode. Folders and IDs
+  stay unchanged; renames undo with geometry/appearance in one step. Clipboard v2
+  stores actual names and still reads v1. Added name round trips across supported
+  codecs (Illustrator conversion remains conditional on the external converter).
+
 - Copy layer values now includes an exact, versioned clipboard payload for crop
   edges/offsets, all fit modes and blanking. Paste reviews Crop & fit and Blanking
   separately, keeps source/device mappings unchanged, and rejects incompatible

@@ -42,13 +42,42 @@ to 16 MiB; a failed document leaves the batch unapplied and reports its filename
    zoom** when present. Available values start enabled. Unchecked values retain
    destination settings; resizing may adjust its existing crop. Outline bounds
    are offered only when the source includes an outline. At least one available
-   geometry or appearance value must be enabled.
+   geometry, appearance or name value must be enabled.
 5. Click **Import mapped values** to update the mapped layers in one undo step.
    Cancel leaves all layers unchanged. Invalid geometry
    blocks the whole batch, without partial changes.
 
 The workspace supports 1–256 layers; the import review handles all selected
 layers rather than choosing one rectangle from a larger clipboard selection.
+
+### Rename destination layers
+
+Enable **Rename destination layers** in the mapping review to use names from the
+copied or imported shapes. It starts unchecked and appears only when included
+items have names. The review shows each proposed name. To rename only, uncheck
+Position, Format and any appearance options. Unnamed items keep their current
+names; folders, layer IDs, stacking order and device links remain unchanged.
+Names must contain 1–128 characters. An invalid name blocks the whole operation;
+renaming and geometry/appearance changes undo together.
+
+| Source | Names used when available |
+| --- | --- |
+| Canvas Pilot clipboard | Actual layer name, without the displayed ID prefix; new copies only |
+| SVG, including Figma/Illustrator SVG text | Inkscape label, shape title, `data-name`, then explicit SVG ID; nearest named group if the shape has none |
+| draw.io XML | Cell label; supported well-formed HTML labels are reduced to plain text |
+| Geometry JSON / CSV | `name` field |
+| HTML geometry | `data-name` attribute |
+| PowerPoint | Shape name |
+| Figma / FigCraft file | Node name |
+| DXF / DWG | CAD layer description, otherwise CAD layer name |
+| Illustrator file | Names retained by its SVG conversion |
+
+An editor may omit names or emit generated SVG IDs. Review the proposed names
+before applying them. Canvas Pilot never turns its own generated review labels
+(such as “rect 1”) into names. Draw.io-rendered SVG cell IDs and older Canvas Pilot
+clipboard labels are not treated as source names. File names and document titles
+are not layer names. This works within the existing supported geometry profiles;
+it does not add support for arbitrary artwork.
 
 ### Canvas Pilot layer clipboard
 

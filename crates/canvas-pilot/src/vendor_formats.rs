@@ -10,6 +10,7 @@ use std::{io::Read, sync::Arc};
 
 fn shape(name: String, geometry: Geometry, background: bool) -> Result<DetectedShape, String> {
     Ok(DetectedShape {
+        name: crate::import::source_name(Some(&name)),
         id: name,
         geometry: geometry.validate()?,
         outline: [0.0; 2],

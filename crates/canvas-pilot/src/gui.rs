@@ -136,6 +136,7 @@ struct Paste {
     include_zoom: bool,
     include_crop_fit: bool,
     include_masks: bool,
+    include_names: bool,
     include_outline: bool,
     closing: bool,
     error: String,
@@ -210,6 +211,12 @@ impl Paste {
             }
         }
     }
+    fn names_available(&self) -> bool {
+        self.shapes
+            .iter()
+            .zip(&self.ignored)
+            .any(|(s, ignored)| !ignored && s.name.is_some())
+    }
     fn appearance_available(&self) -> bool {
         self.shapes
             .iter()
@@ -259,12 +266,27 @@ impl Paste {
                 }
             })
             .collect();
-        layout.apply_mapped_clipboard(
+        let names: Vec<_> = self
+            .shapes
+            .iter()
+            .enumerate()
+            .filter_map(|(row, s)| {
+                if !self.include_names || self.ignored[row] {
+                    None
+                } else {
+                    s.name
+                        .clone()
+                        .map(|name| (self.mapping[row].unwrap(), name))
+                }
+            })
+            .collect();
+        layout.apply_mapped_clipboard_with_names(
             &values,
             &zooms,
             &appearances,
             self.include_crop_fit,
             self.include_masks,
+            &names,
         )
     }
     fn destination_count_warning(&self, layout: &Layout) -> Option<String> {
@@ -278,11 +300,12 @@ impl Paste {
     fn values(&self, layout: &Layout) -> Result<Vec<(usize, Geometry)>, String> {
         if !self.include_size
             && !self.include_position
+            && !(self.include_names && self.names_available())
             && !(self.include_zoom && self.zoom_available())
             && !((self.include_crop_fit || self.include_masks) && self.appearance_available())
         {
             return Err(
-                "Choose at least one available geometry or appearance value to paste.".into(),
+                "Choose at least one available geometry, appearance or name value to paste.".into(),
             );
         }
         let count = self.ignored.iter().filter(|v| !**v).count();
@@ -740,6 +763,7 @@ impl Editor {
             include_zoom: true,
             include_crop_fit: true,
             include_masks: true,
+            include_names: false,
             include_outline: false,
             closing: false,
             error: String::new(),
@@ -1189,6 +1213,9 @@ impl Editor {
                     ui.checkbox(&mut p.include_position,"Position");
                     if p.zoom_available() { ui.checkbox(&mut p.include_zoom,"Crop zoom"); }
                 });
+                if p.names_available() {
+                    ui.checkbox(&mut p.include_names, "Rename destination layers").on_hover_text("Use supplied source names. Unnamed items and destination folders stay unchanged.");
+                }
                 if p.appearance_available() {
                     let summary = match (p.include_crop_fit, p.include_masks) {
                         (true, true) => "Appearance · crop, fit and blanking",
@@ -1209,7 +1236,7 @@ impl Editor {
                 }
                 egui::CollapsingHeader::new("Import details").show(ui, |ui| {
                     ui.label(&p.note);
-                    ui.small(if p.appearance_available() { "Source assignments, layer names, device links and input proposals are not imported. Crop & fit requires matching source dimensions." } else { "Source format, crop offsets, colors and outline appearance are not imported." });
+                    ui.small(if p.appearance_available() { "Source assignments, device links and input proposals are not imported. Crop & fit requires matching source dimensions." } else { "Source format, crop offsets, colors and outline appearance are not imported." });
                 });
                 if !p.include_size {ui.small("Outline adjustment requires Format. Position uses the source top-left when enabled.");}
                 ui.separator();
@@ -1246,6 +1273,10 @@ impl Editor {
                                 }
                             });
                             });
+                            if p.include_names {
+                                if let Some(name) = &shape.name { ui.label(format!("New name: {name}")); }
+                                else { ui.small("No source name; destination name stays unchanged."); }
+                            }
                             egui::CollapsingHeader::new("Geometry · before / after").show(ui, |ui| {
                             ui.small(bounds(shape.geometry));
                             if let Some(a) = shape.appearance { ui.small(format!("Fit: {} · crop L/R/T/B: {} / {} / {} / {} px", a.fit.map(|f| f.label()).unwrap_or("Normal crop"), a.crop.left, a.crop.right, a.crop.top, a.crop.bottom)); ui.small(format!("Blanking L/R/T/B: {:.2}% / {:.2}% / {:.2}% / {:.2}%", a.mask.left*100., a.mask.right*100., a.mask.top*100., a.mask.bottom*100.)); }
@@ -1277,7 +1308,7 @@ impl Editor {
                     ui.colored_label(palette.amber,e);
                 }
                 ui.horizontal(|ui| {
-                    if apply_button(ui,"Import mapped values", valid.is_ok() && (preview.layers()!=self.layout.layers() || preview.formats()!=self.layout.formats())).clicked() {
+                    if apply_button(ui,"Import mapped values", valid.is_ok() && (preview.layers()!=self.layout.layers() || preview.formats()!=self.layout.formats() || (0..preview.layers().len()).any(|i| preview.layer_info(i).name != self.layout.layer_info(i).name))).clicked() {
                         match p.apply(&mut self.layout) {Ok(())=>{self.sync();close=true;},Err(e)=>p.error=e}
                     }
                     if ui.button("Cancel").clicked() {close=true;}
@@ -6605,6 +6636,66 @@ mod tests {
         let output = ctx.run(egui::RawInput::default(), |ctx| app.copy(ctx));
         assert!(output.platform_output.commands.iter().any(|c|matches!(c,egui::OutputCommand::CopyText(text) if text.contains("Width: 300 px") && text.contains("Height: 251 px"))));
         assert_eq!(app.layout.layers()[1], g);
+    }
+    #[test]
+    fn mixed_named_and_unnamed_imports_leave_unnamed_destinations_alone() {
+        let mut app = Editor::default();
+        app.layout.select(Some(0));
+        app.open_paste(r#"<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500"><rect id="Presenter" width="100" height="50"/><rect width="100" height="50"/></svg>"#.into());
+        let p = app.paste.as_mut().unwrap();
+        p.set_scope(ImportScope::All, &app.layout);
+        p.mapping = vec![Some(0), Some(1)];
+        p.include_size = false;
+        p.include_position = false;
+        p.include_names = true;
+        let before = canvas_pilot::project::Project::from_layout(&app.layout);
+        p.apply(&mut app.layout).unwrap();
+        assert_eq!(app.layout.layer_info(0).name, "Presenter");
+        assert_eq!(app.layout.layer_info(1).name, before.layers[1].name);
+        app.layout.undo();
+        assert_eq!(
+            canvas_pilot::project::Project::from_layout(&app.layout),
+            before
+        );
+        p.ignored[0] = true;
+        assert!(!p.names_available());
+        assert!(p.apply(&mut app.layout).is_err());
+    }
+    #[test]
+    fn paste_review_renames_only_when_requested_and_supports_name_only_undo() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.layout
+            .rename_layer(0, "Presenter", "Source folder")
+            .unwrap();
+        app.layout
+            .rename_layer(1, "Old name", "Destination folder")
+            .unwrap();
+        app.layout.select(Some(1));
+        let before = canvas_pilot::project::Project::from_layout(&app.layout);
+        let text = canvas_pilot::clipboard::encode(&app.layout, &[0], "Summary").unwrap();
+        app.open_paste(text);
+        let p = app.paste.as_mut().unwrap();
+        assert!(p.names_available());
+        assert!(!p.include_names);
+        p.include_size = false;
+        p.include_position = false;
+        p.include_crop_fit = false;
+        p.include_masks = false;
+        assert!(p.apply(&mut app.layout).is_err());
+        frame(&mut app, &ctx, vec![]);
+        click_text(&mut app, &ctx, "Rename destination layers");
+        assert!(app.paste.as_ref().unwrap().include_names);
+        click_text(&mut app, &ctx, "Import mapped values");
+        assert!(app.paste.is_none());
+        assert_eq!(app.layout.layer_info(1).name, "Presenter");
+        assert_eq!(app.layout.layer_info(1).folder, "Destination folder");
+        assert_eq!(app.layout.layers()[1], before.layers[1].bounds);
+        app.layout.undo();
+        assert_eq!(
+            canvas_pilot::project::Project::from_layout(&app.layout),
+            before
+        );
     }
     #[test]
     fn copy_and_review_preserve_all_fit_modes_and_allow_mask_only_paste() {

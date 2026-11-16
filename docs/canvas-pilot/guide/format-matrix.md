@@ -33,24 +33,24 @@ See the [advanced feature matrix](advanced-exchange.md) for every saved feature.
 ## File exchange matrix
 
 All eleven exchange formats import and export layer positions and sizes. Geometry
-import maps boxes to **existing destination layers**: it keeps their names, source
-settings and device links, and does not change the output resolution. File names
-and layer labels can help identify the boxes; they do not rename destinations.
+import maps boxes to **existing destination layers**: it keeps their source
+settings and device links, and does not change the output resolution. Names stay
+unchanged unless you enable **Rename destination layers** in the import review.
 
-| File | Import | Export | Layer names in export | Background picture [1](#file-notes) | Crop/mask preview pictures [1](#file-notes) | Extra settings snapshot |
-| --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| PowerPoint (`.pptx`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| FigCraft file (`.figcraft`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ [4](#file-notes) |
-| DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ [4](#file-notes) |
-| Figma file (`.fig`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
-| Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
+| File | Import | Export | Layer names in export | Rename on import [5](#file-notes) | Background picture [1](#file-notes) | Crop/mask preview pictures [1](#file-notes) | Extra settings snapshot |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ · restored | ✅ | ✅ | ✅ |
+| SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| PowerPoint (`.pptx`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| FigCraft file (`.figcraft`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ [4](#file-notes) |
+| DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ❌ | ❌ | ✅ [4](#file-notes) |
+| Figma file (`.fig`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ❌ | ❌ | ❌ |
+| Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ✅ | ❌ |
 
 ### File notes
 
@@ -64,6 +64,11 @@ and layer labels can help identify the boxes; they do not rename destinations.
 4. **Extra settings:** experimental and opt-in. Restore the original snapshot with
    **Project → Restore parameters from export…**; ordinary geometry import never
    applies it. External applications may strip it or leave it stale after edits.
+
+5. **Rename on import:** projects restore saved names. For geometry exchange this is opt-in, using names actually present in the file. SVG and
+   Illustrator conversion use labels, titles or explicit IDs; CAD prefers layer
+   descriptions, then CAD layer names. Unnamed items keep their destination names.
+   See [renaming from imports](files.md#rename-destination-layers).
 
 Exports use one screen-sized canvas, slide, frame or artboard. PPTX import offers
 a slide picker; FIG / FIGCRAFT offer page/frame choices; Illustrator offers artboards.
@@ -80,10 +85,10 @@ applies to Illustrator and draw.io. “Paste” below means **into Canvas Pilot*
 
 | Clipboard path | Paste positions and sizes | Copy out in this format | Rename destination layers | Crop zoom | Crop edges / offsets, fit and masks |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot **Copy layer values**, all fit modes | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Figma **SVG text** copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Illustrator **SVG text** copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
-| draw.io diagram XML copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Canvas Pilot **Copy layer values**, all fit modes | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Figma **SVG text** copy/paste | ✅ | ❌ | ✅ [names](files.md#rename-destination-layers) | ❌ | ❌ |
+| Illustrator **SVG text** copy/paste | ✅ | ❌ | ✅ [names](files.md#rename-destination-layers) | ❌ | ❌ |
+| draw.io diagram XML copy/paste | ✅ | ❌ | ✅ [names](files.md#rename-destination-layers) | ❌ | ❌ |
 | SVG file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Geometry JSON / CSV file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Canvas Pilot HTML / ASCII DXF file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -97,7 +102,7 @@ is available. PowerPoint and QCAD use file exchange in this workflow.
 Paste opens a mapping review with separate **Position** and **Format** (width/height)
 choices. Canvas Pilot copies also offer an **Appearance** group with **Crop & fit**
 and **Blanking**. Crop edges preserve normal zoom/offsets and all explicit fit
-modes; masks retain their proportions. Names identify rows without renaming them.
+modes; masks retain their proportions. Enable **Rename destination layers** to apply supplied names; it starts unchecked.
 
 Crop & fit requires matching source dimensions after input crop; it never changes
 source assignments or device mappings. If dimensions differ, match the local source

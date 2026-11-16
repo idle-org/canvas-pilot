@@ -1,4 +1,4 @@
-# Canvas Pilot layer clipboard, version 1
+# Canvas Pilot layer clipboard, version 2
 
 Implementation: `clipboard.rs`, `import.rs` and the shared paste review in `gui.rs`.
 This is a Canvas Pilot clipboard representation, not a device protocol or a native
@@ -20,7 +20,8 @@ escaping. The summary is informational: editing it does not override the JSON.
 Readers validate the payload and never fall back to rounded geometry when it is
 invalid. Raw legacy summaries without this delimiter still use the existing parser.
 
-See the [complete example](canvas-pilot-clipboard-v1.example.txt).
+See the [current example](canvas-pilot-clipboard-v2.example.txt) and
+[legacy v1 example](canvas-pilot-clipboard-v1.example.txt).
 
 ## JSON schema and validation
 
@@ -31,9 +32,9 @@ No URLs, file paths, commands, images or arbitrary application state are evaluat
 | Field | Meaning |
 | --- | --- |
 | `format` | Exactly `canvas-pilot.layers` |
-| `version` | Integer `1`; unknown versions reject the whole paste |
+| `version` | Integer `2`; readers also accept `1`; other versions reject the whole paste |
 | `layers` | Ordered array of copied layers; selection order follows document order |
-| `layers[].name` | Nonblank label, at most 256 characters; identifies review rows, never renames destinations |
+| `layers[].name` | In v2, the actual layer name without an ID prefix; nonblank, at most 256 characters to read, 1–128 to apply. In v1, a review label only |
 | `layers[].bounds` | `x`, `y`, `width`, `height`: full-precision screen pixels; top-left coordinates, finite within ±1,000,000 and positive dimensions up to 1,000,000 |
 | `layers[].appearance.input_size` | Two positive finite effective source dimensions in pixels, after local input crop; validated by the existing source-size limits |
 | `layers[].appearance.crop` | `left`, `right`, `top`, `bottom`: nonnegative finite effective-source pixel crop edges, leaving positive width/height |
@@ -49,7 +50,8 @@ mask proportions do not become source-pixel crops.
 
 All data enters the existing destination mapping review. Position and Format are
 independent. An **Appearance** group offers **Crop & fit** and **Blanking**, enabled
-initially for this payload. An appearance-only paste is valid. External geometry
+initially for this payload. Appearance-only and name-only pastes are valid. **Rename destination layers** is
+off by default, copies v2 names only, and leaves folders/IDs unchanged. External geometry
 formats have no such payload; older normal-crop summaries offer their legacy zoom
 control instead. Ignored items do not affect availability or mapped values.
 
@@ -69,7 +71,7 @@ writes are never part of paste. Copying and opening the review are read-only.
 
 ## Omissions and compatibility
 
-Destination names, folders, identity, visibility, locks, pivots, source formats,
+Folders, identity, visibility, locks, pivots, source formats,
 input crop, shared source relationships, device links, input proposals, captures,
 references and workspace settings are not copied by this representation. Only the
 recorded source dimensions accompany crop for compatibility validation. Use a
@@ -78,7 +80,9 @@ project or embedded export snapshot for the wider state.
 Existing normal-crop summaries remain readable, with optional zoom and their
 historical integer geometry. Old advanced-container summaries are not upgraded
 implicitly because they lack the crop/source information needed to reconstruct
-appearance. New copies of all fit modes contain the v1 payload. Older application
+appearance. New copies of all fit modes contain the v2 payload. V1 stays readable for geometry
+and appearance; its names may include display ID prefixes and are not offered for
+renaming. V1-only readers reject v2 with an unsupported-version error. Older application
 versions do not support the appended payload; remove the payload only when
 intentionally exchanging the legacy normal-crop geometry/zoom subset.
 

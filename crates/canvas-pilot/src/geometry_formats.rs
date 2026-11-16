@@ -117,6 +117,7 @@ fn document(
             return Err("The geometry background must cover the complete canvas.".into());
         }
         detected.push(DetectedShape {
+            name: crate::import::source_name(Some(&shape.name)),
             id: if shape.name.is_empty() {
                 shape.id
             } else {
@@ -428,6 +429,16 @@ pub(crate) fn parse_dxf(text: &str) -> Result<ImportDocument, String> {
 pub(crate) fn parse_dxf_bytes(bytes: &[u8]) -> Result<ImportDocument, String> {
     let tags = craft_dxf::parse_with_limit(bytes, MAX_EXCHANGE_BYTES / 4)
         .map_err(|e| format!("Invalid DXF: {e}"))?;
+    let cad_names: std::collections::HashMap<_, _> = craft_dxf::model::records(&tags)
+        .iter()
+        .filter(|r| r.kind == "LAYER")
+        .filter_map(craft_dxf::model::Layer::read)
+        .map(|layer| {
+            let name = crate::import::source_name(layer.description.as_deref())
+                .unwrap_or_else(|| layer.name.clone());
+            (layer.name, name)
+        })
+        .collect();
     let values: Vec<_> = tags.iter().map(|tag| (tag.code, tag.str())).collect();
     let pairs: Vec<_> = values
         .iter()
@@ -541,7 +552,7 @@ pub(crate) fn parse_dxf_bytes(bytes: &[u8]) -> Result<ImportDocument, String> {
         .map(|value| value.round() as i64);
         layers.push(JsonShape {
             id: id.into(),
-            name: String::new(),
+            name: cad_names.get(id).cloned().unwrap_or_else(|| id.to_owned()),
             role: if id == "midra-background" {
                 "background"
             } else {

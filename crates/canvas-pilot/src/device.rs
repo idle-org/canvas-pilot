@@ -111,6 +111,7 @@ impl Screen {
                 return Err("Duplicate device layer selection".into());
             }
             shapes.push(DetectedShape {
+                name: None,
                 id,
                 geometry: layer.geometry,
                 outline: [0.0; 2],
