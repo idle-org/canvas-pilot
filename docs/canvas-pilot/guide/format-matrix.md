@@ -20,20 +20,20 @@ import maps boxes to **existing destination layers**: it keeps their names, sour
 settings and device links, and does not change the output resolution. File names
 and layer labels can help identify the boxes; they do not rename destinations.
 
-| File | Import | Export | Layer names in export | Background picture [1](#file-notes) | Crop/mask preview pictures [1](#file-notes) | Extra settings snapshot |
+| File | Import | Export | Layer names in export | Background picture [1](#file-notes) | Crop/mask preview pictures [1](#file-notes) | Extra settings snapshot [4](#file-notes) |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
 | Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SVG (`.svg`) [4](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| draw.io (`.drawio`, XML) [4](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Geometry JSON (`.json`) [4](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Geometry CSV (`.csv`) [4](#file-notes) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| DXF (`.dxf`) [4](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ |
-| DWG (`.dwg`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
-| HTML / CSS (`.html`) [4](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PowerPoint (`.pptx`) [4](#file-notes) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ✅ | ✅ |
-| Figma file (`.fig`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ✅ | ❌ |
-| FigCraft file (`.figcraft`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ | ✅ | ✅ | ❌ |
-| Illustrator file (`.ai`) | ✅ [3](#file-notes) | ✅ [3](#file-notes) | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
+| SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ |
+| DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
+| HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PowerPoint (`.pptx`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Figma file (`.fig`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| FigCraft file (`.figcraft`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
 
 ### File notes
 
