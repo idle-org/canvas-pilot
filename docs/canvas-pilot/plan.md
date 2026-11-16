@@ -135,7 +135,11 @@ Publication is pending an issue-enabled token; the current token lacks
 - [ ] **Multiple editor screens in one project.** Use a dropdown to select the
   active screen, displaying and editing one screen at a time. Preserve each
   screen's layout when switching; simultaneous multi-screen editing is outside
-  this goal. Plan persistence and migration details when implementation is scoped.
+  this goal. See the [design and phased task](../development/multiple-project-screens.task.md)
+  for shared layers/folders, proportional scaling across different ratios and
+  alignment controls. Implementation is paused for existing-feature testing;
+  a visual-only prototype comes before functional changes. Tracked in
+  [Gitea #5](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/issues/5).
 
 ## Test list
 

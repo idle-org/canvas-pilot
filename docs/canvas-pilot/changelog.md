@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Recorded the multi-screen design task, including shared layers, alignment and
+  automatic/custom proportional scaling. Existing-feature testing and a visual-only
+  prototype precede implementation; application behavior is unchanged.
+
 - Clarified rename behavior in the format matrix: project names are always
   restored, and clipboard rename instructions use superscript “how to” links.
 
