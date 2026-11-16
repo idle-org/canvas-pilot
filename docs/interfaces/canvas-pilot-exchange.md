@@ -10,7 +10,7 @@ preserve layer **visible-box geometry**, not sources, crop settings, zoom, pivot
 Midra links, locks, visibility, camera or selection. Pictures illustrate current
 cropping; importing a picture does not reconstruct its crop or source settings.
 
-The [starter-file catalog](../templates/canvas-pilot/README.md) centralizes ready-to-open
+The [starter-file catalog](../templates/canvas-pilot/catalog.md) centralizes ready-to-open
 two-layer templates under `docs/templates/canvas-pilot/` for Full HD (1920 × 1080) and UHD 4K
 (3840 × 2160), in all eleven exchange formats (including PPTX, FIG and AI). The 4K geometry is an exact
 2× scale of the Full HD layout. Regenerate them with:

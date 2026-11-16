@@ -1,6 +1,6 @@
 # Canvas and reference images
 
-[Canvas Pilot](../README.md) · [Guide contents](README.md) · [Starter files](../../templates/canvas-pilot/README.md)
+[Canvas Pilot](../introduction.md) · [Guide contents](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
 ## Workspace defaults and limits
 

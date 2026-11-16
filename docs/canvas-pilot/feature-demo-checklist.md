@@ -127,4 +127,4 @@ projects out of the feature demonstration. This checklist covers implemented
 workflows as of 2026-11-16. Aquilon support is scoped to standalone AQL Cmax 6.2.x,
 validated on the 6.2.79 emulator; describe emulator footage accordingly.
 
-For detailed controls, see the [advanced guide](guide/README.md).
+For detailed controls, see the [advanced guide](guide/overview.md).

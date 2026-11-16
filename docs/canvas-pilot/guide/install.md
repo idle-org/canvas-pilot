@@ -1,6 +1,6 @@
 # Install and update Canvas Pilot
 
-[Introduction](../README.md) · [Your first layout](quickstart.md) · [Advanced guide](README.md)
+[Introduction](../introduction.md) · [Your first layout](quickstart.md) · [Advanced guide](overview.md)
 
 Choose the installation method that suits your computer:
 

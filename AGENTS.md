@@ -32,34 +32,19 @@ Treat dated observations as a snapshot and verify current state before acting.
 - `scripts/`, root Cargo/Cross/release configuration and `Jenkinsfile`: independent
   build, checks, packaging, artwork, launchers and documentation publication.
 
-## Authoritative documentation and task records
+## Authoritative documentation
 
-Start with `docs/README.md` for the full navigation index.
+Use `AGENT_DOCUMENTATION.md` as the index for contracts, research, handoffs,
+acceptance evidence and technical notes. Use `docs/development/README.md` for the
+project plan, tasks, stretch goals and contribution workflow. Read the linked
+records before changing behavior; do not duplicate their status in new checklists.
 
-- `docs/canvas-pilot/README.md` and `guide/README.md`: introduction and advanced guide.
-- `docs/canvas-pilot/plan.md`: completed implementation, current to-do list, distant
-  stretch goals and a separate acceptance-test list. Keep these categories distinct;
-  do not turn a completed task into new work during refactoring or migration.
-- `docs/canvas-pilot/device-check.md`: hardware findings and verification procedures.
-- `docs/canvas-pilot/aquilon_support.task.md`: completed Aquilon implementation
-  handoff; `aquilon-compatibility.md` records evidence and support boundaries.
-  Do not generalize the tested standalone AQL Cmax 6.2.x profile to every model or
-  firmware, or describe emulator evidence as physical-output acceptance.
-- `docs/canvas-pilot/midra-aspect-test-checklist.md`: practical operator checks.
-  `midra-fit-precision.md`: unresolved precision questions for a manufacturer engineer.
-  Keep assumptions distinct from measured or operator-confirmed behavior.
-- `docs/canvas-pilot/presentation-switcher-adapters.md`: future-adapter research and
-  documentation ranking. New adapters require protocol documentation and a usable
-  emulator/simulator before development; a candidate is not a release commitment.
-- `docs/canvas-pilot/feature-demo-checklist.md`: ordered feature presentation script.
-- `docs/canvas-pilot/images/README.md`: screenshot provenance and update instructions;
-  `images/` contains screenshots and `design/` retains historical visual proposals.
-- `docs/development/migration.md`: migration provenance and completeness audit.
-  Earlier history and shared release notes remain linked to the old repository.
-
-When implementing work, reconcile the plan and acceptance evidence as well as the
-user guide. Removed or deferred ideas are not implicit authorization to implement
-features. Consult the current plan instead of copying its changing status here.
+The user manual is built from the Markdown files listed in
+`docs/manuals/canvas-pilot/SUMMARY.md`. Edit those chapters as the single source of
+user-facing instructions. Keep READMEs short navigation pages. Do not put task lists,
+handoffs or agent contracts on the main README or in the user book's chapter list.
+Keep completed work, remaining acceptance and future ideas distinct. Preserve the
+documented support boundaries; emulator evidence is not physical-output acceptance.
 
 ## Compatibility and device behavior
 

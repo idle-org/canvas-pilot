@@ -105,7 +105,7 @@ The user approved the following approach and asked to put it in the stretch goal
 
 The existing screenshots are real captures from before the Canvas Pilot rename;
 the redesigned README explicitly labels them. Their recipes and provenance are in
-[the screenshot guide](../canvas-pilot/images/README.md). Do not edit old screenshots
+[the screenshot guide](../canvas-pilot/images/capture.md). Do not edit old screenshots
 to imply a new capture; recapture the application if updating them.
 
 ## Device testing context

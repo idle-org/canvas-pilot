@@ -1,6 +1,6 @@
 # Import, export and project files
 
-[Canvas Pilot](../README.md) · [Guide contents](README.md) · [Starter files](../../templates/canvas-pilot/README.md)
+[Canvas Pilot](../introduction.md) · [Guide contents](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
 ## Paste layer values and import geometry
 
@@ -142,7 +142,7 @@ viewport preferences, and all embedded reference images. Apply pending edits
 before saving. Opening asks before replacing current work and starts a fresh
 undo history. Existing files require confirmation before replacement.
 
-The [starter-file catalog](../../templates/canvas-pilot/README.md) contains all eleven
+The [starter-file catalog](../../templates/canvas-pilot/catalog.md) contains all eleven
 exchange formats, with two layers for 1920 × 1080 and 3840 × 2160 canvases.
 
 **Project → Export → Export layers…** opens one shared window. Choose SVG,

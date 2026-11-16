@@ -1,6 +1,6 @@
 # Formats, crop and precision
 
-[Canvas Pilot](../README.md) · [Guide contents](README.md) · [Starter files](../../templates/canvas-pilot/README.md)
+[Canvas Pilot](../introduction.md) · [Guide contents](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
 ## Formats and content framing
 

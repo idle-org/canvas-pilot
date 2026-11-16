@@ -1,6 +1,6 @@
 # Quick start: your first layout
 
-[Introduction](../README.md) · [Advanced guide](README.md) · [Starter files](../../templates/canvas-pilot/README.md)
+[Introduction](../introduction.md) · [Advanced guide](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
 Make a simple Slides + Presenter layout, save an editable project, and export its
 geometry. This walkthrough uses the default Full HD canvas and works offline;
@@ -22,7 +22,7 @@ If a previous layout was restored, save any work you want to keep, then choose
 The default canvas is **1920 × 1080**, with **Slides** and **Presenter** layers.
 Leave that resolution unchanged for this walkthrough.
 
-<!-- Screenshot recipe: ../images/README.md#01-workspacepng -->
+<!-- Screenshot recipe: ../images/capture.md#01-workspacepng -->
 ![Default Full HD layout with Slides and Presenter, with Presenter selected](../images/01-workspace.png)
 
 ## 2. Place and size the layers
@@ -63,7 +63,7 @@ and save the export. For plain layer boxes, leave the background and placeholder
 pictures disabled. The SVG can be opened in a vector editor.
 
 Keep the `.midra.json` project as well: a geometry export does not retain all editor
-settings. The [starter-file catalog](../../templates/canvas-pilot/README.md) has
+settings. The [starter-file catalog](../../templates/canvas-pilot/catalog.md) has
 matching layouts in every supported format if you prefer to start in another app.
 
 ## Continue with the advanced guide
@@ -77,5 +77,5 @@ You now have an editable project and a geometry export. Choose your next task:
 - [Connect an Eikos 4K and review layer transfers](device.md). Device sends are
   explicit actions; ordinary local editing does not send changes.
 
-The [advanced guide](README.md) also links to settings, compatibility contracts
+The [advanced guide](overview.md) also links to settings, compatibility contracts
 and hardware-verification details.

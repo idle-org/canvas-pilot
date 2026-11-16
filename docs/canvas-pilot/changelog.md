@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Simplified READMEs to navigation and kept user instructions in the book's source
+  chapters. Moved task-list discovery behind Development and indexed contracts,
+  research and handoffs in `AGENT_DOCUMENTATION.md`; removed internal records from
+  the user book's navigation while preserving their files and evidence.
+
+
 - Added an installation/help chapter covering release downloads, tagged-manifest
   cargo-binstall without compile fallback, cargo install from a release tag,
   platform launchers, updates and troubleshooting. Linked it from the README,

@@ -6,7 +6,7 @@ original draft checklist: unchecked items below are actual remaining work,
 not already implemented features awaiting a historical milestone.
 
 The original visual proposals are retained below for design context.
-The [user guide](guide/README.md) describes current controls; the
+The [user guide](guide/overview.md) describes current controls; the
 [device-send contract](../interfaces/midra-device-send.md) and
 [hardware findings](device-check.md) distinguish automated tests,
 device readback and physical-screen acceptance.

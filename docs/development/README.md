@@ -1,17 +1,19 @@
 # Development
 
-[CI and checks](ci.md) · [Manual generation](../manuals/README.md) · [Release preparation](releases.md) · [Repository migration](migration.md)
+Canvas Pilot is a single-member Rust workspace in `crates/canvas-pilot/`.
+The Python device probe lives in `tools/`; Python tests and build helpers live in
+`tests/` and `scripts/`. For application usage, read the [book](https://books.dandaedre.com/manuals/canvas-pilot/).
 
-The root Cargo workspace contains `crates/canvas-pilot/`. The application, adapters,
-geometry representation and tests live there. `tools/midra_probe.py` is a standalone,
-read-only Python diagnostic tool. Interface contracts and historical fixtures live
-in `docs/interfaces/`; maintain compatibility when changing persistence or exports.
+| Work | Reference |
+| --- | --- |
+| Build, tests and coverage | [CI and local checks](ci.md) |
+| Release preparation | [Packaging and readiness](releases.md) |
+| Edit or publish the book | [Manual generation](../manuals/building.md) |
+| Tasks, acceptance tests and stretch goals | [Project plan](../canvas-pilot/plan.md) |
+| Future adapter candidates | [Research and requirements](../canvas-pilot/presentation-switcher-adapters.md) |
+| Showcase and video manual preparation | [Recording checklist](../canvas-pilot/feature-demo-checklist.md) |
+| Agent context, contracts and technical evidence | [Agent documentation](../../AGENT_DOCUMENTATION.md) |
 
-See the [plan](../canvas-pilot/plan.md) and [device checks](../canvas-pilot/device-check.md)
-for remaining work and hardware validation. Device writes are never CI tests.
-
-See [the documentation index](../README.md) for every planning and acceptance record,
-and [AGENTS.md](../../AGENTS.md) for repository working conventions.
-
-[Conversation handoff](handoff.md) preserves pending decisions, video plans and
-the migration/publication state for the next session.
+Keep task status in the plan. Keep user instructions in the book's source chapters;
+READMEs provide navigation, not parallel copies. Follow [AGENTS.md](../../AGENTS.md)
+when changing code or documentation.
