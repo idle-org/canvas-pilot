@@ -670,12 +670,7 @@ pub(super) fn paint_content_overflow(
         return;
     };
     // Disjoint strips avoid painting the visible box twice or doubling opacity.
-    for clip in [
-        Rect::from_min_max(full.min, Pos2::new(full.right(), rect.top())),
-        Rect::from_min_max(Pos2::new(full.left(), rect.bottom()), full.max),
-        Rect::from_min_max(Pos2::new(full.left(), rect.top()), rect.left_bottom()),
-        Rect::from_min_max(rect.right_top(), Pos2::new(full.right(), rect.bottom())),
-    ] {
+    for clip in outside_strips(full, rect) {
         let clip = clip.intersect(painter.clip_rect());
         if clip.is_positive() {
             let mut ghost = painter.with_clip_rect(clip);
@@ -700,18 +695,10 @@ pub(super) fn paint_one_to_one_helper(
     }
 }
 
-pub(super) fn paint_layer_source(
-    painter: &egui::Painter,
-    rect: Rect,
-    layout: &Layout,
-    i: usize,
-    preview: Option<(egui::TextureId, f32)>,
-) {
+pub(super) fn layer_mask_rect(rect: Rect, layout: &Layout, i: usize) -> Option<Rect> {
     let formats = layout.formats();
     let mask = formats.masks[i];
-    let Ok(reference) = formats.mask_reference(i, layout.layers()[i]) else {
-        return;
-    };
+    let reference = formats.mask_reference(i, layout.layers()[i]).ok()?;
     let layer = layout.layers()[i];
     let k = rect.width() as f64 / layer.width;
     let mask_rect = Rect::from_min_size(
@@ -734,11 +721,89 @@ pub(super) fn paint_layer_source(
                 mask_rect.height() * mask.bottom as f32,
             ),
     );
+    Some(clip)
+}
+
+/// Four disjoint strips; a collapsed or disjoint reveal leaves the whole area hidden.
+pub(super) fn outside_strips(outer: Rect, reveal: Rect) -> [Rect; 4] {
+    let reveal = outer.intersect(reveal);
+    if !reveal.is_positive() {
+        return [outer, Rect::NOTHING, Rect::NOTHING, Rect::NOTHING];
+    }
+    [
+        Rect::from_min_max(outer.min, Pos2::new(outer.right(), reveal.top())),
+        Rect::from_min_max(Pos2::new(outer.left(), reveal.bottom()), outer.max),
+        Rect::from_min_max(Pos2::new(outer.left(), reveal.top()), reveal.left_bottom()),
+        Rect::from_min_max(
+            reveal.right_top(),
+            Pos2::new(outer.right(), reveal.bottom()),
+        ),
+    ]
+}
+
+/// Editor-only context: hidden source remains readable, with hatching marking blanking.
+pub(super) fn paint_mask_helper(
+    painter: &egui::Painter,
+    rect: Rect,
+    layout: &Layout,
+    i: usize,
+    preview: Option<(egui::TextureId, f32)>,
+) {
+    let Some(reveal) = layer_mask_rect(rect, layout, i) else {
+        return;
+    };
+    for strip in outside_strips(rect, reveal) {
+        let clip = strip.intersect(painter.clip_rect());
+        if !clip.is_positive() {
+            continue;
+        }
+        let clipped = painter.with_clip_rect(clip);
+        let mut ghost = clipped.clone();
+        ghost.multiply_opacity(0.25);
+        paint_layer_content(&ghost, rect, layout, i, preview);
+        // Spacing is in screen points, so zoom cannot generate an unbounded grid.
+        let spacing = 12.0;
+        let mut sum = ((clip.left() + clip.top()) / spacing).floor() * spacing;
+        let end = clip.right() + clip.bottom();
+        let stroke = Stroke::new(1.0, Color32::from_rgba_unmultiplied(222, 108, 220, 85));
+        while sum <= end {
+            clipped.line_segment(
+                [
+                    Pos2::new(sum - clip.top(), clip.top()),
+                    Pos2::new(sum - clip.bottom(), clip.bottom()),
+                ],
+                stroke,
+            );
+            sum += spacing;
+        }
+    }
+}
+
+pub(super) fn paint_layer_source(
+    painter: &egui::Painter,
+    rect: Rect,
+    layout: &Layout,
+    i: usize,
+    preview: Option<(egui::TextureId, f32)>,
+) {
+    let Some(clip) = layer_mask_rect(rect, layout, i) else {
+        return;
+    };
     if !clip.is_positive() {
         return;
     }
-    let clipped = painter.with_clip_rect(painter.clip_rect().intersect(clip).intersect(rect));
-    let painter = &clipped;
+    let clipped = painter.with_clip_rect(clip.intersect(rect));
+    paint_layer_content(&clipped, rect, layout, i, preview);
+}
+
+fn paint_layer_content(
+    painter: &egui::Painter,
+    rect: Rect,
+    layout: &Layout,
+    i: usize,
+    preview: Option<(egui::TextureId, f32)>,
+) {
+    let formats = layout.formats();
     let source = formats.sources[formats.source_for[i]];
     let crop = formats.advanced[i];
     let Some(fit) = formats.layer_fit[i] else {
@@ -1573,6 +1638,108 @@ mod tests {
 #[cfg(test)]
 mod preview_paint_tests {
     use super::*;
+    #[test]
+    fn masked_helper_is_translucent_hatched_and_confined_to_hidden_regions() {
+        use canvas_pilot::formats::{LayerFit, Mask, MaskOrigin};
+        let rect = Rect::from_min_size(Pos2::new(200.0, 200.0), Vec2::new(320.0, 180.0));
+        for fit in std::iter::once(None).chain(LayerFit::ALL.into_iter().map(Some)) {
+            for origin in [MaskOrigin::Layer, MaskOrigin::Source] {
+                let mut app = Editor::default();
+                app.layout.set_layer_fit(1, fit, Crop::default()).unwrap();
+                for edge in [0.45, 0.5] {
+                    app.layout
+                        .set_mask(
+                            1,
+                            Mask {
+                                origin,
+                                left: edge,
+                                right: edge,
+                                top: edge,
+                                bottom: edge,
+                            },
+                        )
+                        .unwrap();
+                    let before = app.project();
+                    let reveal = layer_mask_rect(rect, &app.layout, 1).unwrap();
+                    for preview in [None, Some((egui::TextureId::User(91), 0.0))] {
+                        let ctx = egui::Context::default();
+                        let output = ctx.run_ui(egui::RawInput::default(), |ui| {
+                            paint_mask_helper(ui.painter(), rect, &app.layout, 1, preview)
+                        });
+                        assert!(!output.shapes.is_empty(), "{fit:?} {origin:?}");
+                        assert!(output.shapes.iter().all(|s| rect.contains_rect(s.clip_rect)
+                            && !s.clip_rect.intersect(reveal).is_positive()));
+                        assert!(output.shapes.iter().any(|s| matches!(&s.shape, egui::Shape::LineSegment { stroke, .. } if stroke.color == Color32::from_rgba_unmultiplied(222,108,220,85))));
+                        if preview.is_some() {
+                            let meshes: Vec<_> = output
+                                .shapes
+                                .iter()
+                                .filter_map(|s| {
+                                    if let egui::Shape::Mesh(m) = &s.shape {
+                                        Some(m)
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect();
+                            assert!(!meshes.is_empty());
+                            assert!(meshes.iter().all(|m| {
+                                m.vertices
+                                    .iter()
+                                    .all(|v| v.color.a() == Color32::WHITE.gamma_multiply(0.25).a())
+                            }));
+                        }
+                    }
+                    assert_eq!(app.project(), before);
+                }
+            }
+        }
+        let app = Editor::default();
+        let ctx = egui::Context::default();
+        let output = ctx.run_ui(egui::RawInput::default(), |ui| {
+            paint_mask_helper(ui.painter(), rect, &app.layout, 1, None)
+        });
+        assert!(
+            output.shapes.is_empty(),
+            "an unmasked layer needs no overlay"
+        );
+    }
+
+    #[test]
+    fn masked_overlay_is_visible_only_while_editing_the_selected_layer() {
+        use crate::gui::tests::frame;
+        use canvas_pilot::formats::Mask;
+        let mut app = Editor::default();
+        app.layout.select(Some(1));
+        app.layout
+            .set_mask(
+                1,
+                Mask {
+                    left: 0.25,
+                    ..Mask::default()
+                },
+            )
+            .unwrap();
+        let before = app.project();
+        let ctx = egui::Context::default();
+        let hatched = |out: &egui::FullOutput| {
+            out.shapes.iter().any(|s| matches!(&s.shape, egui::Shape::LineSegment { stroke, .. } if stroke.color == Color32::from_rgba_unmultiplied(222,108,220,85)))
+        };
+        assert!(!hatched(&frame(&mut app, &ctx, vec![])));
+        app.edit_content = true;
+        assert!(hatched(&frame(&mut app, &ctx, vec![])));
+        app.edit_mask = true;
+        assert!(hatched(&frame(&mut app, &ctx, vec![])));
+        app.edit_content = false;
+        app.edit_mask = false;
+        assert!(!hatched(&frame(&mut app, &ctx, vec![])));
+        app.layout.select(Some(0));
+        app.edit_content = true;
+        assert!(!hatched(&frame(&mut app, &ctx, vec![])));
+        app.layout.select(Some(1));
+        assert_eq!(app.project(), before);
+    }
+
     #[test]
     fn crop_helpers_render_translucent_content_outside_the_retained_rectangle() {
         let rect = Rect::from_min_size(Pos2::new(200.0, 200.0), Vec2::new(300.0, 300.0));

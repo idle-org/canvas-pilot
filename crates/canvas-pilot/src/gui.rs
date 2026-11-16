@@ -3621,15 +3621,27 @@ impl Editor {
                 origin + Vec2::new(reference.x as f32, reference.y as f32) * scale,
                 Vec2::new(reference.width as f32, reference.height as f32) * scale,
             );
-            let mut ghost = screen.painter.clone();
-            ghost.multiply_opacity(0.3);
-            format_ui::paint_source(
-                &ghost,
-                rect,
-                self.layout.formats().sources[self.layout.formats().source_for[i]],
-                Default::default(),
-                self.layer_preview(i),
+            let layer = self.layout.layers()[i];
+            let layer_rect = Rect::from_min_size(
+                origin + Vec2::new(layer.x as f32, layer.y as f32) * scale,
+                Vec2::new(layer.width as f32, layer.height as f32) * scale,
             );
+            // Inside the layer, the masked-area helper owns the ghost opacity.
+            for strip in format_ui::outside_strips(rect, layer_rect) {
+                let clip = strip.intersect(screen.painter.clip_rect());
+                if !clip.is_positive() {
+                    continue;
+                }
+                let mut ghost = screen.painter.with_clip_rect(clip);
+                ghost.multiply_opacity(0.3);
+                format_ui::paint_source(
+                    &ghost,
+                    rect,
+                    self.layout.formats().sources[self.layout.formats().source_for[i]],
+                    Default::default(),
+                    self.layer_preview(i),
+                );
+            }
         }
         if self.edit_content
             && !self.mask_editing()
@@ -3645,13 +3657,27 @@ impl Editor {
             if self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)
             {
                 if let Some(image) = self.crop_bounds(origin, scale) {
-                    format_ui::paint_one_to_one_helper(
-                        &screen.painter,
-                        image,
-                        self.layout.formats().sources[self.layout.formats().source_for[i]],
-                        self.layout.formats().advanced[i],
-                        self.layer_preview(i),
-                    );
+                    // Do not stack the crop ghost over the masked-area ghost inside
+                    // the layer. Keep the usable-source guide outside it and in the reveal.
+                    let reveal = format_ui::layer_mask_rect(rect, &self.layout, i)
+                        .unwrap_or(Rect::NOTHING)
+                        .intersect(rect);
+                    for clip in format_ui::outside_strips(screen.painter.clip_rect(), rect)
+                        .into_iter()
+                        .chain(std::iter::once(reveal))
+                    {
+                        let clip = clip.intersect(screen.painter.clip_rect());
+                        if !clip.is_positive() {
+                            continue;
+                        }
+                        format_ui::paint_one_to_one_helper(
+                            &screen.painter.with_clip_rect(clip),
+                            image,
+                            self.layout.formats().sources[self.layout.formats().source_for[i]],
+                            self.layout.formats().advanced[i],
+                            self.layer_preview(i),
+                        );
+                    }
                 }
             } else {
                 format_ui::paint_content_overflow(
@@ -3710,6 +3736,9 @@ impl Editor {
                 || preview.is_some()
                 || self.layout.formats().masks[i] != Default::default()
             {
+                if self.edit_content && self.layout.selected() == Some(i) {
+                    format_ui::paint_mask_helper(p, rect, &self.layout, i, preview);
+                }
                 format_ui::paint_layer_source(
                     p,
                     rect,

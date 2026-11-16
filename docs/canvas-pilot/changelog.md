@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### v0.9.11
+
+- Added a 25%-opacity source guide with sparse diagonal hatching over masked areas
+  while editing the selected layer's crop or mask. Hidden content stays readable;
+  leaving editing restores normal transparent blanking. Exports/device data are unchanged.
+- Kept source-mask and 1:1 context guides from stacking opacity inside masked areas.
+  Hatching uses fixed screen spacing and clips to the viewport, including at high zoom.
+- Verified native crop/Tab-mask rendering, both mask origins and all fit modes.
+  Required checks passed with 91.46% whole-application line coverage.
+
 ### v0.9.10
 
 - Restored faded content outside the layer during crop editing and outside the

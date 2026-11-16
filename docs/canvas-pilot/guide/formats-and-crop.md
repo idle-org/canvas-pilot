@@ -239,7 +239,12 @@ ends. Alt alone does nothing outside crop mode and still zooms out with the Zoom
 tool. Some Linux window managers reserve Alt + mouse gestures; use the context
 menu if the desktop intercepts it.
 The magenta rectangle reveals the image; outside pixels
-are blanked transparently. It works with normal crop and every advanced fit.
+are blanked transparently in normal viewing and output. While editing the selected
+layer's crop or mask, the masked portions inside the layer instead show a 25%-opacity
+source guide with sparse magenta diagonal hatching. This keeps hidden content
+readable and distinguishes masking from the ordinary faded crop overflow outside
+the layer. The hatching and masked-content guide disappear when editing ends;
+they are never exported or sent to the device. It works with normal crop and every advanced fit.
 
 - Drag a side or corner independently to blank more or fewer pixels.
 - Drag anywhere inside the layer to move the reveal window without resizing it.
