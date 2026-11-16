@@ -142,16 +142,18 @@ fn exported_svg_roundtrips_rounded_geometry_including_full_screen_layers() {
 }
 #[test]
 fn publication_requires_overwrite_and_read_matches_written_document() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("layout.midra.json");
-    let p = Project::from_layout(&Layout::default());
-    write_file(&path, p.to_json().unwrap().as_bytes(), false).unwrap();
-    assert_eq!(Project::read(&path).unwrap(), p);
-    assert!(write_file(&path, b"replacement", false).is_err());
-    assert_eq!(Project::read(&path).unwrap(), p);
-    write_file(&path, b"replacement", true).unwrap();
-    assert_eq!(std::fs::read(&path).unwrap(), b"replacement");
-    assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 1);
+    for filename in ["layout.capi.json", "layout.midra.json"] {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(filename);
+        let p = Project::from_layout(&Layout::default());
+        write_file(&path, p.to_json().unwrap().as_bytes(), false).unwrap();
+        assert_eq!(Project::read(&path).unwrap(), p);
+        assert!(write_file(&path, b"replacement", false).is_err());
+        assert_eq!(Project::read(&path).unwrap(), p);
+        write_file(&path, b"replacement", true).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), b"replacement");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
 }
 
 #[test]

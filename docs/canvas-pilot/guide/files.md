@@ -139,7 +139,10 @@ user confirmed actual draw.io copy/paste working on 2026-11-15.
 ## Save, open and export
 
 Use the **Project** toolbar menu to **Save project…** or **Open project…**.
-Projects use readable, versioned `.midra.json` files and preserve applied output,
+Existing `.midra.json` projects still open normally and are not renamed
+automatically. **Save project…** suggests a `.capi.json` name.
+
+Projects use readable, versioned `.capi.json` files and preserve applied output,
 inputs, layer bounds/crops, source assignments, locks, visibility, selection,
 viewport preferences, and all embedded reference images. Apply pending edits
 before saving. Opening asks before replacing current work and starts a fresh
@@ -168,7 +171,7 @@ are supported. SVG rendered by draw.io Desktop is recognized through its retaine
 cell IDs; generated HTML labels and raster text fallbacks are ignored. Draw.io
 may crop and rebase that SVG unless the exported diagram includes the background
 layer. These exports round-trip whole-pixel visible-box geometry, not
-source/crop settings; the separate `.midra.json` project format preserves the full project. See the
+source/crop settings; the separate `.capi.json` project format preserves the full project. See the
 [geometry exchange contract and native draw.io checks](../../interfaces/canvas-pilot-exchange.md)
 and [project save contract](../../interfaces/canvas-pilot.md).
 
@@ -380,5 +383,5 @@ service. A missing converter produces an error without changing the project.
 Use SVG if you do not want to install or configure the converter.
 
 AI exchanges layer geometry and optional artwork, not the complete editor project.
-Use a `.midra.json` project to preserve all settings. See the
+Use a `.capi.json` project to preserve all settings. See the
 [AI format contract and round-trip checks](../../interfaces/canvas-pilot-exchange.md#illustrator-ai).

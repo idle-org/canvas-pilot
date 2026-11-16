@@ -45,7 +45,7 @@ CLI to import or export them. See [AI setup](../../canvas-pilot/guide/files.md#i
 These files exchange visible layer boxes. They do not store the complete editor
 state, source assignments, crop settings or device links. In particular, the
 `.json` starter is **geometry JSON**, not a saved Midra project. Use **Project →
-Save project…** for a full `.midra.json` project; see the
+Save project…** for a full `.capi.json` project; see the
 [project format](../../interfaces/canvas-pilot.md). Versioned schema and migration
 examples stay beside their [interface contracts](../../interfaces/README.md).
 

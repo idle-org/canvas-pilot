@@ -9,7 +9,13 @@ examples and tests in the same change as any save/export schema change.
 
 ## Project JSON, version 15
 
-Suggested filename: `layout.midra.json`. Encoding: UTF-8, pretty-printed JSON,
+Suggested filename: `layout.capi.json`. Legacy `.midra.json` projects remain
+readable through **Open project**; both names contain the same JSON representation.
+The file dialog accepts `.json`, and validation uses file contents rather than the
+filename. **Save project…** suggests the new name and lets the user choose the path;
+existing files are not renamed automatically. This filename change requires no schema migration.
+
+Encoding: UTF-8, pretty-printed JSON,
 with a trailing newline. A project preserves applied document values at their
 stored floating-point precision. No display rounding is applied. The loader
 requires every field below, rejects unknown fields, and rejects unsupported

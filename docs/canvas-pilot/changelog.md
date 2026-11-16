@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- New project saves suggest `.capi.json` (Canvas Pilot). Existing `.midra.json`
+  projects remain readable and are not renamed automatically. Updated the manual
+  and checked read/write and overwrite protection with both filenames; JSON
+  contents and schema version are unchanged.
+
 - Added user-guide feature matrices for all eleven exchange formats, project saves
   and separate clipboard workflows. Distinguished geometry, names, visual crop/mask
   pictures and editable snapshot restoration, checked against the codec behavior.

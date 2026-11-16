@@ -51,7 +51,7 @@ You can skip this step if you only need rectangle positions.
 ## 4. Save the editable project
 
 Apply any pending property edits, then choose **Project → Save project…** and
-save as `first-layout.midra.json`. This is the file to reopen when you want to continue
+save as `first-layout.capi.json`. This is the file to reopen when you want to continue
 editing: it retains the project, including source/crop settings and reference images.
 
 Use **Project → Open project…** to load it later.
@@ -62,7 +62,7 @@ Choose **Project → Export → Export layers…**, select **SVG** and **All lay
 and save the export. For plain layer boxes, leave the background and placeholder
 pictures disabled. The SVG can be opened in a vector editor.
 
-Keep the `.midra.json` project as well: a geometry export does not retain all editor
+Keep the `.capi.json` project as well: a geometry export does not retain all editor
 settings. The [starter-file catalog](../../templates/canvas-pilot/catalog.md) has
 matching layouts in every supported format if you prefer to start in another app.
 

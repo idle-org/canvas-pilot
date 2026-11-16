@@ -67,7 +67,7 @@ pub fn parse_values(text: &str) -> Result<ImportDocument, String> {
             return crate::geometry_formats::parse_json(text);
         }
         return Err(
-            "This JSON is not a geometry exchange. Use Open project for .midra.json files.".into(),
+            "This JSON is not a geometry exchange. Use Open project for .capi.json files (or legacy .midra.json projects).".into(),
         );
     }
     if crate::geometry_formats::looks_like_csv(text) {
