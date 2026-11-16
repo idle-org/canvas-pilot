@@ -15,6 +15,12 @@ a reference, not interactive controls.
 
 ## File exchange matrix
 
+Rows run from fullest support to most limited: complete project saves first,
+then formats with restorable settings (pictures break ties), then geometry/artwork
+formats without those settings. AI comes last because it also needs an external
+converter. Formats with matching capabilities are effectively tied; choose the
+one your editor supports.
+
 All eleven exchange formats import and export layer positions and sizes. Geometry
 import maps boxes to **existing destination layers**: it keeps their names, source
 settings and device links, and does not change the output resolution. File names
@@ -26,13 +32,13 @@ and layer labels can help identify the boxes; they do not rename destinations.
 | SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
 | draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
 | Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ [4](#file-notes) |
-| DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ [4](#file-notes) |
-| DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
 | HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
 | PowerPoint (`.pptx`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ [4](#file-notes) |
+| DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ [4](#file-notes) |
 | Figma file (`.fig`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | FigCraft file (`.figcraft`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
 | Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
 
 ### File notes

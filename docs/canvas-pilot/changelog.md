@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Ordered the file feature matrix by preservation support, starting with Canvas
+  Pilot projects, and explained capability ties and the AI converter requirement.
+
 - Placed native-codec note 3 beside format names and extra-settings note 4 in
   each supporting row’s Extra settings cell in the feature matrix.
 
