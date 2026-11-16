@@ -21,7 +21,7 @@ Run these commands from the extracted directory. Linux launchers reference this
 location; keep it in a permanent folder. macOS launchers copy the executable.
 The helper does not sign/notarize the application or bypass OS security checks.
 
-FFprobe is not required. Illustrator AI exchange needs a separately installed
+FFprobe is not required. Illustrator exchange needs a separately installed
 VectorCraft CLI; SVG exchange can be used without it.
 
 License: LICENSES/MIT.txt. Independent software, not affiliated with Analog Way.

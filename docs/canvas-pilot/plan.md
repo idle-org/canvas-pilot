@@ -41,7 +41,7 @@ device readback and physical-screen acceptance.
   size/position/available-zoom toggles, draw.io stroke handling and own-copy
   round trips. Real draw.io clipboard sample and draw.io-exported SVG supported.
 - [x] Eleven-format file exchange: SVG, draw.io, geometry JSON, CSV, DXF/DWG, HTML,
-  PPTX, FIG, FIGCRAFT and AI through VectorCraft. Shared geometry, scope and review,
+  PPTX, FIG, FIGCRAFT and Illustrator through VectorCraft. Shared geometry, scope and review,
   optional artwork where supported, page/frame selection and licensing build flag.
   Two-layer Full HD and UHD templates exist for all eleven formats.
 - [x] Project JSON v15, tested legacy/recovery migration, saved layer links,

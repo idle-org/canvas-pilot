@@ -44,15 +44,15 @@ These starter downloads are plain geometry templates, without embedded snapshots
 | 🥈 Silver | ![DXF](../../images/formats/dxf.svg) DXF | [Download .dxf](canvas-pilot-1080p-2-layers.dxf) | [Download .dxf](canvas-pilot-4k-2-layers.dxf) | CAD tools |
 | 🥉 Bronze | ![Figma](../../images/formats/fig.svg) Figma FIG | [Download .fig](canvas-pilot-1080p-2-layers.fig) | [Download .fig](canvas-pilot-4k-2-layers.fig) | Figma or FigCraft |
 | 🥉 Bronze | ![DWG](../../images/formats/dwg.svg) DWG | [Download .dwg](canvas-pilot-1080p-2-layers.dwg) | [Download .dwg](canvas-pilot-4k-2-layers.dwg) | CAD tools; Craft bridge |
-| 🥉 Bronze | ![Illustrator](../../images/formats/ai.svg) Illustrator AI (optional) | [Download .ai](canvas-pilot-1080p-2-layers.ai) | [Download .ai](canvas-pilot-4k-2-layers.ai) | Requires VectorCraft CLI for Canvas Pilot import/export; prefer SVG |
+| 🥉 Bronze | ![Illustrator](../../images/formats/illustrator.svg) Illustrator (optional) | [Download .ai](canvas-pilot-1080p-2-layers.ai) | [Download .ai](canvas-pilot-4k-2-layers.ai) | Requires VectorCraft CLI for Canvas Pilot import/export; prefer SVG |
 
 FIG, FIGCRAFT, DXF and DWG import/export were manually reviewed on
 2026-11-15. PPTX, draw.io and SVG were previously confirmed; see the
 [format acceptance list](../../canvas-pilot/plan.md#completed-acceptance).
 
-**Prefer SVG when exchanging layouts with Illustrator.** The AI templates remain
+**Prefer SVG when exchanging layouts with Illustrator.** The Illustrator templates remain
 available for compatibility, but Canvas Pilot needs the separately installed VectorCraft
-CLI to import or export them. See [AI setup](../../canvas-pilot/guide/files.md#illustrator-ai-optional-converter-required).
+CLI to import or export them. See [Illustrator setup](../../canvas-pilot/guide/files.md#illustrator-optional-converter-required).
 
 ## Geometry files and saved projects
 
@@ -64,7 +64,7 @@ Save project…** for a full `.pilot.json` project; see the
 examples stay beside their [interface contracts](../../interfaces/README.md).
 
 PPTX and FIG support uses the optional native codecs included in the default
-build. Illustrator AI import/export requires a separately installed VectorCraft
+build. Illustrator import/export requires a separately installed VectorCraft
 CLI. See [dependencies and licensing builds](../../interfaces/canvas-pilot-exchange.md#optional-native-document-codecs-and-licensing-builds).
 
 ## Maintaining the base files
@@ -81,8 +81,8 @@ the file names and bytes and the manual includes the same archive.
 Keep all formats here and link to this catalog instead of copying files or
 maintaining separate download lists. The [generation and verification commands](../../interfaces/canvas-pilot-exchange.md)
 rebuild both canvas sizes with the application exporter and verify their geometry.
-Text and native PPTX/FIG/DWG fixtures are covered by regression tests; the AI check
-requires VectorCraft and is opt-in. The AI samples were checked with VectorCraft
+Text and native PPTX/FIG/DWG fixtures are covered by regression tests; the Illustrator check
+requires VectorCraft and is opt-in. The Illustrator samples were checked with VectorCraft
 0.24.1, not Adobe Illustrator.
 
 The DXF and DWG samples were opened and rendered with **QCAD Professional 3.28.2**.

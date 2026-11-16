@@ -160,7 +160,7 @@ explains source selection, install locations and replacement behavior.
   installation, remove its extracted folder and shortcut. Neither instruction asks
   you to delete saved projects or manually remove application preferences.
 - **Do I need a switcher?** No. Local editing and file exchange work offline.
-- **Do I need extra converters?** FFprobe is not needed. Illustrator AI exchange
+- **Do I need extra converters?** FFprobe is not needed. Illustrator exchange
   requires VectorCraft; SVG exchange works without that optional converter.
 
 ## Run the development version

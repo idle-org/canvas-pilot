@@ -4,12 +4,15 @@
 
 ## Unreleased
 
+- Name the format Illustrator throughout the interface and documentation, avoiding
+  the ambiguous former abbreviation while retaining `.ai` files and codec compatibility.
+
 - Added opt-in saved input correction proposals (project v16), restored inactive
   until mapping/input review and explicit staging; older projects migrate safely.
 - Added FigCraft embedded snapshots and full-state round-trip coverage across all
   snapshot codecs, including fit modes, blanking, shared inputs and mappings.
 - Ranked file formats and starter downloads by preservation tier, with compact
-  format pills and a separate advanced feature matrix. FIG, DWG and AI still
+  format pills and a separate advanced feature matrix. FIG, DWG and Illustrator still
   require a companion project for editable settings.
 
 
@@ -31,7 +34,7 @@
   callout and bold introduction, shared by the Markdown page and book.
 
 - Ordered the file feature matrix by preservation support, starting with Canvas
-  Pilot projects, and explained capability ties and the AI converter requirement.
+  Pilot projects, and explained capability ties and the Illustrator converter requirement.
 
 - Placed native-codec note 3 beside format names and extra-settings note 4 in
   each supporting row’s Extra settings cell in the feature matrix.
@@ -230,7 +233,7 @@ release. Current project schema: **v13**; application settings: **v8**.
   and staged acceptance checks. No device support is enabled by this task.
 
 - Recommend SVG for Illustrator exchange in the README, manual and template
-  catalog. Keep AI as an optional compatibility target requiring external
+  catalog. Keep Illustrator as an optional compatibility target requiring external
   VectorCraft CLI, with executable discovery and setup documented.
 
 - Group viewport context-menu property windows under Properties and capture under
@@ -274,7 +277,7 @@ release. Current project schema: **v13**; application settings: **v8**.
   HTML and PPTX, using metadata/custom fields or comments. Geometry remains
   editable; explicit Restore parameters from export recovers the original snapshot
   into an unsaved project. JSON/CSV v2 carries metadata; plain v1 exports are
-  unchanged. Document all formats, including unsupported DWG/FIG/FIGCRAFT/AI metadata embedding.
+  unchanged. Document all formats, including unsupported DWG/FIG/FIGCRAFT/Illustrator metadata embedding.
   Round-trip tests cover settings and geometry; installed draw.io exported the
   metadata-bearing diagram to SVG, and librsvg rendered both SVG variants.
 
@@ -317,7 +320,7 @@ release. Current project schema: **v13**; application settings: **v8**.
 
 - Mark PPTX, draw.io and SVG format acceptance as solved following manual review confirming all three work (2026-11-14).
 
-- Replace the incomplete DXF skeleton with the official shared Craft DXF document writer/reader; add optional Craft DWG exchange with the same pixel geometry and canvas limits. Refresh CAD starter files and cover document structure, binary DXF and DWG round trips. Add a byte-preserving ZIP of the AI templates to bypass Gitea/browser PDF preview downloads.
+- Replace the incomplete DXF skeleton with the official shared Craft DXF document writer/reader; add optional Craft DWG exchange with the same pixel geometry and canvas limits. Refresh CAD starter files and cover document structure, binary DXF and DWG round trips. Add a byte-preserving ZIP of the Illustrator templates to bypass Gitea/browser PDF preview downloads.
 
 - Place insufficient import-destination warnings directly below the destination scope selector instead of repeating them near the Import button.
 
@@ -372,7 +375,7 @@ release. Current project schema: **v13**; application settings: **v8**.
 - Add manual Midra input-still capture through the verified WebRCS PNG endpoint, with preview/Add as reference, one request at a time and a five-second minimum interval. Device-setting writes are not involved; active-input 512 × 288 and inactive blank-image responses checked on the Eikos.
 - Load project/recovery files and decode embedded references in a background worker, install atomically, preserve work on errors/cancel and pause recovery autosave while loading. Reconcile the historical plan into completed implementation, remaining features and separate hardware/platform acceptance checks.
 
-- Add README-linked two-layer PPTX, Figma FIG and Illustrator AI templates in Full HD and UHD 4K. Extend the template generator with format selection and import verification; test native fixture geometry, with AI checked through VectorCraft 0.24.1.
+- Add README-linked two-layer PPTX, Figma FIG and Illustrator templates in Full HD and UHD 4K. Extend the template generator with format selection and import verification; test native fixture geometry, with Illustrator checked through VectorCraft 0.24.1.
 
 - Remove the redundant Copy coordinates button from the title header and right-align the device label. Existing copy commands remain available.
 
@@ -404,7 +407,7 @@ release. Current project schema: **v13**; application settings: **v8**.
 
 - Use a crisp, theme-aware magnet icon for the snapping dropdown; preserve snapping controls and active grid indicators.
 
-- Unify file exchange around shared geometry preparation, byte-oriented codecs and one Export layers window. Add optional native PPTX/FIG import/export with slide/frame selection and embedded artwork, plus local VectorCraft AI conversion. File conversions run off the UI thread. Document and test `--no-default-features --features no_proprietary`; CI covers both configurations and production coverage includes the codecs.
+- Unify file exchange around shared geometry preparation, byte-oriented codecs and one Export layers window. Add optional native PPTX/FIG import/export with slide/frame selection and embedded artwork, plus local VectorCraft Illustrator conversion. File conversions run off the UI thread. Document and test `--no-default-features --features no_proprietary`; CI covers both configurations and production coverage includes the codecs.
 
 - Add versioned geometry JSON, RFC-style CSV, DXF and HTML/CSS import/export alongside SVG and draw.io. All six formats have two-layer Full HD/UHD templates and round-trip tests; artwork support is explicit per format.
 

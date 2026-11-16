@@ -10,7 +10,7 @@ for naming, crop, pictures and editable-settings support.
 Check the [clipboard feature matrix](format-matrix.md#clipboard-matrix) for your
 application: its file and copy/paste workflows can support different features.
 
-Drop SVG, draw.io/XML, geometry JSON/CSV, DXF/DWG, HTML, PPTX, FIG, FIGCRAFT or AI files into
+Drop SVG, draw.io/XML, geometry JSON/CSV, DXF/DWG, HTML, PPTX, FIG, FIGCRAFT or Illustrator files into
 the window to open the same geometry review as **Import → Geometry file…**.
 Native codecs still require their normal build options/dependencies. Filename
 extensions are case-insensitive; PNG/JPEG/BMP drops remain reference images.
@@ -156,17 +156,17 @@ The [starter-file catalog](../../templates/canvas-pilot/catalog.md) contains all
 exchange formats, with two layers for 1920 × 1080 and 3840 × 2160 canvases.
 
 **Project → Export → Export layers…** opens one shared window. Choose SVG,
-draw.io, JSON, CSV, DXF/DWG, HTML, PPTX, Figma FIG, FigCraft or Illustrator AI, then
+draw.io, JSON, CSV, DXF/DWG, HTML, PPTX, Figma FIG, FigCraft or Illustrator, then
 **Current layer…**,
 **Selected layers…**, **Specific layer…**, **All layers…** and **Visible layers
 only…**. A current-layer export keeps its original screen position and full-screen
 canvas. The window offers **Include background layer**. SVG, draw.io, geometry
-JSON, HTML, PPTX, FIG, FIGCRAFT and AI also offer **Include placeholder pictures** with embedded source-grid
+JSON, HTML, PPTX, FIG, FIGCRAFT and Illustrator also offer **Include placeholder pictures** with embedded source-grid
 imagery; CSV and DXF explicitly disable pictures and carry rectangle geometry.
 
 Import a supported format with **Import → Geometry file…** or paste its text, then
 choose a slide/page/frame where applicable, then map detected layers to destinations.
-PPTX uses 96 pixels per inch; FIG/FIGCRAFT use native pixels. AI requires a separately
+PPTX uses 96 pixels per inch; FIG/FIGCRAFT use native pixels. Illustrator file exchange requires a separately
 installed `vectorcraft-cli`; its artboards appear in the same canvas selector.
 Import/export runs in the background and reports conversion failures without
 modifying the project. Backgrounds are automatically ignored;
@@ -344,7 +344,7 @@ In **Export layers**, enable **Include extra Canvas Pilot parameters (experiment
 store the exported layers' source/crop settings, fit modes, masks, saved input proposals, names, folders, links and workspace
 setup alongside the geometry. It is available for SVG, draw.io, JSON, CSV, DXF,
 HTML, PPTX and FigCraft. Images/capture assignments are excluded from this snapshot; the
-background and placeholder options remain separate. DWG, FIG and AI show why the
+background and placeholder options remain separate. DWG, FIG and Illustrator show why the
 option is unavailable with the current codecs.
 
 Use **Project → Restore parameters from export…** to restore that original
@@ -362,18 +362,18 @@ See the [format-by-format audit and metadata contract](../../interfaces/midra-ex
 See the [advanced feature matrix](advanced-exchange.md) for complete project, snapshot
 and geometry-only preservation, including input corrections.
 
-## Illustrator AI: optional converter required
+## Illustrator: optional converter required
 
 **SVG is the preferred format for exchanging layer layouts with Illustrator.**
 Midra imports and exports SVG directly, without Illustrator or VectorCraft installed.
-AI remains an optional compatibility format; both AI import and AI export require
+Native Illustrator files remain an optional compatibility format; import and export require
 **VectorCraft CLI**, which is not bundled with Canvas Pilot. Installing the
 VectorCraft graphical application alone does not guarantee that its CLI is
 available to Midra.
 
 The normal build includes all other supported exchange formats without external
 applications: SVG, draw.io, geometry JSON/CSV, HTML, DXF/DWG, PPTX, FIG and FIGCRAFT.
-A build made with `no_proprietary` disables DWG, PPTX, FIG, FIGCRAFT and AI support.
+A build made with `no_proprietary` disables DWG, PPTX, FIG, FIGCRAFT and Illustrator support.
 Installing a converter does not re-enable formats excluded from that build.
 
 Obtain VectorCraft CLI from the [VectorCraft project](https://github.com/storytold/vectorcraft).
@@ -396,11 +396,11 @@ $env:MIDRA_VECTORCRAFT_CLI = 'C:\Tools\VectorCraft\vectorcraft-cli.exe'
 .\canvas-pilot.exe
 ```
 
-Select **Illustrator · AI (VectorCraft)** in Export layers, or import an `.ai` file
+Select **Illustrator (VectorCraft)** in Export layers, or import an `.ai` file
 through Geometry file. Conversion is local and temporary; it does not use a cloud
 service. A missing converter produces an error without changing the project.
 Use SVG if you do not want to install or configure the converter.
 
-AI exchanges layer geometry and optional artwork, not the complete editor project.
+Illustrator exchanges layer geometry and optional artwork, not the complete editor project.
 Use a `.pilot.json` project to preserve all settings. See the
-[AI format contract and round-trip checks](../../interfaces/canvas-pilot-exchange.md#illustrator-ai).
+[Illustrator format contract and round-trip checks](../../interfaces/canvas-pilot-exchange.md#illustrator).

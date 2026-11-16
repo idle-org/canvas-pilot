@@ -4,7 +4,7 @@ Canvas Pilot was formerly named Midra Layout. The rename preserves existing wire
 
 The Export menu writes **SVG v2**, **draw.io v1**, **geometry JSON v1**,
 **geometry CSV v1**, **DXF/DWG**, **HTML/CSS v1**, **PPTX**, **Figma FIG / FigCraft** and
-**Illustrator AI** (the latter via a local VectorCraft CLI). Project
+**Illustrator** (the latter via a local VectorCraft CLI). Project
 JSON is version 16 and is the full-fidelity save format. These exchanges
 preserve layer **visible-box geometry**, not sources, crop settings, zoom, pivots,
 Midra links, locks, visibility, camera or selection. Pictures illustrate current
@@ -12,24 +12,24 @@ cropping; importing a picture does not reconstruct its crop or source settings.
 
 The [starter-file catalog](../templates/canvas-pilot/catalog.md) centralizes ready-to-open
 two-layer templates under `docs/templates/canvas-pilot/` for Full HD (1920 × 1080) and UHD 4K
-(3840 × 2160), in all eleven exchange formats (including PPTX, FIG and AI). The 4K geometry is an exact
+(3840 × 2160), in all eleven exchange formats (including PPTX, FIG and Illustrator). The 4K geometry is an exact
 2× scale of the Full HD layout. Regenerate them with:
 
 ```sh
 cargo run --locked -p canvas-pilot --example check_geometry_exchange -- templates docs/templates/canvas-pilot
-# Optional native codecs (default build); AI requires VectorCraft CLI:
+# Optional native codecs (default build); Illustrator requires VectorCraft CLI:
 MIDRA_VECTORCRAFT_CLI=/path/to/vectorcraft-cli cargo run --locked -p canvas-pilot --example check_geometry_exchange -- templates docs/templates/canvas-pilot pptx fig ai
 ```
 
 The generator verifies imported geometry before writing each template and replaces
 existing templates in the explicitly supplied directory. Samples contain only two
 editable layer boxes, with no background or placeholder images. PPTX uses one slide,
-FIG one frame, and AI one artboard. Their canvas sizes are pixels (PPTX uses the
+FIG one frame, and Illustrator one artboard. Their canvas sizes are pixels (PPTX uses the
 documented 96 pixels/inch conversion). These files are geometry examples, not
-full-fidelity project saves. AI samples were generated and round-trip checked with
+full-fidelity project saves. Illustrator samples were generated and round-trip checked with
 VectorCraft CLI 0.24.1; Adobe Illustrator itself was not used for validation.
 Native fixtures are checked semantically rather than byte-for-byte because encoder
-metadata can vary. The AI regression check is opt-in and requires the real CLI:
+metadata can vary. The Illustrator regression check is opt-in and requires the real CLI:
 
 ```sh
 MIDRA_VECTORCRAFT_CLI=/path/to/vectorcraft-cli cargo test --locked -p canvas-pilot --test exchange illustrator_readme_templates -- --ignored
@@ -48,7 +48,7 @@ MIDRA_VECTORCRAFT_CLI=/path/to/vectorcraft-cli cargo test --locked -p canvas-pil
 | PowerPoint, LibreOffice Impress, DeckCraft | PPTX | Yes; slide picker on import | Embedded PNG | Embedded PNG |
 | Figma, FigCraft | Native FIG | Yes; page/frame picker on import | Embedded PNG | Embedded PNG |
 | FigCraft | Native FIGCRAFT | Yes; page/frame picker on import | Embedded PNG | Embedded PNG |
-| Illustrator, VectorCraft | Native AI via VectorCraft CLI | Yes; artboard picker on import | Embedded PNG | Embedded PNG |
+| Illustrator, VectorCraft | Native Illustrator via VectorCraft CLI | Yes; artboard picker on import | Embedded PNG | Embedded PNG |
 
 PSD, VSDX and ODG remain future adapters rather than implied support.
 PDF is a useful final visual but does not retain a
@@ -80,7 +80,7 @@ they do not modify the project/settings schema:
 
 - **Include background layer** adds a first, full-screen shape with ID
   `midra-background`, explicitly marked as background. SVG, draw.io, JSON, HTML,
-  PPTX, FIG and AI
+  PPTX, FIG and Illustrator
   embed all visible references composited in project order over a dark backdrop
   using each image's fit/stretch/native-size, offset and opacity; otherwise they embed a plain dark
   backdrop. This is a baked visual reference, not an editable copy of reference
@@ -107,15 +107,15 @@ The default `vendor_formats` Cargo feature uses the published, pinned
 [`figcraft-format 0.5.1`](https://crates.io/crates/figcraft-format/0.5.1) crates with
 their document/geometry types. Their licenses are `MIT OR Apache-2.0`; vendor file
 formats do not imply a proprietary implementation license. No upstream app UI,
-font bundle, media engine or online service is embedded. VectorCraft's AI readers
-are unpublished and pull in rendering, font and PDF stacks, so AI uses a separate
+font bundle, media engine or online service is embedded. VectorCraft's Illustrator readers
+are unpublished and pull in rendering, font and PDF stacks, so Illustrator uses a separate
 optional executable rather than embedding that stack. Upstream licenses still
 apply to separately distributed tools; Midra does not bundle VectorCraft.
 
 ```sh
-# Normal build: native PPTX/FIG/DWG codecs and the optional AI converter interface.
+# Normal build: native PPTX/FIG/DWG codecs and the optional Illustrator converter interface.
 cargo build --locked --release -p canvas-pilot
-# Excludes vendor codecs, their optional dependency trees and the AI interface.
+# Excludes vendor codecs, their optional dependency trees and the Illustrator interface.
 cargo build --locked --release -p canvas-pilot --no-default-features --features no_proprietary
 ```
 
@@ -184,18 +184,18 @@ Midra or recreated on export. Reader repair warnings appear in the import review
 This option shares the FIG vendor feature and is excluded by `no_proprietary`.
 Tests cover native resaving, bare JSON, geometry, artwork and both starter sizes.
 
-### Illustrator AI
+### Illustrator
 
-Optional compatibility target: **prefer SVG for Illustrator exchange**. AI import
+Optional compatibility target: **prefer SVG for Illustrator exchange**. Illustrator import
 and export require a separately installed VectorCraft CLI; it remains external
-and is not embedded or bundled. See the [manual setup instructions](../canvas-pilot/guide/files.md#illustrator-ai-optional-converter-required).
+and is not embedded or bundled. See the [manual setup instructions](../canvas-pilot/guide/files.md#illustrator-optional-converter-required).
 
 Uses [VectorCraft CLI](https://github.com/storytold/vectorcraft), discovered through
 `MIDRA_VECTORCRAFT_CLI`, beside the Midra executable, in its `bin/` subdirectory,
 then on PATH. Conversion runs locally in safe mode in a temporary directory, with
 a 60-second timeout and 16 MiB result limit. Nothing is installed automatically.
-The CLI reads AI and converts to SVG for the shared geometry importer, or writes
-PDF-compatible AI from Midra SVG. Import enumerates up to 64 artboards and presents
+The CLI reads Illustrator and converts to SVG for the shared geometry importer, or writes
+PDF-compatible Illustrator from Midra SVG. Import enumerates up to 64 artboards and presents
 each separately in the same canvas selector. Converter import warnings are shown
 in the mapping review; export warnings reject the result instead of silently
 losing content. SVG's rectangle/path/image restrictions
@@ -210,7 +210,7 @@ MIDRA_VECTORCRAFT_CLI=/path/to/vectorcraft-cli cargo run --locked -p canvas-pilo
 
 These generate plain and illustrated documents, with backgrounds, and verify the
 imported layer boxes. Existing diagnostic files are not overwritten. VectorCraft
-0.24.1 native AI round trips were checked for both variants. DeckCraft 0.8.0
+0.24.1 native Illustrator round trips were checked for both variants. DeckCraft 0.8.0
 rendered the exported PPTX independently of the pinned 0.6.1 codec; the resulting
 Full HD image was visually inspected.
 
@@ -383,7 +383,7 @@ the only positions present in that SVG. Include Canvas Pilot's background layer
 before exporting through draw.io when the full output-screen origin must survive
 the round trip.
 
-Tests cover each format/artwork combination, the twelve text templates and eight native PPTX/FIG/FIGCRAFT/DWG templates (plus two AI templates in the opt-in CLI check),
+Tests cover each format/artwork combination, the twelve text templates and eight native PPTX/FIG/FIGCRAFT/DWG templates (plus two Illustrator templates in the opt-in CLI check),
 full-screen layers vs backgrounds,
 negative/fractional coordinates, repeat round trips, compressed clipboard/files,
 embedded references, invalid IDs/versions and no-overwrite file handling.
@@ -443,7 +443,7 @@ capture bindings. See the [complete carrier contract and format audit](midra-ext
 
 Restore the original snapshot with **Project → Restore parameters from export…**.
 Normal geometry import continues to use the artwork's current boxes, including any
-external edits. Third-party editors may strip metadata. DWG, FIG and AI are not
+external edits. Third-party editors may strip metadata. DWG, FIG and Illustrator are not
 enabled until their current codec paths can preserve it reliably.
 
 Embedded project snapshots now contain project version 16 and family-aware `device_link` objects. Geometry representation versions are unchanged. Existing embedded versions 1–15 migrate using the [project contract](canvas-pilot.md); plain geometry continues to omit device destinations.

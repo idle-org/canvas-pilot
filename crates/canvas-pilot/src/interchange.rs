@@ -57,7 +57,7 @@ impl Codec {
             Self::Pptx => "PowerPoint · PPTX",
             Self::Figma => "Figma · FIG",
             Self::Figcraft => "FigCraft · FIGCRAFT",
-            Self::Illustrator => "Illustrator · AI (VectorCraft)",
+            Self::Illustrator => "Illustrator (VectorCraft)",
         }
     }
     pub fn extension(self) -> &'static str {
@@ -200,7 +200,7 @@ pub fn import(bytes: &[u8], filename: &str) -> Result<Vec<Page>, String> {
         }]);
     }
     let text = std::str::from_utf8(bytes).map_err(
-        |_| "Unrecognized binary format. Choose PPTX, FIG, FIGCRAFT, AI or a supported geometry file.",
+        |_| "Unrecognized binary format. Choose PPTX, FIG, FIGCRAFT, Illustrator or a supported geometry file.",
     )?;
     Ok(vec![Page {
         name: filename.into(),

@@ -76,9 +76,9 @@ a format for your editor and see which settings it preserves.
 - **Work with another application:** drop a supported geometry file into the window,
   use **Import → Geometry file…**, or **Project → Export → Export layers…**. The [starter-file catalog](../templates/canvas-pilot/catalog.md)
   has matching Full HD and 4K files in SVG, draw.io, geometry JSON, CSV, DXF/DWG,
-  HTML, PPTX, Figma FIG, FigCraft and Illustrator AI. Prefer SVG for Illustrator
-  exchange: AI requires a separately installed VectorCraft CLI for both import
-  and export. See [AI setup](guide/files.md#illustrator-ai-optional-converter-required).
+  HTML, PPTX, Figma FIG, FigCraft and Illustrator. Prefer SVG for Illustrator
+  exchange: Illustrator requires a separately installed VectorCraft CLI for both import
+  and export. See [Illustrator setup](guide/files.md#illustrator-optional-converter-required).
 - **Use a supported device:** connect, review layer mappings, then explicitly load or
   send the chosen layers. Ordinary editing does not send commands to the device.
   Follow the [connection and transfer guide](guide/device.md) and its linked

@@ -26,7 +26,7 @@ external editor moves/resizes a shape without updating the embedded snapshot.
 | DWG | Not enabled | DXF comments do not provide a reliable binary-DWG carrier. XRECORD/XData are potential future paths, but the current Craft conversion bridge has no verified application-payload round trip. No bytes are appended to the binary file. |
 | FigCraft FIGCRAFT | First page node `plugin_data.beffroi_midra_parameters` in native v1 `document.json` | ZIP and bare JSON restore supported. Native FigCraft 0.5.1 load/save preserves the field. Duplicate payloads are rejected; document JSON reads are bounded to 16 MiB. Other ZIP members are preserved. |
 | Figma FIG | Not enabled | Figma has plugin data, but the installed FigCraft 0.5.1 native exporter explicitly warns `plugin data was left out`. Its model field is not evidence of native preservation. |
-| Illustrator AI | Not enabled | PDF-compatible AI can have document metadata, but the current VectorCraft SVG↔AI conversion path has no verified application-payload preservation. No unverified PDF/AI trailer changes are made. |
+| Illustrator | Not enabled | PDF-compatible Illustrator can have document metadata, but the current VectorCraft SVG↔Illustrator conversion path has no verified application-payload preservation. No unverified PDF/Illustrator trailer changes are made. |
 | Midra project JSON | Already complete | Project v16 remains the authoritative full-fidelity save. |
 
 Unsupported codecs disable the option with an explanation. Programmatic attempts

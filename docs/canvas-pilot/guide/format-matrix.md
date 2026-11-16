@@ -4,8 +4,8 @@
 
 Use **Save project** to continue editing later. Use **SVG** for straightforward
 vector-editor exchange, **draw.io** for diagrams.net, **PPTX** for slides, and
-**FIG / FIGCRAFT** for Figma / FigCraft files. Prefer **SVG over AI** for Illustrator
-unless you specifically need a native AI file. **DXF / DWG** suit CAD geometry;
+**FIG / FIGCRAFT** for Figma / FigCraft files. Prefer **SVG** for Illustrator exchange
+unless you specifically need a native `.ai` file. **DXF / DWG** suit CAD geometry;
 **JSON / CSV** suit scripts and tables. HTML provides a browser-viewable layout.
 
 These tables describe what **Canvas Pilot implements**, not everything each file
@@ -17,7 +17,7 @@ a reference, not interactive controls.
 
 **Gold — complete project:** `.pilot.json` retains editable state and images.
 **Silver — optional snapshot:** eight exchange formats preserve advanced settings
-when extra parameters are enabled. **Bronze — geometry/artwork:** FIG, DWG and AI
+when extra parameters are enabled. **Bronze — geometry/artwork:** FIG, DWG and Illustrator
 need a companion project to retain those settings. Tiers describe preservation;
 formats within a tier are tied, with picture-capable formats listed first.
 See the [advanced feature matrix](advanced-exchange.md) for every saved feature.
@@ -40,23 +40,23 @@ and layer labels can help identify the boxes; they do not rename destinations.
 | 🥈 Silver<br>![DXF](../../images/formats/dxf.svg) DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ [4](#file-notes) |
 | 🥉 Bronze<br>![Figma](../../images/formats/fig.svg) Figma file (`.fig`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | 🥉 Bronze<br>![DWG](../../images/formats/dwg.svg) DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
-| 🥉 Bronze<br>![Illustrator](../../images/formats/ai.svg) Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
+| 🥉 Bronze<br>![Illustrator](../../images/formats/illustrator.svg) Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
 
 ### File notes
 
 1. **Pictures:** enable **Include background layer** and/or **Include placeholder pictures** when exporting.
 2. **Names:** exported as format-specific labels/metadata. CAD uses stable layer
-   IDs with human names in descriptions; AI goes through an SVG conversion.
+   IDs with human names in descriptions; Illustrator files go through an SVG conversion.
    Another application's layer panel may display these differently.
-3. **Native codecs:** DWG, PPTX, FIG, FIGCRAFT and AI require a build with vendor
-   formats enabled (the default). AI additionally requires the separately installed
-   [VectorCraft converter](files.md#illustrator-ai-optional-converter-required).
+3. **Native codecs:** DWG, PPTX, FIG, FIGCRAFT and Illustrator require a build with vendor
+   formats enabled (the default). Illustrator file exchange additionally requires the separately installed
+   [VectorCraft converter](files.md#illustrator-optional-converter-required).
 4. **Extra settings:** experimental and opt-in. Restore the original snapshot with
    **Project → Restore parameters from export…**; ordinary geometry import never
    applies it. External applications may strip it or leave it stale after edits.
 
 Exports use one screen-sized canvas, slide, frame or artboard. PPTX import offers
-a slide picker; FIG / FIGCRAFT offer page/frame choices; AI offers artboards.
+a slide picker; FIG / FIGCRAFT offer page/frame choices; Illustrator offers artboards.
 Draw.io supports single-page files, including compressed files. These are supported
 layout profiles, not general-purpose artwork importers: arbitrary HTML, SVG effects,
 CAD entities or complex native document features may be rejected or omitted.

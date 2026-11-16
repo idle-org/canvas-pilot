@@ -72,7 +72,7 @@ They do not turn crop, mask or source settings into native editing controls in t
 other application. Background/placeholder pictures can show the result, but cannot
 restore editable state by themselves.
 
-FIG, DWG and AI have no verified metadata carrier through the current codecs.
+FIG, DWG and Illustrator have no verified metadata carrier through the current codecs.
 Keep a `.pilot.json` companion when using these Bronze formats. Clipboard geometry
 also does not restore embedded snapshots. Use **Restore parameters from export**
 for Silver; use ordinary geometry import for the artwork's latest positions.
