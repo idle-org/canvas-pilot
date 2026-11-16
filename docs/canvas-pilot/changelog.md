@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Refined French ratio wording and documented English MIDRA/WebRCS terminology
+  preservation. Localization remains cosmetic, including unchanged new-project
+  names, default values, export artwork and clipboard content.
+
 - Added embedded English/French UI catalogs using rust-i18n, with an immediate
   System default / English / Français selector at the top of Settings. Settings v9
   migrates older preferences; projects and device operations retain their semantics.

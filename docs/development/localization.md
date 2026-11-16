@@ -62,6 +62,24 @@ not a human-reviewed complete translation: technical diagnostics, some advanced
 controls, device-supplied labels and native file dialogs can still be English.
 Native dialogs follow the OS, not this application's preference.
 
+### Operator terminology and content boundaries
+
+Localization is cosmetic: translate interface instructions, never project content.
+Keep all titles and default names/values in their original language, including newly
+created layers, folders and example content. Exports, clipboard payloads, generated
+artwork, device values and serialization remain independent of the selected language.
+
+For French, use **ratio**, not “rapport”, for aspect-ratio controls. Generic editor
+terms may use **écran** and **calque**; do not force these translations onto names
+shown by the switcher. Preserve the English MIDRA/WebRCS control and option names
+operators need to match on their device, including **Content ratio**, **Transform to**,
+**Layer fill option**, **Native**, **Signal**, **Custom**, **Layer setting**,
+**Centered**, **Cropped**, **Full screen / Fullscreen**, **1:1**, **Input settings**,
+**Global settings**, **Preview**, **Program** and **Blanking**. Retain the spelling
+used by the corresponding control. Translate surrounding explanations; an optional
+French explanation should accompany, rather than replace, the English device name.
+Apply the same principle to other adapters' native terminology.
+
 ### Maintaining UI messages
 
 - Use stable descriptive keys and complete messages in `locales/en.json` and
@@ -159,7 +177,8 @@ Begin after the book workflow and glossary have been validated.
 - [ ] Inventory visible text: menus, dialogs, toolbar tooltips, keyboard help,
   properties, presets, empty states, status messages, progress, errors, file
   filters, recovery/overwrite prompts, device review and connection controls.
-  Include generated SVG labels, export artwork and launcher text where relevant.
+  Include launcher text where relevant. Generated SVG labels and export artwork
+  remain in their original language as document content.
 - [ ] Choose a small Rust-compatible localization mechanism with stable message
   keys, named placeholders, plural support and English fallback. Trial it in one
   settings panel and an error dialog before migrating the rest of the UI.
@@ -174,8 +193,8 @@ Begin after the book workflow and glossary have been validated.
   or design and test a versioned language-independent payload before translating
   its human-readable presentation. Preserve existing clipboard samples.
 - [ ] Preserve existing layer/folder names, imported names, custom presets and
-  device-provided labels. Decide which new-project example names may be localized;
-  never rename existing content when switching languages.
+  device-provided labels. New-project titles, example names and default values also
+  remain in their original language; never rename content when switching languages.
 
 ### Add language preferences and readable UI
 
