@@ -480,5 +480,7 @@
   "language.name.th": "泰语",
   "language.name.hi": "印地语",
   "language.name.tok": "道本语",
-  "language.install-pack": "安装语言包…"
+  "language.install-pack": "安装语言包…",
+  "ui.crop-mask": "裁剪与遮罩",
+  "ui.canvas": "画布"
 }

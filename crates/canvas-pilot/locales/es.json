@@ -480,5 +480,7 @@
   "language.name.th": "Tailandés",
   "language.name.hi": "Hindi",
   "language.name.tok": "Toki Pona",
-  "language.install-pack": "Instalar paquete de idiomas…"
+  "language.install-pack": "Instalar paquete de idiomas…",
+  "ui.crop-mask": "Recorte y máscara",
+  "ui.canvas": "Lienzo"
 }

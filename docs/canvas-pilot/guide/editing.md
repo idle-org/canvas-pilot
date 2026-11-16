@@ -72,7 +72,7 @@ not affect device links or source assignments. All document edits support Undo.
   clipboard payload.
 
 Right-click a layer for **Source properties**, **Layer properties**, **Crop properties**, **Configure capture**,
-**Adjust layer crop**, alignment, **Copy layer values**, **Paste layer values**, and lock/hide actions.
+**Crop & mask**, alignment, **Copy layer values**, **Paste layer values**, and lock/hide actions.
 Paste reads the clipboard and opens the existing value/mapping review before applying changes. Right-clicking a layer
 already in a selection keeps the whole selection and offers **Resize together**.
 Right-clicking an unselected layer selects it first. Locked/hidden layers remain
@@ -162,14 +162,18 @@ including a single layer. All/visible export remains available.
 
 ## Viewport context menu
 
-Right-click a layer for rename/folder actions, copy/paste, crop adjustment,
-aspect-ratio locking and alignment. **Properties** groups the Source, Layer,
-Crop and Mapping windows. **Input preview & crop guides → Configure capture…**
+Right-click a layer for rename/folder actions, copy/paste, aspect-ratio locking
+and alignment. **Crop & mask** pairs **Adjust layer crop** with **Reset crop**,
+and **Adjust layer mask** with **Reset mask**. Reset mask clears all four edges
+while preserving **Mask from**, crop, fitting and layer geometry; Undo restores it.
+**Properties** groups the Source, Layer, Crop, Mask and Mapping windows. **Input preview & crop guides → Configure capture…**
 opens the Preview tab; an existing preview also offers an enable toggle and crop
 guide opacity directly in that submenu. Opacity is adjustable only with an
 available preview image. Input selection stays in the window, so long input
 lists do not interfere with the context menu.
 
-Lock, Hide and Delete follow the editing controls. Snapping, Reference images
-and Output format are together at the bottom. Multiple selection retains its
-Resize together and alignment actions.
+Lock, Hide and Delete follow the editing controls. **Canvas** groups Snapping,
+Reference images and Output format at the bottom: these apply to the workspace
+rather than the selected layer. Right-clicking empty canvas keeps these options
+at the top level. Multiple selection retains its Resize together and alignment
+actions; crop/mask resets require one selected layer.

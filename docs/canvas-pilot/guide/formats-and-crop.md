@@ -221,7 +221,9 @@ clears all edges while keeping the selected reference.
 
 
 Open **Layer properties → Mask**, or right-click a selected layer and choose
-**Adjust layer mask**. For keyboard editing, double-click a layer to enter crop
+**Crop & mask → Adjust layer mask**. **Crop & mask → Reset mask** clears its edges
+without changing the mask reference, crop or layer dimensions, and supports Undo.
+For keyboard editing, double-click a layer to enter crop
 mode, then press **Tab** to switch to the mask; press **Tab** again to return to crop.
 This works with normal crop and 1:1 editing using the Select tool. It avoids Alt
 mouse gestures that some Wayland desktops/window managers intercept.

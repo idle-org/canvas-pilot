@@ -480,5 +480,7 @@
   "language.name.th": "ไทย",
   "language.name.hi": "ฮินดี",
   "language.name.tok": "โทกิโพนา",
-  "language.install-pack": "ติดตั้งชุดภาษา…"
+  "language.install-pack": "ติดตั้งชุดภาษา…",
+  "ui.crop-mask": "ครอบตัดและมาสก์",
+  "ui.canvas": "พื้นที่ทำงาน"
 }

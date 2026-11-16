@@ -480,5 +480,7 @@
   "language.name.th": "Ταϊκὴ",
   "language.name.hi": "Ἰνδικὴ",
   "language.name.tok": "Τόκι Πόνα",
-  "language.install-pack": "Install language pack…"
+  "language.install-pack": "Install language pack…",
+  "ui.crop-mask": "Περικοπὴ καὶ κάλυμμα",
+  "ui.canvas": "Πίναξ"
 }

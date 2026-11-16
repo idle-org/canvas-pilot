@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### v0.9.12
+
+- Added Reset mask to the layer context menu, preserving mask origin, crop, fit and
+  geometry with Undo support. Crop & mask groups both adjust/reset pairs; Canvas
+  groups workspace-wide snapping, references and output format. The layer menu has
+  four fewer top-level entries, and the empty-canvas menu remains shallow.
+- Native menu/reset checks and required validation passed; whole-application
+  line coverage is 91.51%.
+
 ### v0.9.11
 
 - Added a 25%-opacity source guide with sparse diagonal hatching over masked areas

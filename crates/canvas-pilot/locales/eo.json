@@ -480,5 +480,7 @@
   "language.name.th": "Taja",
   "language.name.hi": "Hindia",
   "language.name.tok": "Tokipono",
-  "language.install-pack": "Instali lingvopakaĵon…"
+  "language.install-pack": "Instali lingvopakaĵon…",
+  "ui.crop-mask": "Tondado kaj masko",
+  "ui.canvas": "Kanvaso"
 }

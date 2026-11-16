@@ -2310,40 +2310,9 @@ impl Editor {
         }
         if let Some(i) = self.layout.selected() {
             ui.weak(self.layout.layer_label(i));
-            if ui.button(tr(ui.ctx(), "ui.adjust-layer-mask")).clicked() {
-                self.open_mask_edit(i);
-                ui.close();
-            }
-            let crop_label = if self.edit_content && !self.mask_editing() {
-                "crop.done"
-            } else {
-                "crop.adjust"
-            };
-            if ui
-                .add_enabled(!self.automatic_layer_fit(i), egui::Button::new(tr(ui.ctx(), crop_label)))
-                .on_disabled_hover_text("Centered and Cropped fit automatically; use Crop properties for numeric crop edges.")
-                .on_hover_text(
-                    tr(ui.ctx(), "ui.change-crop-zoom-and-offset-inside-the-layer-keep-its-visible-box-fixed"),
-                )
-                .clicked()
-            {
-                self.toggle_crop_edit();
-                ui.close();
-            }
-            if ui.button(tr(ui.ctx(), "ui.reset-crop")).clicked() {
-                let result = if let Some(mode) = self.layout.formats().layer_fit[i] {
-                    self.layout
-                        .set_layer_fit(i, Some(mode), canvas_pilot::formats::Crop::default())
-                } else {
-                    self.layout
-                        .set_framing(i, canvas_pilot::formats::Framing::default())
-                };
-                match result {
-                    Ok(()) => self.sync(),
-                    Err(e) => self.error = e,
-                }
-                ui.close();
-            }
+            ui.menu_button(tr(ui.ctx(), "ui.crop-mask"), |ui| {
+                self.crop_mask_menu(ui, i)
+            });
         } else if !selected.is_empty() {
             ui.weak(format!("{} layers selected", selected.len()));
             ui.menu_button(tr(ui.ctx(), "ui.resize-together"), |ui| {
@@ -2425,7 +2394,65 @@ impl Editor {
         }
         if !selected.is_empty() || self.layer_ui.context_layer.is_some() {
             ui.separator();
+            ui.menu_button(tr(ui.ctx(), "ui.canvas"), |ui| {
+                self.canvas_context_options(ui)
+            });
+        } else {
+            self.canvas_context_options(ui);
         }
+    }
+
+    fn crop_mask_menu(&mut self, ui: &mut egui::Ui, i: usize) {
+        let crop_label = if self.edit_content && !self.mask_editing() {
+            "crop.done"
+        } else {
+            "crop.adjust"
+        };
+        if ui
+            .add_enabled(
+                !self.automatic_layer_fit(i),
+                egui::Button::new(tr(ui.ctx(), crop_label)),
+            )
+            .on_disabled_hover_text("Centered and Cropped fit automatically; use Crop properties for numeric crop edges.")
+            .on_hover_text(tr(ui.ctx(), "ui.change-crop-zoom-and-offset-inside-the-layer-keep-its-visible-box-fixed"))
+            .clicked()
+        {
+            self.toggle_crop_edit();
+            ui.close();
+        }
+        if ui.button(tr(ui.ctx(), "ui.reset-crop")).clicked() {
+            let result = if let Some(mode) = self.layout.formats().layer_fit[i] {
+                self.layout
+                    .set_layer_fit(i, Some(mode), canvas_pilot::formats::Crop::default())
+            } else {
+                self.layout
+                    .set_framing(i, canvas_pilot::formats::Framing::default())
+            };
+            match result {
+                Ok(()) => self.sync(),
+                Err(e) => self.error = e,
+            }
+            ui.close();
+        }
+        ui.separator();
+        if ui.button(tr(ui.ctx(), "ui.adjust-layer-mask")).clicked() {
+            self.open_mask_edit(i);
+            ui.close();
+        }
+        if ui.button(tr(ui.ctx(), "ui.reset-mask")).clicked() {
+            let mask = canvas_pilot::formats::Mask {
+                origin: self.layout.formats().masks[i].origin,
+                ..Default::default()
+            };
+            match self.layout.set_mask(i, mask) {
+                Ok(()) => self.sync(),
+                Err(error) => self.error = error,
+            }
+            ui.close();
+        }
+    }
+
+    fn canvas_context_options(&mut self, ui: &mut egui::Ui) {
         self.snapping_menu(ui);
         ui.menu_button(tr(ui.ctx(), "ui.reference-images"), |ui| {
             self.reference_actions_menu(ui)
@@ -8625,7 +8652,9 @@ mod tests {
                 };
                 assert!(app.layout.selected().is_some());
                 let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
-                    egui::CentralPanel::default().show(root_ui, |ui| app.layer_context_menu(ui));
+                    egui::CentralPanel::default().show(root_ui, |ui| {
+                        app.crop_mask_menu(ui, app.layout.selected().unwrap())
+                    });
                 });
                 let expected = tr(&ctx, if editing { "crop.done" } else { "crop.adjust" });
                 let labels: Vec<_> = output
@@ -8710,6 +8739,149 @@ mod tests {
                 assert_eq!(app.layout.layers(), &before);
                 assert_eq!(app.layout.layer_info(0).id, id);
             }
+        }
+    }
+
+    #[test]
+    fn grouped_crop_mask_resets_preserve_other_values_and_undo() {
+        use canvas_pilot::formats::{Crop, Framing, LayerFit, Mask, MaskOrigin};
+        for origin in [MaskOrigin::Layer, MaskOrigin::Source] {
+            for mode in std::iter::once(None).chain(LayerFit::ALL.into_iter().map(Some)) {
+                for reset_mask in [true, false] {
+                    let mut app = Editor::default();
+                    app.layout.select(Some(0));
+                    let ctx = egui::Context::default();
+                    let output = frame(&mut app, &ctx, vec![]);
+                    let pos = layer_rects(&output)[0].center();
+                    app.layout
+                        .set_layer_fit(
+                            0,
+                            mode,
+                            Crop {
+                                left: 100.0,
+                                right: 100.0,
+                                top: 50.0,
+                                bottom: 50.0,
+                            },
+                        )
+                        .unwrap();
+                    if mode.is_none() {
+                        app.layout
+                            .set_framing(
+                                0,
+                                Framing {
+                                    zoom: 1.5,
+                                    offset: [0.0; 2],
+                                },
+                            )
+                            .unwrap();
+                    }
+                    let mask = Mask {
+                        origin,
+                        left: 0.1,
+                        right: 0.2,
+                        top: 0.1,
+                        bottom: 0.05,
+                    };
+                    app.layout.set_mask(0, mask).unwrap();
+                    app.sync();
+                    let before = app.project();
+                    let crop = app.layout.formats().advanced[0];
+                    frame(&mut app, &ctx, vec![]);
+                    let secondary = |pressed| egui::Event::PointerButton {
+                        pos,
+                        button: egui::PointerButton::Secondary,
+                        pressed,
+                        modifiers: egui::Modifiers::NONE,
+                    };
+                    frame(
+                        &mut app,
+                        &ctx,
+                        vec![egui::Event::PointerMoved(pos), secondary(true)],
+                    );
+                    frame(&mut app, &ctx, vec![secondary(false)]);
+                    let output = frame(&mut app, &ctx, vec![]);
+                    assert_eq!(app.layout.selected(), Some(0));
+                    let labels: Vec<_> = output
+                        .shapes
+                        .iter()
+                        .filter_map(|s| {
+                            if let egui::Shape::Text(t) = &s.shape {
+                                Some(t.galley.text())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    assert!(labels.contains(&"Crop & mask") && labels.contains(&"Canvas"));
+                    assert!(
+                        !labels.contains(&"Reset crop")
+                            && !labels.contains(&"Reset mask")
+                            && !labels.contains(&"Output format…")
+                    );
+                    click_text(&mut app, &ctx, "Crop & mask");
+                    click_text(
+                        &mut app,
+                        &ctx,
+                        if reset_mask {
+                            "Reset mask"
+                        } else {
+                            "Reset crop"
+                        },
+                    );
+                    assert_eq!(app.layout.formats().layer_fit[0], mode);
+                    if reset_mask {
+                        assert_eq!(
+                            app.layout.formats().masks[0],
+                            Mask {
+                                origin,
+                                ..Mask::default()
+                            }
+                        );
+                        assert_eq!(app.layout.formats().advanced[0], crop);
+                    } else {
+                        assert_eq!(app.layout.formats().masks[0], mask);
+                        assert_eq!(app.layout.formats().advanced[0], Crop::default());
+                    }
+                    assert_eq!(app.project().inputs, before.inputs);
+                    assert_eq!(app.project().layers[1], before.layers[1]);
+                    assert_eq!(app.project().layers[0].bounds, before.layers[0].bounds);
+                    assert!(!app.device.sending);
+                    app.layout.undo();
+                    assert_eq!(app.project(), before);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn canvas_options_are_grouped_only_when_a_layer_is_selected() {
+        for selected in [false, true] {
+            let mut app = Editor::default();
+            if !selected {
+                app.layout.select(None);
+            }
+            let ctx = egui::Context::default();
+            let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+                egui::CentralPanel::default().show(root_ui, |ui| app.layer_context_menu(ui));
+            });
+            let labels: Vec<_> = output
+                .shapes
+                .iter()
+                .filter_map(|s| {
+                    if let egui::Shape::Text(t) = &s.shape {
+                        Some(t.galley.text())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            assert_eq!(labels.contains(&"Canvas"), selected);
+            assert_eq!(
+                labels.contains(&tr(&ctx, "ui.output-format").as_str()),
+                !selected
+            );
+            assert_eq!(labels.contains(&"Crop & mask"), selected);
         }
     }
 

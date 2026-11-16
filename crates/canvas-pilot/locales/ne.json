@@ -480,5 +480,7 @@
   "language.name.th": "थाई",
   "language.name.hi": "हिन्दी",
   "language.name.tok": "टोकी पोना",
-  "language.install-pack": "भाषा प्याक स्थापना गर्नुहोस्…"
+  "language.install-pack": "भाषा प्याक स्थापना गर्नुहोस्…",
+  "ui.crop-mask": "क्रप र मास्क",
+  "ui.canvas": "क्यानभास"
 }
