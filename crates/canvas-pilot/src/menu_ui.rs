@@ -45,13 +45,13 @@ impl Editor {
         if ui.button(tr(ui.ctx(), "ui.device-layers")).clicked() {
             self.device.prepare_send = false;
             self.device.open = true;
-            ui.close_menu();
+            ui.close();
         }
         ui.separator();
         ui.weak(tr(ui.ctx(), "ui.layer-values"));
         self.transfer_layer_picker(ui, "Choose destination layers…");
         if ui.button(tr(ui.ctx(), "ui.geometry-file")).clicked() {
-            ui.close_menu();
+            ui.close();
             self.import_geometry_file();
         }
         if ui
@@ -62,7 +62,7 @@ impl Editor {
             ))
             .clicked()
         {
-            ui.close_menu();
+            ui.close();
             Self::request_layer_paste(ui.ctx());
         }
         ui.separator();
@@ -163,7 +163,7 @@ impl Editor {
     pub(super) fn viewport_options_menu(&mut self, ui: &mut egui::Ui) {
         if ui.button(tr(ui.ctx(), "ui.open-all-settings")).clicked() {
             self.preferences_open = true;
-            ui.close_menu();
+            ui.close();
         }
         ui.separator();
         self.snapping_menu(ui);
@@ -179,13 +179,13 @@ impl Editor {
                     .clicked()
                 {
                     choice.apply(ui.ctx());
-                    ui.close_menu();
+                    ui.close();
                 }
             }
             ui.separator();
             if ui.button(tr(ui.ctx(), "ui.more-themes")).clicked() {
                 self.themes_open = true;
-                ui.close_menu();
+                ui.close();
             }
         });
         ui.separator();
@@ -288,12 +288,12 @@ impl Editor {
         ui.set_min_width(185.0);
         if ui.button(tr(ui.ctx(), "ui.open-all-settings")).clicked() {
             self.preferences_open = true;
-            ui.close_menu();
+            ui.close();
         }
         ui.separator();
         if ui.button(tr(ui.ctx(), "ui.device-connection")).clicked() {
             self.device.connection_open = true;
-            ui.close_menu();
+            ui.close();
         }
         ui.menu_button(tr(ui.ctx(), "ui.project"), |ui| self.project_menu(ui));
         ui.menu_button(tr(ui.ctx(), "ui.import"), |ui| self.import_menu(ui));
@@ -302,12 +302,12 @@ impl Editor {
             if ui.button(tr(ui.ctx(), "ui.undo")).clicked() {
                 self.layout.undo();
                 self.sync();
-                ui.close_menu();
+                ui.close();
             }
             if ui.button(tr(ui.ctx(), "ui.redo")).clicked() {
                 self.layout.redo();
                 self.sync();
-                ui.close_menu();
+                ui.close();
             }
             ui.separator();
             if ui
@@ -318,7 +318,7 @@ impl Editor {
                 .clicked()
             {
                 self.copy(ui.ctx());
-                ui.close_menu();
+                ui.close();
             }
             if ui
                 .button(tr(ui.ctx(), "ui.select-all-editable-layers"))
@@ -330,19 +330,19 @@ impl Editor {
                         .collect::<Vec<_>>(),
                 );
                 self.sync();
-                ui.close_menu();
+                ui.close();
             }
             if ui.button(tr(ui.ctx(), "ui.deselect-all")).clicked() {
                 self.layout.select(None);
                 self.edit_content = false;
                 self.sync();
-                ui.close_menu();
+                ui.close();
             }
         });
         ui.menu_button(tr(ui.ctx(), "ui.view"), |ui| {
             if ui.button(tr(ui.ctx(), "ui.fit-screen")).clicked() {
                 self.fit_screen();
-                ui.close_menu();
+                ui.close();
             }
             if ui
                 .add_enabled(
@@ -352,23 +352,23 @@ impl Editor {
                 .clicked()
             {
                 self.fit_selection();
-                ui.close_menu();
+                ui.close();
             }
             if ui.button(tr(ui.ctx(), "ui.1-1-display-pixels")).clicked() {
                 self.camera_one_to_one = true;
-                ui.close_menu();
+                ui.close();
             }
             ui.separator();
             if ui.button(tr(ui.ctx(), "ui.output-format")).clicked() {
                 self.output_draft = Some(OutputDraft::new(self.layout.formats().output));
-                ui.close_menu();
+                ui.close();
             }
             if ui
                 .button(tr(ui.ctx(), "ui.reference-image-settings"))
                 .clicked()
             {
                 self.reference_open = true;
-                ui.close_menu();
+                ui.close();
             }
         });
         ui.menu_button(tr(ui.ctx(), "ui.layers"), |ui| {
@@ -377,11 +377,11 @@ impl Editor {
                 .clicked()
             {
                 self.manage_layers();
-                ui.close_menu();
+                ui.close();
             }
             if ui.button(tr(ui.ctx(), "ui.add-layer")).clicked() {
                 self.add_layer();
-                ui.close_menu();
+                ui.close();
             }
             if ui
                 .add_enabled(
@@ -392,7 +392,7 @@ impl Editor {
                 .clicked()
             {
                 self.remove_layers();
-                ui.close_menu();
+                ui.close();
             }
             ui.separator();
             ui.menu_button(tr(ui.ctx(), "ui.selected-layer-actions"), |ui| {
@@ -414,7 +414,7 @@ impl Editor {
                         self.layout.select(Some(i));
                         self.edit_content = false;
                         self.sync();
-                        ui.close_menu();
+                        ui.close();
                     }
                     let mut visible = self.layout.visible(i);
                     if ui
@@ -515,7 +515,7 @@ mod tests {
             click_label(&mut app, &ctx, "More themes…");
             click_label(&mut app, &ctx, choice.name());
             assert!(theme::Theme::current(&ctx) == choice);
-            assert_eq!(ctx.style().visuals.dark_mode, !choice.is_light());
+            assert_eq!(ctx.global_style().visuals.dark_mode, !choice.is_light());
             let output = frame(&mut app, &ctx, vec![]);
             for fill in [
                 choice.palette().bg,

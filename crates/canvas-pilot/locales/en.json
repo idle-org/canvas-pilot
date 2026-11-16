@@ -474,5 +474,10 @@
   "mask.source": "Source",
   "mask.origin-help": "Layer follows the layer bounds. Source follows the usable picture before layer crop/zoom. Switching keeps the edge percentages.",
   "mask.source-px": " source px",
-  "mask.proportions-help": "Mask proportions follow the selected reference. Blanking pixels outside the visible layer has no effect."
+  "mask.proportions-help": "Mask proportions follow the selected reference. Blanking pixels outside the visible layer has no effect.",
+  "language.name.pt-PT": "Portuguese (Portugal)",
+  "language.name.ne": "Nepali",
+  "language.name.th": "Thai",
+  "language.name.hi": "Hindi",
+  "language.name.tok": "Toki Pona"
 }

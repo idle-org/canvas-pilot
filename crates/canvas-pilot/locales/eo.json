@@ -474,5 +474,10 @@
   "mask.source": "Fonto",
   "mask.origin-help": "Tavolo sekvas la tavolajn limojn. Fonto sekvas la uzeblan bildon antaŭ tavola tondado/zomo. Ŝanĝo konservas la randajn procentojn.",
   "mask.source-px": " fontaj px",
-  "mask.proportions-help": "Maskaj proporcioj sekvas la elektitan referencon. Kaŝi bilderojn ekster la videbla tavolo ne efikas."
+  "mask.proportions-help": "Maskaj proporcioj sekvas la elektitan referencon. Kaŝi bilderojn ekster la videbla tavolo ne efikas.",
+  "language.name.pt-PT": "Portugala (Portugalio)",
+  "language.name.ne": "Nepala",
+  "language.name.th": "Taja",
+  "language.name.hi": "Hindia",
+  "language.name.tok": "Tokipono"
 }

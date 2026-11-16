@@ -554,7 +554,7 @@ impl Editor {
         };
         if response.on_hover_text(tooltip).clicked() {
             self.start_scoped_load(ui.ctx());
-            ui.close_menu();
+            ui.close();
         }
     }
     fn start_scoped_load(&mut self, ctx: &egui::Context) {
@@ -652,7 +652,7 @@ impl Editor {
             .clicked()
         {
             self.open_device_export();
-            ui.close_menu();
+            ui.close();
         }
     }
     pub(super) fn device_send_button(&mut self, ui: &mut egui::Ui) {
@@ -702,7 +702,7 @@ impl Editor {
                     self.device.open = true;
                 }
             }
-            ui.close_menu();
+            ui.close();
         }
     }
 
@@ -730,7 +730,7 @@ impl Editor {
                                 self.device.input_edits.clear();
                                 self.device.reset_mappings();
                                 self.device.fetch(ctx);
-                                ui.close_menu();
+                                ui.close();
                             }
                         }
                     }).response.on_hover_text(tr(ui.ctx(), "ui.last-four-successful-connections-choose-one-to-connect"));
@@ -785,7 +785,7 @@ impl Editor {
         egui::Window::new(if self.device.prepare_send { "Device mapping & transfer" } else { "Import layers from device" })
             .enabled(!self.format_draft.as_ref().is_some_and(|d| d.pending(&self.layout)))
             .open(&mut open).default_width(660.0).collapsible(false)
-            .max_height((ctx.screen_rect().height() - 100.0).max(200.0)).vscroll(true)
+            .max_height((ctx.content_rect().height() - 100.0).max(200.0)).vscroll(true)
             .show(ctx, |ui| {
                 if self.device.online() {
                     ui.horizontal(|ui| {
@@ -1607,8 +1607,8 @@ mod tests {
             };
             let mut target = Target::Program;
             let mut targets = Default::default();
-            let output = ctx.run(egui::RawInput::default(), |ctx| {
-                egui::CentralPanel::default().show(ctx, |ui| {
+            let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+                egui::CentralPanel::default().show(root_ui, |ui| {
                     send_review(
                         ui,
                         &layout,
@@ -1656,13 +1656,13 @@ mod tests {
         app.layout.select(None);
         let mut pos = egui::Pos2::ZERO;
         for events in [vec![], vec![]] {
-            let _ = ctx.run(
+            let _ = ctx.run_ui(
                 egui::RawInput {
                     events,
                     ..Default::default()
                 },
-                |ctx| {
-                    egui::CentralPanel::default().show(ctx, |ui| {
+                |root_ui| {
+                    egui::CentralPanel::default().show(root_ui, |ui| {
                         pos = ui.cursor().min + Vec2::new(30.0, 10.0);
                         app.device_send_button(ui);
                     });
@@ -1670,7 +1670,7 @@ mod tests {
             );
         }
         for pressed in [true, false] {
-            let _ = ctx.run(
+            let _ = ctx.run_ui(
                 egui::RawInput {
                     events: vec![
                         egui::Event::PointerMoved(pos),
@@ -1678,8 +1678,8 @@ mod tests {
                     ],
                     ..Default::default()
                 },
-                |ctx| {
-                    egui::CentralPanel::default().show(ctx, |ui| app.device_send_button(ui));
+                |root_ui| {
+                    egui::CentralPanel::default().show(root_ui, |ui| app.device_send_button(ui));
                 },
             );
         }
@@ -1773,8 +1773,8 @@ mod tests {
             screens: vec![screen.clone()],
             raw: serde_json::Value::Null,
         };
-        let _ = ctx.run(egui::RawInput::default(), |ctx| {
-            egui::CentralPanel::default().show(ctx, |ui| {
+        let _ = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+            egui::CentralPanel::default().show(root_ui, |ui| {
                 send_review(
                     ui,
                     &layout,
@@ -1796,8 +1796,8 @@ mod tests {
         );
         assert_eq!(*layout.layers(), before);
         layout.select(None);
-        let _ = ctx.run(egui::RawInput::default(), |ctx| {
-            egui::CentralPanel::default().show(ctx, |ui| {
+        let _ = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+            egui::CentralPanel::default().show(root_ui, |ui| {
                 send_review(
                     ui,
                     &layout,
@@ -1966,8 +1966,8 @@ mod tests {
             (app.layout.layer_info(0).id, "1".into()),
             (app.layout.layer_info(1).id, "1".into()),
         ]);
-        let output = ctx.run(egui::RawInput::default(), |ctx| {
-            egui::CentralPanel::default().show(ctx, |ui| {
+        let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+            egui::CentralPanel::default().show(root_ui, |ui| {
                 app.layer_mapping_controls(ui, 0);
                 assert!(
                     send_review(
@@ -2123,8 +2123,8 @@ mod tests {
         let ctx = egui::Context::default();
         let mut targets = std::collections::BTreeMap::from([(1, "2".into()), (2, "1".into())]);
         let before = targets.clone();
-        let _ = ctx.run(egui::RawInput::default(), |ctx| {
-            egui::CentralPanel::default().show(ctx, |ui| {
+        let _ = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+            egui::CentralPanel::default().show(root_ui, |ui| {
                 send_review(
                     ui,
                     &app.layout,

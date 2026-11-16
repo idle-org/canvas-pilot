@@ -406,8 +406,8 @@ mod tests {
         }
         let ctx = egui::Context::default();
         Theme::HighContrast.apply(&ctx);
-        assert!(contrast(ctx.style().visuals.weak_text_color(), p.panel) >= 4.5);
-        assert_eq!(ctx.style().visuals.window_stroke.width, 2.0);
+        assert!(contrast(ctx.global_style().visuals.weak_text_color(), p.panel) >= 4.5);
+        assert_eq!(ctx.global_style().visuals.window_stroke.width, 2.0);
     }
 
     #[test]

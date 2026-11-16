@@ -17,7 +17,7 @@ impl Editor {
     }
     pub(super) fn reference_actions_menu(&mut self, ui: &mut egui::Ui) {
         if ui.button(tr(ui.ctx(), "ui.add-reference-images")).clicked() {
-            ui.close_menu();
+            ui.close();
             self.import_reference_file(ui.ctx());
         }
         if ui
@@ -29,7 +29,7 @@ impl Editor {
             .clicked()
         {
             self.open_snapshot_import();
-            ui.close_menu();
+            ui.close();
         }
         if self.references.is_empty() {
             return;
@@ -45,21 +45,21 @@ impl Editor {
         self.reference_selected = Some(selected);
         if ui.button(tr(ui.ctx(), "ui.reference-settings")).clicked() {
             self.reference_open = true;
-            ui.close_menu();
+            ui.close();
         }
         if ui
             .button(tr(ui.ctx(), "ui.show-only-this-reference"))
             .clicked()
         {
             self.show_only_reference(selected);
-            ui.close_menu();
+            ui.close();
         }
         if ui
             .button(tr(ui.ctx(), "ui.remove-reference-image"))
             .clicked()
         {
             self.remove_reference(selected);
-            ui.close_menu();
+            ui.close();
         }
     }
     fn show_only_reference(&mut self, selected: usize) {
@@ -141,21 +141,21 @@ impl Editor {
                 if ui.button(tr(ui.ctx(), "ui.reference-settings")).clicked() {
                     self.reference_selected = Some(i);
                     self.reference_open = true;
-                    ui.close_menu();
+                    ui.close();
                 }
                 if ui
                     .button(tr(ui.ctx(), "ui.show-only-this-reference"))
                     .clicked()
                 {
                     self.show_only_reference(i);
-                    ui.close_menu();
+                    ui.close();
                 }
                 if ui
                     .button(tr(ui.ctx(), "ui.remove-reference-image"))
                     .clicked()
                 {
                     remove = Some(i);
-                    ui.close_menu();
+                    ui.close();
                 }
             });
             let eye = Rect::from_min_size(ink.point(w - 72., row_y + 5.), Vec2::splat(28.));

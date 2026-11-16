@@ -11,7 +11,7 @@ pub(super) fn apply_scaling(ctx: &egui::Context, ui_scale: f32, text_scale: Opti
     for font in fonts.values_mut() {
         font.size *= text_scale.unwrap_or(1.0);
     }
-    ctx.style_mut(|style| style.text_styles = fonts);
+    ctx.global_style_mut(|style| style.text_styles = fonts);
 }
 
 // Keep the displayed draft separate from the saved size until interaction ends.
@@ -26,7 +26,8 @@ fn scale_slider(ui: &mut egui::Ui, scale: &mut f32, maximum: f32) -> egui::Respo
             .suffix(" %")
             .step_by(5.0),
     );
-    let editing = ui.input(|input| input.pointer.any_down()) || ui.ctx().wants_keyboard_input();
+    let editing =
+        ui.input(|input| input.pointer.any_down()) || ui.ctx().egui_wants_keyboard_input();
     if editing {
         ui.data_mut(|data| data.insert_temp(id, ScaleDraft(*scale, percent / 100.0)));
     } else {
@@ -151,13 +152,14 @@ impl Editor {
         let mut open = self.preferences_open;
         egui::Window::new(tr(ctx, "ui.settings")).id(egui::Id::new("Settings"))
             .open(&mut open)
-            .default_width(660.0_f32.min(ctx.screen_rect().width() - 32.0))
-            .min_width(320.0_f32.min(ctx.screen_rect().width() - 32.0))
+            .default_width(660.0_f32.min(ctx.content_rect().width() - 32.0))
+            .min_width(320.0_f32.min(ctx.content_rect().width() - 32.0))
             .collapsible(false)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.label(tr(ctx, "language.label"));
                     egui::ComboBox::from_id_salt("settings-language")
+                        .height(440.0)
                         .selected_text(self.language.name(ctx))
                         .show_ui(ui, |ui| {
                             for language in localization::Language::ALL {
@@ -179,7 +181,7 @@ impl Editor {
                 ui.weak(tr(ctx, "language.preview"));
                 ui.separator();
                 egui::ScrollArea::vertical().id_salt("settings-body")
-                    .max_height((ctx.screen_rect().height() - ui.cursor().min.y - 120.0).max(40.0))
+                    .max_height((ctx.content_rect().height() - ui.cursor().min.y - 120.0).max(40.0))
                     .show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
@@ -336,13 +338,13 @@ mod tests {
             let mut scale = 1.0;
             let mut rect = egui::Rect::NOTHING;
             let mut run = |events| {
-                let _ = ctx.run(
+                let _ = ctx.run_ui(
                     egui::RawInput {
                         events,
                         ..Default::default()
                     },
-                    |ctx| {
-                        egui::CentralPanel::default().show(ctx, |ui| {
+                    |root_ui| {
+                        egui::CentralPanel::default().show(root_ui, |ui| {
                             rect = scale_slider(ui, &mut scale, maximum).rect;
                         });
                     },
@@ -368,18 +370,18 @@ mod tests {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
         let project = app.project().to_json().unwrap();
-        let base = ctx.style().text_styles[&egui::TextStyle::Body].size;
+        let base = ctx.global_style().text_styles[&egui::TextStyle::Body].size;
         apply_scaling(&ctx, 1.5, Some(1.25));
         apply_scaling(&ctx, 1.5, Some(1.25));
-        let _ = ctx.run(egui::RawInput::default(), |_| {});
+        let _ = ctx.run_ui(egui::RawInput::default(), |_| {});
         assert_eq!(ctx.zoom_factor(), 1.5);
         assert_eq!(
-            ctx.style().text_styles[&egui::TextStyle::Body].size,
+            ctx.global_style().text_styles[&egui::TextStyle::Body].size,
             base * 1.25
         );
         theme::Theme::HighContrast.apply(&ctx);
         assert_eq!(
-            ctx.style().text_styles[&egui::TextStyle::Body].size,
+            ctx.global_style().text_styles[&egui::TextStyle::Body].size,
             base * 1.25
         );
         app.ui_scale = 1.5;
@@ -394,7 +396,10 @@ mod tests {
             ctx.data(|data| data.get_temp::<ScaleDraft>(draft_id))
                 .is_none()
         );
-        assert_eq!(ctx.style().text_styles[&egui::TextStyle::Body].size, base);
+        assert_eq!(
+            ctx.global_style().text_styles[&egui::TextStyle::Body].size,
+            base
+        );
     }
 
     #[test]
@@ -519,6 +524,33 @@ mod tests {
     }
 
     #[test]
+    fn opening_project_preserves_language_scaling_and_pending_preview() {
+        let dir = tempfile::tempdir().unwrap();
+        let (store, mut saved) = settings::Store::at(dir.path().join("settings.json"));
+        saved.language = localization::Language::Ne;
+        saved.ui_scale = 1.25;
+        saved.text_scale = Some(1.1);
+        let ctx = egui::Context::default();
+        let mut app = Editor::with_settings(&ctx, store, saved);
+        app.install_project(&ctx, app.project()).unwrap();
+        assert_eq!(app.language, localization::Language::Ne);
+        assert_eq!(app.ui_scale, 1.25);
+        assert_eq!(app.text_scale, Some(1.1));
+        assert_eq!(localization::locale(&ctx), "ne");
+
+        app.preview_language(&ctx, localization::Language::Hi);
+        app.install_project(&ctx, app.project()).unwrap();
+        assert_eq!(app.language, localization::Language::Hi);
+        assert_eq!(
+            app.application_settings(&ctx).language,
+            localization::Language::Ne
+        );
+        app.finish_language_preview(&ctx, false);
+        assert_eq!(app.language, localization::Language::Ne);
+        assert_eq!(localization::locale(&ctx), "ne");
+    }
+
+    #[test]
     fn enlarged_settings_keep_recovery_controls_visible() {
         for language in localization::Language::ALL {
             let ctx = egui::Context::default();
@@ -534,7 +566,7 @@ mod tests {
             };
             let mut output = egui::FullOutput::default();
             for _ in 0..5 {
-                output = ctx.run(
+                output = ctx.run_ui(
                     egui::RawInput {
                         screen_rect: Some(screen),
                         ..Default::default()
@@ -574,7 +606,7 @@ mod tests {
                 };
                 let mut output = egui::FullOutput::default();
                 for _ in 0..3 {
-                    output = ctx.run(
+                    output = ctx.run_ui(
                         egui::RawInput {
                             screen_rect: Some(screen),
                             ..Default::default()

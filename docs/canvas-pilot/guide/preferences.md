@@ -27,7 +27,8 @@ Open **Menu → Open all settings…** and use **Language / Langue** at the top.
 Each language shows its native name followed by its name in the current interface
 language, for example **English — Anglais** in French.
 Choose **System default**, **English**, **Français**, **日本語**, **简体中文**,
-**Español**, **Ἑλληνικὴ ἀρχαία** (Ancient Greek), or **Esperanto**. The change takes effect
+**Español**, **Português (Portugal)**, **नेपाली** (Nepali), **ไทย** (Thai),
+**हिन्दी** (Hindi), **toki pona**, **Ἑλληνικὴ ἀρχαία** (Ancient Greek), or **Esperanto**. The change takes effect
 immediately as a preview. Choose **Yes** within 20 seconds to save it for future
 launches. The cancellation button uses your previous language; clicking it, pressing
 Escape or letting the countdown expire restores that language. Closing the app
@@ -36,11 +37,20 @@ without confirming also leaves the previous saved choice intact. In French, the 
 
 System default follows supported system languages, with English fallback. Chinese
 uses Simplified Chinese; Traditional Chinese system locales fall back to English.
+Portuguese uses European Portuguese; Brazilian system locales fall back to English.
+Toki Pona uses Latin spelling. English is the official reference language.
 French interface terminology has been accepted; the other translations remain
-unverified machine translations. Some advanced controls and
+unverified machine translations. Some explanatory text, advanced controls and
 technical diagnostics remain in English, as do device control names. Built-in open
-fonts cover Japanese, Chinese, Latin text and polytonic Greek without installing
+fonts cover Japanese, Chinese, Devanagari, Thai, Latin text and polytonic Greek without installing
 fonts separately. **Files & settings → Font licenses** contains their license.
+
+Nepali and Hindi conjuncts and vowel placement, and Thai stacked marks, use native
+text shaping. These remain preview languages: Thai wrapping has no guaranteed
+dictionary-based word boundaries, and the End key can place the caret past the
+text for Thai characters such as `ำ` that expand into several glyphs. For those
+names, avoid relying on End followed by Backspace; select the whole field to
+replace it. This limitation concerns text editing, not interface labels.
 
 The book's [French quick start](fr/quickstart.md) now follows the accepted French
 interface wording and uses French screenshots. It records its machine-translation

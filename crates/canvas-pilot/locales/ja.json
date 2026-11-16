@@ -474,5 +474,10 @@
   "mask.source": "ソース",
   "mask.origin-help": "レイヤーはレイヤー境界を基準にします。ソースはレイヤーのクロップ／ズーム前の有効な画像を基準にします。切り替えても各辺の割合は保持されます。",
   "mask.source-px": " ソース px",
-  "mask.proportions-help": "マスクの割合は選択した基準に従います。表示レイヤー外のピクセルを隠しても表示は変わりません。"
+  "mask.proportions-help": "マスクの割合は選択した基準に従います。表示レイヤー外のピクセルを隠しても表示は変わりません。",
+  "language.name.pt-PT": "ポルトガル語（ポルトガル）",
+  "language.name.ne": "ネパール語",
+  "language.name.th": "タイ語",
+  "language.name.hi": "ヒンディー語",
+  "language.name.tok": "トキポナ"
 }

@@ -474,5 +474,10 @@
   "mask.source": "Fuente",
   "mask.origin-help": "Capa sigue los límites de la capa. Fuente sigue la imagen utilizable antes del recorte/zoom de la capa. El cambio conserva los porcentajes de los bordes.",
   "mask.source-px": " px de fuente",
-  "mask.proportions-help": "Las proporciones siguen la referencia seleccionada. Ocultar píxeles fuera de la capa visible no tiene efecto."
+  "mask.proportions-help": "Las proporciones siguen la referencia seleccionada. Ocultar píxeles fuera de la capa visible no tiene efecto.",
+  "language.name.pt-PT": "Portugués (Portugal)",
+  "language.name.ne": "Nepalí",
+  "language.name.th": "Tailandés",
+  "language.name.hi": "Hindi",
+  "language.name.tok": "Toki Pona"
 }

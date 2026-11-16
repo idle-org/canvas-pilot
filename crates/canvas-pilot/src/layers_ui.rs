@@ -97,7 +97,7 @@ impl Editor {
         if ui.button(tr(ui.ctx(), "ui.rename-layer")).clicked() {
             self.layer_ui.rename = Some((id, self.layout.layer_info(i).name.clone()));
             self.layer_ui.rename_focus = true;
-            ui.close_menu();
+            ui.close();
         }
         let ids = if self.layout.selection_mask()[i] {
             self.layout
@@ -111,18 +111,18 @@ impl Editor {
         ui.menu_button(tr(ui.ctx(), "ui.move-to-folder"), |ui| {
             if ui.button(tr(ui.ctx(), "ui.no-folder")).clicked() {
                 self.layer_ui.assign = Some((ids.clone(), String::new()));
-                ui.close_menu();
+                ui.close();
             }
             for folder in self.layout.folders() {
                 if ui.button(&folder).clicked() {
                     self.layer_ui.assign = Some((ids.clone(), folder));
-                    ui.close_menu();
+                    ui.close();
                 }
             }
             if ui.button(tr(ui.ctx(), "ui.new-folder")).clicked() {
                 self.layer_ui.folder_rename = Some((None, "New folder".into(), ids.clone()));
                 self.layer_ui.rename_focus = true;
-                ui.close_menu();
+                ui.close();
             }
         });
     }
@@ -145,7 +145,7 @@ impl Editor {
             .clicked()
         {
             self.layer_ui.delete_requested = Some(id);
-            ui.close_menu();
+            ui.close();
         }
     }
     fn delete_context_layer(&mut self) {
@@ -634,7 +634,7 @@ impl Editor {
                 self.device.follow_folder(folder);
                 self.layout.select_folder(folder, false);
                 self.sync();
-                ui.close_menu();
+                ui.close();
             }
             if ui
                 .button(tr(ui.ctx(), "ui.use-folder-for-device-transfers"))
@@ -642,12 +642,12 @@ impl Editor {
             {
                 self.device
                     .set_scope(device_ui::TransferScope::Folder(folder.into()));
-                ui.close_menu();
+                ui.close();
             }
             if ui.button(tr(ui.ctx(), "ui.rename-folder")).clicked() {
                 self.layer_ui.folder_rename = Some((Some(folder.into()), folder.into(), vec![]));
                 self.layer_ui.rename_focus = true;
-                ui.close_menu();
+                ui.close();
             }
             for (label, visible, lock) in [
                 (
@@ -668,7 +668,7 @@ impl Editor {
                 if ui.button(label).clicked() {
                     self.layout.set_folder_state(folder, visible, lock);
                     self.sync();
-                    ui.close_menu();
+                    ui.close();
                 }
             }
             let folders = self.layout.folders();
@@ -699,7 +699,7 @@ impl Editor {
                     };
                     self.layer_ui.folder_move =
                         Some((folder.into(), self.layout.layer_info(index).id, above));
-                    ui.close_menu();
+                    ui.close();
                 }
             }
             if ui
@@ -712,7 +712,7 @@ impl Editor {
                 .clicked()
             {
                 self.layer_ui.folder_remove = Some(folder.into());
-                ui.close_menu();
+                ui.close();
             }
         });
         row.on_hover_text(tr(ui.ctx(), "ui.click-select-contents-shift-click-toggle-selection-double-click-rename-drag-reorder-f"));
@@ -913,14 +913,14 @@ mod tests {
             id: usize,
             events: Vec<egui::Event>,
         ) -> egui::FullOutput {
-            ctx.run(
+            ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 900.0))),
                     events,
                     ..Default::default()
                 },
-                |ctx| {
-                    egui::CentralPanel::default().show(ctx, |ui| {
+                |root_ui| {
+                    egui::CentralPanel::default().show(root_ui, |ui| {
                         if viewport {
                             app.layer_ui.context_layer = Some(id);
                             app.layer_context_menu(ui);
@@ -1164,6 +1164,7 @@ mod tests {
             let mut app = Editor::default();
             app.manage_layers();
             frame(&mut app, &ctx, vec![]);
+            frame(&mut app, &ctx, vec![]);
             let before = app.layout.layer_info(1).clone();
             let field_id =
                 egui::Id::new((if enter { "layer-name" } else { "layer-folder" }, before.id));
@@ -1189,6 +1190,10 @@ mod tests {
                 vec![egui::Event::PointerMoved(pos), mouse(pos, true)]
             };
             let output = frame(&mut app, &ctx, events);
+            if !enter {
+                frame(&mut app, &ctx, vec![mouse(Pos2::new(20.0, 15.0), false)]);
+                frame(&mut app, &ctx, vec![]);
+            }
             assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Text(t) if t.galley.text() == "Apply names & folders")));
             if enter {
                 assert_eq!(app.layout.layer_info(1).name, "Camera");
@@ -1330,7 +1335,8 @@ mod tests {
         frame(app, ctx, vec![]);
         let start = ctx.read_response(source).unwrap().rect.center();
         let end_rect = ctx.read_response(target).unwrap().rect;
-        let end = end_rect.center() + Vec2::new(0.0, if below { 10.0 } else { -10.0 });
+        let delta = (end_rect.height() / 4.0).min(10.0);
+        let end = end_rect.center() + Vec2::new(0.0, if below { delta } else { -delta });
         frame(
             app,
             ctx,

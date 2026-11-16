@@ -26,14 +26,14 @@ fn main() -> eframe::Result {
             ..Default::default()
         },
         Box::new(|cc| {
-            let mut style = (*cc.egui_ctx.style()).clone();
+            let mut style = (*cc.egui_ctx.global_style()).clone();
             style.visuals = egui::Visuals::dark();
             style.visuals.extreme_bg_color = FIELD;
             style.visuals.selection.bg_fill = PURPLE;
             style.visuals.widgets.inactive.bg_fill = FIELD;
             style.visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, LINE);
             style.spacing.item_spacing = Vec2::new(12.0, 10.0);
-            cc.egui_ctx.set_style(style);
+            cc.egui_ctx.set_global_style(style);
             Ok(Box::new(gui::Editor::with_saved_settings(&cc.egui_ctx)))
         }),
     )

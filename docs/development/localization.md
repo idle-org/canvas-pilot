@@ -9,7 +9,7 @@ requested as a small first step. French interface terminology was accepted on
 2026-11-16; the chapter now follows those French control labels and uses three
 fresh French screenshots. English remains authoritative. This records approval
 of UI wording, not an independent editorial review of the adapted chapter.
-The application also has six translated UI previews (see below). The rest of the manual remains English, with explicit fallback links.
+The application also has eleven translated UI previews (see below). The rest of the manual remains English, with explicit fallback links.
 
 For this one-chapter pilot, use translated Markdown in `guide/fr/` and the existing
 mdBook build. The summary and reciprocal chapter links expose the language choice;
@@ -45,8 +45,8 @@ The accepted French interface vocabulary does not imply review of other language
 
 ## Application implementation
 
-The desktop UI uses [rust-i18n](https://docs.rs/rust-i18n/) with embedded English, French, Japanese, Simplified Chinese, Spanish, Ancient Greek
-and Esperanto JSON catalogs in `crates/canvas-pilot/locales/`. `sys-locale` obtains the desktop
+The desktop UI uses [rust-i18n](https://docs.rs/rust-i18n/) with embedded English, French, Japanese, Simplified Chinese, Spanish, Ancient Greek,
+Esperanto, European Portuguese, Nepali, Thai, Hindi and Toki Pona JSON catalogs in `crates/canvas-pilot/locales/`. `sys-locale` obtains the desktop
 language. There is no custom translation parser, language-file loader, lookup cache
 or network translation service. The lockfile pins the dependency versions.
 
@@ -91,11 +91,62 @@ strings, both font families and the selected CJK face. Greek catalog text uses N
 precomposed accents for this renderer. These checks establish glyph coverage, not
 human translation review or general support for all complex scripts.
 
-Nepali and Thai were considered but are not selectable: egui 0.31's per-character
-layout does not perform the shaping/mark positioning they require. Revisit them
-with a maintained shaping-capable renderer, including conjuncts, reordered vowels,
-combining marks, cursor movement and selection tests. Do not fake shaping by
-rewriting Unicode text, mapping words into private-use glyphs, or romanizing labels.
+The application now uses egui/eframe 0.35, the smallest released upgrade with
+HarfRust shaping. The 0.37 API migration was evaluated, but is unnecessary for
+these script labels; 0.35 retains the existing bounded file-import representation.
+The migration adopts root-Ui panels, explicit popup close behavior and the updated
+font/layout APIs. Clipboard and links remain enabled by eframe 0.35's integration.
+The dependency requires Rust 1.92 or newer.
+
+Full Noto Sans Devanagari 2.007 and Noto Sans Thai 2.002 are embedded alongside the
+existing fonts, with provenance and OFL notices. No OS font installation, private-use
+encoding, romanization or pre-shaped Unicode rewriting is needed. Portuguese is
+European Portuguese (`pt-PT`); Brazilian system locales fall back to English.
+Toki Pona uses Latin spelling; sitelen pona is outside this implementation.
+Settings v12 adds `pt-PT`, `ne`, `th`, `hi`, `tok`, preserving v11 preferences and
+rejecting unknown or out-of-version values before migration.
+
+The new catalogs translate everyday controls, language confirmation, common editing
+help and file-replacement warnings. Some longer explanations and advanced/device
+controls deliberately remain in English, as do uncatalogued diagnostics. Catalog
+key parity does **not** imply translation completeness or linguistic review.
+
+### Complex-script validation
+
+`cargo run --example text_shaping` is an explicitly invoked, offline diagnostic.
+It shares the application's fonts/catalogs and provides labels, narrow wrapping,
+mixed scripts and editable samples, without user settings or device access.
+
+Validation for v0.9.6 includes actual egui conjunct formation (`क्ष`), pre-base
+vowel placement (`कि`), Thai mark stacking (`กิ้`), wrapping, Unicode paste,
+selection, copy and cursor traversal. The full language-switch regression uses all
+choices and preserves project bytes, drafts and clipboard geometry. Versioned
+settings tests cover old-language rejection and migration without preference loss.
+Project opening/recovery preserves language, display scales and pending confirmation;
+the native recovery walkthrough exposed a reset that now has regression coverage.
+Native X11 screenshots of Nepali and the typography probe were compared visually
+against Pango using the same installed Noto fonts. This is rendering evidence,
+not native-speaker approval. Scripted native mouse clicks opened Settings, switched
+from Nepali to Thai, confirmed the bilingual prompt and verified the saved choice.
+Temporary screenshots and profiles stay outside Git. The final default suite passed
+440 tests (two manual checks ignored); all-features and restricted suites each
+passed 434 (one manual check ignored). Formatting, both Clippy configurations,
+rustdoc with warnings denied and the pinned manual build passed. Whole-application
+line coverage was 91.41%, above the 75% floor.
+
+Known remaining renderer limits:
+
+- In egui 0.35, Thai `ำ` can expand into extra glyphs while cursor bookkeeping
+  still assumes one glyph per character. End followed by Backspace can leave the
+  last character unchanged. Plain paste and select-all/copy preserve the original
+  Unicode; translated labels render correctly. Do not claim fully correct Thai
+  text editing or fix this by rewriting user content. The diagnostic includes
+  `น้ำ` to keep the issue reproducible.
+- Thai wrapping is not verified against dictionary-based word segmentation.
+- Cursor movement can step through code points within a shaped cluster; testing
+  does not establish native-quality input-method composition on all operating
+  systems. Native IMEs and linguistic review remain manual acceptance.
+
 All available languages are normal choices, without joke labels or special modes.
 
 ### Operator terminology and content boundaries
@@ -127,7 +178,7 @@ Apply the same principle to other adapters' native terminology.
   concatenate grammatical sentence fragments. Numeric summaries should avoid
   English-only singular/plural assumptions; evaluate plural-aware messages before
   adding inflected count-dependent wording.
-- Update all seven catalogs together. English is the fallback; catalog tests check key and
+- Update all twelve catalogs together. English is the fallback; catalog tests check key and
   placeholder parity and direct UI references. Do not translate serialization keys,
   protocol values, keyboard shortcut identities, project names, user input or IDs.
 - Give windows and controls stable IDs separate from translated display text.
@@ -146,7 +197,8 @@ Apply the same principle to other adapters' native terminology.
   The expanded catalogs also passed native Linux visual checks for Japanese,
   Chinese, Spanish, Esperanto and polytonic Greek at 1000 × 720. Automated switching
   preserves serialized project and clipboard data, settings persist all language
-  choices, and whole-application coverage passed at 91.01%.
+  choices. That earlier implementation recorded 91.01% whole-application coverage;
+  current validation is recorded above.
 - Technical validation does not constitute human linguistic review. Keep preview
   status until terminology and actual workflows have been reviewed.
 

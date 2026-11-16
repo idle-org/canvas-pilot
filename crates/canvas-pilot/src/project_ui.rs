@@ -170,6 +170,10 @@ impl Editor {
             device: std::mem::take(&mut self.device),
             capture,
             settings: std::mem::take(&mut self.settings),
+            language: self.language,
+            language_preview: self.language_preview.take(),
+            ui_scale: self.ui_scale,
+            text_scale: self.text_scale,
             recovery: std::mem::take(&mut self.recovery),
             snapping: project.workspace.snapping,
             resize_mode: project.workspace.resize_mode,
@@ -345,7 +349,7 @@ impl Editor {
             .clicked()
         {
             self.files.new_requested = true;
-            ui.close_menu();
+            ui.close();
         }
         if let Some(error) = &self.recovery.error {
             ui.colored_label(ui.visuals().error_fg_color, error);
@@ -370,7 +374,7 @@ impl Editor {
         }
         ui.small(self.manual_save_age());
         if ui.button(tr(ui.ctx(), "ui.open-project")).clicked() {
-            ui.close_menu();
+            ui.close();
             if let Some(path) = rfd::FileDialog::new()
                 .add_filter("Canvas Pilot project", &["json"])
                 .pick_file()
@@ -382,7 +386,7 @@ impl Editor {
             .button(tr(ui.ctx(), "ui.restore-parameters-from-export"))
             .clicked()
         {
-            ui.close_menu();
+            ui.close();
             if let Some(path) = rfd::FileDialog::new()
                 .add_filter(
                     "Exports with Canvas Pilot parameters",
@@ -396,7 +400,7 @@ impl Editor {
             }
         }
         if ui.button(tr(ui.ctx(), "ui.save-project")).clicked() {
-            ui.close_menu();
+            ui.close();
             self.save_project_as();
         }
         ui.small(tr(ui.ctx(), "ui.saves-applied-values-and-reference-images"));
@@ -416,7 +420,7 @@ impl Editor {
             .clicked()
         {
             self.open_device_export();
-            ui.close_menu();
+            ui.close();
         }
         ui.menu_button(tr(ui.ctx(), "ui.export"), |ui| self.export_menu(ui));
     }
@@ -428,7 +432,7 @@ impl Editor {
         ui.separator();
         if ui.button(tr(ui.ctx(), "ui.export-layers")).clicked() {
             self.files.export_open = true;
-            ui.close_menu();
+            ui.close();
         }
     }
     fn export_layer_ids(&self) -> Vec<usize> {
@@ -725,8 +729,8 @@ mod tests {
         for format in canvas_pilot::interchange::Codec::available() {
             app.files.exchange_options.extra_parameters = true;
             app.files.exchange_options.placeholders = true;
-            let output = ctx.run(egui::RawInput::default(), |ctx| {
-                egui::CentralPanel::default().show(ctx, |ui| app.exchange_menu(ui, format));
+            let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+                egui::CentralPanel::default().show(root_ui, |ui| app.exchange_menu(ui, format));
             });
             assert_eq!(
                 app.files.exchange_options.extra_parameters,

@@ -428,7 +428,7 @@ mod tests {
         let ctx = egui::Context::default();
         let mut edits = InputEdits::default();
         let mut draw = |edits: &mut InputEdits, events| {
-            ctx.run(
+            ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(egui::Rect::from_min_size(
                         egui::Pos2::ZERO,
@@ -437,9 +437,10 @@ mod tests {
                     events,
                     ..Default::default()
                 },
-                |ctx| {
-                    egui::CentralPanel::default()
-                        .show(ctx, |ui| edits.show(ui, Some(&snapshot), Some(&link), 1));
+                |root_ui| {
+                    egui::CentralPanel::default().show(root_ui, |ui| {
+                        edits.show(ui, Some(&snapshot), Some(&link), 1)
+                    });
                 },
             )
         };

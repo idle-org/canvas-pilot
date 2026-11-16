@@ -1,5 +1,7 @@
 Noto Sans: Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
 Noto Sans CJK: Copyright 2014-2021 Adobe (http://www.adobe.com/).
+Noto Sans Devanagari: Copyright 2022 The Noto Project Authors (https://github.com/notofonts/devanagari)
+Noto Sans Thai: Copyright 2022 The Noto Project Authors (https://github.com/notofonts/thai)
 
 This Font Software is licensed under the SIL Open Font License,
 Version 1.1.

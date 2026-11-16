@@ -107,6 +107,8 @@ Publication is pending an issue-enabled token; the current token lacks
   tasks and acceptance criteria live there. A French quick-start pilot is available
   as an unverified machine translation; the rest of the book remains English. The application has a language selector with system detection, English and
   French/Japanese/Simplified Chinese/Spanish/Ancient Greek/Esperanto previews,
+  plus European Portuguese/Nepali/Thai/Hindi/Toki Pona and native text shaping
+  (see localization notes for remaining Thai editing limits),
   plus embedded Noto fonts for Latin, CJK and polytonic Greek. Human review,
   remaining advanced controls/diagnostics and broader localization are pending.
 

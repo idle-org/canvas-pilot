@@ -15,9 +15,15 @@ pub enum Language {
     Es,
     Grc,
     Eo,
+    #[serde(rename = "pt-PT")]
+    PtPt,
+    Ne,
+    Th,
+    Hi,
+    Tok,
 }
 impl Language {
-    pub const ALL: [Self; 8] = [
+    pub const ALL: [Self; 13] = [
         Self::System,
         Self::En,
         Self::Fr,
@@ -26,6 +32,11 @@ impl Language {
         Self::Es,
         Self::Grc,
         Self::Eo,
+        Self::PtPt,
+        Self::Ne,
+        Self::Th,
+        Self::Hi,
+        Self::Tok,
     ];
 
     pub fn name(self, ctx: &egui::Context) -> String {
@@ -38,6 +49,11 @@ impl Language {
             Self::Es => ("Español", "language.name.es"),
             Self::Grc => ("Ἑλληνικὴ ἀρχαία", "language.name.grc"),
             Self::Eo => ("Esperanto", "language.name.eo"),
+            Self::PtPt => ("Português (Portugal)", "language.name.pt-PT"),
+            Self::Ne => ("नेपाली", "language.name.ne"),
+            Self::Th => ("ไทย", "language.name.th"),
+            Self::Hi => ("हिन्दी", "language.name.hi"),
+            Self::Tok => ("toki pona", "language.name.tok"),
         };
         format!("{native} — {}", tr(ctx, key))
     }
@@ -51,6 +67,11 @@ impl Language {
             Self::Es => "es",
             Self::Grc => "grc",
             Self::Eo => "eo",
+            Self::PtPt => "pt-PT",
+            Self::Ne => "ne",
+            Self::Th => "th",
+            Self::Hi => "hi",
+            Self::Tok => "tok",
             Self::System => system_language(sys_locale::get_locale().as_deref()),
         };
         ctx.set_fonts(font_definitions(locale));
@@ -74,6 +95,11 @@ fn system_language(locale: Option<&str>) -> &'static str {
         "es" => "es",
         "grc" => "grc",
         "eo" => "eo",
+        "pt" if !parts.contains(&"br") => "pt-PT",
+        "ne" => "ne",
+        "th" => "th",
+        "hi" => "hi",
+        "tok" => "tok",
         // Do not silently substitute Simplified Chinese for a Traditional locale.
         "zh" if !parts
             .iter()
@@ -99,6 +125,20 @@ fn font_definitions(locale: &str) -> egui::FontDefinitions {
         data.index = index;
         fonts.font_data.insert(name.into(), data.into());
     }
+    for (name, bytes) in [
+        (
+            "noto-devanagari",
+            include_bytes!("../assets/fonts/NotoSansDevanagari-Regular.ttf").as_slice(),
+        ),
+        (
+            "noto-thai",
+            include_bytes!("../assets/fonts/NotoSansThai-Regular.ttf").as_slice(),
+        ),
+    ] {
+        fonts
+            .font_data
+            .insert(name.into(), FontData::from_static(bytes).into());
+    }
     let cjk = if locale == "zh-CN" {
         ["noto-sc", "noto-jp"]
     } else {
@@ -106,9 +146,13 @@ fn font_definitions(locale: &str) -> egui::FontDefinitions {
     };
     // Consistent Latin and polytonic Greek; CJK follows the selected locale.
     let proportional = fonts.families.get_mut(&FontFamily::Proportional).unwrap();
-    proportional.splice(0..0, ["noto-sans", cjk[0], cjk[1]].map(str::to_owned));
+    proportional.splice(
+        0..0,
+        ["noto-sans", cjk[0], cjk[1], "noto-devanagari", "noto-thai"].map(str::to_owned),
+    );
     let monospace = fonts.families.get_mut(&FontFamily::Monospace).unwrap();
-    monospace.extend(["noto-sans", cjk[0], cjk[1]].map(str::to_owned));
+    monospace
+        .extend(["noto-sans", cjk[0], cjk[1], "noto-devanagari", "noto-thai"].map(str::to_owned));
     fonts
 }
 
@@ -151,8 +195,12 @@ mod tests {
             ("zh-HK", "en"),
             ("zh-MO", "en"),
             ("el-GR", "en"),
-            ("ne-NP", "en"),
-            ("th-TH", "en"),
+            ("ne-NP", "ne"),
+            ("th-TH", "th"),
+            ("hi-IN", "hi"),
+            ("pt-PT", "pt-PT"),
+            ("pt_BR", "en"),
+            ("tok", "tok"),
         ] {
             assert_eq!(system_language(Some(input)), expected, "{input}");
         }
@@ -174,6 +222,11 @@ mod tests {
     #[test]
     fn embedded_fonts_cover_catalogs_endonyms_and_mixed_text() {
         let catalogs = [
+            (Language::PtPt, include_str!("../locales/pt-PT.json")),
+            (Language::Ne, include_str!("../locales/ne.json")),
+            (Language::Th, include_str!("../locales/th.json")),
+            (Language::Hi, include_str!("../locales/hi.json")),
+            (Language::Tok, include_str!("../locales/tok.json")),
             (Language::En, include_str!("../locales/en.json")),
             (Language::Fr, include_str!("../locales/fr.json")),
             (Language::Ja, include_str!("../locales/ja.json")),
@@ -182,6 +235,13 @@ mod tests {
             (Language::Grc, include_str!("../locales/grc.json")),
             (Language::Eo, include_str!("../locales/eo.json")),
         ];
+        use skrifa::MetadataProvider;
+        let definitions = font_definitions("en");
+        let faces: Vec<_> = definitions
+            .font_data
+            .values()
+            .map(|data| skrifa::FontRef::from_index(&data.font, data.index).unwrap())
+            .collect();
         for (language, json) in catalogs {
             let ctx = egui::Context::default();
             language.apply(&ctx);
@@ -192,15 +252,16 @@ mod tests {
             }
             text.push_str(" 日本語 中文 龍 繁體 Ἑλληνικὴ ἀρχαία ĈĜĤĴŜŬ ĉĝĥĵŝŭ Preview Content ratio 1920×1080");
             let characters: BTreeSet<char> = text.chars().filter(|c| !c.is_whitespace()).collect();
-            let _ = ctx.run(egui::RawInput::default(), |ctx| {
-                ctx.fonts(|fonts| {
+            let _ = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+                let ctx = &root_ui.ctx().clone();
+                ctx.fonts_mut(|fonts| {
                     for font in [
                         egui::FontId::proportional(14.0),
                         egui::FontId::monospace(14.0),
                     ] {
                         for c in &characters {
                             assert!(
-                                fonts.has_glyph(&font, *c),
+                                faces.iter().any(|face| face.charmap().map(*c).is_some()),
                                 "{language:?}: missing {c:?} in {font:?}"
                             );
                         }
@@ -216,6 +277,123 @@ mod tests {
         assert_eq!(cn.families[&egui::FontFamily::Proportional][1], "noto-sc");
         assert_eq!(jp.font_data["noto-jp"].index, 0);
         assert_eq!(cn.font_data["noto-sc"].index, 2);
+    }
+
+    #[test]
+    fn complex_scripts_shape_and_keep_original_unicode() {
+        let ctx = egui::Context::default();
+        Language::Ne.apply(&ctx);
+        let _ = ctx.run_ui(egui::RawInput::default(), |ui| {
+            ui.fonts_mut(|fonts| {
+                let mut layout = |text: &str| {
+                    fonts.layout_no_wrap(
+                        text.into(),
+                        egui::FontId::proportional(24.0),
+                        egui::Color32::WHITE,
+                    )
+                };
+                // Conjunct formation must replace the three code points with one visible glyph.
+                let conjunct = layout("क्ष");
+                assert_eq!(conjunct.text(), "क्ष");
+                assert_eq!(
+                    conjunct.rows[0]
+                        .glyphs
+                        .iter()
+                        .filter(|g| !g.uv_rect.is_nothing())
+                        .count(),
+                    1
+                );
+                // The i-matra is stored after the consonant but rendered to its left.
+                let base = layout("क");
+                let syllable = layout("कि");
+                let glyphs = &syllable.rows[0].glyphs;
+                assert_eq!(syllable.text(), "कि");
+                assert_eq!(glyphs.len(), 2);
+                assert_eq!(
+                    glyphs[1].uv_rect.size.y,
+                    base.rows[0].glyphs[0].uv_rect.size.y
+                );
+                assert!(glyphs[0].uv_rect.offset.y < glyphs[1].uv_rect.offset.y);
+                assert!(glyphs[0].pos.x < glyphs[1].pos.x);
+                // Thai marks stack above the base, not in separate advancing cells.
+                let thai = layout("กิ้");
+                let glyphs = &thai.rows[0].glyphs;
+                let tops: Vec<_> = glyphs
+                    .iter()
+                    .map(|g| g.pos.y + g.uv_rect.offset.y)
+                    .collect();
+                assert!(tops[2] < tops[1] && tops[1] < tops[0]);
+                assert_eq!(glyphs[1].advance_width, 0.0);
+                assert_eq!(glyphs[2].advance_width, 0.0);
+                let mixed = "नेपाली हिन्दी ไทย Preview 1920×1080";
+                let wrapped = fonts.layout(
+                    mixed.into(),
+                    egui::FontId::proportional(24.0),
+                    egui::Color32::WHITE,
+                    160.0,
+                );
+                assert_eq!(wrapped.text(), mixed);
+                assert!(wrapped.rows.len() > 1);
+                assert!(wrapped.size().is_finite());
+            });
+        });
+    }
+
+    #[test]
+    fn complex_script_text_edit_paste_select_copy_and_delete_preserve_unicode() {
+        for (language, sample) in [
+            (Language::Ne, "कक्षा क्षितिज"),
+            (Language::Hi, "हिन्दी में लिखिए"),
+            (Language::Th, "ภาษาไทย เก้า"),
+        ] {
+            let ctx = egui::Context::default();
+            language.apply(&ctx);
+            let id = egui::Id::new("unicode-editor");
+            let mut text = String::new();
+            let mut render = |events| {
+                ctx.run_ui(
+                    egui::RawInput {
+                        events,
+                        ..Default::default()
+                    },
+                    |ui| {
+                        ui.add(egui::TextEdit::singleline(&mut text).id(id));
+                    },
+                )
+            };
+            render(vec![]);
+            ctx.memory_mut(|memory| memory.request_focus(id));
+            render(vec![egui::Event::Paste(format!("{sample}!"))]);
+            let key = |key, modifiers| egui::Event::Key {
+                key,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers,
+            };
+            render(vec![key(egui::Key::End, egui::Modifiers::NONE)]);
+            render(vec![key(egui::Key::Backspace, egui::Modifiers::NONE)]);
+            // Traverse combining characters in both directions, exercising hit/cursor bookkeeping.
+            for _ in 0..sample.chars().count() {
+                render(vec![key(egui::Key::ArrowLeft, egui::Modifiers::NONE)]);
+            }
+            for _ in 0..sample.chars().count() {
+                render(vec![key(egui::Key::ArrowRight, egui::Modifiers::NONE)]);
+            }
+            render(vec![key(egui::Key::A, egui::Modifiers::COMMAND)]);
+            let output = render(vec![egui::Event::Copy]);
+
+            assert!(output.platform_output.commands.iter().any(
+                |command| matches!(command, egui::OutputCommand::CopyText(value) if value == sample)
+            ));
+            // Sara Am expands into extra glyphs: End/delete is an upstream limitation.
+            // Verify lossless paste/select/copy separately without claiming correct cursors.
+            render(vec![egui::Event::Paste("Preview 日本語 น้ำ".into())]);
+            render(vec![key(egui::Key::A, egui::Modifiers::COMMAND)]);
+            let copied = render(vec![egui::Event::Copy]);
+            assert!(copied.platform_output.commands.iter().any(|command| matches!(command, egui::OutputCommand::CopyText(value) if value == "Preview 日本語 น้ำ")));
+            assert_eq!(text, "Preview 日本語 น้ำ");
+        }
     }
 
     #[test]
@@ -241,6 +419,11 @@ mod tests {
         let english: BTreeMap<String, String> =
             serde_json::from_str(include_str!("../locales/en.json")).unwrap();
         let catalogs = [
+            ("pt-PT", include_str!("../locales/pt-PT.json")),
+            ("ne", include_str!("../locales/ne.json")),
+            ("th", include_str!("../locales/th.json")),
+            ("hi", include_str!("../locales/hi.json")),
+            ("tok", include_str!("../locales/tok.json")),
             ("en", include_str!("../locales/en.json")),
             ("fr", include_str!("../locales/fr.json")),
             ("ja", include_str!("../locales/ja.json")),

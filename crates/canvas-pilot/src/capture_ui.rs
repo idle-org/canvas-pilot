@@ -16,7 +16,7 @@ fn input_label(inputs: &[device_capture::Input], selected: u32) -> String {
 }
 fn input_picker(
     ui: &mut egui::Ui,
-    salt: impl std::hash::Hash,
+    salt: impl std::hash::Hash + std::fmt::Debug,
     selected: &mut u32,
     inputs: &[device_capture::Input],
     show_empty: &mut bool,
@@ -38,7 +38,7 @@ fn input_picker(
                     .selectable_value(selected, input.id, input_label(inputs, input.id))
                     .clicked()
                 {
-                    ui.memory_mut(|memory| memory.close_popup());
+                    ui.close();
                 }
             }
             if !any {
@@ -1435,7 +1435,7 @@ mod tests {
                     paused: false,
                     texture: Some(ctx.load_texture(
                         format!("Input {input}"),
-                        egui::ColorImage::new([2, 2], Color32::RED),
+                        egui::ColorImage::filled([2, 2], Color32::RED),
                         Default::default(),
                     )),
                     automatic: true,
@@ -1482,7 +1482,7 @@ mod tests {
         let id = app.layout.layer_info(i).id;
         let texture = ctx.load_texture(
             "test preview",
-            egui::ColorImage::new([2, 2], Color32::RED),
+            egui::ColorImage::filled([2, 2], Color32::RED),
             egui::TextureOptions::default(),
         );
         app.capture.layers.insert(

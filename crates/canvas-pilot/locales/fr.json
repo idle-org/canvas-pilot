@@ -474,5 +474,10 @@
   "mask.source": "Source",
   "mask.origin-help": "Calque suit les limites du calque. Source suit l’image utilisable avant le recadrage/zoom du calque. Le changement conserve les pourcentages des bords.",
   "mask.source-px": " px source",
-  "mask.proportions-help": "Les proportions du masque suivent la référence choisie. Masquer des pixels hors du calque visible n’a aucun effet."
+  "mask.proportions-help": "Les proportions du masque suivent la référence choisie. Masquer des pixels hors du calque visible n’a aucun effet.",
+  "language.name.pt-PT": "Portugais (Portugal)",
+  "language.name.ne": "Népalais",
+  "language.name.th": "Thaï",
+  "language.name.hi": "Hindi",
+  "language.name.tok": "Toki Pona"
 }

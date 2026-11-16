@@ -392,7 +392,7 @@ impl Editor {
                         d.source_id = count;
                         d.source = Default::default();
                         d.input_size = d.source.input().unwrap();
-                        ui.close_menu();
+                        ui.close();
                     }
                 });
             });
@@ -900,7 +900,43 @@ mod tests {
     use super::super::tests::{click_text, frame, mouse};
     use super::*;
     fn enter_value(app: &mut Editor, ctx: &egui::Context, label: &str, text: &str) {
-        click_text(app, ctx, label);
+        // DragValue renders prefix, number and suffix as separate atoms in egui 0.35.
+        frame(app, ctx, vec![]);
+        let output = frame(app, ctx, vec![]);
+        let texts: Vec<_> = output
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::Shape::Text(t) => Some(t),
+                _ => None,
+            })
+            .collect();
+        let pos = texts
+            .iter()
+            .enumerate()
+            .rev()
+            .find_map(|(i, t)| {
+                let mut joined = String::new();
+                for end in i..texts.len().min(i + 3) {
+                    joined.push_str(texts[end].galley.text());
+                    if joined == label {
+                        let number = texts[i..=end]
+                            .iter()
+                            .find(|t| t.galley.text().trim().parse::<f64>().is_ok())
+                            .copied()
+                            .unwrap_or(t);
+                        return Some(number.pos + number.galley.size() / 2.0);
+                    }
+                }
+                None
+            })
+            .unwrap_or_else(|| panic!("Numeric control not rendered: {label}"));
+        frame(
+            app,
+            ctx,
+            vec![egui::Event::PointerMoved(pos), mouse(pos, true)],
+        );
+        frame(app, ctx, vec![mouse(pos, false)]);
         frame(app, ctx, vec![egui::Event::Paste(text.into())]);
         frame(
             app,
@@ -1081,14 +1117,19 @@ mod tests {
             0.0
         );
         let output = frame(&mut app, &ctx, vec![]);
-        let start = output
+        let texts: Vec<_> = output
             .shapes
             .iter()
-            .find_map(|shape| match &shape.shape {
-                egui::Shape::Text(t) if t.galley.text() == "R 20.0" => {
-                    Some(t.pos + Vec2::new(12.0, 5.0))
-                }
+            .filter_map(|shape| match &shape.shape {
+                egui::Shape::Text(t) => Some(t),
                 _ => None,
+            })
+            .collect();
+        let start = texts
+            .windows(2)
+            .find_map(|pair| {
+                (pair[0].galley.text() == "R " && pair[1].galley.text() == "20.0")
+                    .then(|| pair[1].pos + pair[1].galley.size() / 2.0)
             })
             .unwrap();
         let end = start - Vec2::new(100.0, 0.0);
@@ -1550,7 +1591,8 @@ mod preview_paint_tests {
             bottom: 100.,
         };
         for preview in [Some((egui::TextureId::User(91), 0.35)), None] {
-            let output = ctx.run(egui::RawInput::default(), |ctx| {
+            let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+                let ctx = &root_ui.ctx().clone();
                 let p = ctx.layer_painter(egui::LayerId::background());
                 paint_source(&p, rect, source, crop, preview);
             });

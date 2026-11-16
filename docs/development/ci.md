@@ -22,6 +22,8 @@ Coverage uses default features and includes the GUI and vendor format codecs.
 are checked separately. The floor in `coverage.toml` applies to the whole application.
 CI pins cargo-llvm-cov 0.9.1 and mdBook via `docs/manuals/mdbook-version`.
 
+The native GUI dependency requires Rust 1.92 or newer.
+
 The worker requires writable mounts `/mnt/assets/coverage` and `/mnt/books` plus
 `rsync`. Cleanup archives exactly three SVG badges and publishes them only to
 `/mnt/assets/coverage/idle-org/canvas-pilot/main/`. The manual publisher updates

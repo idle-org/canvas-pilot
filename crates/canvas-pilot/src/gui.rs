@@ -471,8 +471,9 @@ impl Editor {
                 .events
                 .iter()
                 .any(|e| matches!(e, egui::Event::PointerButton { pressed: true, .. }))
-            && !ctx.wants_keyboard_input()
-            && ctx.memory(|m| m.focused().is_none() && !m.any_popup_open())
+            && !ctx.egui_wants_keyboard_input()
+            && ctx.memory(|m| m.focused().is_none())
+            && !ctx.any_popup_open()
             && self.format_draft.is_none()
             && self.output_draft.is_none()
             && self.paste.is_none()
@@ -520,7 +521,7 @@ impl Editor {
             self.alt_mask = self.edit_content
                 && !self.edit_mask
                 && self.navigation_tool == NavigationTool::Select
-                && !ctx.wants_keyboard_input()
+                && !ctx.egui_wants_keyboard_input()
                 && self
                     .layout
                     .selected()
@@ -1158,7 +1159,7 @@ impl Editor {
             });
             return;
         }
-        if ctx.wants_keyboard_input() {
+        if ctx.egui_wants_keyboard_input() {
             return;
         }
         let paste = ctx.input_mut(|i| {
@@ -1324,7 +1325,7 @@ impl Editor {
                 ui.add(egui::TextEdit::multiline(&mut p.text).desired_rows(4).desired_width(f32::INFINITY));
                 if ui.button(tr(ui.ctx(), "ui.review-pasted-values")).clicked() { p.parse(); }
             }
-            egui::ScrollArea::vertical().id_salt("import-review").max_height((ctx.screen_rect().height()-260.0).max(150.0)).show(ui,|ui| {
+            egui::ScrollArea::vertical().id_salt("import-review").max_height((ctx.content_rect().height()-260.0).max(150.0)).show(ui,|ui| {
                 if !p.error.is_empty() {ui.colored_label(palette.amber,&p.error);}
                 if p.shapes.is_empty() {return;}
                 ui.small(format!("{} detected items · review mappings before importing", p.shapes.len()));
@@ -1935,19 +1936,10 @@ impl Editor {
             palette.muted,
             Stroke::NONE,
         ));
-        let popup = ui.id().with("measurement-points");
-        if button.clicked() {
-            ui.memory_mut(|m| m.toggle_popup(popup));
-        }
-        egui::popup_below_widget(
-            ui,
-            popup,
-            &button,
-            egui::PopupCloseBehavior::CloseOnClickOutside,
-            |ui| {
-                self.measurement_points_menu(ui);
-            },
-        );
+        egui::Popup::menu(&button)
+            .id(ui.id().with("measurement-points"))
+            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
+            .show(|ui| self.measurement_points_menu(ui));
         let (horizontal, vertical) = match self.corner {
             PositionPoint::Center => ("position.center-x", "position.center-y"),
             PositionPoint::TopLeft => ("position.left", "position.top"),
@@ -2155,7 +2147,7 @@ impl Editor {
                     match result {
                         Ok(()) => {
                             self.sync();
-                            ui.close_menu();
+                            ui.close();
                         }
                         Err(e) => self.error = e,
                     }
@@ -2287,7 +2279,7 @@ impl Editor {
         if !selected.is_empty() {
             if ui.button(tr(ui.ctx(), "ui.copy-layer-values")).clicked() {
                 self.copy(ui.ctx());
-                ui.close_menu();
+                ui.close();
             }
             if ui
                 .button(tr(ui.ctx(), "ui.paste-layer-values"))
@@ -2297,7 +2289,7 @@ impl Editor {
                 ))
                 .clicked()
             {
-                ui.close_menu();
+                ui.close();
                 Self::request_layer_paste(ui.ctx());
             }
             ui.separator();
@@ -2306,7 +2298,7 @@ impl Editor {
             ui.weak(self.layout.layer_label(i));
             if ui.button(tr(ui.ctx(), "ui.adjust-layer-mask")).clicked() {
                 self.open_mask_edit(i);
-                ui.close_menu();
+                ui.close();
             }
             let crop_label = if self.edit_content && !self.mask_editing() {
                 "crop.done"
@@ -2322,7 +2314,7 @@ impl Editor {
                 .clicked()
             {
                 self.toggle_crop_edit();
-                ui.close_menu();
+                ui.close();
             }
             if ui.button(tr(ui.ctx(), "ui.reset-crop")).clicked() {
                 let result = if let Some(mode) = self.layout.formats().layer_fit[i] {
@@ -2336,7 +2328,7 @@ impl Editor {
                     Ok(()) => self.sync(),
                     Err(e) => self.error = e,
                 }
-                ui.close_menu();
+                ui.close();
             }
         } else if !selected.is_empty() {
             ui.weak(format!("{} layers selected", selected.len()));
@@ -2357,7 +2349,7 @@ impl Editor {
                         .clicked()
                     {
                         self.resize_mode = mode;
-                        ui.close_menu();
+                        ui.close();
                     }
                 }
             });
@@ -2381,7 +2373,7 @@ impl Editor {
                                 self.format_draft = Some(FormatDraft::new(&self.layout, i));
                             }
                             self.property_tab = tab;
-                            ui.close_menu();
+                            ui.close();
                         }
                     }
                 });
@@ -2391,7 +2383,7 @@ impl Editor {
                             self.format_draft = Some(FormatDraft::new(&self.layout, i));
                         }
                         self.property_tab = PropertyTab::Preview;
-                        ui.close_menu();
+                        ui.close();
                     }
                     self.crop_preview_quick_controls(ui, i);
                 });
@@ -2403,7 +2395,7 @@ impl Editor {
                 }
                 self.edit_content = false;
                 self.sync();
-                ui.close_menu();
+                ui.close();
             }
             if ui.button(tr(ui.ctx(), "ui.hide-selected-layers")).clicked() {
                 for &i in &selected {
@@ -2411,7 +2403,7 @@ impl Editor {
                 }
                 self.edit_content = false;
                 self.sync();
-                ui.close_menu();
+                ui.close();
             }
         }
         if let Some(id) = self.layer_ui.context_layer {
@@ -2426,7 +2418,7 @@ impl Editor {
         });
         if ui.button(tr(ui.ctx(), "ui.output-format")).clicked() {
             self.output_draft = Some(OutputDraft::new(self.layout.formats().output));
-            ui.close_menu();
+            ui.close();
         }
     }
 
@@ -2884,7 +2876,7 @@ impl Editor {
                             let tooltip = format!("Toggle {label} grid. Hold {shortcut} for the same effect; when selected, the modifier temporarily disables it. Alt overrides grids.");
                             if icon.on_hover_text(&tooltip).clicked() || text.on_hover_text(tooltip).clicked() {
                                 self.grid_tool = if selected { None } else { Some(spacing) };
-                                ui.close_menu();
+                                ui.close();
                             }
                         });
                     }
@@ -3552,7 +3544,9 @@ impl Editor {
                 self.sync();
             }
         }
-        response.context_menu(|ui| self.layer_context_menu(ui));
+        egui::Popup::context_menu(&response)
+            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
+            .show(|ui| self.layer_context_menu(ui));
         let screen = Ink {
             painter: ui.painter_at(area),
             origin,
@@ -4036,7 +4030,12 @@ fn position_point_square(ui: &mut egui::Ui, point: &mut PositionPoint, prefix: &
     }
 }
 
-fn click(ui: &egui::Ui, ink: &Ink, b: [f32; 4], id: impl std::hash::Hash) -> bool {
+fn click(
+    ui: &egui::Ui,
+    ink: &Ink,
+    b: [f32; 4],
+    id: impl std::hash::Hash + std::fmt::Debug,
+) -> bool {
     let clicked = ui
         .interact(
             Rect::from_min_size(ink.point(b[0], b[1]), Vec2::new(b[2], b[3])),
@@ -4055,12 +4054,14 @@ fn click(ui: &egui::Ui, ink: &Ink, b: [f32; 4], id: impl std::hash::Hash) -> boo
     clicked
 }
 impl Editor {
-    fn ui(&mut self, ctx: &egui::Context) {
-        self.update_alt_mask(ctx);
-        self.main_ui(ctx);
-        self.language_confirmation(ctx);
+    fn ui(&mut self, root_ui: &mut egui::Ui) {
+        let ctx = root_ui.ctx().clone();
+        self.update_alt_mask(&ctx);
+        self.main_ui(root_ui);
+        self.language_confirmation(&ctx);
     }
-    fn main_ui(&mut self, ctx: &egui::Context) {
+    fn main_ui(&mut self, root_ui: &mut egui::Ui) {
+        let ctx = &root_ui.ctx().clone();
         if self.fields_edited
             && self.fields_pending()
             && !self.layout.dragging()
@@ -4113,10 +4114,10 @@ impl Editor {
         if !blocked {
             self.shortcuts(ctx);
         }
-        egui::TopBottomPanel::top("header")
-            .exact_height(44.0)
+        egui::Panel::top("header")
+            .exact_size(44.0)
             .frame(egui::Frame::NONE.fill(palette.panel))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 if blocked {
                     ui.disable();
                 }
@@ -4145,10 +4146,10 @@ impl Editor {
                     palette.cyan,
                 );
             });
-        egui::TopBottomPanel::bottom("status")
-            .exact_height(34.0)
+        egui::Panel::bottom("status")
+            .exact_size(34.0)
             .frame(egui::Frame::NONE.fill(palette.panel))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 if blocked {
                     ui.disable();
                 }
@@ -4191,21 +4192,24 @@ impl Editor {
                     },
                 );
             });
-        egui::SidePanel::right("inspector")
-            .exact_width(392.0)
+        egui::Panel::right("inspector")
+            .exact_size(392.0)
             .resizable(false)
             .frame(egui::Frame::NONE.fill(palette.panel).inner_margin(24.0))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 if blocked {
                     ui.disable();
                 }
                 egui::ScrollArea::vertical()
-                    .drag_to_scroll(false)
+                    .scroll_source(egui::scroll_area::ScrollSource {
+                        drag: egui::scroll_area::DragScroll::Never,
+                        ..Default::default()
+                    })
                     .show(ui, |ui| self.inspector(ui));
             });
         egui::CentralPanel::default()
             .frame(egui::Frame::NONE.fill(palette.bg))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 if blocked {
                     ui.disable();
                 }
@@ -4234,8 +4238,9 @@ impl eframe::App for Editor {
         self.crop_mask_tab_input(ctx, input);
     }
 
-    fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
-        self.ui(ctx);
+    fn ui(&mut self, ui: &mut egui::Ui, _: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
+        self.ui(ui);
         if !ctx.input(|i| i.pointer.any_down())
             && !self.layout.dragging()
             && self.pivot_drag.is_none()
@@ -4481,17 +4486,25 @@ fn toolbar_menu<R>(
             palette.text
         };
     }
-    let response = ui.menu_button(title, |ui| {
-        ui.set_style(original.clone());
-        // The toolbar's 34 px hit targets should not inflate dropdown rows.
-        let spacing = ui.spacing_mut();
-        spacing.interact_size.y = 22.0;
-        spacing.button_padding.y = 2.0;
-        spacing.item_spacing.y = 4.0;
-        contents(ui)
-    });
+    let (response, inner) = egui::containers::menu::MenuButton::new(title)
+        .config(
+            egui::containers::menu::MenuConfig::new()
+                .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
+        )
+        .ui(ui, |ui| {
+            ui.set_style(original.clone());
+            // The toolbar's 34 px hit targets should not inflate dropdown rows.
+            let spacing = ui.spacing_mut();
+            spacing.interact_size.y = 22.0;
+            spacing.button_padding.y = 2.0;
+            spacing.item_spacing.y = 4.0;
+            contents(ui)
+        });
     ui.set_style(original);
-    response
+    egui::InnerResponse {
+        response,
+        inner: inner.map(|response| response.inner),
+    }
 }
 
 fn layer_state_icon(
@@ -4879,13 +4892,15 @@ mod tests {
         ctx: &egui::Context,
         events: Vec<egui::Event>,
     ) -> egui::FullOutput {
+        // Interaction tests address final widget positions, not animation frames.
+        ctx.global_style_mut(|style| style.animation_time = 0.0);
         let mut input = egui::RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1440.0, 940.0))),
             events,
             ..Default::default()
         };
         app.crop_mask_tab_input(ctx, &mut input);
-        ctx.run(input, |ctx| app.ui(ctx))
+        ctx.run_ui(input, |ui| app.ui(ui))
     }
     fn key(key: egui::Key) -> egui::Event {
         egui::Event::Key {
@@ -4907,7 +4922,7 @@ mod tests {
                     if t.galley.job.text == text
                         || (!text.trim().is_empty() && t.galley.job.text.trim() == text.trim()) =>
                 {
-                    Some(t.pos + Vec2::new(12.0, 5.0))
+                    Some(t.pos + t.galley.size() / 2.0)
                 }
                 _ => None,
             })
@@ -5097,19 +5112,19 @@ mod tests {
             (Vec2::new(1000.0, 940.0), false),
             (Vec2::new(1440.0, 940.0), true),
         ] {
-            let _ = ctx.run(
+            let _ = ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
                     ..Default::default()
                 },
-                |ctx| app.ui(ctx),
+                |ui| app.ui(ui),
             );
-            let output = ctx.run(
+            let output = ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
                     ..Default::default()
                 },
-                |ctx| app.ui(ctx),
+                |ui| app.ui(ui),
             );
             for prefix in ["Corners resize", "Scroll to zoom"] {
                 assert_eq!(output.shapes.iter().any(|s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text().starts_with(prefix))), hints);
@@ -5136,12 +5151,12 @@ mod tests {
             }
         }
         app.pan = Vec2::new(10000.0, 0.0);
-        let output = ctx.run(
+        let output = ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 720.0))),
                 ..Default::default()
             },
-            |ctx| app.ui(ctx),
+            |ui| app.ui(ui),
         );
         assert!(output.shapes.iter().any(|s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text().starts_with("Some layers are outside the view"))));
     }
@@ -5228,12 +5243,12 @@ mod tests {
                     assert_eq!(app.references.len(), 1);
                 }
                 app.fit_screen();
-                let output = ctx.run(
+                let output = ctx.run_ui(
                     egui::RawInput {
                         screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
                         ..Default::default()
                     },
-                    |ctx| app.ui(ctx),
+                    |ui| app.ui(ui),
                 );
                 for label in ["SCREEN 1", "1920 × 1080 px"] {
                     let shape = output.shapes.iter().find(|s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == label)).unwrap();
@@ -5592,12 +5607,12 @@ mod tests {
                     ..Default::default()
                 };
                 for _ in 0..2 {
-                    let _ = ctx.run(
+                    let _ = ctx.run_ui(
                         egui::RawInput {
                             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
                             ..Default::default()
                         },
-                        |ctx| app.ui(ctx),
+                        |ui| app.ui(ui),
                     );
                 }
                 let canvas = ctx.read_response(egui::Id::new("canvas")).unwrap().rect;
@@ -6311,7 +6326,7 @@ mod tests {
             events,
             ..Default::default()
         };
-        let _ = ctx.run(input, |ctx| app.ui(ctx));
+        let _ = ctx.run_ui(input, |ui| app.ui(ui));
     }
 
     #[test]
@@ -7209,7 +7224,7 @@ mod tests {
         assert_eq!(app.fields[3], "250.6");
         app.apply_fields();
         assert_eq!(app.layout.layers()[1], g);
-        let output = ctx.run(egui::RawInput::default(), |ctx| app.copy(ctx));
+        let output = ctx.run_ui(egui::RawInput::default(), |ui| app.copy(ui.ctx()));
         assert!(output.platform_output.commands.iter().any(|c|matches!(c,egui::OutputCommand::CopyText(text) if text.contains("Width: 300 px") && text.contains("Height: 251 px"))));
         assert_eq!(app.layout.layers()[1], g);
     }
@@ -7310,7 +7325,7 @@ mod tests {
                     },
                 )
                 .unwrap();
-            let output = ctx.run(egui::RawInput::default(), |ctx| app.copy(ctx));
+            let output = ctx.run_ui(egui::RawInput::default(), |ui| app.copy(ui.ctx()));
             let text = output
                 .platform_output
                 .commands
@@ -7598,7 +7613,7 @@ mod tests {
                         ..Default::default()
                     }
                 };
-                let _ = ctx.run(
+                let _ = ctx.run_ui(
                     egui::RawInput {
                         screen_rect: Some(Rect::from_min_size(
                             Pos2::ZERO,
@@ -7607,7 +7622,7 @@ mod tests {
                         dropped_files: vec![file],
                         ..Default::default()
                     },
-                    |ctx| app.ui(ctx),
+                    |ui| app.ui(ui),
                 );
                 let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
                 while app.paste.as_ref().unwrap().import_job.is_some()
@@ -7721,7 +7736,7 @@ mod tests {
         pixels
             .write_to(&mut bytes, image::ImageFormat::Png)
             .unwrap();
-        let _ = ctx.run(
+        let _ = ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1440.0, 940.0))),
                 dropped_files: vec![egui::DroppedFile {
@@ -7731,7 +7746,7 @@ mod tests {
                 }],
                 ..Default::default()
             },
-            |ctx| app.ui(ctx),
+            |ui| app.ui(ui),
         );
         app.wait_reference();
         assert!(
@@ -8009,7 +8024,7 @@ mod tests {
         frame(&mut app, &ctx, vec![]);
         ctx.memory_mut(|m| m.request_focus(egui::Id::new(("geometry", 0_usize))));
         frame(&mut app, &ctx, vec![]);
-        assert!(ctx.wants_keyboard_input());
+        assert!(ctx.egui_wants_keyboard_input());
         let before = app.layout.layers().clone();
         frame(
             &mut app,
@@ -8107,14 +8122,14 @@ mod tests {
                 *current = modifiers;
             }
         }
-        let _ = ctx.run(
+        let _ = ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1440.0, 940.0))),
                 modifiers,
                 events,
                 ..Default::default()
             },
-            |ctx| app.ui(ctx),
+            |ui| app.ui(ui),
         );
     }
     #[test]
@@ -8364,6 +8379,7 @@ mod tests {
             vec![
                 egui::Event::PointerMoved(Pos2::new(700.0, 420.0)),
                 egui::Event::MouseWheel {
+                    phase: egui::TouchPhase::Move,
                     unit: egui::MouseWheelUnit::Point,
                     delta: Vec2::new(0.0, 100.0),
                     modifiers: egui::Modifiers::NONE,
@@ -8430,14 +8446,14 @@ mod tests {
         ctx: &egui::Context,
         events: Vec<egui::Event>,
     ) -> egui::FullOutput {
-        ctx.run(
+        ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1440.0, 940.0))),
                 events,
                 modifiers: egui::Modifiers::SHIFT,
                 ..Default::default()
             },
-            |ctx| app.ui(ctx),
+            |ui| app.ui(ui),
         )
     }
     fn click_shift(app: &mut Editor, ctx: &egui::Context, p: Pos2) {
@@ -8561,8 +8577,8 @@ mod tests {
                     ..Default::default()
                 };
                 assert!(app.layout.selected().is_some());
-                let output = ctx.run(egui::RawInput::default(), |ctx| {
-                    egui::CentralPanel::default().show(ctx, |ui| app.layer_context_menu(ui));
+                let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+                    egui::CentralPanel::default().show(root_ui, |ui| app.layer_context_menu(ui));
                 });
                 let expected = tr(&ctx, if editing { "crop.done" } else { "crop.adjust" });
                 let labels: Vec<_> = output

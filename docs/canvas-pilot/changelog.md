@@ -4,6 +4,22 @@
 
 ## Unreleased
 
+### v0.9.6
+
+- Added European Portuguese, Nepali, Thai, Hindi and Latin-script Toki Pona UI
+  previews, for twelve language choices plus System default. English remains
+  authoritative; some explanations and advanced controls retain English fallback.
+- Updated egui/eframe to 0.35 for native shaping and embedded full Noto Devanagari
+  and Thai fonts. Preserved menu toggles and bounded file imports through the API
+  migration. Settings v12 adds the locales and migrates prior preferences.
+- Fixed project opening/recovery resetting the language selector and saved display
+  scales; pending language confirmation still rolls back correctly after opening.
+- Added an offline typography probe and shaping/editing regression checks. Native
+  samples were compared with Pango. Thai End-key behavior for expanded glyphs and
+  dictionary-based wrapping remain limitations; translations need linguistic review.
+- Rust gates and the manual build passed; whole-application line coverage is 91.41%.
+  Native scripted clicks verified language selection, confirmation and persistence.
+
 ### v0.9.5
 
 - Tab toggles crop/mask in double-click canvas editing, avoiding desktop Alt-mouse
