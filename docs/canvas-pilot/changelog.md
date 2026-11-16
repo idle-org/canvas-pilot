@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Audited all 165 migrated project files; task lists, stretch goals, advanced guide,
+  screenshots, templates and fixtures were retained. Expanded agent guidance and
+  documentation navigation, and included the transferred checklists/research in
+  the book. Recorded the comparison against the exact pre-migration commit.
+
+
 - Moved Canvas Pilot, its device probe, templates, tests and manual into the standalone
   `idle-org/canvas-pilot` repository. Builds and documentation no longer require
   beffroi-tools; project/settings compatibility and the public manual URL are unchanged.

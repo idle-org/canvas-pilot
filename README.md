@@ -20,6 +20,8 @@ and GTK development libraries. Python tooling requires Python 3.11+.
 [User guide](docs/canvas-pilot/guide/README.md) ·
 [Templates](docs/templates/canvas-pilot/README.md) ·
 [Changelog](docs/canvas-pilot/changelog.md) ·
-[Development](docs/development/README.md)
+[Development](docs/development/README.md) ·
+[Tasks and stretch goals](docs/canvas-pilot/plan.md) ·
+[Documentation index](docs/README.md)
 
 Originally part of [beffroi-tools](https://proxy.dandaedre.com/gitea/Beffroi/beffroi-tools); see [migration notes](docs/development/migration.md).

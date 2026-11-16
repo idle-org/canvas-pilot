@@ -37,3 +37,12 @@
 - [Aquilon compatibility investigation](../../canvas-pilot/aquilon-compatibility.md)
 
 - [Device adapters and Aquilon exchange](../../interfaces/device-adapters.md)
+
+# Checklists and future work
+
+- [Feature demonstration checklist](../../canvas-pilot/feature-demo-checklist.md)
+- [Midra aspect acceptance checklist](../../canvas-pilot/midra-aspect-test-checklist.md)
+- [Midra precision questions for engineers](../../canvas-pilot/midra-fit-precision.md)
+- [Future presentation-switcher adapters](../../canvas-pilot/presentation-switcher-adapters.md)
+- [Completed Aquilon support task](../../canvas-pilot/aquilon_support.task.md)
+- [Repository migration and completeness](../../development/migration.md)

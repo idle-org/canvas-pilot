@@ -9,3 +9,6 @@ in `docs/interfaces/`; maintain compatibility when changing persistence or expor
 
 See the [plan](../canvas-pilot/plan.md) and [device checks](../canvas-pilot/device-check.md)
 for remaining work and hardware validation. Device writes are never CI tests.
+
+See [the documentation index](../README.md) for every planning and acceptance record,
+and [AGENTS.md](../../AGENTS.md) for repository working conventions.
