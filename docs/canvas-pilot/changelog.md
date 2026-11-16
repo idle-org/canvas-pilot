@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Restored the illustrated main README with a workspace preview, feature overview
+  and layout workflow. Kept status badges at the top, detailed instructions in the
+  book and task lists behind the Development link.
+
 - New project saves suggest `.pilot.json` (Canvas Pilot). Open project accepts
   any `.json` filename and validates its contents, including legacy `.midra.json`
   projects. Files are not renamed automatically. Updated the manual and checked
