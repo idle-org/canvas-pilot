@@ -4,10 +4,11 @@
 
 ## Unreleased
 
-- New project saves suggest `.pilot.json` (Canvas Pilot). Existing `.capi.json` and `.midra.json`
-  projects remain readable and are not renamed automatically. Updated the manual
-  and checked read/write and overwrite protection with all three filenames; JSON
-  contents and schema version are unchanged.
+- New project saves suggest `.pilot.json` (Canvas Pilot). Open project accepts
+  any `.json` filename and validates its contents, including legacy `.midra.json`
+  projects. Files are not renamed automatically. Updated the manual and checked
+  read/write and overwrite protection for preferred, generic and legacy filenames;
+  JSON contents and schema version are unchanged.
 
 - Added user-guide feature matrices for all eleven exchange formats, project saves
   and separate clipboard workflows. Distinguished geometry, names, visual crop/mask

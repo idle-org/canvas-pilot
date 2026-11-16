@@ -142,7 +142,7 @@ fn exported_svg_roundtrips_rounded_geometry_including_full_screen_layers() {
 }
 #[test]
 fn publication_requires_overwrite_and_read_matches_written_document() {
-    for filename in ["layout.pilot.json", "layout.capi.json", "layout.midra.json"] {
+    for filename in ["layout.pilot.json", "arbitrary.json", "layout.midra.json"] {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join(filename);
         let p = Project::from_layout(&Layout::default());

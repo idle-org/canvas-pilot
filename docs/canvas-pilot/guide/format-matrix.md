@@ -35,7 +35,9 @@ and layer labels can help identify the boxes; they do not rename destinations.
 | FigCraft file (`.figcraft`) | ☑* | ☑* | ☑ | ☑ | ☑ | ☐ |
 | Illustrator file (`.ai`) | ☑* | ☑* | ☑* | ☑ | ☑ | ☐ |
 
-- **Projects:** use Open/Save project, not geometry import/export. Pictures and
+- **Projects:** `.pilot.json` is the suggested name; Open project accepts any
+  `.json` filename and checks that its contents are a valid project. Use Open/Save
+  project, not geometry import/export. Pictures and
   editable settings are saved directly; no optional snapshot is needed.
 - **Pictures:** enable **Include background layer** and/or **Include placeholder
   pictures** when exporting. Background pictures flatten visible references.

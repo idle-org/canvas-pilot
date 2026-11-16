@@ -139,8 +139,9 @@ user confirmed actual draw.io copy/paste working on 2026-11-15.
 ## Save, open and export
 
 Use the **Project** toolbar menu to **Save project…** or **Open project…**.
-Existing `.capi.json` and `.midra.json` projects still open normally and are not renamed
-automatically. **Save project…** suggests a `.pilot.json` name.
+**Save project…** suggests a `.pilot.json` name. **Open project…** lets you try
+any `.json` file, including legacy `.midra.json` projects; the contents must be a
+valid Canvas Pilot project. Existing files are not renamed automatically.
 
 Projects use readable, versioned `.pilot.json` files and preserve applied output,
 inputs, layer bounds/crops, source assignments, locks, visibility, selection,
