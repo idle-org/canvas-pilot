@@ -52,7 +52,7 @@ unchanged unless you enable **Rename destination layers** in the import review.
 
 | File | Import | Export | Layer names in export | Rename on import [5](#file-notes) | Background picture [1](#file-notes) | Crop/mask preview pictures [1](#file-notes) | Extra settings snapshot |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ · restored | ✅ | ✅ | ✅ |
+| Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ Always | ✅ | ✅ | ✅ |
 | SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
 | draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
 | Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
@@ -99,9 +99,9 @@ applies to Illustrator and draw.io. “Paste” below means **into Canvas Pilot*
 | Clipboard path | Paste positions and sizes | Copy out in this format | Rename destination layers | Crop zoom | Crop edges / offsets, fit and masks |
 | --- | :---: | :---: | :---: | :---: | :---: |
 | Canvas Pilot **Copy layer values**, all fit modes | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Figma **SVG text** copy/paste | ✅ | ❌ | ✅ [names](files.md#rename-destination-layers) | ❌ | ❌ |
-| Illustrator **SVG text** copy/paste | ✅ | ❌ | ✅ [names](files.md#rename-destination-layers) | ❌ | ❌ |
-| draw.io diagram XML copy/paste | ✅ | ❌ | ✅ [names](files.md#rename-destination-layers) | ❌ | ❌ |
+| Figma **SVG text** copy/paste | ✅ | ❌ | ✅ <sup>[how to](files.md#rename-destination-layers)</sup> | ❌ | ❌ |
+| Illustrator **SVG text** copy/paste | ✅ | ❌ | ✅ <sup>[how to](files.md#rename-destination-layers)</sup> | ❌ | ❌ |
+| draw.io diagram XML copy/paste | ✅ | ❌ | ✅ <sup>[how to](files.md#rename-destination-layers)</sup> | ❌ | ❌ |
 | SVG file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Geometry JSON / CSV file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Canvas Pilot HTML / ASCII DXF file contents pasted as text | ✅ | ❌ | ❌ | ❌ | ❌ |

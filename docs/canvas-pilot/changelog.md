@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Clarified rename behavior in the format matrix: project names are always
+  restored, and clipboard rename instructions use superscript “how to” links.
+
 - Fixed format-tier pills in the book: labels now wrap horizontally instead of
   stacking as illustrations. Separate tier headings clarify project backups,
   optional snapshots and geometry exchange; download-table pills use the same sizing.
