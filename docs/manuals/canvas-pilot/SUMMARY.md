@@ -16,6 +16,7 @@
   - [Canvas and reference images](../../canvas-pilot/guide/canvas.md)
   - [File and clipboard feature matrix](../../canvas-pilot/guide/format-matrix.md)
   - [Advanced exchange feature matrix](../../canvas-pilot/guide/advanced-exchange.md)
+  - [What gets lost between formats?](../../canvas-pilot/guide/conversion-losses.md)
   - [Formats, crop and precision](../../canvas-pilot/guide/formats-and-crop.md)
   - [Import, export and project files](../../canvas-pilot/guide/files.md)
   - [Menus and preferences](../../canvas-pilot/guide/preferences.md)

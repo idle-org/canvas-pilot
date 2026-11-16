@@ -43,6 +43,8 @@ for editable crops, masks, input settings and other Canvas Pilot state.
 
 See the [advanced feature matrix](advanced-exchange.md) for every saved feature.
 
+See also [conversion examples and losses](conversion-losses.md) before passing files through several editors.
+
 ## File exchange matrix
 
 All eleven exchange formats import and export layer positions and sizes. Geometry

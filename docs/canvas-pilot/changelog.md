@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.4
+
+- Added five practical conversion-loss examples for Figma, draw.io, SVG and Canvas
+  Pilot, distinguishing artwork, editable geometry and embedded snapshots. Linked
+  vendor documentation and separated documented behavior from untested re-save risks.
+
 ### v0.9.3
 
 - Added Layer/Source mask references. Source masks follow the usable source before

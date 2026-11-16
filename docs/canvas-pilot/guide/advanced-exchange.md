@@ -77,6 +77,8 @@ input/plug or missing device field prevents staging. Corrections affect shared
 inputs and can therefore affect other layers and Program. Removing a saved proposal
 does not undo device changes or discard separately staged edits.
 
+For practical examples across editors, see [what gets lost between formats](conversion-losses.md).
+
 ## Limits and round trips
 
 Silver formats are SVG, draw.io, geometry JSON, HTML, PPTX, FigCraft, CSV and DXF.
