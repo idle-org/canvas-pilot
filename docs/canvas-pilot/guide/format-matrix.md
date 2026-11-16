@@ -18,15 +18,28 @@ a reference, not interactive controls.
 Tiers describe preservation of Canvas Pilot settings. Formats within a tier are
 tied; choose the one your editor supports.
 
-- **🥇 Gold — complete project:** ![Canvas Pilot](../../images/formats/project.svg)<br>
-  `.pilot.json` retains editable state and images. **It is Canvas Pilot’s own
-  project format, intended to be opened only in Canvas Pilot—not an industry
-  standard or a file for other editors.** For sharing with another application,
-  choose one of the exchange formats below.
-- **🥈 Silver — optional snapshot:** ![SVG](../../images/formats/svg.svg) ![draw.io](../../images/formats/drawio.svg) ![JSON](../../images/formats/json.svg) ![HTML](../../images/formats/html.svg) ![PowerPoint](../../images/formats/pptx.svg) ![FigCraft](../../images/formats/figcraft.svg) ![CSV](../../images/formats/csv.svg) ![DXF](../../images/formats/dxf.svg)<br>
-  These formats preserve advanced settings when extra parameters are enabled.
-- **🥉 Bronze — geometry/artwork:** ![Figma](../../images/formats/fig.svg) ![DWG](../../images/formats/dwg.svg) ![Illustrator](../../images/formats/illustrator.svg)<br>
-  These formats need a companion project to retain editable settings.
+### 🥇 Gold — complete project
+
+![Canvas Pilot](../../images/formats/project.svg)
+
+Save a `.pilot.json` to keep editable state and images together.
+**This format opens only in Canvas Pilot.** It is not an industry exchange
+standard; choose a format below to work in another application.
+
+### 🥈 Silver — exchange with an optional snapshot
+
+![SVG](../../images/formats/svg.svg) ![draw.io](../../images/formats/drawio.svg) ![JSON](../../images/formats/json.svg) ![HTML](../../images/formats/html.svg) ![PowerPoint](../../images/formats/pptx.svg) ![FigCraft](../../images/formats/figcraft.svg) ![CSV](../../images/formats/csv.svg) ![DXF](../../images/formats/dxf.svg)
+
+Enable **extra Canvas Pilot parameters** when exporting to retain an optional
+snapshot of advanced settings. Recover it with **Restore parameters from export**.
+Other editors may discard this snapshot; keep a project file as your backup.
+
+### 🥉 Bronze — geometry and artwork
+
+![Figma](../../images/formats/fig.svg) ![DWG](../../images/formats/dwg.svg) ![Illustrator](../../images/formats/illustrator.svg)
+
+Use these formats for their destination editors. Keep a companion `.pilot.json`
+for editable crops, masks, input settings and other Canvas Pilot state.
 
 See the [advanced feature matrix](advanced-exchange.md) for every saved feature.
 

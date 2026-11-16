@@ -3,3 +3,25 @@ table td,
 table thead th {
     padding: 4px 10px;
 }
+
+/* Format pills are inline labels, not full-width guide illustrations.
+   Override mdBook's block-image margins on both tier and download pages. */
+.content img[src*="/images/formats/"] {
+    display: inline-block;
+    width: auto;
+    height: 22px;
+    margin: 2px 4px 2px 0;
+    vertical-align: middle;
+}
+
+/* mdBook wraps Markdown images in block-level click-to-zoom labels.
+   Pills need neither that block layout nor a full-screen zoom control. */
+.content .checkbox-label:has(> img[src*="/images/formats/"]) {
+    display: inline-block;
+    pointer-events: none;
+    vertical-align: middle;
+}
+.content .checkbox-label:has(> img[src*="/images/formats/"]) > input,
+.content .checkbox-label:has(> img[src*="/images/formats/"]) > .img-wrapper {
+    display: none;
+}

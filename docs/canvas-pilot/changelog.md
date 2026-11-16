@@ -4,7 +4,9 @@
 
 ## Unreleased
 
-No changes yet.
+- Fixed format-tier pills in the book: labels now wrap horizontally instead of
+  stacking as illustrations. Separate tier headings clarify project backups,
+  optional snapshots and geometry exchange; download-table pills use the same sizing.
 
 ## v0.8.0 — 2026-11-16
 
