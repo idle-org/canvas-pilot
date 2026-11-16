@@ -156,8 +156,8 @@ Stable IDs survive removal and are independent of Midra layer numbers. Group
 movement, alignment and Same-handles resizing work across the selection;
 Mirror/Opposite resizing still require exactly two layers.
 
-Project JSON is version 12, with tested migration from older supported versions.
-Every format’s **Selected layers…** action exports just the current selection,
+Projects support migration from older supported versions.
+Every format’s **Selected layers** scope exports just the current selection,
 including a single layer. All/visible export remains available.
 
 ## Viewport context menu

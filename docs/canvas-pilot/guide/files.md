@@ -155,14 +155,20 @@ undo history. Existing files require confirmation before replacement.
 The [starter-file catalog](../../templates/canvas-pilot/catalog.md) contains all eleven
 exchange formats, with two layers for 1920 × 1080 and 3840 × 2160 canvases.
 
-**Project → Export → Export layers…** opens one shared window. Choose SVG,
-draw.io, JSON, CSV, DXF/DWG, HTML, PPTX, Figma FIG, FigCraft or Illustrator, then
-**Current layer…**,
-**Selected layers…**, **Specific layer…**, **All layers…** and **Visible layers
-only…**. A current-layer export keeps its original screen position and full-screen
-canvas. The window offers **Include background layer**. SVG, draw.io, geometry
-JSON, HTML, PPTX, FIG, FIGCRAFT and Illustrator also offer **Include placeholder pictures** with embedded source-grid
-imagery; CSV and DXF explicitly disable pictures and carry rectangle geometry.
+**Project → Export → Export layers…** opens one shared window:
+
+1. Choose the **Format**.
+2. Choose **Layers**: Selected layers, All layers, Visible layers only, or Specific
+   layer. With Selected layers, **Choose layers…** lets you adjust the selection.
+3. Click **Export…** and choose a file. The layer count previews the scope;
+   selecting one layer keeps its original screen position and full-screen canvas.
+
+Optional groups start collapsed. **Pictures** contains **Include background layer**
+and **Include placeholder pictures**. Their heading shows what is included even
+when collapsed. CSV and DXF offer only a background rectangle, with no picture
+controls. **Canvas Pilot settings** contains the optional editable snapshot;
+its heading also shows whether inclusion is enabled. For everyday geometry
+exchange, leave both groups at their defaults.
 
 Import a supported format with **Import → Geometry file…** or paste its text, then
 choose a slide/page/frame where applicable, then map detected layers to destinations.
@@ -193,7 +199,7 @@ The toolbar’s **Import** button uses a downward arrow into a tray. Hover for i
 label; its dropdown contains SVG, clipboard values, and reference-image actions.
 
 <!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
-![Export layers dialog showing SVG, extra parameters, picture options and layer scopes](../images/08-guide-export.png)
+![Export layers dialog showing SVG, selected-layer scope, collapsed optional groups and one Export button](../images/08-guide-export.png)
 
 *Choose a format, artwork options and which layers to export in one window. The header still uses the former Midra Layout name.*
 
@@ -207,8 +213,8 @@ You can choose layers without returning to the viewport:
   layer using its destination dropdown. When using a selection, there must be at least as many chosen destinations as imported rectangles
   after ignoring a background. Map to any subset of them; other layers stay
   unchanged. Duplicate mappings and empty imports remain invalid.
-- A format’s **Choose layers to export…** selects the group for
-  **Selected layers…**. **Specific layer…** remains available for individual layers,
+- In Export layers, choose **Selected layers** and use **Choose layers…** to select
+  the group. **Specific layer** remains available for individual layers,
   including hidden layers.
 - Midra send preparation has **Choose editor layers to send…**, followed by a
   device-destination dropdown for each chosen layer. It can open online with
@@ -340,7 +346,8 @@ and [versioned project contract](../../interfaces/canvas-pilot.md).
 See [which editing features survive](#which-editing-features-survive)
 for a comparison of project saves, plain geometry import and snapshot restoration.
 
-In **Export layers**, enable **Include extra Canvas Pilot parameters (experimental)** to
+In **Export layers**, expand **Canvas Pilot settings** and enable
+**Include extra Canvas Pilot parameters (experimental)** to
 store the exported layers' source/crop settings, fit modes, masks, saved input proposals, names, folders, links and workspace
 setup alongside the geometry. It is available for SVG, draw.io, JSON, CSV, DXF,
 HTML, PPTX and FigCraft. Images/capture assignments are excluded from this snapshot; the

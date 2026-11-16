@@ -1151,13 +1151,14 @@ impl Editor {
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut p.include_size,"Format (width / height)");
                     ui.checkbox(&mut p.include_position,"Position");
-                    let available=p.zoom_available();
-                    let mut zoom=p.include_zoom && available;
-                    if ui.add_enabled(available,egui::Checkbox::new(&mut zoom,"Crop zoom")).changed() {p.include_zoom=zoom;}
+                    if p.zoom_available() { ui.checkbox(&mut p.include_zoom,"Crop zoom"); }
                 });
-                if !p.zoom_available() {ui.small("Crop zoom is not included in this data.");}
                 ui.small("Unchecked values keep the destination settings. Format changes may adjust existing crops to fit.");
-                ui.add_enabled(p.include_size && p.shapes.iter().any(|s|s.outline.iter().any(|v|*v>0.0)),egui::Checkbox::new(&mut p.include_outline,"Include outline in bounds"));
+                if p.shapes.iter().any(|s|s.outline.iter().any(|v|*v>0.0)) {
+                    ui.indent("outline-option", |ui| {
+                        ui.add_enabled(p.include_size,egui::Checkbox::new(&mut p.include_outline,"Include outline in bounds"));
+                    });
+                }
                 egui::CollapsingHeader::new("Import details").show(ui, |ui| {
                     ui.label(&p.note);
                     ui.small("Source format, crop offsets, colors and outline appearance are not imported.");

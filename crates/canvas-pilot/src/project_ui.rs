@@ -12,6 +12,25 @@ type LoadedProject = (PreparedProject, Option<PathBuf>, Option<u64>);
 type ProjectJob = std::sync::mpsc::Receiver<Result<Option<LoadedProject>, String>>;
 type ExportJob = std::sync::mpsc::Receiver<Result<(PathBuf, Vec<u8>), String>>;
 
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+enum ExportScope {
+    #[default]
+    Selected,
+    All,
+    Visible,
+    Specific,
+}
+impl ExportScope {
+    fn label(self) -> &'static str {
+        match self {
+            Self::Selected => "Selected layers",
+            Self::All => "All layers",
+            Self::Visible => "Visible layers only",
+            Self::Specific => "Specific layer",
+        }
+    }
+}
+
 #[derive(Default)]
 pub(super) struct FileUi {
     pub(super) project_path: Option<PathBuf>,
@@ -26,6 +45,8 @@ pub(super) struct FileUi {
     pub(super) message: Option<String>,
     exchange_options: canvas_pilot::exchange::Options,
     export_open: bool,
+    export_scope: ExportScope,
+    export_layer: Option<usize>,
     export_codec: canvas_pilot::interchange::Codec,
     export_job: Option<ExportJob>,
 }
@@ -401,94 +422,114 @@ impl Editor {
             ui.close_menu();
         }
     }
+    fn export_layer_ids(&self) -> Vec<usize> {
+        (0..self.layout.layers().len())
+            .filter(|&i| match self.files.export_scope {
+                ExportScope::Selected => self.layout.selected_indices().contains(&i),
+                ExportScope::All => true,
+                ExportScope::Visible => self.layout.visible(i),
+                ExportScope::Specific => {
+                    self.files.export_layer == Some(self.layout.layer_info(i).id)
+                }
+            })
+            .map(|i| self.layout.layer_info(i).id)
+            .collect()
+    }
     fn exchange_menu(&mut self, ui: &mut egui::Ui, format: canvas_pilot::interchange::Codec) {
+        egui::ComboBox::from_label("Layers")
+            .selected_text(self.files.export_scope.label())
+            .show_ui(ui, |ui| {
+                for scope in [
+                    ExportScope::Selected,
+                    ExportScope::All,
+                    ExportScope::Visible,
+                    ExportScope::Specific,
+                ] {
+                    ui.selectable_value(&mut self.files.export_scope, scope, scope.label());
+                }
+            });
+        if self.files.export_scope == ExportScope::Selected {
+            self.transfer_layer_picker(ui, "Choose layers…");
+        }
+        if self.files.export_scope == ExportScope::Specific {
+            if !self
+                .layout
+                .layers()
+                .iter()
+                .enumerate()
+                .any(|(i, _)| Some(self.layout.layer_info(i).id) == self.files.export_layer)
+            {
+                self.files.export_layer = (0..self.layout.layers().len())
+                    .next()
+                    .map(|i| self.layout.layer_info(i).id);
+            }
+            let label = (0..self.layout.layers().len())
+                .find(|&i| Some(self.layout.layer_info(i).id) == self.files.export_layer)
+                .map(|i| self.layout.layer_label(i))
+                .unwrap_or_default();
+            egui::ComboBox::from_label("Layer")
+                .selected_text(label)
+                .show_ui(ui, |ui| {
+                    for i in 0..self.layout.layers().len() {
+                        ui.selectable_value(
+                            &mut self.files.export_layer,
+                            Some(self.layout.layer_info(i).id),
+                            self.layout.layer_label(i),
+                        );
+                    }
+                });
+        }
         let metadata = canvas_pilot::exchange_metadata::supported(format);
         if !metadata {
             self.files.exchange_options.extra_parameters = false;
         }
-        ui.add_enabled(
-            metadata,
-            egui::Checkbox::new(
-                &mut self.files.exchange_options.extra_parameters,
-                "Include extra Canvas Pilot parameters (experimental)",
-            ),
-        );
-        ui.small(if metadata {
-            "Embeds the exported layers’ source/crop settings, names, folders, links and workspace settings. No image bytes or capture bindings. Other apps may remove it. Restore the original snapshot through Project > Restore parameters from export; geometry import still uses the artwork."
-        } else {
-            "Extra parameters are not yet supported for this format. Save a Canvas Pilot project alongside it."
-        });
-        ui.checkbox(
-            &mut self.files.exchange_options.background,
-            "Include background layer",
-        )
-        .on_hover_text(if format.artwork() {
-            "Composite the visible reference images on a screen-sized background, or a plain backdrop when none is visible."
-        } else {
-            "Include a screen-sized background rectangle. This format cannot embed its picture."
-        });
-        ui.add_enabled(
-            format.artwork(),
-            egui::Checkbox::new(
-                &mut self.files.exchange_options.placeholders,
-                "Include placeholder pictures",
-            ),
-        )
-        .on_hover_text(if format.artwork() {
-            "Embed source-pattern pictures showing current cropping. These are placeholders, not live source captures."
-        } else {
-            "This format carries rectangle geometry but cannot embed placeholder pictures."
-        });
+        if !format.artwork() {
+            self.files.exchange_options.placeholders = false;
+        }
+        let options = &mut self.files.exchange_options;
+        let pictures = match (options.background, options.placeholders) {
+            (true, true) => "Pictures · background and placeholders",
+            (true, false) => "Pictures · background included",
+            (false, true) => "Pictures · placeholders included",
+            (false, false) => "Pictures · none",
+        };
+        egui::CollapsingHeader::new(if format.artwork() { pictures } else if options.background { "Background · included" } else { "Background · none" })
+            .id_salt("export-pictures").show(ui, |ui| {
+                ui.checkbox(&mut options.background, "Include background layer")
+                    .on_hover_text(if format.artwork() { "Use the visible reference images, or a plain background when none is visible." } else { "Include a screen-sized rectangle. This format cannot embed pictures." });
+                if format.artwork() {
+                    ui.checkbox(&mut options.placeholders, "Include placeholder pictures")
+                        .on_hover_text("Show source patterns with the current crop and mask. These are not live captures.");
+                }
+            });
+        egui::CollapsingHeader::new(if options.extra_parameters { "Canvas Pilot settings · included" } else { "Canvas Pilot settings · not included" })
+            .id_salt("export-settings").show(ui, |ui| {
+                if metadata {
+                    ui.checkbox(&mut options.extra_parameters, "Include extra Canvas Pilot parameters (experimental)");
+                    ui.small("Keep an editable snapshot of these layers. Restore it from the Project menu; other editors may remove it.");
+                    ui.label("What is saved?").on_hover_text("Source settings, crop, fit, blanking, mappings, inactive input proposals and workspace settings. Reference images and captured previews are excluded. The snapshot stays at its original values if artwork is edited elsewhere.");
+                } else {
+                    ui.small("This format cannot carry editable settings. Save a .pilot.json project alongside it.");
+                }
+            });
         ui.separator();
-        let current = self.layout.selected().map(|i| self.layout.layer_info(i).id);
+        let ids = self.export_layer_ids();
+        ui.small(format!(
+            "{} {} to export",
+            ids.len(),
+            if ids.len() == 1 { "layer" } else { "layers" }
+        ));
         if ui
-            .add_enabled(current.is_some(), egui::Button::new("Current layer…"))
-            .on_disabled_hover_text("Select exactly one layer.")
+            .add_enabled(!ids.is_empty(), egui::Button::new("Export…"))
+            .on_disabled_hover_text("Choose at least one layer to export.")
             .clicked()
         {
-            ui.close_menu();
-            self.export_exchange(format, &[current.unwrap()], "layer");
+            self.export_exchange(
+                format,
+                &ids,
+                if ids.len() == 1 { "layer" } else { "layout" },
+            );
         }
-        self.transfer_layer_picker(ui, "Choose layers to export…");
-        ui.menu_button("Specific layer…", |ui| {
-            egui::ScrollArea::vertical()
-                .max_height(320.0)
-                .show(ui, |ui| {
-                    for i in 0..self.layout.layers().len() {
-                        if ui.button(self.layout.layer_label(i)).clicked() {
-                            let id = self.layout.layer_info(i).id;
-                            ui.close_menu();
-                            self.export_exchange(format, &[id], "layer");
-                        }
-                    }
-                });
-        });
-        let selected: Vec<_> = self
-            .layout
-            .selected_indices()
-            .iter()
-            .map(|&i| self.layout.layer_info(i).id)
-            .collect();
-        if ui
-            .add_enabled(!selected.is_empty(), egui::Button::new("Selected layers…"))
-            .clicked()
-        {
-            ui.close_menu();
-            self.export_exchange(format, &selected, "selection");
-        }
-        for (label, visible) in [("All layers…", false), ("Visible layers only…", true)] {
-            if ui.button(label).clicked() {
-                let ids: Vec<_> = (0..self.layout.layers().len())
-                    .filter(|&i| !visible || self.layout.visible(i))
-                    .map(|i| self.layout.layer_info(i).id)
-                    .collect();
-                ui.close_menu();
-                self.export_exchange(format, &ids, "layout");
-            }
-        }
-        ui.small(
-            "Round-trip layer boxes in screen pixels. Project JSON preserves full source/crop settings.",
-        );
     }
     fn export_exchange(
         &mut self,
@@ -640,30 +681,65 @@ impl Editor {
 mod tests {
     use super::*;
     #[test]
-    fn all_exchange_menus_offer_current_layer_and_format_artwork_options() {
+    fn export_scope_is_explicit_and_unavailable_options_are_cleared() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
-        // Render the real submenu directly so file-dialog actions remain untouched.
+        app.files.export_scope = ExportScope::All;
+        let all = app.export_layer_ids();
+        assert_eq!(all.len(), app.layout.layers().len());
+        app.files.export_scope = ExportScope::Specific;
+        app.files.export_layer = Some(all[1]);
+        assert_eq!(app.export_layer_ids(), vec![all[1]]);
+        app.files.export_layer = Some(usize::MAX);
+        assert!(app.export_layer_ids().is_empty());
+        app.files.export_scope = ExportScope::Selected;
+        let expected: Vec<_> = app
+            .layout
+            .selected_indices()
+            .iter()
+            .map(|&i| app.layout.layer_info(i).id)
+            .collect();
+        assert_eq!(app.export_layer_ids(), expected);
         for format in canvas_pilot::interchange::Codec::available() {
+            app.files.exchange_options.extra_parameters = true;
+            app.files.exchange_options.placeholders = true;
             let output = ctx.run(egui::RawInput::default(), |ctx| {
                 egui::CentralPanel::default().show(ctx, |ui| app.exchange_menu(ui, format));
             });
-            for label in [
-                "Current layer…",
-                "Include background layer",
-                "Include placeholder pictures",
-                "Selected layers…",
-                "All layers…",
-                "Visible layers only…",
-            ] {
-                assert!(
-                    output.shapes.iter().any(
-                        |s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == label)
-                    ),
-                    "{label}"
-                );
-            }
+            assert_eq!(
+                app.files.exchange_options.extra_parameters,
+                canvas_pilot::exchange_metadata::supported(format)
+            );
+            assert_eq!(app.files.exchange_options.placeholders, format.artwork());
+            assert!(
+                output.shapes.iter().any(
+                    |s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == "Export…")
+                )
+            );
+            assert!(!output.shapes.iter().any(|s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == "Include placeholder pictures")));
         }
+    }
+
+    #[test]
+    fn optional_export_groups_expand_without_exporting_or_changing_layers() {
+        use super::super::tests::{click_text, frame};
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.files.export_open = true;
+        let before = app.project();
+        click_text(&mut app, &ctx, "Pictures · none");
+        click_text(&mut app, &ctx, "Include placeholder pictures");
+        assert!(app.files.exchange_options.placeholders);
+        click_text(&mut app, &ctx, "Canvas Pilot settings · not included");
+        click_text(
+            &mut app,
+            &ctx,
+            "Include extra Canvas Pilot parameters (experimental)",
+        );
+        assert!(app.files.exchange_options.extra_parameters);
+        frame(&mut app, &ctx, vec![]);
+        assert!(app.files.export_job.is_none());
+        assert_eq!(app.project(), before);
     }
 
     #[test]

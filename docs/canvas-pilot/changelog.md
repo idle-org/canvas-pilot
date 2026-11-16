@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Simplified export to a layer-scope dropdown and one Export button. Pictures and
+  editable snapshots live in collapsed groups with visible inclusion summaries.
+  Import shows crop zoom and outline options only when supported by the data.
+
 - Name the format Illustrator throughout the interface and documentation, avoiding
   the ambiguous former abbreviation while retaining `.ai` files and codec compatibility.
 
