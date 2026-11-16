@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Added a localization roadmap: translate and publish the book first, then localize
+  the application, with a shared glossary, compatibility requirements and separate
+  acceptance checklists. Translation implementation has not started.
+
 - Put portable release downloads first in installation help, with exact archive
   patterns by platform and optional command-line methods below. Added seven real
   offline screenshots to advanced guide chapters, with captions and capture recipes.

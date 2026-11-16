@@ -10,10 +10,11 @@ The Python device probe lives in `tools/`; Python tests and build helpers live i
 | Release preparation | [Packaging and readiness](releases.md) |
 | Edit or publish the book | [Manual generation](../manuals/building.md) |
 | Tasks, acceptance tests and stretch goals | [Project plan](../canvas-pilot/plan.md) |
+| Localization: book, then application | [Task list and acceptance criteria](localization.md) |
 | Future adapter candidates | [Research and requirements](../canvas-pilot/presentation-switcher-adapters.md) |
 | Showcase and video manual preparation | [Recording checklist](../canvas-pilot/feature-demo-checklist.md) |
 | Agent context, contracts and technical evidence | [Agent documentation](../../AGENT_DOCUMENTATION.md) |
 
-Keep task status in the plan. Keep user instructions in the book's source chapters;
+Keep overall task status in the plan and localization subtasks in its linked roadmap. Keep user instructions in the book's source chapters;
 READMEs provide navigation, not parallel copies. Follow [AGENTS.md](../../AGENTS.md)
 when changing code or documentation.

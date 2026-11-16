@@ -9,6 +9,7 @@ This index links authoritative records; it does not duplicate their content.
 
 - [Development entry point](docs/development/README.md).
 - [Implementation, to-do, acceptance tests and stretch goals](docs/canvas-pilot/plan.md).
+- [Book and application localization roadmap](docs/development/localization.md).
 - [Future adapter research and documentation ranking](docs/canvas-pilot/presentation-switcher-adapters.md).
 - [Completed Aquilon support task](docs/canvas-pilot/aquilon_support.task.md).
 - [Feature demonstration/recording checklist](docs/canvas-pilot/feature-demo-checklist.md).
