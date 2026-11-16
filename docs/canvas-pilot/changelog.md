@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Shortened the feature matrix’s Pictures note to the export option names.
+
 - Removed the project-format note from the feature matrix and renumbered the
   remaining note references.
 

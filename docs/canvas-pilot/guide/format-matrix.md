@@ -37,11 +37,7 @@ and layer labels can help identify the boxes; they do not rename destinations.
 
 ### File notes
 
-1. **Pictures:** enable **Include background layer** and/or **Include placeholder
-   pictures** when exporting. Background pictures flatten visible references.
-   Placeholder pictures show source-grid patterns with crop, fit and masking;
-   they are not live input images. Reimport reads their boxes, not their pixels
-   or editable crop. CSV, DXF and DWG can include a background **rectangle** only.
+1. **Pictures:** enable **Include background layer** and/or **Include placeholder pictures** when exporting.
 2. **Names:** exported as format-specific labels/metadata. CAD uses stable layer
    IDs with human names in descriptions; AI goes through an SVG conversion.
    Another application's layer panel may display these differently.
