@@ -116,6 +116,7 @@ impl Editor {
                 ui.ctx(),
                 "ui.includes-contact-between-mirrored-opposite-resizing-layers",
             ));
+            ui.checkbox(&mut self.snapping.mask_edges, tr(ui.ctx(), "ui.mask-edges"));
         });
         ui.weak(tr(
             ui.ctx(),
@@ -466,6 +467,27 @@ mod tests {
         );
         frame(app, ctx, vec![mouse(pos, false)]);
     }
+    #[test]
+    fn mask_snapping_menu_persists_without_editing_geometry() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let (store, saved) = settings::Store::at(path.clone());
+        let ctx = egui::Context::default();
+        let mut app = Editor::with_settings(&ctx, store, saved);
+        let before = app.layout.layers().clone();
+        click_label(&mut app, &ctx, "Menu");
+        click_label(&mut app, &ctx, "Options");
+        click_label(&mut app, &ctx, "Snapping");
+        click_label(&mut app, &ctx, "Snap movement & resizing");
+        click_label(&mut app, &ctx, "Mask edges");
+        assert!(app.snapping.mask_edges);
+        assert_eq!(*app.layout.layers(), before);
+        let (store, saved) = settings::Store::at(path);
+        assert!(store.error.is_none());
+        assert!(saved.snapping.mask_edges);
+        assert!(saved.snapping.enabled);
+    }
+
     #[test]
     fn options_are_saved_and_restored_in_a_fresh_editor() {
         let dir = tempfile::tempdir().unwrap();

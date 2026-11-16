@@ -8,6 +8,7 @@ pub struct Snapping {
     pub pixels: bool,
     pub screen_edges: bool,
     pub layer_edges: bool,
+    pub mask_edges: bool,
     pub grid: bool,
     pub show_grid: bool,
     pub grid_divisions: [u32; 2],
@@ -19,6 +20,7 @@ impl Default for Snapping {
             pixels: true,
             screen_edges: true,
             layer_edges: true,
+            mask_edges: false,
             grid: false,
             show_grid: true,
             grid_divisions: [8, 6],
@@ -37,6 +39,66 @@ impl Snapping {
 // Screen coordinates remain fractional for custom resolutions not divisible by four.
 fn screen_guides(size: u32) -> [f64; 5] {
     [0.0, 0.25, 0.5, 0.75, 1.0].map(|fraction| size as f64 * fraction)
+}
+
+// Mask fractions are resolved through the same source/layer reference as rendering.
+// Clip to the layer aperture; a fully blanked layer has no visible snap edges.
+fn mask_geometry(formats: &crate::formats::Formats, index: usize, g: Geometry) -> Option<Geometry> {
+    let mask = formats.mask_bounds(index, g).ok()?;
+    let picture = if let Some(fit) = formats.layer_fit[index] {
+        fit.image(
+            formats.advanced[index]
+                .remaining(formats.input(index).ok()?)
+                .ok()?,
+            g,
+        )
+        .ok()?
+    } else {
+        g
+    };
+    let x = g.x.max(mask.x).max(picture.x);
+    let y = g.y.max(mask.y).max(picture.y);
+    let width = (g.x + g.width)
+        .min(mask.x + mask.width)
+        .min(picture.x + picture.width)
+        - x;
+    let height = (g.y + g.height)
+        .min(mask.y + mask.height)
+        .min(picture.y + picture.height)
+        - y;
+    (width > 0.0 && height > 0.0).then_some(Geometry {
+        x,
+        y,
+        width,
+        height,
+    })
+}
+
+fn edges(g: Geometry, axis: usize) -> [f64; 2] {
+    if axis == 0 {
+        [g.x, g.x + g.width]
+    } else {
+        [g.y, g.y + g.height]
+    }
+}
+
+impl Snapping {
+    fn targets(
+        self,
+        formats: &crate::formats::Formats,
+        index: usize,
+        g: Geometry,
+        axis: usize,
+    ) -> impl Iterator<Item = f64> {
+        let mask = self
+            .mask_edges
+            .then(|| mask_geometry(formats, index, g))
+            .flatten();
+        [self.layer_edges.then_some(g), mask]
+            .into_iter()
+            .flatten()
+            .flat_map(move |g| edges(g, axis))
+    }
 }
 
 impl Layout {
@@ -86,14 +148,10 @@ impl Layout {
             if options.grid {
                 edges.extend(options.grid_guides(self.formats.output[axis], axis));
             }
-            if options.layer_edges {
+            if options.layer_edges || options.mask_edges {
                 for (i, other) in self.layers.iter().enumerate() {
                     if i != index && self.visible(i) {
-                        edges.extend(if axis == 0 {
-                            [other.x, other.x + other.width]
-                        } else {
-                            [other.y, other.y + other.height]
-                        });
+                        edges.extend(options.targets(&self.formats, i, *other, axis));
                     }
                 }
             }
@@ -153,10 +211,10 @@ impl Layout {
                 Vec::new()
             };
             targets.extend(grid_targets.iter().copied());
-            if options.layer_edges {
+            if options.layer_edges || options.mask_edges {
                 for (i, g) in before.layers.iter().enumerate() {
                     if !selected[i] && self.visible[i] {
-                        targets.extend(edge(*g, axis));
+                        targets.extend(options.targets(&before.formats, i, *g, axis));
                     }
                 }
             }
@@ -165,15 +223,20 @@ impl Layout {
                 if !selected[i] {
                     continue;
                 }
-                for (anchor, moving) in edge(*g, axis)
+                let mask = options
+                    .mask_edges
+                    .then(|| mask_geometry(&before.formats, i, *g))
+                    .flatten();
+                for (is_center, moving) in edge(*g, axis)
                     .into_iter()
-                    .chain(std::iter::once(g.center()[axis]))
-                    .enumerate()
+                    .chain(mask.into_iter().flat_map(|g| edge(g, axis)))
+                    .map(|v| (false, v))
+                    .chain(std::iter::once((true, g.center()[axis])))
                 {
                     for target in &targets {
                         // Centers align to screen interior guides and overlay grid lines;
                         // other targets retain edge-to-edge behavior.
-                        if anchor == 2
+                        if is_center
                             && (!options.screen_edges
                                 || !screen_guides(self.formats.output[axis])[1..4].contains(target))
                             && !grid_targets.contains(target)
@@ -317,14 +380,10 @@ impl Layout {
             if options.grid {
                 targets.extend(options.grid_guides(self.formats.output[axis], axis));
             }
-            if options.layer_edges {
+            if options.layer_edges || options.mask_edges {
                 for (i, g) in r.before.layers.iter().enumerate() {
                     if !r.targets[i] && self.visible(i) {
-                        targets.extend(if axis == 0 {
-                            [g.x, g.x + g.width]
-                        } else {
-                            [g.y, g.y + g.height]
-                        });
+                        targets.extend(options.targets(&r.before.formats, i, *g, axis));
                     }
                 }
             }

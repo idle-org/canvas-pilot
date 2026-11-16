@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### v0.9.13
+
+- Added optional Mask edges snapping for movement, resize targets and pivots,
+  using layer/source mask bounds clipped to the layer aperture. Moving mask
+  edges can align alongside outer layer edges; hidden and fully masked targets
+  are ignored. Resize handles and mirrored contact retain outer-edge geometry.
+- Project v18 and settings v14 persist the option; older files migrate with it
+  disabled. Added regression coverage for masked targets, strict migrations and
+  the saved UI toggle. Whole-application line coverage: 91.54%.
+
 ### v0.9.12
 
 - Added Reset mask to the layer context menu, preserving mask origin, crop, fit and

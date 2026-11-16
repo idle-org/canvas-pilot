@@ -7,7 +7,7 @@ These are offline editor formats, not Analog Way REST payloads. Implementation:
 [`project.rs`](../../crates/canvas-pilot/tests/project.rs). Update this contract,
 examples and tests in the same change as any save/export schema change.
 
-## Project JSON, version 17
+## Project JSON, version 18
 
 Suggested filename: `layout.pilot.json`. **Open project** accepts any `.json`
 filename, including legacy `.midra.json` projects, and validates the project
@@ -27,7 +27,7 @@ and `next_layer_id: 3`; other values are preserved.
 The [version 1 example](canvas-pilot-v1.example.json) remains a migration fixture.
 Version 4 adds `editor.outline_layers: false`, and reference `native_size: false`
 and `offset: [0, 0]` when migrating versions 1–3. Old fitting behavior is preserved.
-Version 5 adds required `midra_link` to every layer. Versions 1–4 migrate with null links; links cannot be supplied under an older version. Version 6 renames `editor.position_corner` to `editor.position_point` and adds `center`. Versions 1–5 retain their original corner; center and the new field are rejected in those older schemas. Version 7 adds `editor.backdrop_title`; versions 1–6 gain `"Example Conference Name"` and cannot supply this field under the old schema. Version 8 adds required `editor.position_layer_point`: null keeps matched points; a point enables independent measurement. Versions 1–7 migrate to null and cannot supply this field. Version 9 adds required `layers[].pivot`; versions 1–8 migrate to `[0.5, 0.5]` and cannot supply this field. Version 10 replaces `reference` with the required ordered `references` array. Versions 1–9 migrate null to `[]` and a single image to a one-element array, preserving all image settings. Version 11 adds required `workspace` settings and embedded layer previews. Versions 1–10 gain the documented workspace defaults, with no captures or collapsed folders; supplying `workspace` in an older schema is rejected. Version 12 adds required `folders`, the explicit folder names that survive without members. Versions 1–11 gain `folders: []`, preserving their existing implicit layer grouping; supplying this field under an older version is rejected. Version 13 replaces `midra_link` with required `device_link`, adding the explicit device family. Versions 1–12 migrate numeric links to `family: "midra4k"`; null remains null, and legacy decimal IDs with leading zeros are canonicalized. Unknown legacy fields are rejected. Version 14 adds required `layers[].layer_fit`: versions 1–13 migrate to null, preserving normal crop/zoom behavior; supplying this field under an older schema is rejected. Version 15 adds required `layers[].mask`; versions 1–14 migrate with four zero edges and reject masks supplied under an older version. Version 16 adds required root `input_proposals`; versions 1–15 migrate to an empty array and reject this field if supplied under an older version. Version 17 adds required `mask.origin` (`layer` or `source`). Versions 1–16 migrate to `layer`; older versions containing `origin` are rejected. See the [version 17 example](canvas-pilot-v17.example.json); v16 remains a migration fixture. Saving always writes version 17; older applications reject it.
+Version 5 adds required `midra_link` to every layer. Versions 1–4 migrate with null links; links cannot be supplied under an older version. Version 6 renames `editor.position_corner` to `editor.position_point` and adds `center`. Versions 1–5 retain their original corner; center and the new field are rejected in those older schemas. Version 7 adds `editor.backdrop_title`; versions 1–6 gain `"Example Conference Name"` and cannot supply this field under the old schema. Version 8 adds required `editor.position_layer_point`: null keeps matched points; a point enables independent measurement. Versions 1–7 migrate to null and cannot supply this field. Version 9 adds required `layers[].pivot`; versions 1–8 migrate to `[0.5, 0.5]` and cannot supply this field. Version 10 replaces `reference` with the required ordered `references` array. Versions 1–9 migrate null to `[]` and a single image to a one-element array, preserving all image settings. Version 11 adds required `workspace` settings and embedded layer previews. Versions 1–10 gain the documented workspace defaults, with no captures or collapsed folders; supplying `workspace` in an older schema is rejected. Version 12 adds required `folders`, the explicit folder names that survive without members. Versions 1–11 gain `folders: []`, preserving their existing implicit layer grouping; supplying this field under an older version is rejected. Version 13 replaces `midra_link` with required `device_link`, adding the explicit device family. Versions 1–12 migrate numeric links to `family: "midra4k"`; null remains null, and legacy decimal IDs with leading zeros are canonicalized. Unknown legacy fields are rejected. Version 14 adds required `layers[].layer_fit`: versions 1–13 migrate to null, preserving normal crop/zoom behavior; supplying this field under an older schema is rejected. Version 15 adds required `layers[].mask`; versions 1–14 migrate with four zero edges and reject masks supplied under an older version. Version 16 adds required root `input_proposals`; versions 1–15 migrate to an empty array and reject this field if supplied under an older version. Version 17 adds required `mask.origin` (`layer` or `source`). Versions 1–16 migrate to `layer`; older versions containing `origin` are rejected. See the [version 17 example](canvas-pilot-v17.example.json); v16 remains a migration fixture. Version 18 adds required `workspace.snapping.mask_edges` (default false). Versions 1–17 migrate with this option disabled; supplying it under an older schema is rejected. See the [version 18 example](canvas-pilot-v18.example.json). Saving always writes version 18; older applications reject it.
 Incompatible files are never partially applied.
 
 [Complete example](canvas-pilot-v17.example.json) is a valid project with an empty `Memory A` folder, a Midra link and an inactive input correction proposal,
@@ -38,7 +38,7 @@ It is loaded by the regression tests.
 | Root field | Representation / meaning |
 | --- | --- |
 | `format` | Exactly `"beffroi.midra-layout"` |
-| `version` | Integer `17` |
+| `version` | Integer `18` |
 | `input_proposals` | Required array, 0–256 inactive correction proposals; at most one per existing layer, with an exactly matching `device_link`. See below. |
 | `folders` | Required array of 0–256 unique explicit folder names, each trimmed and 1–128 characters. Explicit folders remain even with no members; layer folder labels also form implicit groups. |
 | `next_layer_id` | Positive integer strictly greater than every layer ID; not rewound by undo |
@@ -260,7 +260,7 @@ and `viewBox="0 0 W H"` equal to the output screen. The root carries
 
 ## Compatibility changes
 
-Project version 17 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
+Project version 18 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
 `version` and either implement a tested migration or clearly reject older/newer
 files. Changing rectangle/marker semantics requires a corresponding documented
 exchange-interface revision and importer tests. Update this document and its example
@@ -278,7 +278,7 @@ retarget existing links; choosing a destination there explicitly replaces that
 layer's saved link. Direct send/load actions use each layer's saved screen,
 independently of the screen currently displayed in the configuration window.
 
-Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 17.
+Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 18.
 
 ## Folder-scoped Midra transfers
 
@@ -309,7 +309,7 @@ migration rules are unchanged. These IDs do not select or route physical inputs.
 
 | Field | Representation / validation / migration default |
 | --- | --- |
-| `snapping` | Required booleans `enabled` (false), `pixels` (true), `screen_edges` (true), `layer_edges` (true), `grid` (false), `show_grid` (true), and `grid_divisions` (two integers 1–64, default `[8,6]`). These override application defaults for the opened project. |
+| `snapping` | Required booleans `enabled` (false), `pixels` (true), `screen_edges` (true), `layer_edges` (true), `mask_edges` (false), `grid` (false), `show_grid` (true), and `grid_divisions` (two integers 1–64, default `[8,6]`). These override application defaults for the opened project. |
 | `resize_mode` | `individual` (default), `same`, `mirror`, or `opposite` |
 | `grid_spacing` | null (default), 10 or 100, in output pixels |
 | `collapsed_folders` | Unique existing nonempty folder names (including empty explicit folders); default `[]`. Deleted/renamed stale entries are omitted when saving. |
@@ -344,7 +344,7 @@ background export behavior.
 For the complete persistence audit and the reasons for keeping other controls
 out of project files, see [Project persistence audit](canvas-pilot-persistence-audit.md).
 
-Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 17 and use the same migration on import.
+Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 18 and use the same migration on import.
 
 ### Explicit layer fit (v14)
 

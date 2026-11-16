@@ -7,7 +7,7 @@ not a named project export. Headless/default editors never access this path.
 | Field | Meaning |
 | --- | --- |
 | `version` | Integer `1`; other versions rejected |
-| `project` | Complete [project v17](canvas-pilot.md), including embedded reference bytes; its units, precision and validation apply without display rounding |
+| `project` | Complete [project v18](canvas-pilot.md), including embedded reference bytes; its units, precision and validation apply without display rounding |
 | `project_path` | Last opened/successfully saved named JSON path, or null; geometry exports do not change it |
 | `manual_saved_at` | Unix UTC seconds of the last successful explicit project save, or null when unknown; recovery and measurement-point autosaves do not update it |
 
@@ -34,7 +34,7 @@ last successful writer wins.
 Recovery retains applied values only: no undo history, pending text/format/import
 drafts, transient tools, or credentials. A normal exit cancels unfinished canvas
 gestures before the final checkpoint. The schema does not replace named project
-JSON: Save continues to emit a bare project v17 document. Opening/New replaces the
+JSON: Save continues to emit a bare project v18 document. Opening/New replaces the
 single recovery slot; New warns with the manual-save age and Save/Discard/Cancel.
 A failed or cancelled manual save never completes Save-and-create-new.
 

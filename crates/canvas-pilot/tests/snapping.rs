@@ -651,6 +651,7 @@ fn overlay_grid_snaps_moves_resizes_and_pivots_with_fractional_divisions() {
         grid: true,
         show_grid: false,
         grid_divisions: [7, 5],
+        mask_edges: false,
     };
     let mut layout = Layout::default();
     let x = 1920.0 / 7.0;
@@ -702,4 +703,237 @@ fn overlay_grid_snaps_moves_resizes_and_pivots_with_fractional_divisions() {
         .len(),
         65
     );
+}
+
+fn mask_options() -> Snapping {
+    Snapping {
+        enabled: true,
+        pixels: false,
+        screen_edges: false,
+        layer_edges: false,
+        mask_edges: true,
+        ..Default::default()
+    }
+}
+
+#[test]
+fn masked_edges_snap_movement_pivot_and_resize_for_both_origins() {
+    use canvas_pilot::{
+        ResizeHandle,
+        formats::{Mask, MaskOrigin},
+    };
+    for origin in [MaskOrigin::Layer, MaskOrigin::Source] {
+        let mut layout = Layout::default();
+        layout
+            .set_mask(
+                0,
+                Mask {
+                    origin,
+                    right: 0.25,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        layout.set_locked(0, true);
+        // First layer ends at 760, its picture at 600.
+        let target = 600.0;
+        let options = mask_options();
+        assert_eq!(
+            layout
+                .snap_pivot(1, [target + 3.0, 300.0], options, 6.0, None, false)
+                .0[0],
+            target
+        );
+        let original = layout.layers().clone();
+        layout.start_drag([1160.0, 200.0]);
+        assert_eq!(
+            layout.drag_to_snapped([target + 3.0, 210.0], options, 6.0)[0],
+            Some(target)
+        );
+        assert_eq!(layout.layers()[1].x, target);
+        layout.finish_drag();
+        layout.undo();
+        assert_eq!(*layout.layers(), original);
+        layout.select(Some(1));
+        layout.start_handle_resize(1, ResizeHandle::Left, [1160.0, 360.0], false);
+        assert_eq!(
+            layout.drag_to_snapped([target + 3.0, 360.0], options, 6.0)[0],
+            Some(target)
+        );
+        assert_eq!(layout.layers()[1].x, target);
+        assert_eq!(layout.layers()[1].x + layout.layers()[1].width, 1800.0);
+        layout.cancel_drag();
+        for hidden in [false, true] {
+            layout.set_visible(0, !hidden);
+            let mut disabled = options;
+            disabled.mask_edges = false;
+            assert_eq!(
+                layout
+                    .snap_pivot(1, [603.0, 300.0], disabled, 6.0, None, false)
+                    .1[0],
+                None
+            );
+            assert_eq!(
+                layout
+                    .snap_pivot(1, [603.0, 300.0], options, 6.0, None, false)
+                    .1[0],
+                if hidden { None } else { Some(600.0) }
+            );
+        }
+    }
+}
+
+#[test]
+fn moving_mask_edges_align_without_changing_masks_and_groups_remain_rigid() {
+    use canvas_pilot::formats::Mask;
+    let mut layout = Layout::default();
+    layout
+        .set_mask(
+            1,
+            Mask {
+                left: 0.25,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let formats = layout.formats().clone();
+    layout.start_drag([1200.0, 200.0]);
+    // Moving left mask edge is 160 pixels inside the layer.
+    assert_eq!(
+        layout.drag_to_snapped([643.0, 210.0], mask_options(), 6.0)[0],
+        Some(760.0)
+    );
+    assert_eq!(layout.layers()[1].x, 600.0);
+    assert_eq!(*layout.formats(), formats);
+    layout.cancel_drag();
+    layout
+        .set_mask(
+            1,
+            Mask {
+                left: 0.2,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    layout.set_selection([true, true]);
+    layout.start_drag([1200.0, 200.0]);
+    let before = layout.layers().clone();
+    let options = Snapping {
+        screen_edges: true,
+        ..mask_options()
+    };
+    // Selected layers cannot target one another; a mask edge can target the output.
+    assert_eq!(
+        layout.drag_to_snapped([875.0, 210.0], options, 6.0)[0],
+        Some(960.0)
+    );
+    assert_eq!(
+        layout.layers()[1].x - layout.layers()[0].x,
+        before[1].x - before[0].x
+    );
+    layout.cancel_drag();
+    assert_eq!(*layout.layers(), before);
+}
+
+#[test]
+fn fully_masked_targets_are_ignored_and_source_masks_are_clipped_to_layer() {
+    use canvas_pilot::formats::{Framing, Mask, MaskOrigin};
+    let mut layout = Layout::default();
+    layout
+        .set_mask(
+            0,
+            Mask {
+                left: 0.5,
+                right: 0.5,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        layout
+            .snap_pivot(1, [443.0, 300.0], mask_options(), 6.0, None, false)
+            .1,
+        [None; 2]
+    );
+    layout
+        .set_mask(
+            0,
+            Mask {
+                origin: MaskOrigin::Source,
+                left: 0.3,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    layout
+        .set_framing(
+            0,
+            Framing {
+                zoom: 2.0,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    // Source is now twice the aperture: 120 + (0.30 - 0.25) * 1280 = 184.
+    assert_eq!(
+        layout
+            .snap_pivot(1, [187.0, 300.0], mask_options(), 6.0, None, false)
+            .1[0],
+        Some(184.0)
+    );
+    assert_eq!(
+        layout
+            .snap_pivot(1, [763.0, 300.0], mask_options(), 6.0, None, false)
+            .1[0],
+        Some(760.0)
+    );
+    assert_eq!(
+        layout
+            .snap_pivot(1, [1083.0, 300.0], mask_options(), 6.0, None, false)
+            .1[0],
+        None
+    );
+}
+
+#[test]
+fn mask_targets_follow_all_fit_modes_and_skip_letterbox_space() {
+    use canvas_pilot::formats::{LayerFit, Mask, MaskOrigin};
+    for fit in LayerFit::ALL {
+        for origin in [MaskOrigin::Layer, MaskOrigin::Source] {
+            let mut layout = Layout::default();
+            let mut g = layout.layers()[0];
+            g.height = 600.0;
+            layout.apply(0, g).unwrap();
+            layout
+                .set_layer_fit(0, Some(fit), Default::default())
+                .unwrap();
+            layout
+                .set_mask(
+                    0,
+                    Mask {
+                        origin,
+                        left: 0.3,
+                        top: 0.3,
+                        ..Default::default()
+                    },
+                )
+                .unwrap();
+            let mask = layout.formats().mask_bounds(0, g).unwrap();
+            let picture = fit.image([1920.0, 1080.0], g).unwrap();
+            let expected = [
+                g.x.max(mask.x).max(picture.x),
+                g.y.max(mask.y).max(picture.y),
+            ];
+            let (actual, guides) = layout.snap_pivot(
+                1,
+                expected.map(|v| v + 2.0),
+                mask_options(),
+                6.0,
+                None,
+                false,
+            );
+            assert_eq!(actual, expected, "{fit:?} {origin:?}");
+            assert_eq!(guides, expected.map(Some));
+        }
+    }
 }

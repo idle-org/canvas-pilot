@@ -154,6 +154,22 @@ Navigation tool choice survives selection changes and project loads in the curre
 session; a new launch starts with Select. Pan/Zoom do not alter geometry, crop values
 or document history. Existing project saves still preserve zoom/pan values.
 
+### Snap to masks
+
+Enable **Mask edges** in the snapping options to add the visible mask boundaries
+as targets, independently of **Visible layer edges**. Movement can align either
+outer layer edges or mask edges to those targets, screen guides and grid lines.
+Resize handles and pivots can snap to stationary layers’ mask boundaries;
+resize handles still belong to the outer layer rectangle. Mirrored/opposite
+resize contact remains based on outer layer edges.
+
+Both layer-relative and source-relative masks are supported, including source
+crop, pan and zoom. Mask bounds are clipped to the layer aperture and fitted picture, so empty
+letterbox margins add no mask targets; fully masked
+areas and hidden layers supply no mask targets. Locked visible layers still do.
+This option starts disabled and is saved in preferences and projects. Crop and
+mask-editing gestures remain free of snapping.
+
 ### Persistent editing tools
 
 The toolbar’s **Snap ▾** dropdown groups the **10 px grid** and **100 px grid**
