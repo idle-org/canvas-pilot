@@ -440,6 +440,19 @@ impl Editor {
             )
         )
     }
+    fn open_mask_edit(&mut self, i: usize) {
+        self.property_tab = PropertyTab::Mask;
+        if self
+            .format_draft
+            .as_ref()
+            .is_none_or(|draft| !draft.is_for(i))
+        {
+            self.format_draft = Some(FormatDraft::new(&self.layout, i));
+        }
+        self.edit_mask = true;
+        self.edit_content = true;
+    }
+
     fn toggle_crop_edit(&mut self) {
         self.edit_mask = false;
         if self
@@ -2184,16 +2197,7 @@ impl Editor {
         if let Some(i) = self.layout.selected() {
             ui.weak(self.layout.layer_label(i));
             if ui.button(tr(ui.ctx(), "ui.adjust-layer-mask")).clicked() {
-                self.property_tab = PropertyTab::Mask;
-                if self
-                    .format_draft
-                    .as_ref()
-                    .is_none_or(|draft| !draft.is_for(i))
-                {
-                    self.format_draft = Some(FormatDraft::new(&self.layout, i));
-                }
-                self.edit_mask = true;
-                self.edit_content = true;
+                self.open_mask_edit(i);
                 ui.close_menu();
             }
             let crop_label = if self.edit_content && !self.edit_mask {
@@ -3352,7 +3356,26 @@ impl Editor {
             self.zoom_drag = None;
             self.camera_before = None;
         }
-        let finish_crop = self.edit_content
+        let mask_shortcut = edit_pointer
+            && pivot_hover.is_none()
+            && ui.input(|i| {
+                i.modifiers.alt && !i.modifiers.shift && !i.modifiers.ctrl && !i.modifiers.command
+            })
+            && response.double_clicked_by(egui::PointerButton::Primary);
+        if mask_shortcut && let Some(pointer) = pointer {
+            let point = (pointer - origin) / scale;
+            if let Some(i) = self
+                .content_hit(pointer, origin, scale)
+                .or_else(|| self.layout.hit([point.x as f64, point.y as f64]))
+                .filter(|&i| !self.layout.locked(i) && self.layout.visible(i))
+            {
+                self.layout.select(Some(i));
+                self.open_mask_edit(i);
+                self.sync();
+            }
+        }
+        let finish_crop = !mask_shortcut
+            && self.edit_content
             && edit_pointer
             && pivot_hover.is_none()
             && !click_shift_modifier(ui)
@@ -3361,6 +3384,7 @@ impl Editor {
             self.edit_content = false;
         }
         if response.clicked()
+            && !mask_shortcut
             && edit_pointer
             && self.edit_content
             && pointer.is_some_and(|p| {
@@ -3379,6 +3403,7 @@ impl Editor {
             && edit_pointer
             && pivot_hover.is_none()
             && !finish_crop
+            && !mask_shortcut
             && !self.edit_content
             && let Some(p) = pointer
         {
@@ -6091,6 +6116,65 @@ mod tests {
             assert!(!app.edit_content);
         }
     }
+    #[test]
+    fn alt_double_click_opens_mask_from_normal_and_crop_modes_without_mutation() {
+        for (crop, locked, target, tool) in [
+            (false, false, true, NavigationTool::Select),
+            (true, false, true, NavigationTool::Select),
+            (false, true, true, NavigationTool::Select),
+            (false, false, false, NavigationTool::Select),
+            (false, false, true, NavigationTool::Zoom),
+            (false, false, true, NavigationTool::Pan),
+        ] {
+            let mut app = Editor::default();
+            let ctx = egui::Context::default();
+            let output = frame(&mut app, &ctx, vec![]);
+            let pos = if target {
+                layer_rects(&output)[1].center()
+            } else {
+                Pos2::new(500.0, 700.0)
+            };
+            app.layout.select(Some(1));
+            app.layout.set_locked(1, locked);
+            app.edit_content = crop;
+            app.navigation_tool = tool;
+            let before = app.layout.layers().clone();
+            let formats = app.layout.formats().clone();
+            for _ in 0..2 {
+                for pressed in [true, false] {
+                    let modifiers = egui::Modifiers::ALT;
+                    let input = egui::RawInput {
+                        screen_rect: Some(Rect::from_min_size(
+                            Pos2::ZERO,
+                            Vec2::new(1440.0, 940.0),
+                        )),
+                        modifiers,
+                        events: vec![
+                            egui::Event::PointerMoved(pos),
+                            egui::Event::PointerButton {
+                                pos,
+                                button: egui::PointerButton::Primary,
+                                pressed,
+                                modifiers,
+                            },
+                        ],
+                        ..Default::default()
+                    };
+                    let _ = ctx.run(input, |ctx| app.ui(ctx));
+                }
+            }
+            let expected = !locked && target && tool == NavigationTool::Select;
+            assert_eq!(app.edit_mask, expected);
+            if expected {
+                assert!(app.edit_content);
+                assert_eq!(app.property_tab, PropertyTab::Mask);
+                assert!(app.format_draft.as_ref().unwrap().is_for(1));
+            }
+            assert_eq!(*app.layout.layers(), before);
+            assert_eq!(*app.layout.formats(), formats);
+        }
+    }
+
     #[test]
     fn double_click_does_not_edit_a_locked_layer() {
         let mut app = Editor::default();

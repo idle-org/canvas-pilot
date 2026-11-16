@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Alt/Option + double-click with the Select tool opens the layer mask controls,
+  including from crop mode. Existing crop double-click and Zoom/Pan behavior remain
+  intact; regression tests cover the shortcut, locked layers and empty canvas.
+
 - Added the missing Mask properties entry to the layer right-click Properties
   submenu, opening the existing mask controls. The context-menu regression test
   now covers this entry.
