@@ -240,7 +240,7 @@ fn family_links_save_migrate_recover_and_validate() {
     let mut old: Value = serde_json::from_str(old).unwrap();
     old["layers"][0]["midra_link"] = json!({"screen":"001","layer":"02"});
     let p = Project::from_json(&old.to_string()).unwrap();
-    assert_eq!(p.version, 15);
+    assert_eq!(p.version, 16);
     assert_eq!(
         p.layers[0].device_link.as_ref().unwrap().family,
         Family::Midra4k
@@ -300,7 +300,7 @@ fn documented_v13_example_contains_native_aquilon_link() {
         "../../../docs/interfaces/canvas-pilot-v13.example.json"
     ))
     .unwrap();
-    assert_eq!(p.version, 15);
+    assert_eq!(p.version, 16);
     let link = p.layers[0].device_link.as_ref().unwrap();
     assert_eq!(link.family, Family::Aquilon);
     assert_eq!(link.screen, "S1");

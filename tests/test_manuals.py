@@ -29,11 +29,14 @@ class ManualTests(unittest.TestCase):
 title = "Example"
 description = "Example manual"
 src = "src"
+[output.html]
+additional-css = ["manual.css"]
 [manual]
 icon = "docs/icon.png"
 ''')
         self.write("docs/manuals/example/SUMMARY.md", "# Summary\n\n"
                    "- [Intro](../../tool/README.md)\n- [Details](../../tool/detail.md)\n")
+        self.write("docs/manuals/example/manual.css", "table { color: inherit; }")
         self.write("docs/icon.png", "image fixture")
         self.write("docs/tool/README.md", '# Intro\n\n[Detail](detail.md#values)\n'
                    '[Other](../other.md)\n![Icon](../icon.png)\n'
@@ -60,6 +63,7 @@ icon = "docs/icon.png"
                          (self.root / "docs/sample.json").read_bytes())
         self.assertFalse((stage / "src/docs/other.md").exists())
         self.assertNotIn("[manual]", (stage / "book.toml").read_text())
+        self.assertEqual((stage / "manual.css").read_text(), "table { color: inherit; }")
         self.assertEqual((self.root / "docs/tool/README.md").read_bytes(), before)
 
     def test_missing_duplicate_outside_and_symlinked_sources_are_rejected(self):

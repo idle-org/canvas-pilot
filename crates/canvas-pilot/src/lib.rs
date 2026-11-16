@@ -9,6 +9,7 @@ mod folders;
 pub mod formats;
 mod geometry_formats;
 pub mod import;
+pub mod input_proposal;
 pub mod interchange;
 pub mod project;
 pub mod snapping;

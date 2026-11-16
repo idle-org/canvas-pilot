@@ -163,6 +163,7 @@ impl Preview {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Project {
+    pub input_proposals: Vec<crate::input_proposal::InputProposal>,
     pub folders: Vec<String>,
     pub workspace: Workspace,
     pub format: String,
@@ -180,7 +181,8 @@ impl Project {
             folders: layout.folders.clone(),
             workspace: Workspace::default(),
             format: FORMAT.into(),
-            version: 15,
+            version: 16,
+            input_proposals: Vec::new(),
             next_layer_id: layout.next_id,
             output_resolution: layout.formats.output.into(),
             inputs: (0..layout.formats.sources.len())
@@ -231,11 +233,29 @@ impl Project {
     }
     /// Build a fresh document only after validating the entire file. No history is restored.
     pub fn layout(&self) -> Result<Layout, String> {
-        if self.format != FORMAT || self.version != 15 {
+        if self.format != FORMAT || self.version != 16 {
             return Err(
-                "Unsupported project format/version; expected beffroi.midra-layout version 15."
+                "Unsupported project format/version; expected beffroi.midra-layout version 16."
                     .into(),
             );
+        }
+        if self.input_proposals.len() > 256 {
+            return Err("Too many input proposals.".into());
+        }
+        let mut proposal_layers = std::collections::BTreeSet::new();
+        for proposal in &self.input_proposals {
+            proposal.validate()?;
+            if !proposal_layers.insert(proposal.layer_id)
+                || !self.layers.iter().any(|l| {
+                    l.id == proposal.layer_id
+                        && l.device_link.as_ref() == Some(&proposal.device_link)
+                })
+            {
+                return Err(
+                    "Input proposal must refer to a distinct layer with its matching device link."
+                        .into(),
+                );
+            }
         }
         if self.editor.backdrop_title.chars().count() > 128
             || self.editor.backdrop_title.chars().any(char::is_control)
@@ -427,8 +447,8 @@ impl Project {
         }
         let header: Header =
             serde_json::from_str(text).map_err(|e| format!("Invalid project JSON: {e}"))?;
-        if !(1..=15).contains(&header.version) {
-            return Err("Unsupported project version; expected versions 1–15.".into());
+        if !(1..=16).contains(&header.version) {
+            return Err("Unsupported project version; expected versions 1–16.".into());
         }
         let mut migrated: serde_json::Value = if header.version == 1 || header.version == 2 {
             let mut value: serde_json::Value =
@@ -651,6 +671,13 @@ impl Project {
                 layer["mask"] = serde_json::to_value(formats::Mask::default()).unwrap();
             }
             migrated["version"] = 15.into();
+        }
+        if header.version <= 15 {
+            if migrated.get("input_proposals").is_some() {
+                return Err("Unexpected input_proposals in legacy project.".into());
+            }
+            migrated["input_proposals"] = serde_json::json!([]);
+            migrated["version"] = 16.into();
         }
         let p: Self =
             serde_json::from_value(migrated).map_err(|e| format!("Invalid project JSON: {e}"))?;

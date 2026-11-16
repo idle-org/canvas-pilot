@@ -62,6 +62,19 @@ impl PreparedProject {
 impl Editor {
     pub(super) fn project(&self) -> Project {
         let mut p = Project::from_layout(&self.layout);
+        p.input_proposals = self
+            .device
+            .input_edits
+            .saved
+            .iter()
+            .filter(|proposal| {
+                p.layers.iter().any(|l| {
+                    l.id == proposal.layer_id
+                        && l.device_link.as_ref() == Some(&proposal.device_link)
+                })
+            })
+            .cloned()
+            .collect();
         p.editor.position_point = self.corner;
         p.editor.position_layer_point = self.position_layer_point;
         p.editor.backdrop_title = self.backdrop_title.clone();
@@ -127,6 +140,7 @@ impl Editor {
         let e = project.editor;
         self.device.reset_mappings();
         self.device.input_edits.clear();
+        self.device.input_edits.saved = project.input_proposals;
         self.capture.clear_preview();
         let mut layer_ui = layers_ui::LayerUi::default();
         layer_ui.collapsed = project.workspace.collapsed_folders.into_iter().collect();
@@ -345,7 +359,9 @@ impl Editor {
             if let Some(path) = rfd::FileDialog::new()
                 .add_filter(
                     "Exports with Canvas Pilot parameters",
-                    &["svg", "drawio", "xml", "json", "csv", "dxf", "html", "pptx"],
+                    &[
+                        "svg", "drawio", "xml", "json", "csv", "dxf", "html", "pptx", "figcraft",
+                    ],
                 )
                 .pick_file()
             {
@@ -674,6 +690,25 @@ mod tests {
         let time = app.files.manual_saved_at;
         app.autosave_position_points();
         assert_eq!(app.files.manual_saved_at, time);
+    }
+
+    #[test]
+    fn saved_input_proposals_reopen_inactive_and_follow_layer_identity() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let project = Project::from_json(include_str!(
+            "../../../docs/interfaces/canvas-pilot-v16.example.json"
+        ))
+        .unwrap();
+        app.device.input_edits.enabled = true;
+        app.install_project(&ctx, project.clone()).unwrap();
+        assert!(!app.device.input_edits.enabled);
+        assert_eq!(app.project().input_proposals, project.input_proposals);
+        app.layout.set_device_link(0, None).unwrap();
+        assert!(app.project().input_proposals.is_empty());
+        app.install_project(&ctx, Project::from_layout(&Layout::default()))
+            .unwrap();
+        assert!(app.device.input_edits.saved.is_empty());
     }
 
     #[test]

@@ -234,7 +234,7 @@ fn persistent_device_links_roundtrip_migrate_and_undo() {
         include_str!("../../../docs/interfaces/canvas-pilot-v5.example.json"),
     ] {
         let p = Project::from_json(text).unwrap();
-        assert_eq!(p.version, 15);
+        assert_eq!(p.version, 16);
         assert!(p.layers.iter().all(|l| l.device_link.is_none()));
     }
     let mut value = serde_json::to_value(&project).unwrap();
@@ -311,7 +311,7 @@ fn position_point_schema_migrates_corners_and_rejects_mislabeled_files() {
         .unwrap();
         old["editor"]["position_corner"] = name.into();
         let loaded = Project::from_json(&old.to_string()).unwrap();
-        assert_eq!(loaded.version, 15);
+        assert_eq!(loaded.version, 16);
         assert_eq!(loaded.editor.position_point, expected);
         old["editor"]["position_corner"] = "center".into();
         assert!(Project::from_json(&old.to_string()).is_err());
@@ -320,7 +320,7 @@ fn position_point_schema_migrates_corners_and_rejects_mislabeled_files() {
         assert!(Project::from_json(&old.to_string()).is_err());
     }
     let value: serde_json::Value = serde_json::from_str(&current.to_json().unwrap()).unwrap();
-    for version in [0, 16] {
+    for version in [0, 17] {
         let mut invalid = value.clone();
         invalid["version"] = version.into();
         assert!(
@@ -361,7 +361,7 @@ fn backdrop_title_roundtrips_and_older_projects_gain_the_default() {
     }
     let old = include_str!("../../../docs/interfaces/canvas-pilot-v6.example.json");
     let migrated = Project::from_json(old).unwrap();
-    assert_eq!(migrated.version, 15);
+    assert_eq!(migrated.version, 16);
     assert_eq!(migrated.editor.backdrop_title, DEFAULT_BACKDROP_TITLE);
     let mut invalid: serde_json::Value = serde_json::from_str(old).unwrap();
     invalid["editor"]["backdrop_title"] = "Unexpected".into();
@@ -432,7 +432,7 @@ fn saved_pivots_roundtrip_and_old_projects_default_to_center() {
     assert_eq!(loaded.layer_info(0).pivot, custom);
     assert_eq!(loaded.layer_info(1).pivot, [0.5; 2]);
     let example = include_str!("../../../docs/interfaces/canvas-pilot-v9.example.json");
-    assert_eq!(Project::from_json(example).unwrap().version, 15);
+    assert_eq!(Project::from_json(example).unwrap().version, 16);
     let old = include_str!("../../../docs/interfaces/canvas-pilot-v8.example.json");
     let migrated = Project::from_json(old).unwrap();
     assert!(migrated.layers.iter().all(|l| l.pivot == [0.5; 2]));
@@ -464,7 +464,7 @@ fn reference_collection_migrates_single_images_and_rejects_mislabeled_or_oversiz
     let reference = serde_json::json!({"name":"guide.png","image_base64":STANDARD.encode(b"image bytes"),"visible":false,"opacity":0.4,"preserve_ratio":true,"native_size":false,"offset":[0.0,0.0]});
     old["reference"] = reference.clone();
     let migrated = Project::from_json(&old.to_string()).unwrap();
-    assert_eq!(migrated.version, 15);
+    assert_eq!(migrated.version, 16);
     assert_eq!(migrated.references.len(), 1);
     assert!(!migrated.references[0].visible);
     assert_eq!(migrated.references[0].opacity, 0.4);
@@ -484,7 +484,7 @@ fn reference_collection_migrates_single_images_and_rejects_mislabeled_or_oversiz
     gallery.references = vec![migrated.references[0].clone(); 33];
     assert!(gallery.to_json().unwrap_err().contains("32 reference"));
     let example = include_str!("../../../docs/interfaces/canvas-pilot-v10.example.json");
-    assert_eq!(Project::from_json(example).unwrap().version, 15);
+    assert_eq!(Project::from_json(example).unwrap().version, 16);
 }
 
 #[test]
@@ -605,4 +605,56 @@ fn workspace_roundtrip_migration_and_validation() {
     let mut missing = good.clone();
     missing.as_object_mut().unwrap().remove("workspace");
     assert!(Project::from_json(&missing.to_string()).is_err());
+}
+
+#[test]
+fn input_proposals_migrate_validate_and_require_explicit_version_16() {
+    let old = include_str!("../../../docs/interfaces/canvas-pilot-v15.example.json");
+    let migrated = Project::from_json(old).unwrap();
+    assert_eq!(migrated.version, 16);
+    assert!(migrated.input_proposals.is_empty());
+    let fixture = include_str!("../../../docs/interfaces/canvas-pilot-v16.example.json");
+    let project = Project::from_json(fixture).unwrap();
+    assert_eq!(project.input_proposals.len(), 1);
+    assert_eq!(
+        Project::from_json(&project.to_json().unwrap()).unwrap(),
+        project
+    );
+    let mut json = serde_json::to_value(&project).unwrap();
+    json.as_object_mut().unwrap().remove("input_proposals");
+    assert!(Project::from_json(&json.to_string()).is_err());
+    for (pointer, value) in [
+        ("/version", serde_json::json!(15)),
+        ("/input_proposals/0/layer_id", serde_json::json!(999)),
+        (
+            "/input_proposals/0/input",
+            serde_json::json!("INPUT_4/../../source"),
+        ),
+        ("/input_proposals/0/plug", serde_json::json!("0")),
+        (
+            "/input_proposals/0/device_link/layer",
+            serde_json::json!("999"),
+        ),
+        (
+            "/input_proposals/0/settings/aspect~1pp~1customRatio",
+            serde_json::json!(0),
+        ),
+    ] {
+        let mut invalid = serde_json::to_value(&project).unwrap();
+        *invalid.pointer_mut(pointer).unwrap() = value;
+        assert!(
+            Project::from_json(&invalid.to_string()).is_err(),
+            "{pointer}"
+        );
+    }
+    let mut invalid = project.clone();
+    invalid.input_proposals[0]
+        .settings
+        .insert("source/pp/input".into(), serde_json::json!("INPUT_9"));
+    assert!(invalid.to_json().is_err());
+    let mut duplicate = project.clone();
+    duplicate
+        .input_proposals
+        .push(project.input_proposals[0].clone());
+    assert!(duplicate.to_json().is_err());
 }

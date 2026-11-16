@@ -8,10 +8,7 @@ const MAX_METADATA: usize = 1024 * 1024;
 const PREFIX: &str = "beffroi-midra-parameters:";
 
 pub fn supported(codec: Codec) -> bool {
-    !matches!(
-        codec,
-        Codec::Dwg | Codec::Figma | Codec::Figcraft | Codec::Illustrator
-    )
+    !matches!(codec, Codec::Dwg | Codec::Figma | Codec::Illustrator)
 }
 
 /// Exclude unexported layers, unused inputs, image bytes and device capture bindings.
@@ -19,6 +16,7 @@ pub fn snapshot(project: &Project, ids: &[usize]) -> Result<Project, String> {
     project.layout()?;
     let mut p = project.clone();
     p.layers.retain(|l| ids.contains(&l.id));
+    p.input_proposals.retain(|p| ids.contains(&p.layer_id));
     p.editor.selected_layer_ids.retain(|id| ids.contains(id));
     p.folders
         .retain(|f| p.layers.iter().any(|l| &l.folder == f));
@@ -68,6 +66,9 @@ pub(crate) fn embed(
         return Err("Extra parameters are not supported by this format's current codec.".into());
     }
     let payload = encode(project, ids)?;
+    if codec == Codec::Figcraft {
+        return embed_figcraft(&bytes, &payload);
+    }
     if codec == Codec::Pptx {
         return embed_pptx(&bytes, &payload);
     }
@@ -205,7 +206,9 @@ pub fn extract(bytes: &[u8], codec: Codec) -> Result<Option<Project>, String> {
     if !supported(codec) {
         return Ok(None);
     }
-    let payload = if codec == Codec::Pptx {
+    let payload = if codec == Codec::Figcraft {
+        figcraft_payload(bytes)?
+    } else if codec == Codec::Pptx {
         let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| e.to_string())?;
         let text = match zip.by_name("docProps/custom.xml") {
             Ok(file) => read_bounded(file)?,
@@ -345,6 +348,94 @@ fn embed_pptx(bytes: &[u8], payload: &str) -> Result<Vec<u8>, String> {
         .start_file("docProps/custom.xml", options)
         .map_err(|e| e.to_string())?;
     write!(writer, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/custom-properties\" xmlns:vt=\"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes\"><property fmtid=\"{{D5CDD505-2E9C-101B-9397-08002B2CF9AE}}\" pid=\"2\" name=\"{KEY}\"><vt:lpwstr>{payload}</vt:lpwstr></property></Properties>").map_err(|e| e.to_string())?;
+    writer
+        .finish()
+        .map(|c| c.into_inner())
+        .map_err(|e| e.to_string())
+}
+
+// FigCraft's native node plugin_data survives its normal load/save cycle. This is
+// deliberately not used for FIG: that exporter drops plugin_data.
+fn figcraft_document(bytes: &[u8]) -> Result<serde_json::Value, String> {
+    let mut text = Vec::new();
+    if bytes.starts_with(b"PK") {
+        let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| e.to_string())?;
+        if zip
+            .file_names()
+            .filter(|name| *name == "document.json")
+            .count()
+            != 1
+        {
+            return Err("FigCraft requires exactly one document.json.".into());
+        }
+        zip.by_name("document.json")
+            .map_err(|e| e.to_string())?
+            .take((crate::exchange::MAX_EXCHANGE_BYTES + 1) as u64)
+            .read_to_end(&mut text)
+            .map_err(|e| e.to_string())?;
+    } else {
+        text.extend_from_slice(bytes);
+    }
+    if text.len() > crate::exchange::MAX_EXCHANGE_BYTES {
+        return Err("FigCraft document exceeds 16 MiB.".into());
+    }
+    let document: serde_json::Value = serde_json::from_slice(&text).map_err(|e| e.to_string())?;
+    if document["format"] != "figcraft" || document["version"] != 1 {
+        return Err("Unsupported FigCraft metadata carrier version.".into());
+    }
+    Ok(document)
+}
+fn figcraft_payload(bytes: &[u8]) -> Result<Option<String>, String> {
+    let document = figcraft_document(bytes)?;
+    let nodes = document["nodes"]
+        .as_object()
+        .ok_or("Missing FigCraft nodes")?;
+    let mut found = None;
+    for node in nodes.values() {
+        if let Some(value) = node.get("plugin_data").and_then(|v| v.get(KEY)) {
+            if found.is_some() {
+                return Err("Multiple extra-parameter snapshots in FigCraft.".into());
+            }
+            found = Some(
+                value
+                    .as_str()
+                    .ok_or("Invalid FigCraft parameters")?
+                    .to_owned(),
+            );
+        }
+    }
+    Ok(found)
+}
+fn embed_figcraft(bytes: &[u8], payload: &str) -> Result<Vec<u8>, String> {
+    let mut document = figcraft_document(bytes)?;
+    let page = document["pages"]
+        .as_array()
+        .and_then(|p| p.first())
+        .and_then(|p| p.as_u64())
+        .ok_or("Missing FigCraft page")?
+        .to_string();
+    let node = document["nodes"]
+        .get_mut(&page)
+        .ok_or("Missing FigCraft page node")?;
+    node["plugin_data"][KEY] = payload.into();
+    let json = serde_json::to_vec(&document).map_err(|e| e.to_string())?;
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| e.to_string())?;
+    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for i in 0..archive.len() {
+        let file = archive.by_index(i).map_err(|e| e.to_string())?;
+        if file.name() == "document.json" {
+            writer
+                .start_file(
+                    "document.json",
+                    zip::write::SimpleFileOptions::default()
+                        .compression_method(zip::CompressionMethod::Deflated),
+                )
+                .map_err(|e| e.to_string())?;
+            writer.write_all(&json).map_err(|e| e.to_string())?;
+        } else {
+            writer.raw_copy_file(file).map_err(|e| e.to_string())?;
+        }
+    }
     writer
         .finish()
         .map(|c| c.into_inner())

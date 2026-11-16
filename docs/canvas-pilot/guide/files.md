@@ -329,7 +329,9 @@ refresh reopens paused until you capture or resume it explicitly.
 Connection history, startup connection, theme and Program permission remain in
 application preferences. Unsaved drafts, undo history, open menus, active editing
 gestures and pending device operations are temporary. Transfer scope, target bank,
-sizing strategy and opt-in advanced device input edits remain session choices.
+sizing strategy and the permission to send advanced input edits remain session choices.
+Explicitly saved input correction proposals persist, but always reopen inactive.
+See [saved input corrections](advanced-exchange.md#saved-input-corrections).
 See the [complete persistence audit](../../interfaces/canvas-pilot-persistence-audit.md)
 and [versioned project contract](../../interfaces/canvas-pilot.md).
 
@@ -338,10 +340,10 @@ and [versioned project contract](../../interfaces/canvas-pilot.md).
 See [which editing features survive](#which-editing-features-survive)
 for a comparison of project saves, plain geometry import and snapshot restoration.
 
-In **Export layers**, enable **Include extra Midra parameters (experimental)** to
-store the exported layers' source/crop settings, names, folders, links and workspace
+In **Export layers**, enable **Include extra Canvas Pilot parameters (experimental)** to
+store the exported layers' source/crop settings, fit modes, masks, saved input proposals, names, folders, links and workspace
 setup alongside the geometry. It is available for SVG, draw.io, JSON, CSV, DXF,
-HTML and PPTX. Images/capture assignments are excluded from this snapshot; the
+HTML, PPTX and FigCraft. Images/capture assignments are excluded from this snapshot; the
 background and placeholder options remain separate. DWG, FIG and AI show why the
 option is unavailable with the current codecs.
 
@@ -357,41 +359,8 @@ See the [format-by-format audit and metadata contract](../../interfaces/midra-ex
 
 ## Which editing features survive?
 
-This table separates editable state from a picture of its appearance. “Snapshot”
-means a supported exchange format exported with extra parameters and reopened through **Restore parameters from export**.
-
-| Feature | Project Open/Save | Plain geometry file import | Snapshot restore |
-| --- | :---: | :---: | :---: |
-| Layer position and size | ✅ | ✅ | ✅ |
-| Full-precision saved coordinates | ✅ | ❌ [1](#editing-notes) | ✅ |
-| Output screen resolution | ✅ | ❌ | ✅ |
-| Layer names and stacking order | ✅ | ❌ | ✅ |
-| Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [2](#editing-notes) |
-| Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [2](#editing-notes) |
-| Input crop edges | ✅ | ❌ | ✅ |
-| Normal layer crop zoom and offsets | ✅ | ❌ | ✅ |
-| Advanced fit modes and their crop edges | ✅ | ❌ | ✅ |
-| Editable blanking masks | ✅ | ❌ | ✅ |
-| Resize pivots and group resize settings | ✅ | ❌ | ✅ |
-| Saved device screen/layer links | ✅ | ❌ | ✅ |
-| Reference images and their individual settings | ✅ | ❌ | ❌ |
-| Capture assignments and saved preview stills | ✅ | ❌ | ❌ |
-| Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [2](#editing-notes) |
-| Undo history, pending edits and active device operations | ❌ | ❌ | ❌ |
-| Application theme, connection history and Program permission | ❌ [3](#editing-notes) | ❌ | ❌ |
-
-### Editing notes
-
-1. Geometry **exports round boxes to whole pixels**; import can retain fractional
-   coordinates where the reader supports them. Use a project or snapshot for
-   full-precision recovery. Geometry import never reorders destination layers.
-2. Snapshot restoration includes only exported layers and their referenced inputs;
-   selection and folders are filtered accordingly. It replaces the document with
-   the saved snapshot, not a merge of the external artwork's latest edits.
-3. Application preferences are saved separately from projects. Opening a project
-   or restoring a snapshot does not connect or send to a switcher.
-
-For a complete editable backup, **Save project** remains the recommended choice.
+See the [advanced feature matrix](advanced-exchange.md) for complete project, snapshot
+and geometry-only preservation, including input corrections.
 
 ## Illustrator AI: optional converter required
 

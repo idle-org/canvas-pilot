@@ -7,7 +7,7 @@ not a named project export. Headless/default editors never access this path.
 | Field | Meaning |
 | --- | --- |
 | `version` | Integer `1`; other versions rejected |
-| `project` | Complete [project v15](canvas-pilot.md), including embedded reference bytes; its units, precision and validation apply without display rounding |
+| `project` | Complete [project v16](canvas-pilot.md), including embedded reference bytes; its units, precision and validation apply without display rounding |
 | `project_path` | Last opened/successfully saved named JSON path, or null; geometry exports do not change it |
 | `manual_saved_at` | Unix UTC seconds of the last successful explicit project save, or null when unknown; recovery and measurement-point autosaves do not update it |
 
@@ -34,11 +34,11 @@ last successful writer wins.
 Recovery retains applied values only: no undo history, pending text/format/import
 drafts, transient tools, or credentials. A normal exit cancels unfinished canvas
 gestures before the final checkpoint. The schema does not replace named project
-JSON: Save continues to emit a bare project v15 document. Opening/New replaces the
+JSON: Save continues to emit a bare project v16 document. Opening/New replaces the
 single recovery slot; New warns with the manual-save age and Save/Discard/Cancel.
 A failed or cancelled manual save never completes Save-and-create-new.
 
-[Legacy recovery example (embedded project v9, migrated to v15)](canvas-pilot-recovery-v1.example.json) is exercised by the startup regression test.
+[Legacy recovery example (embedded project v9, migrated to v16)](canvas-pilot-recovery-v1.example.json) is exercised by the startup regression test.
 
 Future breaking envelope changes require a version bump and explicit migration
 or rejection. Recovery is not an interchange format; use Save for portable files.

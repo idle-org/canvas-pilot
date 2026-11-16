@@ -5,7 +5,7 @@ Canvas Pilot was formerly named Midra Layout. The rename preserves existing wire
 The Export menu writes **SVG v2**, **draw.io v1**, **geometry JSON v1**,
 **geometry CSV v1**, **DXF/DWG**, **HTML/CSS v1**, **PPTX**, **Figma FIG / FigCraft** and
 **Illustrator AI** (the latter via a local VectorCraft CLI). Project
-JSON is version 15 and is the full-fidelity save format. These exchanges
+JSON is version 16 and is the full-fidelity save format. These exchanges
 preserve layer **visible-box geometry**, not sources, crop settings, zoom, pivots,
 Midra links, locks, visibility, camera or selection. Pictures illustrate current
 cropping; importing a picture does not reconstruct its crop or source settings.
@@ -176,9 +176,10 @@ extension; unsupported future versions are rejected by the upstream reader.
 Geometry, page/frame selection, reserved background names and artwork follow the
 FIG contract above. Export rounds positions and sizes to whole screen pixels;
 import retains fractional coordinates. One output-sized frame contains the named
-layer rectangles. Background and placeholder pictures are optional. Midra source,
-crop, mapping and workspace settings are omitted; extra-parameter embedding is
-not enabled. FigCraft history, branches and library data are not imported into
+layer rectangles. Background and placeholder pictures are optional. Source, crop, fit, mask,
+mapping, inactive input proposals and workspace settings can be stored in the
+optional [extra-parameter snapshot](midra-extra-parameters.md). Plain geometry import
+does not restore these settings. FigCraft history, branches and library data are not imported into
 Midra or recreated on export. Reader repair warnings appear in the import review.
 This option shares the FIG vendor feature and is excluded by `no_proprietary`.
 Tests cover native resaving, bare JSON, geometry, artwork and both starter sizes.
@@ -430,10 +431,10 @@ The verifier now uses the unified byte importer for text and binary formats.
 The `.ai` starter ZIP is only a download wrapper, not a new import format; its
 two entries must remain byte-identical to the `.ai` fixtures (Python regression).
 
-## Optional extra Midra parameters
+## Optional extra Canvas Pilot parameters
 
-Export layers offers **Include extra Midra parameters (experimental)** for SVG,
-draw.io, JSON, CSV, DXF, HTML and PPTX. This embeds an inert snapshot separately
+Export layers offers **Include extra Canvas Pilot parameters (experimental)** for SVG,
+draw.io, JSON, CSV, DXF, HTML, PPTX and FigCraft. This embeds an inert snapshot separately
 from the artwork. JSON/CSV use geometry version 2 only when enabled; plain exports
 remain version 1. Other carrier versions remain unchanged. Existing omissions in
 this document describe plain geometry export; the optional snapshot preserves
@@ -442,10 +443,10 @@ capture bindings. See the [complete carrier contract and format audit](midra-ext
 
 Restore the original snapshot with **Project → Restore parameters from export…**.
 Normal geometry import continues to use the artwork's current boxes, including any
-external edits. Third-party editors may strip metadata. DWG, FIG, FIGCRAFT and AI are not
+external edits. Third-party editors may strip metadata. DWG, FIG and AI are not
 enabled until their current codec paths can preserve it reliably.
 
-Embedded project snapshots now contain project version 15 and family-aware `device_link` objects. Geometry representation versions are unchanged. Existing embedded versions 1–13 migrate using the [project contract](canvas-pilot.md); plain geometry continues to omit device destinations.
+Embedded project snapshots now contain project version 16 and family-aware `device_link` objects. Geometry representation versions are unchanged. Existing embedded versions 1–15 migrate using the [project contract](canvas-pilot.md); plain geometry continues to omit device destinations.
 
 Project v14 additionally preserves `layer_fit` in embedded snapshots. Geometry
 alone describes the layer container when explicit fit is enabled and omits crop

@@ -2,7 +2,7 @@
 
 Audited against the editor, project loader, application settings, capture controls,
 layer tree, format properties, import/export controls and device transfer state.
-Implemented with [project version 12](canvas-pilot.md). This is an ownership audit:
+Current ownership for [project version 16](canvas-pilot.md). This is an ownership audit:
 not every control should become document data.
 
 | Parameters | Owner and decision |
@@ -10,7 +10,7 @@ not every control should become document data.
 | Output resolution / aspect | Project: exact width/height. The output aspect preset is derived from them, not stored twice. |
 | Layer position, dimensions, stacking order | Project: full-precision bounds and array order; display/export rounding never changes the saved values. |
 | Input format, native dimensions, custom input crop, shared input slot | Project: `inputs` and layer `source_id`, already saved. |
-| Layer format, dynamic crop, zoom and offset | Project: final bounds and advanced crop, already saved. Zoom/offset/aspect are derived from these authoritative values. |
+| Layer format, dynamic crop, zoom and offset, explicit fit modes and blanking masks | Project: final bounds and advanced crop, already saved. Zoom/offset/aspect are derived from these authoritative values. |
 | Names, stable IDs, next ID, folder membership, visibility, lock, pivot | Project, already saved. Folder visibility/locking acts on members, so there is no separate state to save. Explicit folder names are saved separately in project v12 and may have no members. |
 | Device screen/layer mapping | Project, already saved per layer. Physical source routing is separate and is not silently changed by a geometry send. |
 | Reference images, order, visibility, opacity, fit/native sizing, offset | Project, already embedded. Focused reference row is temporary. |
@@ -33,12 +33,23 @@ not every control should become document data.
 
 The [application settings contract](canvas-pilot-settings.md) is unchanged (v8).
 The [recovery envelope](canvas-pilot-recovery.md) is unchanged (v1); its nested
-project migrates to v12. Geometry export representations are unchanged and omit
+project migrates to v16. Geometry export representations are unchanged and omit
 capture images/settings; optional fixed-reference backgrounds retain their
 existing behavior.
 
-Regression coverage includes current-schema round trips, versions 1–11 migration,
+Regression coverage includes current-schema round trips, versions 1–15 migration,
 invalid assignments/settings and unknown/missing fields, embedded-still decoding,
 atomic failure on malformed images, cleared stale previews, restore-without-fetch,
 manual resumption eligibility and saved resize setup. The guide and example JSON
 are updated with the schema.
+
+## Version 16 addition: saved input proposals
+
+Explicitly saved advanced input corrections now belong to the project as inert
+`input_proposals`, maintained by `InputEdits.saved` and project save/restore.
+The enable flag and staged device writes remain session-only. Opening/recovery
+clears those flags and pending writes before installing saved proposals. Export
+snapshots filter proposals to included, correctly mapped layers. The
+[project contract](canvas-pilot.md#inactive-input-correction-proposals) defines
+validation and the [advanced matrix](../canvas-pilot/guide/advanced-exchange.md)
+distinguishes these proposals from source geometry and actual device routing.

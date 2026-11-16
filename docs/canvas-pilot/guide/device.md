@@ -190,3 +190,5 @@ store. Connect, load and send remain background operations. Input snapshots reta
 pooled, throttled, opt-in behavior, including inputs above 16. Older firmware,
 linked units and other Aquilon models remain unverified. See the
 [adapter contract](../../interfaces/device-adapters.md) for tested scope and limits.
+
+Saved device input corrections are optional [inactive proposals](advanced-exchange.md#saved-input-corrections); opening a file never enables or sends them.

@@ -367,6 +367,7 @@ impl Editor {
             ui,
             self.device.snapshot.as_ref(),
             self.layout.layer_info(i).device_link.as_ref(),
+            self.layout.layer_info(i).id,
         );
     }
 

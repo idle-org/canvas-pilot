@@ -8,6 +8,7 @@ src = "src"
 create-missing = false
 
 [output.html]
+additional-css = ["manual.css"]
 site-url = "/manuals/canvas-pilot/"
 default-theme = "light"
 preferred-dark-theme = "navy"

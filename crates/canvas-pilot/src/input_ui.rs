@@ -1,4 +1,4 @@
-//! Session-only, explicitly enabled edits to the device's shared input settings.
+//! Explicit device edits and separately saved, inactive input-setting proposals.
 use super::*;
 use canvas_pilot::{
     device::Snapshot,
@@ -10,6 +10,8 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Default)]
 pub(super) struct InputEdits {
     pub enabled: bool,
+    pub saved: Vec<canvas_pilot::input_proposal::InputProposal>,
+    message: Option<String>,
     // Only fields actually edited are staged; opening the tab never stages defaults.
     values: BTreeMap<String, Value>,
 }
@@ -44,7 +46,9 @@ fn setting_label(value: &str) -> String {
 
 impl InputEdits {
     pub fn clear(&mut self) {
-        *self = Self::default();
+        self.enabled = false;
+        self.values.clear();
+        self.message = None;
     }
 
     pub fn show(
@@ -52,7 +56,36 @@ impl InputEdits {
         ui: &mut egui::Ui,
         snapshot: Option<&Snapshot>,
         link: Option<&canvas_pilot::DeviceLink>,
+        layer_id: usize,
     ) {
+        if let Some(saved) = self.saved.iter().find(|p| p.layer_id == layer_id).cloned() {
+            ui.label(format!(
+                "Saved proposal: {} · plug {} (inactive until staged)",
+                saved.input, saved.plug
+            ));
+            for (key, value) in &saved.settings {
+                ui.small(format!("{key}: {value}"));
+            }
+            let can_stage =
+                self.enabled && snapshot.is_some_and(|s| Self::proposal_matches(&saved, s, link));
+            if ui
+                .add_enabled(can_stage, egui::Button::new("Stage saved input proposal"))
+                .clicked()
+                && let Some(snapshot) = snapshot
+            {
+                self.message = Some(match self.stage_proposal(&saved, snapshot, link) {
+                    Ok(()) => "Proposal staged. Review mappings before sending.".into(),
+                    Err(error) => error,
+                });
+            }
+            ui.small("To stage: connect, match this layer's saved mapping and routed input/plug, then enable advanced input edits. Send remains a separate action.");
+            if ui.button("Remove saved input proposal").clicked() {
+                self.saved.retain(|p| p.layer_id != layer_id);
+            }
+        }
+        if let Some(message) = &self.message {
+            ui.label(message);
+        }
         if snapshot.is_some_and(|s| !s.profile.advanced_inputs()) {
             ui.label("Shared input corrections for this adapter are managed in WebRCS. Layer crop and zoom remain available in the editor.");
             return;
@@ -206,7 +239,89 @@ impl InputEdits {
                 }
             }
         });
+        let prefix = format!("{base}/");
+        let settings: BTreeMap<_, _> = self
+            .values
+            .iter()
+            .filter_map(|(path, value)| {
+                path.strip_prefix(&prefix)
+                    .map(|key| (key.to_owned(), value.clone()))
+            })
+            .collect();
+        if ui
+            .add_enabled(
+                !settings.is_empty(),
+                egui::Button::new("Save staged input edits as a project proposal"),
+            )
+            .clicked()
+            && let Some(link) = link
+        {
+            let proposal = canvas_pilot::input_proposal::InputProposal {
+                layer_id,
+                device_link: link.clone(),
+                input: base.split('/').nth(4).unwrap_or_default().into(),
+                plug: base.split('/').nth(7).unwrap_or_default().into(),
+                settings,
+            };
+            if proposal.validate().is_ok() {
+                self.saved.retain(|p| p.layer_id != layer_id);
+                self.saved.push(proposal);
+            }
+        }
+        ui.small("Saving a proposal is opt-in. Project saves and extra-parameter exports retain it; reopening never stages or sends it.");
         ui.small("Edits wait for Send; opening this tab or enabling the checkbox sends nothing. Refresh/load after sending to inspect the device's resulting content dimensions.");
+    }
+    fn proposal_matches(
+        proposal: &canvas_pilot::input_proposal::InputProposal,
+        snapshot: &Snapshot,
+        link: Option<&canvas_pilot::DeviceLink>,
+    ) -> bool {
+        proposal.validate().is_ok()
+            && snapshot.profile.advanced_inputs()
+            && link == Some(&proposal.device_link)
+            && snapshot
+                .screens
+                .iter()
+                .find(|s| s.id == proposal.device_link.screen)
+                .and_then(|s| {
+                    input_path(
+                        snapshot,
+                        &s.id,
+                        &s.preview_bank,
+                        &proposal.device_link.layer,
+                    )
+                })
+                .as_deref()
+                == Some(proposal.base().as_str())
+    }
+    fn stage_proposal(
+        &mut self,
+        proposal: &canvas_pilot::input_proposal::InputProposal,
+        snapshot: &Snapshot,
+        link: Option<&canvas_pilot::DeviceLink>,
+    ) -> Result<(), String> {
+        if !self.enabled || !Self::proposal_matches(proposal, snapshot, link) {
+            return Err(
+                "Enable edits and verify the saved layer, input and plug mapping first.".into(),
+            );
+        }
+        let values: Vec<_> = proposal
+            .settings
+            .iter()
+            .map(|(key, value)| {
+                let path = format!("{}/{key}", proposal.base());
+                let original = snapshot
+                    .raw
+                    .pointer(&path)
+                    .ok_or("Refresh device: proposal field unavailable.")?
+                    .clone();
+                Ok((path, value.clone(), original))
+            })
+            .collect::<Result<_, String>>()?;
+        for (path, value, original) in values {
+            self.stage(path, value, &original);
+        }
+        Ok(())
     }
     fn stage(&mut self, path: String, value: Value, original: &Value) {
         if &value == original {
@@ -311,7 +426,7 @@ mod tests {
                 },
                 |ctx| {
                     egui::CentralPanel::default()
-                        .show(ctx, |ui| edits.show(ui, Some(&snapshot), Some(&link)));
+                        .show(ctx, |ui| edits.show(ui, Some(&snapshot), Some(&link), 1));
                 },
             )
         };
@@ -418,5 +533,80 @@ mod tests {
         assert_eq!(plan.changes.len(), 1);
         edits.stage(path, json!("SIGNAL"), &json!("SIGNAL"));
         assert!(edits.values.is_empty());
+    }
+    #[test]
+    fn restored_proposals_are_inert_and_stage_only_after_route_and_field_review() {
+        let mut snapshot = fixture();
+        snapshot.screens.push(canvas_pilot::device::Screen {
+            id: "1".into(),
+            resolution: [1920, 1080],
+            preview_bank: "UP".into(),
+            program_bank: "DOWN".into(),
+            layers: vec![],
+        });
+        let proposal = canvas_pilot::input_proposal::InputProposal {
+            layer_id: 1,
+            device_link: canvas_pilot::DeviceLink {
+                family: Default::default(),
+                screen: "1".into(),
+                layer: "1".into(),
+            },
+            input: "INPUT_4".into(),
+            plug: "2".into(),
+            settings: [
+                ("aspect/pp/transformTo".into(), json!("CUSTOM")),
+                ("aspect/pp/customRatio".into(), json!(1778)),
+            ]
+            .into(),
+        };
+        let mut edits = InputEdits {
+            saved: vec![proposal.clone()],
+            ..Default::default()
+        };
+        let link = Some(&proposal.device_link);
+        let mut plan = empty_plan();
+        edits
+            .extend_plan(&snapshot, &[(1, "1".into())], &mut plan)
+            .unwrap();
+        assert!(plan.changes.is_empty());
+        assert!(edits.stage_proposal(&proposal, &snapshot, link).is_err());
+        edits.enabled = true;
+        edits
+            .extend_plan(&snapshot, &[(1, "1".into())], &mut plan)
+            .unwrap();
+        assert!(
+            plan.changes.is_empty(),
+            "Enabling alone must not stage saved data"
+        );
+        let mut wrong = proposal.clone();
+        wrong.input = "INPUT_9".into();
+        assert!(edits.stage_proposal(&wrong, &snapshot, link).is_err());
+        assert!(edits.stage_proposal(&proposal, &snapshot, None).is_err());
+        let mut missing = snapshot.clone();
+        missing
+            .raw
+            .pointer_mut("/device/inputList/items/INPUT_4/plugList/items/2/settings/aspect/pp")
+            .unwrap()
+            .as_object_mut()
+            .unwrap()
+            .remove("transformTo");
+        assert!(edits.stage_proposal(&proposal, &missing, link).is_err());
+        assert!(
+            edits.values.is_empty(),
+            "Missing fields reject staging atomically"
+        );
+        edits.stage_proposal(&proposal, &snapshot, link).unwrap();
+        edits
+            .extend_plan(&snapshot, &[(1, "1".into())], &mut plan)
+            .unwrap();
+        assert_eq!(plan.changes.len(), 2);
+        assert!(plan.changes.iter().all(|c| {
+            c.path
+                .join("/")
+                .starts_with("device/inputList/items/INPUT_4/plugList/items/2/settings/aspect/pp/")
+        }));
+        edits.clear();
+        assert!(!edits.enabled && edits.values.is_empty());
+        assert_eq!(edits.saved, vec![proposal]);
     }
 }

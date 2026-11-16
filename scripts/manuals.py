@@ -72,6 +72,15 @@ def stage_book(book, destination, root=ROOT):
     config = book["config"].read_text().split("[manual]", 1)[0]
     (destination / "book.toml").write_text(config)
     (src / "SUMMARY.md").write_text(book["summary"])
+    for name in book["data"].get("output", {}).get("html", {}).get("additional-css", []):
+        relative = Path(name)
+        if relative.is_absolute() or ".." in relative.parts:
+            raise ValueError(f"Stylesheet must be relative to the book: {name}")
+        source = source_path(root, book["config"].parent, name)
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / source, target)
+
 
     def copy_asset(path):
         target = src / path

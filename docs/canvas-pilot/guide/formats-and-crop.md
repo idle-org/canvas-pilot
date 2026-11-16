@@ -112,7 +112,7 @@ Opening Source, checking the box, or changing a value does not send. Only fields
 actually edited are staged for the next explicit Send, and only when that send
 includes a destination routed to the same input/plug. Untouched aspect/crop
 settings stay as they are on the machine. Unchecking discards staged edits.
-The opt-in and device edits are session-only: disconnecting, changing the device
+The permission and staged device edits are session-only: disconnecting, changing the device
 address or loading a project clears them. Source routing is never changed.
 Refresh/load after sending to inspect the resulting device content dimensions.
 
@@ -260,3 +260,5 @@ preview model must distinguish sampled input pixels from corrected display
 proportions and avoid applying a correction twice when loading device-reported
 content dimensions. These details need evidence before claiming an exact device
 round trip.
+
+Saved device input corrections are optional [inactive proposals](advanced-exchange.md#saved-input-corrections); opening a file never enables or sends them.

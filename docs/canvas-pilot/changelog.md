@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+- Added opt-in saved input correction proposals (project v16), restored inactive
+  until mapping/input review and explicit staging; older projects migrate safely.
+- Added FigCraft embedded snapshots and full-state round-trip coverage across all
+  snapshot codecs, including fit modes, blanking, shared inputs and mappings.
+- Ranked file formats and starter downloads by preservation tier, with compact
+  format pills and a separate advanced feature matrix. FIG, DWG and AI still
+  require a companion project for editable settings.
+
+
 - Classified book and application localization as a stretch goal, retaining its
   detailed roadmap and acceptance checklist.
 
