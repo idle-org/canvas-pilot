@@ -44,6 +44,8 @@ pub struct Editor {
     capture: capture_ui::CaptureUi,
     layer_ui: layers_ui::LayerUi,
     settings: settings::Store,
+    ui_scale: f32,
+    text_scale: Option<f32>,
     language: localization::Language,
     language_preview: Option<preferences_ui::LanguagePreview>,
     recovery: recovery_ui::Recovery,
@@ -364,6 +366,8 @@ impl Default for Editor {
             device: Default::default(),
             capture: Default::default(),
             layer_ui: Default::default(),
+            ui_scale: 1.0,
+            text_scale: None,
             language: localization::Language::default(),
             language_preview: None,
             settings: settings::Store::default(),
@@ -523,6 +527,7 @@ impl Editor {
         theme::Theme::restore_recent(ctx, saved.recent_themes.clone());
         saved.theme.apply(ctx);
         saved.language.apply(ctx);
+        preferences_ui::apply_scaling(ctx, saved.ui_scale, saved.text_scale);
         let mut device = device_ui::DeviceUi::with_connection_preferences(
             saved.midra_host,
             saved.allow_sending_to_program,
@@ -533,6 +538,8 @@ impl Editor {
             device,
             settings: store,
             language: saved.language,
+            ui_scale: saved.ui_scale,
+            text_scale: saved.text_scale,
             snapping: saved.snapping,
             keep_aspect_ratio: saved.keep_aspect_ratio,
             show_pattern: saved.show_source_pattern,
@@ -542,6 +549,8 @@ impl Editor {
     }
     fn application_settings(&self, ctx: &egui::Context) -> settings::Settings {
         settings::Settings {
+            ui_scale: self.ui_scale,
+            text_scale: self.text_scale,
             language: self
                 .language_preview
                 .as_ref()

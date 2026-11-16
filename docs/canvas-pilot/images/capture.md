@@ -152,3 +152,10 @@ Verify the French control names against the chapter, keep the whole client area,
 and close only the temporary app after capture. Rebuild the book and inspect the
 French chapter's images and print view. Screenshot refreshes do not imply that
 other languages or the rest of the manual have received an editorial review.
+
+## Accessibility settings capture
+
+`09-accessibility.png` shows version 0.9.1 on Linux/X11 in an isolated offline
+profile, at 1440 × 940 physical pixels. Use English, High Contrast, 150% interface
+scale and separate 125% text scale; open Settings → Appearance. The PNG is an
+unedited native capture. Project names and example artwork remain unchanged.

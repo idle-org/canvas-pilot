@@ -456,5 +456,10 @@
   "language.keep": "はい",
   "language.rollback": "確認しない場合、%{seconds} 秒後に元の言語に戻ります。",
   "language.cancel": "いいえ、間違えてこの言語を選びました",
-  "ui.mask-properties": "マスクのプロパティ…"
+  "ui.mask-properties": "マスクのプロパティ…",
+  "access.interface-scale": "インターフェースの拡大率",
+  "access.text-scale": "文字サイズを個別に調整",
+  "access.text-help": "標準コントロールの文字を拡大します。キャンバスと固定サイズのラベルはインターフェースの拡大率に従います。",
+  "access.contrast": "高コントラストを使用",
+  "access.reset": "インターフェースのサイズをリセット"
 }

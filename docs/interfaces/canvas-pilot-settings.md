@@ -1,15 +1,15 @@
-# Canvas Pilot application settings, version 10
+# Canvas Pilot application settings, version 11
 
 Canvas Pilot was formerly named Midra Layout. The rename preserves existing wire-format identifiers, `.midra.json` projects, settings/recovery locations and `MIDRA_VECTORCRAFT_CLI` configuration. No schema version changes are needed. New exports use Canvas Pilot in human-readable titles; legacy files remain readable.
 
 Implementation: `crates/canvas-pilot/src/settings.rs`. This per-user JSON file is
 independent of the [project JSON and SVG contracts](canvas-pilot.md).
-[Complete default example](canvas-pilot-settings-v10.example.json).
+[Complete default example](canvas-pilot-settings-v11.example.json).
 Version 1 files migrate automatically: the saved theme becomes the only entry in
 `recent_themes`, with all other preferences preserved. The [version 1 example](canvas-pilot-settings-v1.example.json)
 remains a migration fixture. Version 2 files then migrate by adding disabled
 snapping with all target types enabled. The [version 2 example](canvas-pilot-settings-v2.example.json)
-remains a migration fixture too. Version 3 files migrate by adding an empty `midra_host`; the [version 3 example](canvas-pilot-settings-v3.example.json) remains a migration fixture. Version 4 files migrate by adding `allow_sending_to_program: false`; the [version 4 example](canvas-pilot-settings-v4.example.json) remains a migration fixture. Version 5 files migrate with `autoconnect_at_startup: false`; the [version 5 example](canvas-pilot-settings-v5.example.json) remains a migration fixture. Version 6 files migrate with the overlay grid visible, snapping to it disabled, and `grid_divisions: [8, 6]`; the [version 6 example](canvas-pilot-settings-v6.example.json) remains a migration fixture. Version 7 migrates with an empty `recent_midra_hosts` list; the [version 7 example](canvas-pilot-settings-v7.example.json) remains a migration fixture. Version 8 migrates with `language: "system"`; the [version 8 example](canvas-pilot-settings-v8.example.json) remains a migration fixture. Version 9 migrates without changing any preferences; its `system`, `en` and `fr` values remain valid. The [version 9 example](canvas-pilot-settings-v9.example.json) remains a migration fixture. Version 10 adds language choices; saving writes version 10, which old applications reject.
+remains a migration fixture too. Version 3 files migrate by adding an empty `midra_host`; the [version 3 example](canvas-pilot-settings-v3.example.json) remains a migration fixture. Version 4 files migrate by adding `allow_sending_to_program: false`; the [version 4 example](canvas-pilot-settings-v4.example.json) remains a migration fixture. Version 5 files migrate with `autoconnect_at_startup: false`; the [version 5 example](canvas-pilot-settings-v5.example.json) remains a migration fixture. Version 6 files migrate with the overlay grid visible, snapping to it disabled, and `grid_divisions: [8, 6]`; the [version 6 example](canvas-pilot-settings-v6.example.json) remains a migration fixture. Version 7 migrates with an empty `recent_midra_hosts` list; the [version 7 example](canvas-pilot-settings-v7.example.json) remains a migration fixture. Version 8 migrates with `language: "system"`; the [version 8 example](canvas-pilot-settings-v8.example.json) remains a migration fixture. Version 9 migrates without changing any preferences; its `system`, `en` and `fr` values remain valid. The [version 9 example](canvas-pilot-settings-v9.example.json) remains a migration fixture. Version 10 adds language choices. Version 11 adds `ui_scale` and `text_scale`; v1–v10 settings migrate to 100% interface scale with separate text scaling disabled, preserving all existing preferences. The [version 10 example](canvas-pilot-settings-v10.example.json) remains a migration fixture. Saving writes version 11, which older applications reject.
 
 The `directories` 6 crate resolves `ProjectDirs::from("org", "beffroi", "midra-layout")`.
 The filename is `settings.json` beneath `config_dir()`:
@@ -26,7 +26,9 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 
 | Field | Values / default |
 | --- | --- |
-| `version` | Integer `10` |
+| `version` | Integer `11` |
+| `ui_scale` | Finite number, 1.0–2.0 inclusive; default 1.0. egui interface zoom relative to the OS display scale. |
+| `text_scale` | `null` (default, disabled) or finite number 1.0–1.5 inclusive. Additional standard-widget text multiplier. |
 | `language` | `"system"` (default), `"en"`, `"fr"`, `"ja"`, `"zh-CN"`, `"es"`, `"grc"`, `"eo"`. Unknown values are rejected. |
 | `autoconnect_at_startup` | Boolean; default false. Try one background connection at application startup if the saved address is nonblank. |
 | `allow_sending_to_program` | Boolean; default false. Enables the Program destination in the exporter. Turning it off restores Preview; applies to quick Apply too. |
@@ -37,6 +39,14 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 | `keep_aspect_ratio` | Boolean; default true |
 | `show_source_pattern` | Boolean; default false. Shows source patterns on other layers only during crop editing; normal editing always hides patterns. |
 | `snapping` | Object with required boolean fields `enabled` (false), `pixels` (true), `screen_edges` (true; screen edges plus 25%, 50% and 75% guides on both axes), `layer_edges` (true), `grid` (false), `show_grid` (true), and `grid_divisions` ([8, 6]); unknown fields rejected |
+
+Scale preferences apply on startup and save immediately when changed. UI controls
+use 5-percentage-point increments; the file accepts any finite in-range multiplier.
+Separate text scaling changes standard widget text styles without compounding on
+repeated application. Explicit-size artwork and labels follow interface zoom only.
+Neither scale changes project dimensions, export text, clipboard bytes or device
+coordinates. Restore defaults and Reset interface size restore 1.0 / null.
+`high_contrast` is the new theme identifier, also valid in `recent_themes`.
 
 Language is a workstation preference, never a project field or exchange value.
 Changing **Settings → Language / Langue** previews immediately and saves after
@@ -96,6 +106,7 @@ The picker includes both light and dark themes with color swatches.
 | Theme | Settings ID | Source CSS |
 | --- | --- | --- |
 | Midra Dark | `midra` | Original editor palette |
+| High Contrast | `high_contrast` | Original accessibility palette; black surfaces, bright text, stronger borders |
 | Corporate Light | `corporate_light` | `theme-corporate.css` and `../base/variables.css` |
 | Foxified Dark | `foxified_dark` | `theme-foxified-dark.css` |
 | Bluecore | `bluecore` | `theme-bluecore.css` |
@@ -120,7 +131,7 @@ the new `language` value. Cancellation, Escape or timeout restores the previous
 choice. While a preview is pending, all settings writes retain the previous
 confirmed language, so quitting or crashing cannot persist an accidental selection.
 The cancel button uses the previously displayed locale, including resolved System
-default. Preview state and its deadline are not serialized; the v10 schema is unchanged.
+default. Preview state and its deadline are not serialized; preview state adds no serialized fields.
 
 The Settings window and quick menus share the same settings. Changes apply
 and save immediately, except for language confirmation described above; closing

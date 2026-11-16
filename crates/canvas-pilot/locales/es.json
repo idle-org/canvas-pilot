@@ -456,5 +456,10 @@
   "language.keep": "Sí",
   "language.rollback": "Si no confirmas, se volverá al idioma anterior en %{seconds} segundos.",
   "language.cancel": "No, elegí este idioma por accidente",
-  "ui.mask-properties": "Propiedades de la máscara…"
+  "ui.mask-properties": "Propiedades de la máscara…",
+  "access.interface-scale": "Escala de la interfaz",
+  "access.text-scale": "Ajustar el texto por separado",
+  "access.text-help": "Escala adicional para controles estándar. El lienzo y las etiquetas de tamaño fijo siguen la escala de la interfaz.",
+  "access.contrast": "Usar alto contraste",
+  "access.reset": "Restablecer el tamaño de la interfaz"
 }

@@ -6,6 +6,7 @@ use super::*;
 pub enum Theme {
     #[default]
     Midra,
+    HighContrast,
     FoxifiedDark,
     CorporateLight,
     Bluecore,
@@ -45,8 +46,9 @@ pub struct Palette {
 }
 
 impl Theme {
-    pub const ALL: [Self; 19] = [
+    pub const ALL: [Self; 20] = [
         Self::Midra,
+        Self::HighContrast,
         Self::FoxifiedDark,
         Self::CorporateLight,
         Self::Bluecore,
@@ -69,6 +71,7 @@ impl Theme {
     pub fn name(self) -> &'static str {
         match self {
             Self::Midra => "Midra Dark",
+            Self::HighContrast => "High Contrast",
             Self::FoxifiedDark => "Foxified Dark",
             Self::CorporateLight => "Corporate Light",
             Self::Bluecore => "Bluecore",
@@ -115,6 +118,22 @@ impl Theme {
     pub fn palette(self) -> Palette {
         let rgb = |hex: u32| Color32::from_rgb((hex >> 16) as u8, (hex >> 8) as u8, hex as u8);
         match self {
+            Self::HighContrast => Palette {
+                canvas: rgb(0x000000),
+                banner: rgb(0x101010),
+                grid: rgb(0x777777),
+                layer: rgb(0x101010),
+                pattern: [rgb(0x000000), rgb(0xffffff)],
+                bg: rgb(0x000000),
+                panel: rgb(0x000000),
+                field: rgb(0x101010),
+                line: rgb(0xaaaaaa),
+                text: rgb(0xffffff),
+                muted: rgb(0xdddddd),
+                cyan: rgb(0x00ffff),
+                amber: rgb(0xffff00),
+                purple: rgb(0x202080),
+            },
             Self::Bluecore => sotv_palette(
                 [
                     0x1a222d, 0x232f3a, 0x111922, 0x2b3948, 0xd0e4ff, 0xaaccee, 0x3399ff, 0x4488cc,
@@ -301,6 +320,19 @@ impl Theme {
             widget.bg_stroke = Stroke::new(1.0_f32, border);
             widget.fg_stroke = Stroke::new(1.0_f32, p.text);
         }
+        if self == Self::HighContrast {
+            v.window_stroke.width = 2.0;
+            for widget in [
+                &mut v.widgets.noninteractive,
+                &mut v.widgets.inactive,
+                &mut v.widgets.hovered,
+                &mut v.widgets.active,
+                &mut v.widgets.open,
+            ] {
+                widget.bg_stroke.width = 2.0;
+                widget.fg_stroke.width = 2.0;
+            }
+        }
         ctx.set_visuals(v);
         ctx.data_mut(|d| d.insert_temp(egui::Id::new("application-theme"), self));
         ctx.request_repaint();
@@ -348,6 +380,36 @@ fn sotv_palette(colors: [u32; 8], light: bool) -> Palette {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn high_contrast_text_and_borders_have_strong_luminance_separation() {
+        fn luminance(c: Color32) -> f64 {
+            let channel = |v: u8| {
+                let s = v as f64 / 255.0;
+                if s <= 0.04045 {
+                    s / 12.92
+                } else {
+                    ((s + 0.055) / 1.055).powf(2.4)
+                }
+            };
+            0.2126 * channel(c.r()) + 0.7152 * channel(c.g()) + 0.0722 * channel(c.b())
+        }
+        let contrast = |a: Color32, b: Color32| {
+            let (a, b) = (luminance(a), luminance(b));
+            (a.max(b) + 0.05) / (a.min(b) + 0.05)
+        };
+        let p = Theme::HighContrast.palette();
+        for bg in [p.bg, p.panel, p.field, p.purple] {
+            for text in [p.text, p.muted] {
+                assert!(contrast(text, bg) >= 7.0);
+            }
+            assert!(contrast(p.line, bg) >= 3.0);
+        }
+        let ctx = egui::Context::default();
+        Theme::HighContrast.apply(&ctx);
+        assert!(contrast(ctx.style().visuals.weak_text_color(), p.panel) >= 4.5);
+        assert_eq!(ctx.style().visuals.window_stroke.width, 2.0);
+    }
+
     #[test]
     fn recent_themes_are_unique_newest_first_and_bounded() {
         let ctx = egui::Context::default();

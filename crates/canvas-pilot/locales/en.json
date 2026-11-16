@@ -456,5 +456,10 @@
   "language.keep": "Yes",
   "language.rollback": "Your previous language returns in %{seconds} seconds unless you confirm.",
   "language.cancel": "No, I clicked on this language by accident",
-  "ui.mask-properties": "Mask properties…"
+  "ui.mask-properties": "Mask properties…",
+  "access.interface-scale": "Interface scale",
+  "access.text-scale": "Adjust text separately",
+  "access.text-help": "Additional scaling for standard controls. Canvas artwork and fixed-size labels follow interface scale.",
+  "access.contrast": "Use high contrast",
+  "access.reset": "Reset interface size"
 }

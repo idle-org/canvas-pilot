@@ -49,6 +49,27 @@ It does not rename layers, change file contents or send device commands. Numeric
 fields continue to use a decimal point in every language. Projects do not carry
 language preferences to another workstation.
 
+### Interface size and high contrast
+
+Open **Menu → Open all settings… → Appearance**:
+
+- **Interface scale:** enlarge the entire interface from **100% to 200%**, on top
+  of the operating system's display scale. This also enlarges icons and hit targets.
+- **Adjust text separately:** optionally enlarge standard control text by a further
+  **100% to 150%**. Canvas artwork and fixed-size labels follow interface scale only.
+- **Use high contrast:** select a black-based theme with white text, bright accents
+  and stronger control borders. It also appears as **High Contrast** in the theme browser.
+
+Changes apply immediately and are remembered on this computer. **Reset interface
+size**, near the top of Settings, restores 100% and disables separate text scaling.
+The settings content scrolls at smaller window sizes. Larger windows provide more
+working space at high zoom. Project dimensions, exported artwork, clipboard data
+and device values stay unchanged; imported pictures retain their original colors.
+
+![Appearance settings with high contrast, 150% interface scale and 125% text scale](../images/09-accessibility.png)
+
+*Enlarged controls with High Contrast. Close and Reset interface size remain above the scrolling settings.*
+
 ### Application themes
 
 **Menu → Options → Theme** (also in the toolbar cog) shows up to three recently

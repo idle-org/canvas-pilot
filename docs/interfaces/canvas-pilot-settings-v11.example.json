@@ -1,0 +1,29 @@
+{
+  "version": 11,
+  "theme": "midra",
+  "recent_themes": [
+    "midra"
+  ],
+  "show_toolbar_icon_names": false,
+  "keep_aspect_ratio": true,
+  "show_source_pattern": false,
+  "snapping": {
+    "enabled": false,
+    "pixels": true,
+    "screen_edges": true,
+    "layer_edges": true,
+    "grid": false,
+    "show_grid": true,
+    "grid_divisions": [
+      8,
+      6
+    ]
+  },
+  "midra_host": "",
+  "allow_sending_to_program": false,
+  "autoconnect_at_startup": false,
+  "recent_midra_hosts": [],
+  "language": "system",
+  "ui_scale": 1.0,
+  "text_scale": null
+}

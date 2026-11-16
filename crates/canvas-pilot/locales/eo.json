@@ -456,5 +456,10 @@
   "language.keep": "Jes",
   "language.rollback": "Sen konfirmo, la antaŭa lingvo revenos post %{seconds} sekundoj.",
   "language.cancel": "Ne, mi elektis ĉi tiun lingvon erare",
-  "ui.mask-properties": "Ecoj de la masko…"
+  "ui.mask-properties": "Ecoj de la masko…",
+  "access.interface-scale": "Interfaca skalo",
+  "access.text-scale": "Alĝustigi tekston aparte",
+  "access.text-help": "Plia skalo por normaj regiloj. La kanvaso kaj fiksgrandaj etikedoj sekvas la interfacan skalon.",
+  "access.contrast": "Uzi altan kontraston",
+  "access.reset": "Restarigi la interfacan grandecon"
 }

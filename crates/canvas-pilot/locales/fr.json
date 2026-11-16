@@ -456,5 +456,10 @@
   "language.keep": "Oui",
   "language.rollback": "Sans confirmation, la langue précédente sera rétablie dans %{seconds} secondes.",
   "language.cancel": "Non, j’ai choisi cette langue par erreur",
-  "ui.mask-properties": "Propriétés du masque…"
+  "ui.mask-properties": "Propriétés du masque…",
+  "access.interface-scale": "Échelle de l’interface",
+  "access.text-scale": "Ajuster le texte séparément",
+  "access.text-help": "Agrandissement supplémentaire des commandes standard. Le canevas et les libellés à taille fixe suivent l’échelle de l’interface.",
+  "access.contrast": "Utiliser le contraste élevé",
+  "access.reset": "Réinitialiser la taille de l’interface"
 }

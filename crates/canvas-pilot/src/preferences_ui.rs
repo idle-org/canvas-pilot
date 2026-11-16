@@ -1,6 +1,16 @@
 use super::*;
 
-#[derive(Clone, Copy, Default, PartialEq)]
+pub(super) fn apply_scaling(ctx: &egui::Context, ui_scale: f32, text_scale: Option<f32>) {
+    ctx.set_zoom_factor(ui_scale);
+    // Derive from defaults each time: toggles and theme changes must not compound sizes.
+    let mut fonts = egui::Style::default().text_styles;
+    for font in fonts.values_mut() {
+        font.size *= text_scale.unwrap_or(1.0);
+    }
+    ctx.style_mut(|style| style.text_styles = fonts);
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(super) enum Section {
     #[default]
     Appearance,
@@ -115,8 +125,8 @@ impl Editor {
         let mut open = self.preferences_open;
         egui::Window::new(tr(ctx, "ui.settings")).id(egui::Id::new("Settings"))
             .open(&mut open)
-            .default_width(660.0)
-            .min_width(540.0)
+            .default_width(660.0_f32.min(ctx.screen_rect().width() - 32.0))
+            .min_width(320.0_f32.min(ctx.screen_rect().width() - 32.0))
             .collapsible(false)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -132,8 +142,19 @@ impl Editor {
                             }
                         });
                 });
+                ui.horizontal_wrapped(|ui| {
+                if ui.button(tr(ui.ctx(), "ui.close")).clicked() { self.preferences_open = false; }
+                if ui.small_button(tr(ctx, "access.reset")).clicked() {
+                    self.ui_scale = 1.0;
+                    self.text_scale = None;
+                    apply_scaling(ctx, self.ui_scale, self.text_scale);
+                }
+                });
                 ui.weak(tr(ctx, "language.preview"));
                 ui.separator();
+                egui::ScrollArea::vertical().id_salt("settings-body")
+                    .max_height((ctx.screen_rect().height() - ui.cursor().min.y - 120.0).max(40.0))
+                    .show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
                         ui.set_width(145.0);
@@ -142,15 +163,29 @@ impl Editor {
                         }
                     });
                     ui.separator();
-                    egui::ScrollArea::vertical().id_salt("settings-content")
-                        .max_height((ctx.screen_rect().height() - 260.0).max(180.0))
-                        .min_scrolled_height((ctx.screen_rect().height() - 260.0).clamp(265.0, 540.0))
-                        .show(ui, |ui| {
                         ui.vertical(|ui| {
-                        ui.set_min_height(265.0);
+                        ui.set_min_height(60.0);
                         match self.preferences_section {
                             Section::Appearance => {
                                 ui.heading(tr(ui.ctx(), "ui.appearance"));
+                                let scaling_before = (self.ui_scale, self.text_scale);
+                                let mut percent = self.ui_scale * 100.0;
+                                ui.label(tr(ctx, "access.interface-scale"));
+                                ui.add(egui::Slider::new(&mut percent, 100.0..=200.0).suffix(" %").step_by(5.0));
+                                self.ui_scale = percent / 100.0;
+                                let mut separate = self.text_scale.is_some();
+                                if ui.checkbox(&mut separate, tr(ctx, "access.text-scale")).changed() {
+                                    self.text_scale = separate.then_some(1.0);
+                                }
+                                if let Some(scale) = &mut self.text_scale {
+                                    let mut percent = *scale * 100.0;
+                                    ui.add(egui::Slider::new(&mut percent, 100.0..=150.0).suffix(" %").step_by(5.0));
+                                    *scale = percent / 100.0;
+                                    ui.weak(tr(ctx, "access.text-help"));
+                                }
+                                if scaling_before != (self.ui_scale, self.text_scale) { apply_scaling(ctx, self.ui_scale, self.text_scale); }
+                                if ui.button(tr(ctx, "access.contrast")).clicked() { theme::Theme::HighContrast.apply(ctx); }
+                                ui.separator();
                                 ui.label(rust_i18n::t!("theme.current", locale = localization::locale(ctx), name = theme::Theme::current(ctx).name()).into_owned());
                                 if ui.button(tr(ui.ctx(), "ui.browse-all-themes")).clicked() { self.themes_open = true; }
                                 ui.label(tr(ui.ctx(), "ui.recently-used"));
@@ -205,6 +240,9 @@ impl Editor {
                                 ui.weak(tr(ui.ctx(), "ui.opening-a-project-may-restore-its-viewport-options-without-rewriting-your-startup-def"));
                                 if ui.button(tr(ui.ctx(), "ui.restore-default-settings")).clicked() {
                                     let defaults = settings::Settings::default();
+                                    self.ui_scale = defaults.ui_scale;
+                                    self.text_scale = defaults.text_scale;
+                                    apply_scaling(ctx, self.ui_scale, self.text_scale);
                                     self.language = defaults.language;
                                     self.language.apply(ctx);
                                     theme::Theme::restore_recent(ctx, defaults.recent_themes);
@@ -227,7 +265,7 @@ impl Editor {
                             }
                         }
                         });
-                    });
+                });
                 });
                 ui.separator();
                 ui.label(tr(ui.ctx(), "ui.changes-take-effect-immediately-and-save-automatically"));
@@ -235,7 +273,6 @@ impl Editor {
                 if self.settings.can_retry() && ui.button(tr(ui.ctx(), "ui.retry-saving-settings")).clicked() {
                     self.settings.save(&self.application_settings(ctx));
                 }
-                if ui.button(tr(ui.ctx(), "ui.close")).clicked() { self.preferences_open = false; }
             });
         self.preferences_open &= open;
         let after = self.application_settings(ctx);
@@ -270,6 +307,34 @@ mod tests {
         );
         frame(app, ctx, vec![mouse(pos, false)]);
     }
+    #[test]
+    fn scaling_is_idempotent_and_preserves_project_and_theme() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let project = app.project().to_json().unwrap();
+        let base = ctx.style().text_styles[&egui::TextStyle::Body].size;
+        apply_scaling(&ctx, 1.5, Some(1.25));
+        apply_scaling(&ctx, 1.5, Some(1.25));
+        let _ = ctx.run(egui::RawInput::default(), |_| {});
+        assert_eq!(ctx.zoom_factor(), 1.5);
+        assert_eq!(
+            ctx.style().text_styles[&egui::TextStyle::Body].size,
+            base * 1.25
+        );
+        theme::Theme::HighContrast.apply(&ctx);
+        assert_eq!(
+            ctx.style().text_styles[&egui::TextStyle::Body].size,
+            base * 1.25
+        );
+        app.ui_scale = 1.5;
+        app.text_scale = Some(1.25);
+        assert_eq!(app.application_settings(&ctx).ui_scale, 1.5);
+        assert_eq!(app.application_settings(&ctx).text_scale, Some(1.25));
+        assert_eq!(app.project().to_json().unwrap(), project);
+        apply_scaling(&ctx, 1.0, None);
+        assert_eq!(ctx.style().text_styles[&egui::TextStyle::Body].size, base);
+    }
+
     #[test]
     fn preferences_edit_and_persist_without_touching_document_or_drafts() {
         let dir = tempfile::tempdir().unwrap();
@@ -392,6 +457,47 @@ mod tests {
     }
 
     #[test]
+    fn enlarged_settings_keep_recovery_controls_visible() {
+        for language in localization::Language::ALL {
+            let ctx = egui::Context::default();
+            language.apply(&ctx);
+            apply_scaling(&ctx, 1.0, Some(1.5));
+            let screen = Rect::from_min_size(Pos2::ZERO, Vec2::new(500.0, 360.0));
+            let mut app = Editor {
+                language,
+                ui_scale: 2.0,
+                text_scale: Some(1.5),
+                preferences_open: true,
+                ..Default::default()
+            };
+            let mut output = egui::FullOutput::default();
+            for _ in 0..5 {
+                output = ctx.run(
+                    egui::RawInput {
+                        screen_rect: Some(screen),
+                        ..Default::default()
+                    },
+                    |ctx| app.preferences_window(ctx),
+                );
+            }
+            for key in ["ui.close", "access.reset"] {
+                let label = tr(&ctx, key);
+                let rect = output
+                    .shapes
+                    .iter()
+                    .find_map(|s| match &s.shape {
+                        egui::Shape::Text(t) if t.galley.text() == label => {
+                            Some(Rect::from_min_size(t.pos, t.galley.size()))
+                        }
+                        _ => None,
+                    })
+                    .unwrap_or_else(|| panic!("Missing {key} in {language:?}"));
+                assert!(screen.contains_rect(rect), "{language:?}: {key}: {rect:?}");
+            }
+        }
+    }
+
+    #[test]
     fn settings_language_and_close_stay_visible_at_minimum_window_size() {
         let screen = Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 720.0));
         for language in localization::Language::ALL {
@@ -424,7 +530,7 @@ mod tests {
                             }
                             _ => None,
                         })
-                        .unwrap_or_else(|| panic!("Missing {label}"));
+                        .unwrap_or_else(|| panic!("Missing {label}: {language:?} / {section:?}"));
                     assert!(
                         screen.contains_rect(rect),
                         "Control outside window: {label}: {rect:?}"

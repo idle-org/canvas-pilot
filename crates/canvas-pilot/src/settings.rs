@@ -7,6 +7,8 @@ use std::{io::Read, path::PathBuf};
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     pub version: u32,
+    pub ui_scale: f32,
+    pub text_scale: Option<f32>,
     pub language: crate::localization::Language,
     pub midra_host: String,
     pub recent_midra_hosts: Vec<String>,
@@ -22,7 +24,9 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            version: 10,
+            version: 11,
+            ui_scale: 1.0,
+            text_scale: None,
             language: Default::default(),
             autoconnect_at_startup: false,
             allow_sending_to_program: false,
@@ -123,13 +127,34 @@ impl Settings {
             }
             value["version"] = 10.into();
         }
+        if value["version"] == 10 {
+            for field in ["ui_scale", "text_scale"] {
+                if value.get(field).is_some() {
+                    return Err(format!("Unexpected {field} in version 10 settings"));
+                }
+            }
+            value["ui_scale"] = serde_json::json!(1.0);
+            value["text_scale"] = serde_json::Value::Null;
+            value["version"] = 11.into();
+        }
+        if value["version"] == 11 && value.get("text_scale").is_none() {
+            return Err("Missing text_scale in version 11 settings".into());
+        }
         let settings: Self = serde_json::from_value(value).map_err(|e| e.to_string())?;
         settings.validate()?;
         Ok(settings)
     }
     fn validate(&self) -> Result<(), String> {
-        if self.version != 10 {
+        if self.version != 11 {
             return Err(format!("unsupported settings version {}", self.version));
+        }
+        if !self.ui_scale.is_finite()
+            || !(1.0..=2.0).contains(&self.ui_scale)
+            || self
+                .text_scale
+                .is_some_and(|scale| !scale.is_finite() || !(1.0..=1.5).contains(&scale))
+        {
+            return Err("Interface scale must be 100–200%; text scale must be 100–150%".into());
         }
         if self.recent_midra_hosts.len() > 4
             || self.recent_midra_hosts.iter().enumerate().any(|(i, host)| {
@@ -258,12 +283,64 @@ impl Store {
 mod tests {
     use super::*;
     #[test]
+    fn scaling_migrates_and_round_trips_with_strict_limits() {
+        let old = include_str!("../../../docs/interfaces/canvas-pilot-settings-v10.example.json");
+        let migrated = Settings::parse(old).unwrap();
+        assert_eq!(migrated.ui_scale, 1.0);
+        assert_eq!(migrated.text_scale, None);
+        assert_eq!(
+            migrated,
+            Settings::parse(include_str!(
+                "../../../docs/interfaces/canvas-pilot-settings-v11.example.json"
+            ))
+            .unwrap()
+        );
+        let saved = Settings {
+            ui_scale: 2.0,
+            text_scale: Some(1.5),
+            theme: Theme::HighContrast,
+            recent_themes: vec![Theme::HighContrast],
+            ..migrated
+        };
+        assert_eq!(
+            Settings::parse(&serde_json::to_string(&saved).unwrap()).unwrap(),
+            saved
+        );
+        for scale in [0.5, 2.1, f32::NAN, f32::INFINITY] {
+            assert!(
+                Settings {
+                    ui_scale: scale,
+                    ..saved.clone()
+                }
+                .validate()
+                .is_err()
+            );
+        }
+        for scale in [0.5, 1.6, f32::NAN] {
+            assert!(
+                Settings {
+                    text_scale: Some(scale),
+                    ..saved.clone()
+                }
+                .validate()
+                .is_err()
+            );
+        }
+        let mut missing = serde_json::to_value(&saved).unwrap();
+        missing.as_object_mut().unwrap().remove("text_scale");
+        assert!(Settings::parse(&missing.to_string()).is_err());
+        let mut malformed: serde_json::Value = serde_json::from_str(old).unwrap();
+        malformed["ui_scale"] = serde_json::json!(1.5);
+        assert!(Settings::parse(&malformed.to_string()).is_err());
+    }
+
+    #[test]
     fn language_settings_migrate_and_validate_without_touching_other_preferences() {
         use crate::localization::Language;
         let old = include_str!("../../../docs/interfaces/canvas-pilot-settings-v8.example.json");
         let migrated = Settings::parse(old).unwrap();
         assert_eq!(migrated.language, Language::System);
-        assert_eq!(migrated.version, 10);
+        assert_eq!(migrated.version, 11);
         let current =
             include_str!("../../../docs/interfaces/canvas-pilot-settings-v10.example.json");
         assert_eq!(Settings::parse(current).unwrap(), migrated);
@@ -272,12 +349,14 @@ mod tests {
             let mut old: serde_json::Value = serde_json::from_str(v9).unwrap();
             old["language"] = old_language.into();
             let upgraded = Settings::parse(&old.to_string()).unwrap();
-            assert_eq!(upgraded.version, 10);
+            assert_eq!(upgraded.version, 11);
             assert_eq!(
                 serde_json::to_value(upgraded.language).unwrap(),
                 old["language"]
             );
-            old["version"] = 10.into();
+            old["version"] = 11.into();
+            old["ui_scale"] = serde_json::json!(1.0);
+            old["text_scale"] = serde_json::Value::Null;
             assert_eq!(serde_json::to_value(upgraded).unwrap(), old);
         }
         let mut invalid_v9: serde_json::Value = serde_json::from_str(v9).unwrap();
@@ -371,7 +450,7 @@ mod tests {
         for text in [
             "broken".to_string(),
             serde_json::to_string(&Settings {
-                version: 11,
+                version: 12,
                 ..Default::default()
             })
             .unwrap(),

@@ -456,5 +456,10 @@
   "language.keep": "是",
   "language.rollback": "如果不确认，将在 %{seconds} 秒后恢复原来的语言。",
   "language.cancel": "不，我不小心选错了语言",
-  "ui.mask-properties": "遮罩属性…"
+  "ui.mask-properties": "遮罩属性…",
+  "access.interface-scale": "界面缩放",
+  "access.text-scale": "单独调整文字",
+  "access.text-help": "额外缩放标准控件文字。画布和固定大小的标签遵循界面缩放。",
+  "access.contrast": "使用高对比度",
+  "access.reset": "重置界面大小"
 }
