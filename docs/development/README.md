@@ -12,3 +12,6 @@ for remaining work and hardware validation. Device writes are never CI tests.
 
 See [the documentation index](../README.md) for every planning and acceptance record,
 and [AGENTS.md](../../AGENTS.md) for repository working conventions.
+
+[Conversation handoff](handoff.md) preserves pending decisions, video plans and
+the migration/publication state for the next session.

@@ -6,6 +6,10 @@ manual and build tooling. It must build without a sibling beffroi-tools checkout
 Keep the single-member workspace and adapter design simple; avoid speculative layers
 of abstraction. User instructions take precedence over this guidance.
 
+When resuming the migrated conversation, read `docs/development/handoff.md` for
+pending decisions, video plans, prior test authorization and publication state.
+Treat dated observations as a snapshot and verify current state before acting.
+
 ## Project map
 
 - `crates/canvas-pilot/src/`: editor and application. `lib.rs`, `project.rs`,

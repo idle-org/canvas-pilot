@@ -71,6 +71,11 @@ device readback and physical-screen acceptance.
 
 ## To-do list
 
+- [ ] **Resolve local input-ratio correction scope.** Shared-input Content ratio
+  and Transform to controls already exist and are [documented](guide/formats-and-crop.md#content-ratio-versus-transform-to).
+  Whether to add a local correction/preview model remains an unanswered question;
+  do not treat a new implementation or persistence change as decided.
+
 - [x] **Explicit Midra layer aspect modes.** 1:1, Centered, Fullscreen and
   Cropped are available behind **Layer properties → Crop → Advanced layer fit**.
   Crop-first math, centered placement, clipping, import/send, preview and project
@@ -82,6 +87,17 @@ device readback and physical-screen acceptance.
   remains in the [engineering follow-up](midra-fit-precision.md).
 
 ### Stretch goals (distant future)
+
+- [ ] **Video showcase, manual and optional chapter demonstrations.** Record a
+  short showcase for the README and book introduction, then a guided video manual
+  linked from quick start with chapter timestamps. Use the existing
+  [feature demonstration checklist](feature-demo-checklist.md) as the recording
+  outline. Add short chapter clips where motion helps: crop controls, 1:1 crop
+  movement, masks and device mapping/transfers; start with the two main videos.
+  Keep written instructions as the searchable reference. Include captions and the
+  recorded application version, avoid autoplay, and host large video files outside
+  Git. Link or embed them in the book once a host is chosen. This approach is
+  user-approved; recording, hosting choice and implementation remain future work.
 
 - [ ] **Confirm Midra fit precision with a manufacturer/firmware engineer.**
   Obtain crop quantization, subpixel centering and rasterization rules, plus

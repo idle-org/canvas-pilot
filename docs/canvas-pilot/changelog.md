@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+- Saved a conversation handoff for reopening the standalone project, including
+  pending input-ratio scope, planned videos, device-test context and publication
+  state. Linked it from agent/developer guidance and retained pending plans in
+  the task list without changing completed acceptance status. Added the approved
+  showcase, video walkthrough and optional chapter clips as a stretch goal.
+
+
 - Redesigned the repository README with an illustrated introduction, layout workflow,
   feature overview, format/device guidance and direct setup, template and help links.
   Existing screenshots are identified as captures from before the rename.
