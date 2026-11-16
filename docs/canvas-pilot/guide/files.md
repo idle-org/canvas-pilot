@@ -330,7 +330,7 @@ and [versioned project contract](../../interfaces/canvas-pilot.md).
 
 ## Extra settings inside artwork exports
 
-See [which editing features survive](format-matrix.md#which-editing-features-survive)
+See [which editing features survive](#which-editing-features-survive)
 for a comparison of project saves, plain geometry import and snapshot restoration.
 
 In **Export layers**, enable **Include extra Midra parameters (experimental)** to
@@ -349,6 +349,44 @@ Other programs may remove the extra data when resaving. **Save project** remains
 the complete save, including reference images and captured previews.
 
 See the [format-by-format audit and metadata contract](../../interfaces/midra-extra-parameters.md).
+
+## Which editing features survive?
+
+This table separates editable state from a picture of its appearance. “Snapshot”
+means a supported exchange format exported with extra parameters and reopened through **Restore parameters from export**.
+
+| Feature | Project Open/Save | Plain geometry file import | Snapshot restore |
+| --- | :---: | :---: | :---: |
+| Layer position and size | ✅ | ✅ | ✅ |
+| Full-precision saved coordinates | ✅ | ❌ [1](#editing-notes) | ✅ |
+| Output screen resolution | ✅ | ❌ | ✅ |
+| Layer names and stacking order | ✅ | ❌ | ✅ |
+| Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [2](#editing-notes) |
+| Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [2](#editing-notes) |
+| Input crop edges | ✅ | ❌ | ✅ |
+| Normal layer crop zoom and offsets | ✅ | ❌ | ✅ |
+| Advanced fit modes and their crop edges | ✅ | ❌ | ✅ |
+| Editable blanking masks | ✅ | ❌ | ✅ |
+| Resize pivots and group resize settings | ✅ | ❌ | ✅ |
+| Saved device screen/layer links | ✅ | ❌ | ✅ |
+| Reference images and their individual settings | ✅ | ❌ | ❌ |
+| Capture assignments and saved preview stills | ✅ | ❌ | ❌ |
+| Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [2](#editing-notes) |
+| Undo history, pending edits and active device operations | ❌ | ❌ | ❌ |
+| Application theme, connection history and Program permission | ❌ [3](#editing-notes) | ❌ | ❌ |
+
+### Editing notes
+
+1. Geometry **exports round boxes to whole pixels**; import can retain fractional
+   coordinates where the reader supports them. Use a project or snapshot for
+   full-precision recovery. Geometry import never reorders destination layers.
+2. Snapshot restoration includes only exported layers and their referenced inputs;
+   selection and folders are filtered accordingly. It replaces the document with
+   the saved snapshot, not a merge of the external artwork's latest edits.
+3. Application preferences are saved separately from projects. Opening a project
+   or restoring a snapshot does not connect or send to a switcher.
+
+For a complete editable backup, **Save project** remains the recommended choice.
 
 ## Illustrator AI: optional converter required
 

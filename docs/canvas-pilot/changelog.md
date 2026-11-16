@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Moved the detailed editing-state preservation comparison from the format matrix
+  to the import/export guide beside snapshot restoration, retaining a link.
+
 - Moved the extra-settings note reference beside each supporting format name
   in the feature matrix.
 

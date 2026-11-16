@@ -90,44 +90,9 @@ bounds. Colors, text styling and artwork are not applied to the destination.
 Pasting exported text with extra parameters still imports geometry; use the
 separate restore action to recover the embedded settings.
 
-## Which editing features survive?
-
-This table separates editable state from a picture of its appearance. “Snapshot”
-means one of the seven checked exchange formats above, exported with extra
-parameters and reopened through **Restore parameters from export**.
-
-| Feature | Project Open/Save | Plain geometry file import | Snapshot restore |
-| --- | :---: | :---: | :---: |
-| Layer position and size | ✅ | ✅ | ✅ |
-| Full-precision saved coordinates | ✅ | ❌ [5](#editing-notes) | ✅ |
-| Output screen resolution | ✅ | ❌ | ✅ |
-| Layer names and stacking order | ✅ | ❌ | ✅ |
-| Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [6](#editing-notes) |
-| Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [6](#editing-notes) |
-| Input crop edges | ✅ | ❌ | ✅ |
-| Normal layer crop zoom and offsets | ✅ | ❌ | ✅ |
-| Advanced fit modes and their crop edges | ✅ | ❌ | ✅ |
-| Editable blanking masks | ✅ | ❌ | ✅ |
-| Resize pivots and group resize settings | ✅ | ❌ | ✅ |
-| Saved device screen/layer links | ✅ | ❌ | ✅ |
-| Reference images and their individual settings | ✅ | ❌ | ❌ |
-| Capture assignments and saved preview stills | ✅ | ❌ | ❌ |
-| Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [6](#editing-notes) |
-| Undo history, pending edits and active device operations | ❌ | ❌ | ❌ |
-| Application theme, connection history and Program permission | ❌ [7](#editing-notes) | ❌ | ❌ |
-
-### Editing notes
-
-5. Geometry **exports round boxes to whole pixels**; import can retain fractional
-   coordinates where the reader supports them. Use a project or snapshot for
-   full-precision recovery. Geometry import never reorders destination layers.
-6. Snapshot restoration includes only exported layers and their referenced inputs;
-   selection and folders are filtered accordingly. It replaces the document with
-   the saved snapshot, not a merge of the external artwork's latest edits.
-7. Application preferences are saved separately from projects. Opening a project
-   or restoring a snapshot does not connect or send to a switcher.
-
 PNG, JPEG and BMP are **reference-image imports**, not layer-geometry formats.
-  PDF, PSD, VSDX and ODG are not supported geometry-exchange choices.
+PDF, PSD, VSDX and ODG are not supported geometry-exchange choices.
 
-For a complete editable backup, **Save project** remains the recommended choice.
+For advanced save and restore details, see
+[which editing features survive](files.md#which-editing-features-survive) in the
+import/export guide.
