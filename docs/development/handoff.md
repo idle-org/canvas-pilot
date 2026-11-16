@@ -39,8 +39,9 @@ These settings are server-side; they do not require a Git commit.
 
 The new Jenkins job hookup has not been performed in this conversation. Setup is
 in [CI](ci.md). The three new badge URLs returned HTTP 404 at the last check;
-the README therefore keeps them in a collapsed Build status section pending the
-first publication. No new book deployment was performed during migration.
+the README initially kept them in a collapsed Build status section pending the
+first publication. The user subsequently requested moving them back to the top,
+which has been done. See [release readiness](releases.md) for the later no-build audit. No new book deployment was performed during migration.
 Canvas Pilot publishes only its own book and badges; beffroi-tools retains ownership
 of the shared manuals landing page. Never synchronize/delete that shared root.
 

@@ -2,6 +2,13 @@
   <img src="crates/canvas-pilot/assets/app-icon.png" width="96" height="96" alt="Canvas Pilot icon">
 </p>
 <h1 align="center">Canvas Pilot</h1>
+
+<p align="center">
+  <a href="docs/canvas-pilot/changelog.md"><img src="https://assets.dandaedre.com/coverage/idle-org/canvas-pilot/main/version.svg" alt="Version"></a>
+  <a href="docs/development/ci.md"><img src="https://assets.dandaedre.com/coverage/idle-org/canvas-pilot/main/test.svg" alt="Tests"></a>
+  <a href="docs/development/ci.md"><img src="https://assets.dandaedre.com/coverage/idle-org/canvas-pilot/main/coverage.svg" alt="Coverage"></a>
+</p>
+
 <p align="center"><strong>Compose your screen layout. Frame every layer. Bring it to the switcher.</strong></p>
 
 <p align="center">
@@ -120,19 +127,7 @@ For bug reports, include your OS, application version, steps to reproduce and,
 for device issues, the model and firmware. Contributors can start with the
 [development guide](docs/development/README.md) and [file/device contracts](docs/interfaces/README.md).
 
-<details>
-<summary>Build status</summary>
 
-The badges below become available after the standalone Jenkins pipeline publishes
-its first results. See [CI setup and local checks](docs/development/ci.md).
-
-<p align="center">
-  <a href="docs/canvas-pilot/changelog.md"><img src="https://assets.dandaedre.com/coverage/idle-org/canvas-pilot/main/version.svg" alt="Version"></a>
-  <a href="docs/development/ci.md"><img src="https://assets.dandaedre.com/coverage/idle-org/canvas-pilot/main/test.svg" alt="Tests"></a>
-  <a href="docs/development/ci.md"><img src="https://assets.dandaedre.com/coverage/idle-org/canvas-pilot/main/coverage.svg" alt="Coverage"></a>
-</p>
-
-</details>
 
 ---
 

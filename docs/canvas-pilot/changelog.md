@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Restored build-status badges to the top of the README. Checked release readiness
+  without compilation or publication, added required cargo-binstall metadata and
+  replaced the portable archive's repository README with standalone instructions.
+
+
 - Saved a conversation handoff for reopening the standalone project, including
   pending input-ratio scope, planned videos, device-test context and publication
   state. Linked it from agent/developer guidance and retained pending plans in

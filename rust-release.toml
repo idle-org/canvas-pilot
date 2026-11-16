@@ -33,7 +33,7 @@ files = [
   { source = "scripts/create-desktop-launcher.py", destination = "scripts/create-desktop-launcher.py", workspace-relative = true },
   { source = "scripts/desktop_icons.py", destination = "scripts/desktop_icons.py", workspace-relative = true },
   { source = "LICENSE", destination = "LICENSES/MIT.txt", workspace-relative = true },
-  { source = "README.md", destination = "README.txt", workspace-relative = true },
+  { source = "docs/canvas-pilot/portable-quickstart.txt", destination = "README.txt", workspace-relative = true },
 ]
 
 [[repository.fallbacks]]

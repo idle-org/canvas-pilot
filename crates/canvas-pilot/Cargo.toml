@@ -6,6 +6,11 @@ license.workspace = true
 repository.workspace = true
 description = "Screen layout design, geometry import and reviewed device control"
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }-v{ version }.tgz"
+pkg-fmt = "tgz"
+bin-dir = "{ name }-{ target }-v{ version }/{ bin }{ binary-ext }"
+
 [features]
 default = ["vendor_formats"]
 vendor_formats = ["dep:craft-dwg", "dep:deckcraft-pptx", "dep:deckcraft-model", "dep:deckcraft-geom", "dep:figcraft-format", "dep:figcraft-doc", "dep:figcraft-geom"]

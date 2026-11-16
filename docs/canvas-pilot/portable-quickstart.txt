@@ -1,0 +1,26 @@
+Canvas Pilot - portable quick start
+===================================
+
+Extract the complete archive before running the application. Run canvas-pilot.exe
+on Windows, or ./canvas-pilot on Linux/macOS. Choose the archive matching your OS
+and CPU; macOS builds target macOS 13 or newer. A graphical desktop is required.
+Linux requires the desktop/OpenGL runtime libraries used by the application.
+
+Start offline: arrange the example layers, adjust their crop and save your project.
+A device connection is optional. Review device mappings and transfer destinations
+before explicitly sending a layout to a switcher.
+
+Manual: https://books.dandaedre.com/manuals/canvas-pilot/
+Project, templates and help: https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot
+
+Optional desktop launchers (Python 3.11+):
+  Linux: python3 scripts/create-desktop-launcher.py canvas-pilot --binary "$PWD/canvas-pilot" --output "$HOME/.local/share"
+  macOS: python3 scripts/create-desktop-launcher.py canvas-pilot --platform macos --binary "$PWD/canvas-pilot" --output "$HOME/Applications"
+Run these commands from the extracted directory. Linux launchers reference this
+location; keep it in a permanent folder. macOS launchers copy the executable.
+The helper does not sign/notarize the application or bypass OS security checks.
+
+FFprobe is not required. Illustrator AI exchange needs a separately installed
+VectorCraft CLI; SVG exchange can be used without it.
+
+License: LICENSES/MIT.txt. Independent software, not affiliated with Analog Way.
