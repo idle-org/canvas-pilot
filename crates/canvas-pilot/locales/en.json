@@ -461,5 +461,12 @@
   "access.text-scale": "Adjust text separately",
   "access.text-help": "Additional scaling for standard controls. Canvas artwork and fixed-size labels follow interface scale.",
   "access.contrast": "Use high contrast",
-  "access.reset": "Reset interface size"
+  "access.reset": "Reset interface size",
+  "language.name.en": "English",
+  "language.name.fr": "French",
+  "language.name.ja": "Japanese",
+  "language.name.zh-CN": "Simplified Chinese",
+  "language.name.es": "Spanish",
+  "language.name.grc": "Ancient Greek",
+  "language.name.eo": "Esperanto"
 }

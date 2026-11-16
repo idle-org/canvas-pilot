@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.9.2
+
+- Language choices show the native name followed by its name in the current
+  interface language, for example English — Anglais in French.
+
 ### v0.9.1
 
 - Added Appearance controls for 50–400% interface zoom and optional 50–200%

@@ -29,16 +29,17 @@ impl Language {
     ];
 
     pub fn name(self, ctx: &egui::Context) -> String {
-        match self {
-            Self::System => tr(ctx, "language.system"),
-            Self::En => "English".into(),
-            Self::Fr => "Français".into(),
-            Self::Ja => "日本語".into(),
-            Self::ZhCn => "简体中文".into(),
-            Self::Es => "Español".into(),
-            Self::Grc => "Ἑλληνικὴ ἀρχαία".into(),
-            Self::Eo => "Esperanto".into(),
-        }
+        let (native, key) = match self {
+            Self::System => return tr(ctx, "language.system"),
+            Self::En => ("English", "language.name.en"),
+            Self::Fr => ("Français", "language.name.fr"),
+            Self::Ja => ("日本語", "language.name.ja"),
+            Self::ZhCn => ("简体中文", "language.name.zh-CN"),
+            Self::Es => ("Español", "language.name.es"),
+            Self::Grc => ("Ἑλληνικὴ ἀρχαία", "language.name.grc"),
+            Self::Eo => ("Esperanto", "language.name.eo"),
+        };
+        format!("{native} — {}", tr(ctx, key))
     }
 
     pub fn apply(self, ctx: &egui::Context) {
@@ -155,6 +156,19 @@ mod tests {
         ] {
             assert_eq!(system_language(Some(input)), expected, "{input}");
         }
+    }
+
+    #[test]
+    fn language_names_follow_current_locale_and_keep_native_names() {
+        let ctx = egui::Context::default();
+        Language::Fr.apply(&ctx);
+        assert_eq!(Language::En.name(&ctx), "English — Anglais");
+        assert_eq!(Language::Fr.name(&ctx), "Français — Français");
+        assert_eq!(Language::Es.name(&ctx), "Español — Espagnol");
+        Language::En.apply(&ctx);
+        assert_eq!(Language::Fr.name(&ctx), "Français — French");
+        assert_eq!(Language::Ja.name(&ctx), "日本語 — Japanese");
+        assert_eq!(Language::System.name(&ctx), tr(&ctx, "language.system"));
     }
 
     #[test]

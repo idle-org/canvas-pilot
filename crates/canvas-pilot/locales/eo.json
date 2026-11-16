@@ -461,5 +461,12 @@
   "access.text-scale": "Alĝustigi tekston aparte",
   "access.text-help": "Plia skalo por normaj regiloj. La kanvaso kaj fiksgrandaj etikedoj sekvas la interfacan skalon.",
   "access.contrast": "Uzi altan kontraston",
-  "access.reset": "Restarigi la interfacan grandecon"
+  "access.reset": "Restarigi la interfacan grandecon",
+  "language.name.en": "Angla",
+  "language.name.fr": "Franca",
+  "language.name.ja": "Japana",
+  "language.name.zh-CN": "Simpligita ĉina",
+  "language.name.es": "Hispana",
+  "language.name.grc": "Antikva greka",
+  "language.name.eo": "Esperanto"
 }

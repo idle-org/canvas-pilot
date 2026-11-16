@@ -24,6 +24,8 @@ project; older projects open with captions off.
 ### Interface language
 
 Open **Menu → Open all settings…** and use **Language / Langue** at the top.
+Each language shows its native name followed by its name in the current interface
+language, for example **English — Anglais** in French.
 Choose **System default**, **English**, **Français**, **日本語**, **简体中文**,
 **Español**, **Ἑλληνικὴ ἀρχαία** (Ancient Greek), or **Esperanto**. The change takes effect
 immediately as a preview. Choose **Yes** within 20 seconds to save it for future

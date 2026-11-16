@@ -461,5 +461,12 @@
   "access.text-scale": "文字サイズを個別に調整",
   "access.text-help": "標準コントロールの文字を拡大します。キャンバスと固定サイズのラベルはインターフェースの拡大率に従います。",
   "access.contrast": "高コントラストを使用",
-  "access.reset": "インターフェースのサイズをリセット"
+  "access.reset": "インターフェースのサイズをリセット",
+  "language.name.en": "英語",
+  "language.name.fr": "フランス語",
+  "language.name.ja": "日本語",
+  "language.name.zh-CN": "簡体字中国語",
+  "language.name.es": "スペイン語",
+  "language.name.grc": "古代ギリシャ語",
+  "language.name.eo": "エスペラント"
 }

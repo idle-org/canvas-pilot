@@ -461,5 +461,12 @@
   "access.text-scale": "单独调整文字",
   "access.text-help": "额外缩放标准控件文字。画布和固定大小的标签遵循界面缩放。",
   "access.contrast": "使用高对比度",
-  "access.reset": "重置界面大小"
+  "access.reset": "重置界面大小",
+  "language.name.en": "英语",
+  "language.name.fr": "法语",
+  "language.name.ja": "日语",
+  "language.name.zh-CN": "简体中文",
+  "language.name.es": "西班牙语",
+  "language.name.grc": "古希腊语",
+  "language.name.eo": "世界语"
 }

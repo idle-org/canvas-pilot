@@ -461,5 +461,12 @@
   "access.text-scale": "Ajustar el texto por separado",
   "access.text-help": "Escala adicional para controles estándar. El lienzo y las etiquetas de tamaño fijo siguen la escala de la interfaz.",
   "access.contrast": "Usar alto contraste",
-  "access.reset": "Restablecer el tamaño de la interfaz"
+  "access.reset": "Restablecer el tamaño de la interfaz",
+  "language.name.en": "Inglés",
+  "language.name.fr": "Francés",
+  "language.name.ja": "Japonés",
+  "language.name.zh-CN": "Chino simplificado",
+  "language.name.es": "Español",
+  "language.name.grc": "Griego antiguo",
+  "language.name.eo": "Esperanto"
 }

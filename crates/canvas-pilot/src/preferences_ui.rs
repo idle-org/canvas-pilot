@@ -457,8 +457,8 @@ mod tests {
             assert_eq!(app.fields, draft);
             assert!(!app.device.sending);
         }
-        click_label(&mut app, &ctx, "English");
-        click_label(&mut app, &ctx, "Français");
+        click_label(&mut app, &ctx, "English — English");
+        click_label(&mut app, &ctx, "Français — French");
         click_label(&mut app, &ctx, "Oui");
         click_label(&mut app, &ctx, "Fermer");
         assert!(!app.preferences_open);
@@ -467,8 +467,8 @@ mod tests {
         let mut restored = Editor::with_settings(&restored_ctx, store, saved);
         assert_eq!(localization::locale(&restored_ctx), "fr");
         restored.preferences_open = true;
-        click_label(&mut restored, &restored_ctx, "Français");
-        click_label(&mut restored, &restored_ctx, "English");
+        click_label(&mut restored, &restored_ctx, "Français — Français");
+        click_label(&mut restored, &restored_ctx, "English — Anglais");
         assert_eq!(localization::locale(&restored_ctx), "en");
     }
 

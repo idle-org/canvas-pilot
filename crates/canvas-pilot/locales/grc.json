@@ -461,5 +461,12 @@
   "access.text-scale": "Τὰ γράμματα χωρὶς αὔξειν",
   "access.text-help": "Αὔξησις τῶν γραμμάτων τῶν συνήθων ὀργάνων. Ὁ πίναξ καὶ αἱ σταθεραὶ ἐπιγραφαὶ ἕπονται τῷ μεγέθει τῆς διεπαφῆς.",
   "access.contrast": "Ἰσχυρὰν ἀντίθεσιν χρῆσθαι",
-  "access.reset": "Τὸ μέγεθος ἀποκαθιστάναι"
+  "access.reset": "Τὸ μέγεθος ἀποκαθιστάναι",
+  "language.name.en": "Ἀγγλική",
+  "language.name.fr": "Γαλλική",
+  "language.name.ja": "Ἰαπωνική",
+  "language.name.zh-CN": "Σινικὴ ἁπλῆ",
+  "language.name.es": "Ἱσπανική",
+  "language.name.grc": "Ἑλληνικὴ ἀρχαία",
+  "language.name.eo": "Ἐσπεράντο"
 }

@@ -461,5 +461,12 @@
   "access.text-scale": "Ajuster le texte séparément",
   "access.text-help": "Agrandissement supplémentaire des commandes standard. Le canevas et les libellés à taille fixe suivent l’échelle de l’interface.",
   "access.contrast": "Utiliser le contraste élevé",
-  "access.reset": "Réinitialiser la taille de l’interface"
+  "access.reset": "Réinitialiser la taille de l’interface",
+  "language.name.en": "Anglais",
+  "language.name.fr": "Français",
+  "language.name.ja": "Japonais",
+  "language.name.zh-CN": "Chinois simplifié",
+  "language.name.es": "Espagnol",
+  "language.name.grc": "Grec ancien",
+  "language.name.eo": "Espéranto"
 }
