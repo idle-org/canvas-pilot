@@ -85,6 +85,16 @@ Keep root README concise and put details in `docs/`. Add a succinct Unreleased
 entry to `docs/canvas-pilot/changelog.md` for each change, including useful validation
 or limitations; it is linked from `docs/changelogs.md`.
 
+## Version bookkeeping
+
+Bump the workspace patch version once per completed subject (feature, fix or
+substantive documentation task), not once per commit. Follow-up corrections and
+validation for that same subject share its version. Read-only work needs no bump.
+Use a requested minor/major bump instead of an additional patch bump. Keep
+`Cargo.toml`, the Canvas Pilot entry in `Cargo.lock` and the changelog in sync;
+group entries by version under Unreleased until published. Keep this lightweight:
+version bookkeeping alone does not call for a tag, binary build, push or release.
+
 ## Publication and working conventions
 
 Manual publication owns only `/mnt/books/manuals/canvas-pilot/`; never replace the

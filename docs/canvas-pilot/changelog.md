@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.0
+
+This minor version brings interface localization, French quick-start screenshots,
+safer language selection and easier access to mask editing. It is not yet published.
+Future completed subjects receive one patch-version bump for bookkeeping.
+
 - Alt/Option + double-click with the Select tool opens the layer mask controls,
   including from crop mode. Existing crop double-click and Zoom/Pan behavior remain
   intact; regression tests cover the shortcut, locked layers and empty canvas.
