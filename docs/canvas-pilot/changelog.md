@@ -9,6 +9,8 @@
 - Added Appearance controls for 50–400% interface zoom and optional 50–200%
   standard-widget text scaling, with a readily accessible size reset. Added a
   High Contrast theme with measured text contrast and stronger widget borders.
+  Scaling sliders keep the interface still while dragging and apply on release;
+  typed values apply after finishing text entry.
   Settings v11 migrates older preferences without changing projects or exports.
   Fixed-size artwork/labels follow interface zoom, not the additional text scale.
 

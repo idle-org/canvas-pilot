@@ -1,6 +1,10 @@
 use super::*;
 
+#[derive(Clone)]
+struct ScaleDraft(f32, f32);
+
 pub(super) fn apply_scaling(ctx: &egui::Context, ui_scale: f32, text_scale: Option<f32>) {
+    ctx.data_mut(|data| data.remove_by_type::<ScaleDraft>());
     ctx.set_zoom_factor(ui_scale);
     // Derive from defaults each time: toggles and theme changes must not compound sizes.
     let mut fonts = egui::Style::default().text_styles;
@@ -8,6 +12,28 @@ pub(super) fn apply_scaling(ctx: &egui::Context, ui_scale: f32, text_scale: Opti
         font.size *= text_scale.unwrap_or(1.0);
     }
     ctx.style_mut(|style| style.text_styles = fonts);
+}
+
+// Keep the displayed draft separate from the saved size until interaction ends.
+fn scale_slider(ui: &mut egui::Ui, scale: &mut f32, maximum: f32) -> egui::Response {
+    let id = ui.next_auto_id().with("scale-draft");
+    let ScaleDraft(original, draft) = ui
+        .data(|data| data.get_temp::<ScaleDraft>(id))
+        .unwrap_or(ScaleDraft(*scale, *scale));
+    let mut percent = if original == *scale { draft } else { *scale } * 100.0;
+    let response = ui.add(
+        egui::Slider::new(&mut percent, 50.0..=maximum)
+            .suffix(" %")
+            .step_by(5.0),
+    );
+    let editing = ui.input(|input| input.pointer.any_down()) || ui.ctx().wants_keyboard_input();
+    if editing {
+        ui.data_mut(|data| data.insert_temp(id, ScaleDraft(*scale, percent / 100.0)));
+    } else {
+        *scale = percent / 100.0;
+        ui.data_mut(|data| data.remove::<ScaleDraft>(id));
+    }
+    response
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -169,18 +195,14 @@ impl Editor {
                             Section::Appearance => {
                                 ui.heading(tr(ui.ctx(), "ui.appearance"));
                                 let scaling_before = (self.ui_scale, self.text_scale);
-                                let mut percent = self.ui_scale * 100.0;
                                 ui.label(tr(ctx, "access.interface-scale"));
-                                ui.add(egui::Slider::new(&mut percent, 50.0..=400.0).suffix(" %").step_by(5.0));
-                                self.ui_scale = percent / 100.0;
+                                scale_slider(ui, &mut self.ui_scale, 400.0);
                                 let mut separate = self.text_scale.is_some();
                                 if ui.checkbox(&mut separate, tr(ctx, "access.text-scale")).changed() {
                                     self.text_scale = separate.then_some(1.0);
                                 }
                                 if let Some(scale) = &mut self.text_scale {
-                                    let mut percent = *scale * 100.0;
-                                    ui.add(egui::Slider::new(&mut percent, 50.0..=200.0).suffix(" %").step_by(5.0));
-                                    *scale = percent / 100.0;
+                                    scale_slider(ui, scale, 200.0);
                                     ui.weak(tr(ctx, "access.text-help"));
                                 }
                                 if scaling_before != (self.ui_scale, self.text_scale) { apply_scaling(ctx, self.ui_scale, self.text_scale); }
@@ -308,6 +330,40 @@ mod tests {
         frame(app, ctx, vec![mouse(pos, false)]);
     }
     #[test]
+    fn scale_slider_commits_only_after_pointer_release() {
+        for maximum in [200.0, 400.0] {
+            let ctx = egui::Context::default();
+            let mut scale = 1.0;
+            let mut rect = egui::Rect::NOTHING;
+            let mut run = |events| {
+                let _ = ctx.run(
+                    egui::RawInput {
+                        events,
+                        ..Default::default()
+                    },
+                    |ctx| {
+                        egui::CentralPanel::default().show(ctx, |ui| {
+                            rect = scale_slider(ui, &mut scale, maximum).rect;
+                        });
+                    },
+                );
+                (scale, rect)
+            };
+            let (_, rect) = run(vec![]);
+            let start = rect.left_center() + egui::vec2(30.0, 0.0);
+            assert_eq!(
+                run(vec![egui::Event::PointerMoved(start), mouse(start, true)]).0,
+                1.0
+            );
+            let end = rect.left_center() + egui::vec2(85.0, 0.0);
+            assert_eq!(run(vec![egui::Event::PointerMoved(end)]).0, 1.0);
+            let (committed, _) = run(vec![mouse(end, false)]);
+            assert!(committed > 1.0, "released value: {committed}");
+            assert_eq!(run(vec![]).0, committed);
+        }
+    }
+
+    #[test]
     fn scaling_is_idempotent_and_preserves_project_and_theme() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
@@ -331,7 +387,13 @@ mod tests {
         assert_eq!(app.application_settings(&ctx).ui_scale, 1.5);
         assert_eq!(app.application_settings(&ctx).text_scale, Some(1.25));
         assert_eq!(app.project().to_json().unwrap(), project);
+        let draft_id = egui::Id::new("pending-scale");
+        ctx.data_mut(|data| data.insert_temp(draft_id, ScaleDraft(1.0, 3.0)));
         apply_scaling(&ctx, 1.0, None);
+        assert!(
+            ctx.data(|data| data.get_temp::<ScaleDraft>(draft_id))
+                .is_none()
+        );
         assert_eq!(ctx.style().text_styles[&egui::TextStyle::Body].size, base);
     }
 

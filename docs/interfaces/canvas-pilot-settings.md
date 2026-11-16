@@ -40,7 +40,8 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 | `show_source_pattern` | Boolean; default false. Shows source patterns on other layers only during crop editing; normal editing always hides patterns. |
 | `snapping` | Object with required boolean fields `enabled` (false), `pixels` (true), `screen_edges` (true; screen edges plus 25%, 50% and 75% guides on both axes), `layer_edges` (true), `grid` (false), `show_grid` (true), and `grid_divisions` ([8, 6]); unknown fields rejected |
 
-Scale preferences apply on startup and save immediately when changed. UI controls
+Scale preferences apply on startup. Slider drafts apply and save on pointer
+release; typed values wait until text entry ends. UI controls
 use 5-percentage-point increments; the file accepts any finite in-range multiplier.
 Separate text scaling changes standard widget text styles without compounding on
 repeated application. Explicit-size artwork and labels follow interface zoom only.
@@ -134,7 +135,7 @@ The cancel button uses the previously displayed locale, including resolved Syste
 default. Preview state and its deadline are not serialized; preview state adds no serialized fields.
 
 The Settings window and quick menus share the same settings. Changes apply
-and save immediately, except for language confirmation described above; closing
+and save immediately, except for scaling interaction and language confirmation described above; closing
 the window requires no general Apply step. Restore default
 preferences resets appearance and editing values, including theme history and snapping, without
 changing layer geometry or pending position/size text fields. Snapping uses a

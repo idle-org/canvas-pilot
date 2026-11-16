@@ -60,7 +60,9 @@ Open **Menu → Open all settings… → Appearance**:
 - **Use high contrast:** select a black-based theme with white text, bright accents
   and stronger control borders. It also appears as **High Contrast** in the theme browser.
 
-Changes apply immediately and are remembered on this computer. **Reset interface
+Scale values update while dragging, but resizing applies only after releasing
+the pointer. Typed values apply after finishing text entry. Preferences are
+remembered on this computer. **Reset interface
 size**, near the top of Settings, restores 100% and disables separate text scaling.
 Smaller scales free up space on low-resolution displays; larger scales support
 high-resolution monitors. These ranges do not depend on monitor resolution.
