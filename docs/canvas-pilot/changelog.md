@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Fixed raw `crop.adjust` / `crop.done` translation keys in the layer context menu.
+  A rendered-menu regression test covers both editing states in every language.
+
 - Added Japanese, Simplified Chinese, Spanish, Ancient Greek and Esperanto software
   translations with immediate language switching. All are unverified machine
   translations; device terminology and document/clipboard content stay unchanged.

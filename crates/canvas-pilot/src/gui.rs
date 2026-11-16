@@ -2197,7 +2197,7 @@ impl Editor {
                 "crop.adjust"
             };
             if ui
-                .add_enabled(!self.automatic_layer_fit(i), egui::Button::new(crop_label))
+                .add_enabled(!self.automatic_layer_fit(i), egui::Button::new(tr(ui.ctx(), crop_label)))
                 .on_disabled_hover_text("Centered and Cropped fit automatically; use Crop properties for numeric crop edges.")
                 .on_hover_text(
                     tr(ui.ctx(), "ui.change-crop-zoom-and-offset-inside-the-layer-keep-its-visible-box-fixed"),
@@ -8126,6 +8126,41 @@ mod tests {
         app.sync();
         assert!(!app.fields_pending());
         assert_eq!(app.fields, original);
+    }
+
+    #[test]
+    fn crop_menu_renders_translations_in_both_editing_states() {
+        for language in localization::Language::ALL {
+            let ctx = egui::Context::default();
+            language.apply(&ctx);
+            for editing in [false, true] {
+                let mut app = Editor {
+                    edit_content: editing,
+                    ..Default::default()
+                };
+                assert!(app.layout.selected().is_some());
+                let output = ctx.run(egui::RawInput::default(), |ctx| {
+                    egui::CentralPanel::default().show(ctx, |ui| app.layer_context_menu(ui));
+                });
+                let expected = tr(&ctx, if editing { "crop.done" } else { "crop.adjust" });
+                let labels: Vec<_> = output
+                    .shapes
+                    .iter()
+                    .filter_map(|shape| match &shape.shape {
+                        egui::Shape::Text(text) => Some(text.galley.text()),
+                        _ => None,
+                    })
+                    .collect();
+                assert!(
+                    labels.contains(&expected.as_str()),
+                    "{language:?}: missing {expected}"
+                );
+                assert!(
+                    !labels.iter().any(|label| label.starts_with("crop.")),
+                    "raw key in {language:?} menu"
+                );
+            }
+        }
     }
 
     #[test]
