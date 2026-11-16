@@ -1,5 +1,28 @@
 # Release preparation
 
+## Current milestone: v0.8.0
+
+[Release notes](release-notes/v0.8.0.md) record the standalone Canvas Pilot and
+advanced exchange milestone. The workspace and lockfile use version 0.8.0.
+The annotated local `v0.8.0` tag identifies the committed release preparation.
+Tags and commits are not pushed automatically, and no binaries are published by
+this preparation task.
+
+On a capable build host with this tagged commit checked out:
+
+```sh
+rust_realease . --package canvas-pilot --tag v0.8.0 --dry-run
+rust_realease . --package canvas-pilot --tag v0.8.0 --compile-only
+```
+
+The second command performs the expensive four-target builds and packaging; it
+creates no remote release. Keep default features enabled for vendor formats.
+After target-platform smoke tests, a separately authorized publishing run can
+use `--message-file docs/development/release-notes/v0.8.0.md` and the configured
+credential mechanism. Do not use `--replace-assets` for a first publication.
+
+## Packaging configuration
+
 `rust-release.toml` configures portable Windows and Linux builds through Cross and
 Apple Silicon/Intel macOS 13+ builds through the pinned cargo-zigbuild container.
 Run release preparation from the repository root with the separately installed

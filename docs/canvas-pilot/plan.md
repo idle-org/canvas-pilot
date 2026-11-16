@@ -11,6 +11,13 @@ The [user guide](guide/overview.md) describes current controls; the
 [hardware findings](device-check.md) distinguish automated tests,
 device readback and physical-screen acceptance.
 
+## Release milestone
+
+**v0.8.0 — Standalone and advanced exchange** is prepared as a source milestone.
+See its [release notes](../development/release-notes/v0.8.0.md) and
+[build/publication procedure](../development/releases.md). Remaining acceptance
+checks and stretch goals below remain open; the tag does not mark them complete.
+
 ## Completed implementation
 
 - [x] Rust/egui workspace app; canonical pixel geometry, stable layer/input IDs,

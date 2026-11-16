@@ -7,6 +7,7 @@ The Python device probe lives in `tools/`; Python tests and build helpers live i
 | Work | Reference |
 | --- | --- |
 | Build, tests and coverage | [CI and local checks](ci.md) |
+| Current milestone | [v0.8.0 — standalone and advanced exchange](release-notes/v0.8.0.md) |
 | Release preparation | [Packaging and readiness](releases.md) |
 | Edit or publish the book | [Manual generation](../manuals/building.md) |
 | Tasks, acceptance tests and stretch goals | [Project plan](../canvas-pilot/plan.md) |

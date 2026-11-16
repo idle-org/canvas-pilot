@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+No changes yet.
+
+## v0.8.0 — 2026-11-16
+
+Standalone Canvas Pilot and advanced exchange milestone. See the
+[release notes](../development/release-notes/v0.8.0.md) for highlights,
+compatibility and remaining release validation. This version is prepared for
+release; downloadable binaries are not yet published.
+
 - Import/paste can optionally rename destination layers from supplied editor names,
   with proposed names shown before applying and a name-only mode. Folders and IDs
   stay unchanged; renames undo with geometry/appearance in one step. Clipboard v2
