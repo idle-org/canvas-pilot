@@ -5,7 +5,7 @@
 ## Unreleased
 
 - Placed native-codec note 3 beside format names and extra-settings note 4 in
-  its column heading in the feature matrix.
+  each supporting row’s Extra settings cell in the feature matrix.
 
 - Moved the detailed editing-state preservation comparison from the format matrix
   to the import/export guide beside snapshot restoration, retaining a link.
