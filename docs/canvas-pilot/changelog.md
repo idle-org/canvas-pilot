@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Moved the extra-settings note reference beside each supporting format name
+  in the feature matrix.
+
 - Shortened the feature matrix’s Pictures note to the export option names.
 
 - Removed the project-format note from the feature matrix and renumbered the
