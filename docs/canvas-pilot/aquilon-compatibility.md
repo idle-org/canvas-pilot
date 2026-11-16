@@ -4,7 +4,7 @@
 
 Implemented and tested 2026-11-15. **Aquilon is a first-class supported adapter**
 for standalone AQL Cmax firmware 6.2.x; the tested emulator is **6.2.79** at the
-user-provided custom port. See the [current adapter contract](../interfaces/device-adapters.md).
+configured custom port. See the [current adapter contract](../interfaces/device-adapters.md).
 
 The supported profile is complete for its documented scope. Physical-output
 acceptance remains outstanding; other models, linked units and unsupported
@@ -71,7 +71,7 @@ probe on 2026-11-15 confirmed the transport details below; no settings were chan
 
 ## Emulator response-size diagnosis
 
-Read-only GETs at the user-supplied emulator confirmed `/api/tpp/v1/system`
+Read-only GETs at the test emulator confirmed `/api/tpp/v1/system`
 returns `type: "AQL Cmax"`, firmware **6.2.79**, and `/api/stores/device` returns
 **124,076,981 bytes** (about 118 MiB). This exceeds the current Midra 32 MiB state
 limit. Raising that limit alone would still fail at the unsupported-family check.

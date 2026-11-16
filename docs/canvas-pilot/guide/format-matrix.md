@@ -79,8 +79,7 @@ applies to Illustrator and draw.io. “Paste” below means **into Canvas Pilot*
 | PowerPoint native clipboard | ❌ | ❌ | ❌ | ❌ | ❌ |
 | QCAD native clipboard | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-Figma SVG, Illustrator SVG and draw.io XML clipboard paths have been confirmed in
-user testing. This does not imply support for every application's native binary
+Figma SVG, Illustrator SVG and draw.io XML clipboard paths have been manually reviewed. This does not imply support for every application's native binary
 or HTML clipboard payload. Use the corresponding file path if no supported text
 is available. PowerPoint and QCAD use file exchange in this workflow.
 

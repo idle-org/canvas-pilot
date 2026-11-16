@@ -55,7 +55,7 @@ device readback and physical-screen acceptance.
 - [x] Multiple editor layers may share one Midra destination. Mapping warns with
   other linked layer names/folders; sends reject overlaps only within the chosen
   scope. This replaces the earlier extra-links-per-layer proposal. Nested folders
-  and additional file codecs have been removed from scope at the user's request.
+  and additional file codecs have been removed from scope following scope review.
 - [x] Both device sizing strategies, Centered-crop imports, required preset apply
   pulse, rounding/reconstruction checks and readback. Preview/Program protocol
   checks on Eikos 3.3.10 are recorded; Program availability is a user preference.
@@ -65,7 +65,7 @@ device readback and physical-screen acceptance.
 - [x] Geometry/import/UI/mock-device regression tests, workspace CI, coverage,
   documentation and release build configuration integration.
 - [x] **Export/workflow cleanup.** Shared transfer scopes, mapping review and
-  direct linked send/load are implemented. Marked solved by the user on 2026-11-15.
+  direct linked send/load are implemented. Manually reviewed and marked solved on 2026-11-15.
 
 - [x] **Aquilon / LivePremier: first-class supported (standalone AQL Cmax 6.2.x).** Device-neutral snapshots, family-aware v13 links, bounded targeted AWJ reads, geometry/crop import, mapped Preview/Program sends and pooled input previews. See [adapter contract](../interfaces/device-adapters.md) and [emulator acceptance](aquilon-compatibility.md). Linked units, other models/firmware, shared input corrections and non-centered/masked import remain explicitly unsupported.
 
@@ -97,7 +97,7 @@ device readback and physical-screen acceptance.
   Keep written instructions as the searchable reference. Include captions and the
   recorded application version, avoid autoplay, and host large video files outside
   Git. Link or embed them in the book once a host is chosen. This approach is
-  user-approved; recording, hosting choice and implementation remain future work.
+  approved; recording, hosting choice and implementation remain future work.
 
 - [ ] **Confirm Midra fit precision with a manufacturer/firmware engineer.**
   Obtain crop quantization, subpixel centering and rasterization rules, plus
@@ -123,20 +123,20 @@ device readback and physical-screen acceptance.
 
 ### Completed acceptance
 
-User-confirmed working on 2026-11-14; these format issues are solved:
+Manually reviewed on 2026-11-14; these format issues are solved:
 
 - [x] **PPTX** — working flawlessly.
 - [x] **draw.io** — working.
 - [x] **SVG** — working.
 
-User-confirmed import/export working on 2026-11-15; these format issues are solved:
+Import/export manually reviewed on 2026-11-15; these format issues are solved:
 
 - [x] **Figma FIG** — import/export validated.
 - [x] **FigCraft FIGCRAFT** — import/export validated.
 - [x] **DXF** — import/export validated.
 - [x] **DWG** — import/export validated.
 
-User-confirmed clipboard workflows on 2026-11-15:
+Clipboard workflows manually reviewed on 2026-11-15:
 
 - [x] **Illustrator, draw.io and Figma** — actual copy/paste working; supplied
   samples also have regression coverage.
@@ -278,7 +278,7 @@ not part of this desktop tool.
 The [Analog Way Midra 4K V3.2 manual, July 2024, pp. 83–85](https://www.bhphotovideo.com/lit_files/1168243.pdf#page=83)
 documents layer alignment, snapping, position and size controls. This supports
 the workflow research; it does not establish the precise coordinate convention
-or current firmware behavior for the user's installation. Avoid portraying all
+or current firmware behavior for the target installation. Avoid portraying all
 WebRCS versions as lacking alignment. The proposed improvement is more explicit
 corner-based positioning and reference-image inspection.
 
@@ -293,6 +293,6 @@ WebRCS version.
 
 The installed firmware is recorded as Eikos 3.3.10. Primary operator OS/display
 scale and broader platform acceptance remain to verify. Concept A is approved;
-the user-supplied draw.io clipboard rectangle is retained as a regression fixture.
+the supplied draw.io clipboard rectangle is retained as a regression fixture.
 The implementation and backlog at the top of this document supersede the original
 mockup assumptions.

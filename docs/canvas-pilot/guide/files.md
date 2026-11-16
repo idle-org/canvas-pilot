@@ -79,7 +79,7 @@ The supplied [Figma SVG sample](../../../crates/canvas-pilot/tests/fixtures/figm
 works through the existing SVG/value paste parser: two 640 × 360 rectangular
 paths at (0, 0) and (1040, 0), including their matrix translations and order.
 Paste SVG text and review the detected shapes in the mapping dialog.
-The user confirmed actual Figma copy/paste working on 2026-11-15. This validates
+Figma copy/paste was manually reviewed on 2026-11-15. This validates
 the tested SVG workflow, not every native binary/HTML clipboard format.
 
 ### Illustrator SVG clipboard text
@@ -89,11 +89,11 @@ works through the existing SVG/value paste parser. Its two 1814.174 × 1020.473
 rectangles retain fractional positions (0.354, 0.354) and (395.791, 461.357).
 Enabling outline inclusion adds the centered 0.709-unit stroke to their bounds,
 producing 1814.883 × 1021.182 boxes. Stroke colors are not imported as artwork
-through this geometry workflow. The user confirmed actual Illustrator copy/paste
-working on 2026-11-15; other native clipboard formats are outside this validation.
+through this geometry workflow. Illustrator copy/paste was manually reviewed
+on 2026-11-15; other native clipboard formats are outside this validation.
 
 For QCAD and PowerPoint, use file exchange; no clipboard-export integration is
-planned for the user's reported workflows.
+planned for these workflows.
 
 ### draw.io clipboard
 
@@ -136,8 +136,8 @@ These are application limits, not verified Eikos limits.
 
 Draw.io also exposes raw page XML through **Extras → Edit Diagram**, as described
 in its [source-editing documentation](https://www.drawio.com/docs/manual/advanced/diagram-source-edit/).
-Support is covered by the supplied clipboard data and regression fixtures. The
-user confirmed actual draw.io copy/paste working on 2026-11-15.
+Support is covered by the supplied clipboard data and regression fixtures. Draw.io
+copy/paste was manually reviewed on 2026-11-15.
 
 ## Save, open and export
 

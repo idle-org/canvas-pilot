@@ -41,7 +41,7 @@ Review the detected rectangles and their destination layers before applying.
 | FigCraft | [Download .figcraft](canvas-pilot-1080p-2-layers.figcraft) | [Download .figcraft](canvas-pilot-4k-2-layers.figcraft) | FigCraft |
 | Illustrator AI (optional) | [Download .ai](canvas-pilot-1080p-2-layers.ai) | [Download .ai](canvas-pilot-4k-2-layers.ai) | Requires VectorCraft CLI for Midra import/export; prefer SVG |
 
-FIG, FIGCRAFT, DXF and DWG import/export were confirmed working by the user on
+FIG, FIGCRAFT, DXF and DWG import/export were manually reviewed on
 2026-11-15. PPTX, draw.io and SVG were previously confirmed; see the
 [format acceptance list](../../canvas-pilot/plan.md#completed-acceptance).
 

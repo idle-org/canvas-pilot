@@ -221,7 +221,7 @@ device recipe. Unsupported results must not be approximated with masking.
 Quantize only at the device boundary. Check the reconstructed visible rectangle
 and sampled source region after quantization. Show the requested and achievable
 values and residual error; block a supposedly exact recipe when its error exceeds
-the verified device precision. Never silently alter the user's final box.
+the verified device precision. Never silently alter the final layer box.
 
 ## Interaction and changes to the inspector
 
@@ -243,7 +243,7 @@ Pointer-wheel zoom remains camera zoom; content zoom uses its own control to
 avoid accidental geometry edits. Each drag/edit is one undoable operation.
 
 Cropping requires a content illustration: a source-coordinate test pattern can
-show framing without live video. A user-provided source still may optionally be
+show framing without live video. An imported source still may optionally be
 added later and must remain distinct from the screen-wide reference image.
 Do not suggest the screen reference picture is the layer's source content.
 

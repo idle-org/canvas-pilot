@@ -92,7 +92,7 @@ sanitize before sharing. Its exchange contract is documented in
 
 ## Reviewed send and cropped-layer round trip
 
-The user's later authorization permits Program changes and accepts the physical-bank
+The later test authorization permits Program changes and accepts the physical-bank
 TAKE race. This supersedes the earlier Preview-only restriction above.
 
 **Export → Configure Midra export…** now supports

@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Reworded conversational test attributions as manual reviews across the catalog,
+  guides and acceptance records, preserving dates and validation boundaries.
+
 - Made the template catalog’s format-choice link more visible with a compact
   callout and bold introduction, shared by the Markdown page and book.
 
@@ -149,20 +152,20 @@
 
 - Split the backlog into a to-do list (including stretch goals) and a test list.
   Move Inkscape clipboard acceptance to testing and remove standalone captured
-  input image saving from planned work at the user's request.
+  input image saving from planned work following scope review.
 
 - Register standalone Aquilon AQL Cmax 6.2.x as first-class supported, based on
   the recorded 6.2.79 emulator acceptance. Replace the stale implementation
   handoff with completed milestones and explicit scope boundaries; physical
   output, other models/firmware and unsupported modes remain unverified.
 
-- Record user-confirmed working clipboard workflows for Illustrator, draw.io and
+- Record manually reviewed clipboard workflows for Illustrator, draw.io and
   Figma. Narrow remaining clipboard acceptance to Inkscape; QCAD and PowerPoint
   remain file-exchange workflows for this scope.
 
 - Validate the supplied Illustrator SVG clipboard sample with regression coverage
   for fractional coordinates and optional centered-stroke bounds. Record QCAD as
-  a file-exchange workflow based on user feedback; no clipboard adapter is planned.
+  a file-exchange workflow following workflow review; no clipboard adapter is planned.
   Existing SVG parsing handles the sample; live clipboard delivery remains unverified.
 
 - Mark export/workflow cleanup solved following user confirmation; move it from
@@ -292,7 +295,7 @@ release. Current project schema: **v13**; application settings: **v8**.
 
 - Add direct links to the published mdBook manual from the project README, tool guide and documentation indexes.
 
-- Mark PPTX, draw.io and SVG format acceptance as solved following the user's confirmation that all three work (2026-11-14).
+- Mark PPTX, draw.io and SVG format acceptance as solved following manual review confirming all three work (2026-11-14).
 
 - Replace the incomplete DXF skeleton with the official shared Craft DXF document writer/reader; add optional Craft DWG exchange with the same pixel geometry and canvas limits. Refresh CAD starter files and cover document structure, binary DXF and DWG round trips. Add a byte-preserving ZIP of the AI templates to bypass Gitea/browser PDF preview downloads.
 

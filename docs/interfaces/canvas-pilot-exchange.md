@@ -146,7 +146,7 @@ the fixed unit convention; importing never silently resizes the Midra output.
 
 ### Figma FIG
 
-User-validated import/export on 2026-11-15.
+Import/export manually reviewed on 2026-11-15.
 
 FigCraft writes a native `.fig` ZIP containing the Kiwi-encoded canvas and embedded
 image assets. Export creates a `Canvas Pilot` frame with screen dimensions and
@@ -165,7 +165,7 @@ they do not constitute validation against every Figma service version.
 
 ### FigCraft FIGCRAFT
 
-User-validated import/export on 2026-11-15.
+Import/export manually reviewed on 2026-11-15.
 
 The separate `.figcraft` option uses the pinned `figcraft-format` crate's native
 version 1 reader/writer, not a renamed `.fig`. Its ZIP contains `document.json`
@@ -291,7 +291,7 @@ data or placeholder pictures.
 
 ## CAD: DXF and DWG profiles
 
-Both DXF and DWG import/export were user-validated on 2026-11-15.
+Both DXF and DWG import/export were manually reviewed on 2026-11-15.
 
 DXF uses the official shared `craft-dxf` document model and serializer, pinned to
 Craft libraries revision `79e97b6febcb62de406e5bcf5a724bd3f7333065` (MIT OR Apache-2.0).
@@ -338,8 +338,8 @@ layout. The file contains no script or external resource.
 
 ## Limits, import and round trips
 
-**Operator acceptance (2026-11-14):** the user confirmed PPTX working flawlessly,
-and draw.io and SVG working. Their reported format issues are marked solved in
+**Manual review (2026-11-14):** PPTX, draw.io and SVG workflows were confirmed
+working. Their reported format issues are marked solved in
 the [task list](../canvas-pilot/plan.md#completed-acceptance).
 
 Import files and clipboard text, and generated exports, are capped at **16 MiB**
