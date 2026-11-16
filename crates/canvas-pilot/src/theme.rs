@@ -306,12 +306,14 @@ impl Theme {
         } else {
             Color32::LIGHT_RED
         };
+        // A small contrast shift makes borderless menu hover visible too.
+        let hover_fill = p.panel.lerp_to_gamma(p.text, 0.08);
         v.selection.bg_fill = p.purple;
         v.selection.stroke = Stroke::new(1.0_f32, p.text);
         for (widget, fill, border) in [
             (&mut v.widgets.noninteractive, p.panel, p.line),
             (&mut v.widgets.inactive, p.field, p.line),
-            (&mut v.widgets.hovered, p.panel, p.cyan),
+            (&mut v.widgets.hovered, hover_fill, p.cyan),
             (&mut v.widgets.active, p.purple, p.cyan),
             (&mut v.widgets.open, p.panel, p.cyan),
         ] {

@@ -4482,7 +4482,11 @@ fn toolbar_menu<R>(
     let widgets = &mut ui.style_mut().visuals.widgets;
     for (visuals, fill, border) in [
         (&mut widgets.inactive, palette.field, palette.line),
-        (&mut widgets.hovered, palette.panel, palette.cyan),
+        (
+            &mut widgets.hovered,
+            original.visuals.widgets.hovered.bg_fill,
+            palette.cyan,
+        ),
         (&mut widgets.active, palette.purple, palette.cyan),
         (&mut widgets.open, palette.panel, palette.cyan),
     ] {

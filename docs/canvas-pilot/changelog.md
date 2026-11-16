@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.9
+
+- Added a subtle background shift to shared hover styling, including borderless
+  menus and toolbar menus. The colour adapts to each theme without animation,
+  extra drawing passes or changes to control sizes. Native dark/light screenshots
+  confirmed stationary rows; required checks passed with 91.38% line coverage.
+
 ### v0.9.8
 
 - Fixed hover/focus outlines changing selectable-row widths and moving surrounding
