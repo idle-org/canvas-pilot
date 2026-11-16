@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Moved format tiers and pills above the feature matrix, restoring plain format
+  names in the comparison table.
+
 - Simplified export to a layer-scope dropdown and one Export button. Pictures and
   editable snapshots live in collapsed groups with visible inclusion summaries.
   Import shows crop zoom and outline options only when supported by the data.

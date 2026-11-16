@@ -13,34 +13,41 @@ format can theoretically contain. ✅ means supported; ❌ means unavailable in 
 workflow. Linked numbers refer to the notes below each table. These emoji are
 a reference, not interactive controls.
 
-## File exchange matrix
+## Format tiers
 
-**Gold — complete project:** `.pilot.json` retains editable state and images.
-**Silver — optional snapshot:** eight exchange formats preserve advanced settings
-when extra parameters are enabled. **Bronze — geometry/artwork:** FIG, DWG and Illustrator
-need a companion project to retain those settings. Tiers describe preservation;
-formats within a tier are tied, with picture-capable formats listed first.
+Tiers describe preservation of Canvas Pilot settings. Formats within a tier are
+tied; choose the one your editor supports.
+
+- **🥇 Gold — complete project:** ![Canvas Pilot](../../images/formats/project.svg)<br>
+  `.pilot.json` retains editable state and images.
+- **🥈 Silver — optional snapshot:** ![SVG](../../images/formats/svg.svg) ![draw.io](../../images/formats/drawio.svg) ![JSON](../../images/formats/json.svg) ![HTML](../../images/formats/html.svg) ![PowerPoint](../../images/formats/pptx.svg) ![FigCraft](../../images/formats/figcraft.svg) ![CSV](../../images/formats/csv.svg) ![DXF](../../images/formats/dxf.svg)<br>
+  These formats preserve advanced settings when extra parameters are enabled.
+- **🥉 Bronze — geometry/artwork:** ![Figma](../../images/formats/fig.svg) ![DWG](../../images/formats/dwg.svg) ![Illustrator](../../images/formats/illustrator.svg)<br>
+  These formats need a companion project to retain editable settings.
+
 See the [advanced feature matrix](advanced-exchange.md) for every saved feature.
+
+## File exchange matrix
 
 All eleven exchange formats import and export layer positions and sizes. Geometry
 import maps boxes to **existing destination layers**: it keeps their names, source
 settings and device links, and does not change the output resolution. File names
 and layer labels can help identify the boxes; they do not rename destinations.
 
-| File / tier | Import | Export | Exported names | Background [1](#file-notes) | Crop/mask pictures [1](#file-notes) | Settings snapshot |
+| File | Import | Export | Layer names in export | Background picture [1](#file-notes) | Crop/mask preview pictures [1](#file-notes) | Extra settings snapshot |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| 🥇 Gold<br>![Canvas Pilot](../../images/formats/project.svg) Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 🥈 Silver<br>![SVG](../../images/formats/svg.svg) SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| 🥈 Silver<br>![draw.io](../../images/formats/drawio.svg) draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| 🥈 Silver<br>![JSON](../../images/formats/json.svg) Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| 🥈 Silver<br>![HTML](../../images/formats/html.svg) HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| 🥈 Silver<br>![PowerPoint](../../images/formats/pptx.svg) PowerPoint (`.pptx`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| 🥈 Silver<br>![FigCraft](../../images/formats/figcraft.svg) FigCraft file (`.figcraft`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
-| 🥈 Silver<br>![CSV](../../images/formats/csv.svg) Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ [4](#file-notes) |
-| 🥈 Silver<br>![DXF](../../images/formats/dxf.svg) DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ [4](#file-notes) |
-| 🥉 Bronze<br>![Figma](../../images/formats/fig.svg) Figma file (`.fig`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| 🥉 Bronze<br>![DWG](../../images/formats/dwg.svg) DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
-| 🥉 Bronze<br>![Illustrator](../../images/formats/illustrator.svg) Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
+| Canvas Pilot project (`.pilot.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| SVG (`.svg`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| draw.io (`.drawio`, XML) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| Geometry JSON (`.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| HTML / CSS (`.html`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| PowerPoint (`.pptx`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| FigCraft file (`.figcraft`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ [4](#file-notes) |
+| Geometry CSV (`.csv`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ [4](#file-notes) |
+| DXF (`.dxf`) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ✅ [4](#file-notes) |
+| Figma file (`.fig`) [3](#file-notes) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| DWG (`.dwg`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ❌ | ❌ | ❌ |
+| Illustrator file (`.ai`) [3](#file-notes) | ✅ | ✅ | ✅ [2](#file-notes) | ✅ | ✅ | ❌ |
 
 ### File notes
 
