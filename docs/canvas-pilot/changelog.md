@@ -4,6 +4,18 @@
 
 ## Unreleased
 
+### v0.9.16
+
+- Added language-pack management in Settings: installed revisions/languages,
+  confirmed removal and immediate refresh without restarting. Removing the active
+  language selects and saves English.
+- Format-2 ZIP packs carry a positive revision number. Higher revisions update
+  atomically; equal/older revisions require overwrite confirmation. Legacy packs
+  remain readable as revision 0; cross-pack locale collisions remain errors.
+  Updated the Ukrainian/Bhojpuri teaching ZIP and authoring contract.
+- Native manager/removal checks, update/overwrite UI regressions and all required
+  validation passed; whole-application line coverage is 91.68%.
+
 ### v0.9.15
 
 - Removed nested Export and duplicate device mapping/transfer entries from Project;

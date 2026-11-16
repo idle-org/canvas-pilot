@@ -5,7 +5,7 @@ use std::{
     borrow::Cow,
     collections::{BTreeMap, BTreeSet},
     io::{Read, Write},
-    path::Path,
+    path::{Path, PathBuf},
     sync::{LazyLock, RwLock},
 };
 
@@ -18,6 +18,8 @@ const MAX_PACKS: usize = 32;
 struct Manifest {
     version: u32,
     id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    revision: Option<u64>,
     languages: Vec<Description>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -77,22 +79,48 @@ pub fn valid_id(id: &str) -> bool {
         && !id.starts_with('-')
         && !id.ends_with('-')
 }
-pub fn available(ctx: &egui::Context) -> Vec<Description> {
-    ctx.data(|data| data.get_temp::<Vec<Description>>(egui::Id::new("language-packs")))
+#[derive(Clone, Debug)]
+pub struct Installed {
+    pub id: String,
+    pub revision: u64,
+    pub languages: Vec<Description>,
+    path: PathBuf,
+}
+pub fn installed(ctx: &egui::Context) -> Vec<Installed> {
+    ctx.data(|data| data.get_temp::<Vec<Installed>>(egui::Id::new("language-packs")))
         .unwrap_or_default()
 }
-fn register(ctx: &egui::Context, pack: &Pack) {
-    let mut languages = available(ctx);
+pub fn available(ctx: &egui::Context) -> Vec<Description> {
+    let mut languages: Vec<_> = installed(ctx)
+        .into_iter()
+        .flat_map(|p| p.languages)
+        .collect();
+    languages.sort_by(|a, b| a.locale.cmp(&b.locale));
+    languages
+}
+fn register(ctx: &egui::Context, pack: &Pack, path: &Path) {
+    let mut packs = installed(ctx);
     let mut backend = CATALOGS.write().unwrap();
+    for old in packs.iter().filter(|p| p.id == pack.manifest.id) {
+        for language in &old.languages {
+            backend.remove(&format!("pack:{}", language.locale));
+        }
+    }
+    packs.retain(|p| p.id != pack.manifest.id);
     for language in &pack.manifest.languages {
         backend.insert(
             format!("pack:{}", language.locale),
             pack.catalogs[&language.locale].clone(),
         );
-        languages.push(language.clone());
     }
-    languages.sort_by(|a, b| a.locale.cmp(&b.locale));
-    ctx.data_mut(|data| data.insert_temp(egui::Id::new("language-packs"), languages));
+    packs.push(Installed {
+        id: pack.manifest.id.clone(),
+        revision: pack.manifest.revision.unwrap_or(0),
+        languages: pack.manifest.languages.clone(),
+        path: path.into(),
+    });
+    packs.sort_by(|a, b| a.id.cmp(&b.id));
+    ctx.data_mut(|data| data.insert_temp(egui::Id::new("language-packs"), packs));
 }
 fn placeholders(text: &str) -> Result<BTreeSet<&str>, String> {
     text.split("%{")
@@ -140,14 +168,20 @@ fn parse(bytes: &[u8]) -> Result<Pack, String> {
             return Err("Duplicate ZIP entry".into());
         }
     }
-    let manifest: Manifest = serde_json::from_slice(
+    let manifest_value: serde_json::Value = serde_json::from_slice(
         &entries
             .remove("manifest.json")
             .ok_or("Missing manifest.json")?,
     )
     .map_err(|e| e.to_string())?;
-    if manifest.version != 1
-        || !valid_id(&manifest.id)
+    if manifest_value["version"] == 1 && manifest_value.get("revision").is_some() {
+        return Err("Legacy packs cannot contain revision; use manifest version 2".into());
+    }
+    let manifest: Manifest = serde_json::from_value(manifest_value).map_err(|e| e.to_string())?;
+    if !matches!(
+        (manifest.version, manifest.revision),
+        (1, None) | (2, Some(1..))
+    ) || !valid_id(&manifest.id)
         || manifest.languages.is_empty()
         || manifest.languages.len() > 16
     {
@@ -210,23 +244,30 @@ fn read(path: &Path) -> Result<Vec<u8>, String> {
         .map_err(|e| e.to_string())?;
     Ok(bytes)
 }
-fn check_collisions(ctx: &egui::Context, pack: &Pack) -> Result<(), String> {
-    let existing = available(ctx);
-    if pack
-        .manifest
-        .languages
-        .iter()
-        .any(|new| existing.iter().any(|old| old.locale == new.locale))
-    {
-        return Err("A language in this pack is already installed; remove its old ZIP and restart before replacing it".into());
+fn check_collisions(ctx: &egui::Context, pack: &Pack, replacing: bool) -> Result<(), String> {
+    for old in installed(ctx) {
+        if old.id == pack.manifest.id {
+            if replacing {
+                continue;
+            }
+            return Err("Pack identifier is already installed".into());
+        }
+        if pack.manifest.languages.iter().any(|new| {
+            old.languages
+                .iter()
+                .any(|language| language.locale == new.locale)
+        }) {
+            return Err(format!(
+                "A language in this pack belongs to installed pack {}",
+                old.id
+            ));
+        }
     }
     Ok(())
 }
 /// Load once at application startup; invalid files do not prevent startup.
 pub fn load(ctx: &egui::Context, directory: &Path) -> Vec<String> {
-    ctx.data_mut(|data| {
-        data.insert_temp(egui::Id::new("language-packs"), Vec::<Description>::new())
-    });
+    ctx.data_mut(|data| data.insert_temp(egui::Id::new("language-packs"), Vec::<Installed>::new()));
     let entries = match std::fs::read_dir(directory) {
         Ok(entries) => entries,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return vec![],
@@ -252,8 +293,8 @@ pub fn load(ctx: &egui::Context, directory: &Path) -> Vec<String> {
         let result = read(&path)
             .and_then(|bytes| parse(&bytes))
             .and_then(|pack| {
-                check_collisions(ctx, &pack)?;
-                register(ctx, &pack);
+                check_collisions(ctx, &pack, false)?;
+                register(ctx, &pack, &path);
                 Ok(())
             });
         if let Err(error) = result {
@@ -262,28 +303,116 @@ pub fn load(ctx: &egui::Context, directory: &Path) -> Vec<String> {
     }
     errors
 }
-/// Validate the entire pack, persist without replacing existing files, then register.
-pub fn install(ctx: &egui::Context, directory: &Path, source: &Path) -> Result<(), String> {
+/// Validated bytes and the exact destination reviewed by the user. Never re-read the source on confirmation.
+pub struct Prepared {
+    pack: Pack,
+    bytes: Vec<u8>,
+    path: PathBuf,
+    previous: Option<Vec<u8>>,
+    pub previous_revision: Option<u64>,
+}
+impl Prepared {
+    pub fn id(&self) -> &str {
+        &self.pack.manifest.id
+    }
+    pub fn revision(&self) -> u64 {
+        self.pack.manifest.revision.unwrap_or(0)
+    }
+    pub fn needs_confirmation(&self) -> bool {
+        self.previous.is_some()
+            && self
+                .previous_revision
+                .is_none_or(|old| self.revision() <= old)
+    }
+}
+fn existing_bytes(path: &Path) -> Result<Option<Vec<u8>>, String> {
+    match read(path) {
+        Ok(bytes) if bytes.len() as u64 <= MAX_ARCHIVE => Ok(Some(bytes)),
+        Ok(_) => Err("Existing pack exceeds 2 MiB; remove it manually before replacing it".into()),
+        Err(_error) if !path.exists() => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+pub fn prepare(ctx: &egui::Context, directory: &Path, source: &Path) -> Result<Prepared, String> {
     let bytes = read(source)?;
     let pack = parse(&bytes)?;
-    check_collisions(ctx, &pack)?;
+    check_collisions(ctx, &pack, true)?;
+    let path = installed(ctx)
+        .into_iter()
+        .find(|p| p.id == pack.manifest.id)
+        .map_or_else(
+            || directory.join(format!("{}.zip", pack.manifest.id)),
+            |p| p.path,
+        );
+    let previous = existing_bytes(&path)?;
+    if let Some(old) = previous.as_ref().and_then(|bytes| parse(bytes).ok())
+        && old.manifest.id != pack.manifest.id
+    {
+        return Err("Destination belongs to a different pack; remove that pack first".into());
+    }
+    let previous_revision = previous
+        .as_ref()
+        .and_then(|bytes| parse(bytes).ok())
+        .filter(|old| old.manifest.id == pack.manifest.id)
+        .map(|old| old.manifest.revision.unwrap_or(0));
+    Ok(Prepared {
+        pack,
+        bytes,
+        path,
+        previous,
+        previous_revision,
+    })
+}
+pub fn commit(ctx: &egui::Context, pending: Prepared, overwrite: bool) -> Result<(), String> {
+    if pending.needs_confirmation() && !overwrite {
+        return Err("Replacing this pack requires overwrite confirmation".into());
+    }
+    check_collisions(ctx, &pending.pack, true)?;
+    if existing_bytes(&pending.path)? != pending.previous {
+        return Err("Installed pack changed during review; choose the ZIP again".into());
+    }
+    let directory = pending.path.parent().ok_or("Missing pack directory")?;
     std::fs::create_dir_all(directory).map_err(|e| e.to_string())?;
-    if std::fs::read_dir(directory)
-        .map_err(|e| e.to_string())?
-        .filter_map(Result::ok)
-        .filter(|e| e.path().extension().is_some_and(|ext| ext == "zip"))
-        .count()
-        >= MAX_PACKS
+    if pending.previous.is_none()
+        && std::fs::read_dir(directory)
+            .map_err(|e| e.to_string())?
+            .filter_map(Result::ok)
+            .filter(|e| e.path().extension().is_some_and(|ext| ext == "zip"))
+            .count()
+            >= MAX_PACKS
     {
         return Err("Too many language packs (maximum 32)".into());
     }
     let mut file = tempfile::NamedTempFile::new_in(directory).map_err(|e| e.to_string())?;
-    file.write_all(&bytes).map_err(|e| e.to_string())?;
+    file.write_all(&pending.bytes).map_err(|e| e.to_string())?;
     file.as_file().sync_all().map_err(|e| e.to_string())?;
-    file.persist_noclobber(directory.join(format!("{}.zip", pack.manifest.id)))
-        .map_err(|e| e.to_string())?;
-    register(ctx, &pack);
+    if pending.previous.is_some() {
+        file.persist(&pending.path).map_err(|e| e.to_string())?;
+    } else {
+        file.persist_noclobber(&pending.path)
+            .map_err(|e| e.to_string())?;
+    }
+    register(ctx, &pending.pack, &pending.path);
     Ok(())
+}
+pub fn remove(ctx: &egui::Context, pack: &Installed) -> Result<(), String> {
+    let current = parse(&read(&pack.path)?)?;
+    if current.manifest.id != pack.id || current.manifest.revision.unwrap_or(0) != pack.revision {
+        return Err("Installed pack changed; restart before removing it".into());
+    }
+    std::fs::remove_file(&pack.path).map_err(|e| e.to_string())?;
+    let mut backend = CATALOGS.write().unwrap();
+    for language in &pack.languages {
+        backend.remove(&format!("pack:{}", language.locale));
+    }
+    let mut packs = installed(ctx);
+    packs.retain(|p| p.id != pack.id);
+    ctx.data_mut(|data| data.insert_temp(egui::Id::new("language-packs"), packs));
+    Ok(())
+}
+#[cfg(test)]
+pub fn install(ctx: &egui::Context, directory: &Path, source: &Path) -> Result<(), String> {
+    commit(ctx, prepare(ctx, directory, source)?, false)
 }
 
 #[cfg(test)]
@@ -314,6 +443,154 @@ mod tests {
     fn manifest() -> serde_json::Value {
         serde_json::json!({"version":1,"id":"test","languages":[{"locale":"uk","name":"Ukrainian","native_name":"Українська"}]})
     }
+    fn revision_archive(id: &str, locale: &str, revision: Option<u64>, text: &str) -> Vec<u8> {
+        let mut m = serde_json::json!({"version":1,"id":id,"languages":[{"locale":locale,"name":"Test","native_name":"Test"}]});
+        if let Some(revision) = revision {
+            m["version"] = 2.into();
+            m["revision"] = revision.into();
+        }
+        archive(&[
+            ("manifest.json", &serde_json::to_vec(&m).unwrap()),
+            (
+                &format!("{locale}.json"),
+                &serde_json::to_vec(&serde_json::json!({"ui.close":text})).unwrap(),
+            ),
+        ])
+    }
+
+    #[test]
+    fn updates_replace_language_lists_and_work_at_pack_limit_on_original_paths() {
+        let dir = tempfile::tempdir().unwrap();
+        let destination = dir.path().join("packs");
+        std::fs::create_dir_all(&destination).unwrap();
+        let old = revision_archive("limits", "test-old-list", Some(1), "Old");
+        let file = destination.join("custom-name.zip");
+        std::fs::write(&file, old).unwrap();
+        let ctx = egui::Context::default();
+        assert!(load(&ctx, &destination).is_empty());
+        for i in 1..MAX_PACKS {
+            std::fs::write(destination.join(format!("invalid-{i}.zip")), b"bad").unwrap();
+        }
+        let source = dir.path().join("source.zip");
+        let updated = revision_archive("limits", "test-new-list", Some(2), "New");
+        std::fs::write(&source, &updated).unwrap();
+        install(&ctx, &destination, &source).unwrap();
+        assert_eq!(
+            available(&ctx)
+                .iter()
+                .map(|p| p.locale.as_str())
+                .collect::<Vec<_>>(),
+            ["test-new-list"]
+        );
+        assert_eq!(std::fs::read(&file).unwrap(), updated);
+        assert!(!destination.join("limits.zip").exists());
+        std::fs::write(
+            &source,
+            revision_archive("extra", "test-extra-list", Some(1), "Extra"),
+        )
+        .unwrap();
+        assert!(install(&ctx, &destination, &source).is_err());
+        // A misleading filename is not permission to overwrite a different identity.
+        std::fs::write(
+            destination.join("extra.zip"),
+            revision_archive("unrelated", "test-unrelated-list", Some(1), "Other"),
+        )
+        .unwrap();
+        assert!(prepare(&ctx, &destination, &source).is_err());
+    }
+
+    #[test]
+    fn revisions_update_atomically_and_equal_older_or_legacy_require_confirmation() {
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("source.zip");
+        let destination = dir.path().join("packs");
+        let ctx = egui::Context::default();
+        let legacy = revision_archive("revisions", "test-revision", None, "Legacy");
+        std::fs::write(&source, &legacy).unwrap();
+        install(&ctx, &destination, &source).unwrap();
+        let newer = revision_archive("revisions", "test-revision", Some(2), "Updated");
+        std::fs::write(&source, &newer).unwrap();
+        install(&ctx, &destination, &source).unwrap();
+        Language::Pack("test-revision".into()).apply(&ctx);
+        assert_eq!(tr(&ctx, "ui.close"), "Updated");
+        assert_eq!(installed(&ctx)[0].revision, 2);
+        for revision in [Some(2), Some(1), None] {
+            std::fs::write(
+                &source,
+                revision_archive("revisions", "test-revision", revision, "Replacement"),
+            )
+            .unwrap();
+            let pending = prepare(&ctx, &destination, &source).unwrap();
+            assert!(pending.needs_confirmation());
+            assert!(commit(&ctx, pending, false).is_err());
+            assert_eq!(
+                std::fs::read(destination.join("revisions.zip")).unwrap(),
+                newer
+            );
+            assert_eq!(tr(&ctx, "ui.close"), "Updated");
+        }
+        let pending = prepare(&ctx, &destination, &source).unwrap();
+        // Confirmation uses reviewed bytes, not a newly edited source file.
+        std::fs::write(&source, b"changed after review").unwrap();
+        commit(&ctx, pending, true).unwrap();
+        assert_eq!(tr(&ctx, "ui.close"), "Replacement");
+        let restarted = egui::Context::default();
+        assert!(load(&restarted, &destination).is_empty());
+        assert_eq!(installed(&restarted)[0].revision, 0);
+        remove(&ctx, &installed(&ctx)[0]).unwrap();
+        assert!(available(&ctx).is_empty());
+        assert!(!destination.join("revisions.zip").exists());
+        Language::Pack("test-revision".into()).apply(&ctx);
+        assert_eq!(tr(&ctx, "ui.close"), "Close");
+        assert!(load(&restarted, &destination).is_empty());
+        assert!(installed(&restarted).is_empty());
+    }
+
+    #[test]
+    fn changed_destination_collisions_and_invalid_revisions_leave_packs_intact() {
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("source.zip");
+        let destination = dir.path().join("packs");
+        let ctx = egui::Context::default();
+        let original = revision_archive("collision", "test-collision", Some(1), "Original");
+        std::fs::write(&source, &original).unwrap();
+        install(&ctx, &destination, &source).unwrap();
+        std::fs::write(
+            &source,
+            revision_archive("other", "test-collision", Some(3), "Collision"),
+        )
+        .unwrap();
+        assert!(prepare(&ctx, &destination, &source).is_err());
+        std::fs::write(
+            &source,
+            revision_archive("collision", "test-collision", Some(2), "Newer"),
+        )
+        .unwrap();
+        let pending = prepare(&ctx, &destination, &source).unwrap();
+        let file = destination.join("collision.zip");
+        std::fs::write(&file, b"external change").unwrap();
+        assert!(commit(&ctx, pending, true).is_err());
+        assert_eq!(std::fs::read(&file).unwrap(), b"external change");
+        assert!(remove(&ctx, &installed(&ctx)[0]).is_err());
+        std::fs::write(&file, &original).unwrap();
+        let mut m = manifest();
+        m["version"] = 2.into();
+        for revision in [
+            serde_json::Value::Null,
+            serde_json::json!(0),
+            serde_json::json!(-1),
+            serde_json::json!(1.5),
+            serde_json::json!("2"),
+        ] {
+            m["revision"] = revision;
+            assert!(parse(&modified(m.clone(), serde_json::json!({"ui.close":"Test"}))).is_err());
+        }
+        m["version"] = 1.into();
+        m["revision"] = 1.into();
+        assert!(parse(&modified(m, serde_json::json!({"ui.close":"Test"}))).is_err());
+        assert_eq!(std::fs::read(file).unwrap(), original);
+    }
+
     #[test]
     fn example_matches_sources_installs_restarts_and_falls_back() {
         let mut zip = zip::ZipArchive::new(std::io::Cursor::new(EXAMPLE)).unwrap();

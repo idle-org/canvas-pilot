@@ -1,6 +1,7 @@
 {
-  "version": 1,
+  "version": 2,
   "id": "example-uk-bho",
+  "revision": 1,
   "languages": [
     {
       "locale": "uk",

@@ -41,14 +41,16 @@ fn scale_slider(ui: &mut egui::Ui, scale: &mut f32, maximum: f32) -> egui::Respo
 pub(super) enum Section {
     #[default]
     Appearance,
+    Languages,
     Editing,
     Reference,
     Storage,
     Device,
 }
 impl Section {
-    const ALL: [(Self, &'static str); 5] = [
+    const ALL: [(Self, &'static str); 6] = [
         (Self::Appearance, "ui.appearance"),
+        (Self::Languages, "language.packs"),
         (Self::Editing, "ui.editing"),
         (Self::Reference, "ui.reference-images"),
         (Self::Storage, "ui.files-settings"),
@@ -59,6 +61,11 @@ pub(super) struct LanguagePreview {
     pub(super) previous: localization::Language,
     previous_locale: String,
     deadline: std::time::Instant,
+}
+
+pub(super) enum PackAction {
+    Install(crate::language_packs::Prepared),
+    Remove(crate::language_packs::Installed),
 }
 
 impl Editor {
@@ -145,6 +152,115 @@ impl Editor {
         }
     }
 
+    fn refresh_pack_language(
+        &mut self,
+        ctx: &egui::Context,
+        previous: &[crate::language_packs::Description],
+    ) {
+        if let localization::Language::Pack(locale) = &self.language
+            && previous.iter().any(|p| &p.locale == locale)
+            && !crate::language_packs::available(ctx)
+                .iter()
+                .any(|p| &p.locale == locale)
+        {
+            self.language = localization::Language::En;
+        }
+        self.language.apply(ctx);
+        self.settings.save(&self.application_settings(ctx));
+    }
+
+    fn prepare_language_pack(&mut self, ctx: &egui::Context, path: &std::path::Path) {
+        self.finish_language_preview(ctx, false);
+        let result = self
+            .settings
+            .path
+            .as_ref()
+            .and_then(|p| p.parent())
+            .ok_or_else(|| "Settings directory unavailable".to_owned())
+            .and_then(|directory| {
+                crate::language_packs::prepare(ctx, &directory.join("language-packs"), path)
+            });
+        let previous = crate::language_packs::available(ctx);
+        match result {
+            Ok(pending) if pending.needs_confirmation() => {
+                self.language_pack_action = Some(PackAction::Install(pending))
+            }
+            Ok(pending) => match crate::language_packs::commit(ctx, pending, false) {
+                Ok(()) => self.refresh_pack_language(ctx, &previous),
+                Err(error) => self.error = error,
+            },
+            Err(error) => self.error = error,
+        }
+    }
+
+    fn language_pack_settings(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+        ui.heading(tr(&ctx, "language.packs"));
+        if ui.button(tr(&ctx, "language.install-pack")).clicked()
+            && let Some(path) = rfd::FileDialog::new()
+                .add_filter("Language pack", &["zip"])
+                .pick_file()
+        {
+            self.prepare_language_pack(&ctx, &path);
+        }
+        ui.weak("Choose a ZIP to install or update. Newer revisions update immediately; equal or older revisions ask before replacing.");
+        let packs = crate::language_packs::installed(&ctx);
+        if packs.is_empty() {
+            ui.label("No language packs installed.");
+        }
+        for pack in packs {
+            ui.separator();
+            ui.label(format!("{} · revision {}", pack.id, pack.revision));
+            for language in &pack.languages {
+                ui.label(format!("{} — {}", language.native_name, language.name));
+            }
+            ui.push_id(&pack.id, |ui| {
+                if ui.button(tr(&ctx, "language.remove-pack")).clicked() {
+                    self.finish_language_preview(&ctx, false);
+                    self.language_pack_action = Some(PackAction::Remove(pack.clone()));
+                }
+            });
+        }
+    }
+
+    pub(super) fn language_pack_confirmation(&mut self, ctx: &egui::Context) {
+        let Some(action) = &self.language_pack_action else {
+            return;
+        };
+        let response = egui::Modal::new(egui::Id::new("confirm-language-pack")).show(ctx, |ui| {
+            ui.set_max_width(460.0);
+            let label = match action {
+                PackAction::Install(pack) => {
+                    ui.heading(tr(ctx, "language.overwrite-pack"));
+                    ui.label(format!("{}: installed revision {} → revision {}", pack.id(), pack.previous_revision.map_or_else(|| "unknown".into(), |v| v.to_string()), pack.revision()));
+                    ui.label("This is not a newer revision. Replacing it overwrites the installed translations.");
+                    "language.overwrite-pack"
+                },
+                PackAction::Remove(pack) => {
+                    ui.heading(tr(ctx, "language.remove-pack"));
+                    ui.label(&pack.id);
+                    ui.label(pack.languages.iter().map(|p| p.name.as_str()).collect::<Vec<_>>().join(", "));
+                    ui.label("All languages in this pack will be removed. If the current language is removed, the interface switches to English. You can reinstall the ZIP later.");
+                    "language.remove-pack"
+                }
+            };
+            (ui.button(tr(ctx, label)).clicked(), ui.button(tr(ctx, "ui.cancel")).clicked())
+        });
+        if response.inner.1 || response.should_close() {
+            self.language_pack_action = None;
+        } else if response.inner.0 {
+            let previous = crate::language_packs::available(ctx);
+            let result = match self.language_pack_action.take().unwrap() {
+                PackAction::Install(pack) => crate::language_packs::commit(ctx, pack, true),
+                PackAction::Remove(pack) => crate::language_packs::remove(ctx, &pack),
+            };
+            match result {
+                Ok(()) => self.refresh_pack_language(ctx, &previous),
+                Err(error) => self.error = error,
+            }
+        }
+    }
+
     pub(super) fn preferences_window(&mut self, ctx: &egui::Context) {
         if !self.preferences_open {
             return;
@@ -179,11 +295,6 @@ impl Editor {
                     apply_scaling(ctx, self.ui_scale, self.text_scale);
                 }
                 });
-                if ui.button(tr(ctx, "language.install-pack")).clicked()
-                    && let Some(path) = rfd::FileDialog::new().add_filter("Language pack", &["zip"]).pick_file() {
-                        let result = self.settings.path.as_ref().and_then(|p| p.parent()).ok_or_else(|| "Settings directory unavailable".to_owned()).and_then(|directory| crate::language_packs::install(ctx, &directory.join("language-packs"), &path));
-                        match result { Ok(()) => self.language.apply(ctx), Err(error) => self.error = error }
-                }
                 ui.weak(tr(ctx, "language.preview"));
                 ui.separator();
                 egui::ScrollArea::vertical().id_salt("settings-body")
@@ -229,6 +340,7 @@ impl Editor {
                                 ui.checkbox(&mut self.show_pattern, tr(ui.ctx(), "ui.show-source-patterns-on-other-layers-while-cropping"));
                                 ui.weak(tr(ui.ctx(), "ui.themes-also-apply-to-the-viewport-imported-pictures-retain-their-colors"));
                             }
+                            Section::Languages => self.language_pack_settings(ui),
                             Section::Editing => {
                                 ui.heading(tr(ui.ctx(), "ui.editing"));
                                 self.resize_ratio_option(ui);
@@ -337,6 +449,104 @@ mod tests {
         );
         frame(app, ctx, vec![mouse(pos, false)]);
     }
+    fn manager_pack(revision: u64, locale: &str) -> Vec<u8> {
+        use std::io::Write;
+        let manifest = serde_json::json!({"version":2,"id":"manager-test","revision":revision,"languages":[{"locale":locale,"name":"Manager test","native_name":"Manager test"}]});
+        let mut writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        for (name, value) in [
+            ("manifest.json", manifest),
+            (
+                &format!("{locale}.json"),
+                serde_json::json!({"ui.close":format!("Close revision {revision}")}),
+            ),
+        ] {
+            writer
+                .start_file(name, zip::write::SimpleFileOptions::default())
+                .unwrap();
+            writer
+                .write_all(&serde_json::to_vec(&value).unwrap())
+                .unwrap();
+        }
+        writer.finish().unwrap().into_inner()
+    }
+
+    #[test]
+    fn pack_manager_updates_confirms_overwrites_and_removes_active_language_live() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let source = dir.path().join("pack.zip");
+        let (store, mut saved) = settings::Store::at(path.clone());
+        saved.language = localization::Language::En;
+        let ctx = egui::Context::default();
+        let mut app = Editor::with_settings(&ctx, store, saved);
+        app.preferences_open = true;
+        app.fields[0] = "-".into();
+        let project = app.project().to_json().unwrap();
+        let draft = app.fields.clone();
+        click_label(&mut app, &ctx, "Language packs");
+        assert_eq!(app.preferences_section, Section::Languages);
+        std::fs::write(&source, manager_pack(1, "test-manager")).unwrap();
+        app.prepare_language_pack(&ctx, &source);
+        assert!(app.language_pack_action.is_none());
+        app.preview_language(&ctx, localization::Language::Pack("test-manager".into()));
+        app.finish_language_preview(&ctx, true);
+        std::fs::write(&source, manager_pack(2, "test-manager")).unwrap();
+        app.prepare_language_pack(&ctx, &source);
+        assert!(app.language_pack_action.is_none());
+        assert_eq!(tr(&ctx, "ui.close"), "Close revision 2");
+        app.prepare_language_pack(&ctx, &source);
+        assert!(matches!(
+            app.language_pack_action,
+            Some(PackAction::Install(_))
+        ));
+        click_label(&mut app, &ctx, "Cancel");
+        assert!(app.language_pack_action.is_none());
+        std::fs::write(&source, manager_pack(1, "test-manager")).unwrap();
+        app.prepare_language_pack(&ctx, &source);
+        assert!(matches!(
+            app.language_pack_action,
+            Some(PackAction::Install(_))
+        ));
+        click_label(&mut app, &ctx, "Overwrite pack");
+        assert_eq!(tr(&ctx, "ui.close"), "Close revision 1");
+        click_label(&mut app, &ctx, "Remove pack…");
+        click_label(&mut app, &ctx, "Cancel");
+        assert_eq!(crate::language_packs::available(&ctx).len(), 1);
+        click_label(&mut app, &ctx, "Remove pack…");
+        click_label(&mut app, &ctx, "Remove pack…");
+        assert!(crate::language_packs::available(&ctx).is_empty());
+        assert_eq!(app.language, localization::Language::En);
+        assert_eq!(localization::locale(&ctx), "en");
+        assert_eq!(
+            settings::Store::at(path).1.language,
+            localization::Language::En
+        );
+        assert!(!dir.path().join("language-packs/manager-test.zip").exists());
+        assert_eq!(app.project().to_json().unwrap(), project);
+        assert_eq!(app.fields, draft);
+        // An unrelated installation preserves an already-missing preference.
+        app.language = localization::Language::Pack("missing-manager".into());
+        app.language.apply(&ctx);
+        std::fs::write(&source, manager_pack(2, "test-other-manager")).unwrap();
+        app.prepare_language_pack(&ctx, &source);
+        assert_eq!(
+            app.language,
+            localization::Language::Pack("missing-manager".into())
+        );
+        app.preview_language(
+            &ctx,
+            localization::Language::Pack("test-other-manager".into()),
+        );
+        app.finish_language_preview(&ctx, true);
+        // Updating away the active locale switches to English without confirmation.
+        std::fs::write(&source, manager_pack(3, "test-manager")).unwrap();
+        app.prepare_language_pack(&ctx, &source);
+        assert!(app.language_pack_action.is_none());
+        assert_eq!(app.language, localization::Language::En);
+        assert_eq!(app.project().to_json().unwrap(), project);
+        assert_eq!(app.fields, draft);
+    }
+
     #[test]
     fn scale_slider_commits_only_after_pointer_release() {
         for maximum in [200.0, 400.0] {

@@ -1,4 +1,7 @@
 {
+  "language.packs": "语言包",
+  "language.remove-pack": "移除语言包…",
+  "language.overwrite-pack": "覆盖语言包",
   "ui.mask-edges": "蒙版边缘",
   "ui.rename-layer": "重命名图层…",
   "ui.move-to-folder": "移至文件夹",

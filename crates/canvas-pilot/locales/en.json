@@ -1,4 +1,7 @@
 {
+  "language.packs": "Language packs",
+  "language.remove-pack": "Remove pack…",
+  "language.overwrite-pack": "Overwrite pack",
   "ui.mask-edges": "Mask edges",
   "ui.rename-layer": "Rename layer…",
   "ui.move-to-folder": "Move to folder",

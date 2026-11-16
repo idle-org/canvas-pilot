@@ -1,4 +1,7 @@
 {
+  "language.packs": "言語パック",
+  "language.remove-pack": "パックを削除…",
+  "language.overwrite-pack": "パックを上書き",
   "ui.mask-edges": "マスクの端",
   "ui.rename-layer": "レイヤー名を変更…",
   "ui.move-to-folder": "フォルダーに移動",

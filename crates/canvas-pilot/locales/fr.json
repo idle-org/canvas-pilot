@@ -1,4 +1,7 @@
 {
+  "language.packs": "Packs de langues",
+  "language.remove-pack": "Supprimer le pack…",
+  "language.overwrite-pack": "Remplacer le pack",
   "ui.mask-edges": "Bords des masques",
   "ui.rename-layer": "Renommer le calque…",
   "ui.move-to-folder": "Déplacer vers un dossier",

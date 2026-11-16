@@ -1,4 +1,7 @@
 {
+  "language.packs": "Paquetes de idiomas",
+  "language.remove-pack": "Eliminar paquete…",
+  "language.overwrite-pack": "Sobrescribir paquete",
   "ui.mask-edges": "Bordes de máscara",
   "ui.rename-layer": "Renombrar capa…",
   "ui.move-to-folder": "Mover a carpeta",

@@ -1,4 +1,7 @@
 {
+  "language.packs": "ชุดภาษา",
+  "language.remove-pack": "ลบชุดภาษา…",
+  "language.overwrite-pack": "เขียนทับชุดภาษา",
   "ui.mask-edges": "ขอบมาสก์",
   "ui.rename-layer": "เปลี่ยนชื่อเลเยอร์…",
   "ui.move-to-folder": "ย้ายไปโฟลเดอร์",

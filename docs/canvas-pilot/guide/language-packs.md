@@ -8,7 +8,7 @@ not translate project names, device responses or exported geometry.
 
 1. Download [language-pack.zip](../../language-packs/language-pack.zip).
 2. In Canvas Pilot, open **Menu → Open all settings…**.
-3. Click **Install language pack…** and select the ZIP. Leave it zipped.
+3. Choose **Language packs**, then click **Install language pack…** and select the ZIP. Leave it zipped.
 4. Open **Language / Langue**. The list now includes **Українська — Ukrainian**
    and **भोजपुरी — Bhojpuri**, below the built-in languages; scroll if needed.
 5. Select one and confirm within 20 seconds. Cancellation and the countdown still
@@ -21,7 +21,7 @@ stays English. Bhojpuri is identified as `bho`, separately from Hindi (`hi`), fo
 [the ISO language-code list](https://www.loc.gov/standards/iso639-2/php/code_list-utf8.php).
 It demonstrates the same Devanagari font support used by Hindi.
 
-These packs reuse the fonts already bundled with Canvas Pilot. Version 1 packs
+These packs reuse the fonts already bundled with Canvas Pilot. Version 1 and 2 packs
 contain translations only: they neither install fonts nor reduce the current
 application download size. Ukrainian uses the existing Cyrillic coverage.
 
@@ -37,8 +37,9 @@ The manifest describes the pack and its languages:
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "id": "example-uk-bho",
+  "revision": 1,
   "languages": [
     {"locale": "uk", "name": "Ukrainian", "native_name": "Українська"},
     {"locale": "bho", "name": "Bhojpuri", "native_name": "भोजपुरी"}
@@ -89,12 +90,32 @@ settings-file location displayed there. Keep installed packs there across app
 updates. You can also copy a ZIP into this directory while the app is closed;
 it is loaded on the next launch.
 
-An installed pack or duplicate language is never silently overwritten. To update
-or remove a pack, close Canvas Pilot, remove its old ZIP from `language-packs`, and
-restart. Then install the replacement ZIP if desired. Do not remove `settings.json`.
-If your selected pack is absent, the UI uses English and marks the saved choice as
-unavailable. Reinstalling that pack restores the requested language. System default
-continues to resolve built-in languages; select installed languages explicitly.
+Use **Settings → Language packs** to see installed packs, their revisions and included languages.
+**Remove pack…** asks for confirmation and removes every language bundled in that
+pack immediately. Removing the active language switches to English and saves that
+choice. Built-in languages cannot be removed. Keep the source ZIP if you want to
+reinstall later; removal does not delete your original download.
+
+To update, choose **Install language pack…** and select the new ZIP:
+
+- Keep the same pack `id` and increase `revision` for a newer release. A higher
+  revision replaces the installed pack immediately, including the currently selected
+  translations. No restart or manual file removal is needed.
+- An equal revision (a sidegrade, including the same ZIP) or lower revision asks
+  before overwriting. Cancel leaves the installed pack unchanged.
+- Legacy format-1 packs have revision 0. A format-2 revision 1 pack updates them
+  directly; installing a legacy pack over another installed pack requires confirmation.
+- Languages belonging to a different installed pack cannot be overwritten. Remove
+  that pack explicitly first. An update can add/remove languages within its own pack;
+  if it removes the active language, Canvas Pilot switches to English.
+
+`version` describes the manifest format and stays **2**; `revision` is a positive
+integer that you increase for each release (1, 2, 3, …). It is independent of the app
+version and file timestamps, so timezone or clock changes do not affect ordering.
+
+If a pack is removed outside the app, the saved language remains marked unavailable
+and renders in English until reinstalled. System default continues to resolve
+built-in languages; select installed languages explicitly.
 
 Invalid packs are rejected without installing any of their languages. Startup
 skips invalid packs and reports errors. Packs are limited to 2 MiB compressed,

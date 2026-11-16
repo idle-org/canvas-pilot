@@ -1,4 +1,7 @@
 {
+  "language.packs": "Lingvopakaĵoj",
+  "language.remove-pack": "Forigi pakaĵon…",
+  "language.overwrite-pack": "Anstataŭigi pakaĵon",
   "ui.mask-edges": "Randoj de maskoj",
   "ui.rename-layer": "Renomi tavolon…",
   "ui.move-to-folder": "Movi al dosierujo",

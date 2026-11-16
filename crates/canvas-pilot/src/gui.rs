@@ -48,6 +48,7 @@ pub struct Editor {
     text_scale: Option<f32>,
     language: localization::Language,
     language_preview: Option<preferences_ui::LanguagePreview>,
+    language_pack_action: Option<preferences_ui::PackAction>,
     recovery: recovery_ui::Recovery,
     themes_open: bool,
     preferences_open: bool,
@@ -371,6 +372,7 @@ impl Default for Editor {
             text_scale: None,
             language: localization::Language::default(),
             language_preview: None,
+            language_pack_action: None,
             settings: settings::Store::default(),
             recovery: recovery_ui::Recovery::default(),
             themes_open: false,
@@ -482,6 +484,7 @@ impl Editor {
             && !self.reference_open
             && !self.layer_ui.open
             && self.language_preview.is_none()
+            && self.language_pack_action.is_none()
             && self.files.loading.is_none()
             && !self.files.new_requested
             && !self.files.new_after_save
@@ -4141,6 +4144,7 @@ impl Editor {
         self.update_alt_mask(&ctx);
         self.main_ui(root_ui);
         self.language_confirmation(&ctx);
+        self.language_pack_confirmation(&ctx);
     }
     fn main_ui(&mut self, root_ui: &mut egui::Ui) {
         let ctx = &root_ui.ctx().clone();
