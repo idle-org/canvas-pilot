@@ -31,16 +31,19 @@ immediately, saves automatically and survives restarting. In French, the route i
 
 System default follows supported system languages, with English fallback. Chinese
 uses Simplified Chinese; Traditional Chinese system locales fall back to English.
-All translations are unverified machine translations. Some advanced controls and
+French interface terminology has been accepted; the other translations remain
+unverified machine translations. Some advanced controls and
 technical diagnostics remain in English, as do device control names. Built-in open
 fonts cover Japanese, Chinese, Latin text and polytonic Greek without installing
-fonts separately. **Files & settings → Font licenses** contains their license. The book's [French quick start](fr/quickstart.md) remains an
-unverified machine translation. Screenshots and its quoted commands use English;
-select English to follow those labels exactly.
+fonts separately. **Files & settings → Font licenses** contains their license.
+
+The book's [French quick start](fr/quickstart.md) now follows the accepted French
+interface wording and uses French screenshots. It records its machine-translation
+origin and links to the English manual as the authoritative source.
 
 Changing language preserves the open project, pending edits and device connections.
 It does not rename layers, change file contents or send device commands. Numeric
-fields continue to use a decimal point in both languages. Projects do not carry
+fields continue to use a decimal point in every language. Projects do not carry
 language preferences to another workstation.
 
 ### Application themes

@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Updated the French quick start to the accepted French interface terminology,
+  with new offline workspace, layer-properties and crop screenshots. English
+  remains the authoritative manual; English screenshots and project names are
+  preserved. The chapter records its machine-translation origin.
+
 - Fixed raw `crop.adjust` / `crop.done` translation keys in the layer context menu.
   A rendered-menu regression test covers both editing states in every language.
 

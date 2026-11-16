@@ -4,15 +4,15 @@
 
 **Français** · [English — version de référence](../quickstart.md)
 
-> **Traduction automatique non vérifiée.** Cette page n’a pas été relue ni validée
-> par une personne francophone. Le [manuel anglais](../../introduction.md) fait
-> référence et peut évoluer avant cette traduction. En cas de doute ou de différence,
-> consultez la version anglaise. Seul ce démarrage rapide est traduit pour le moment.
-> Les captures et les noms des commandes restent en anglais. Pour retrouver ces
-> libellés, choisissez **English** dans **Language / Langue**, en haut des réglages. Les liens vers les autres chapitres
-> mènent à des pages en anglais.
+> **À propos de cette version française.** Ce guide est issu d’une traduction
+> automatique ; la terminologie de l’interface française a été validée. Le
+> [manuel anglais](../../introduction.md) reste la référence et peut évoluer avant
+> cette page. En cas de différence, consultez la version anglaise. Seul ce
+> démarrage rapide est traduit pour le moment ; les autres chapitres sont en anglais.
+> Les captures montrent l’interface en français. Les noms des calques, les titres
+> d’exemple et les termes propres aux appareils conservent leur langue d’origine.
 
-<!-- Translation source: docs/canvas-pilot/guide/quickstart.md at 1ac01cbf65dbad206f5b989f24924333e688f646. Machine translated; human review pending. -->
+<!-- Translation source: docs/canvas-pilot/guide/quickstart.md at daa8975. French UI terminology accepted 2026-11-16; instructions and screenshots aligned with that UI. English remains authoritative; no independent editorial review of this adapted chapter is claimed. -->
 
 Créez une composition simple avec les calques **Slides** (diapositives) et
 **Presenter** (présentateur), enregistrez un projet modifiable, puis exportez sa
@@ -22,7 +22,11 @@ ligne : aucun processeur vidéo n’est nécessaire.
 ## 1. Ouvrir une nouvelle composition
 
 Suivez d’abord les [instructions d’installation et de mise à jour (en anglais)](../install.md),
-puis lancez Canvas Pilot. Si vous travaillez depuis les sources du projet, exécutez
+puis lancez Canvas Pilot. Dans **Menu → Ouvrir tous les réglages…**, choisissez
+**Français** dans **Language / Langue**, en haut des réglages. Le changement est
+immédiat et reste enregistré au prochain lancement.
+
+Si vous travaillez depuis les sources du projet, exécutez
 cette commande à la racine du dépôt :
 
 ```sh
@@ -32,57 +36,62 @@ cargo run --locked -p canvas-pilot
 Consultez la [configuration de développement (en anglais)](../../../development/README.md)
 si vous avez besoin des outils de compilation. Si une composition précédente a été
 restaurée, enregistrez le travail à conserver, puis choisissez
-**Project → New project…** et confirmez.
+**Projet → Nouveau projet…** et confirmez.
 
 Le canevas par défaut mesure **1920 × 1080** et contient les calques **Slides** et
 **Presenter**. Conservez cette résolution pour ce tutoriel.
 
-![Composition Full HD par défaut avec Slides et Presenter ; Presenter est sélectionné](../../images/01-workspace.png)
+<!-- Screenshot recipe: ../../images/capture.md#french-quick-start-captures -->
+![Composition Full HD par défaut avec Slides et Presenter ; Presenter est sélectionné](../../images/fr/01-workspace.png)
 
-*Capture de l’interface en anglais, réutilisée sans modification.*
+*Interface en français ; les noms et le contenu du projet restent inchangés.*
 
 ## 2. Placer et dimensionner les calques
 
-1. Cliquez sur **Presenter** dans la liste **Layers** ou sur le canevas.
+1. Cliquez sur **Presenter** dans la liste **Calques** ou sur le canevas.
 2. Faites glisser le calque pour le déplacer. Faites glisser une poignée d’angle
-   pour le redimensionner ; laissez **Keep aspect ratio when resizing** coché
+   pour le redimensionner ; laissez **Conserver le ratio au redimensionnement** coché
    pour conserver ses proportions.
 3. Pour un placement précis, utilisez les champs de position de l’inspecteur.
-   Vérifiez d’abord le coin de référence choisi : **From right** mesure la distance
+   Vérifiez d’abord le coin de référence choisi : **Depuis la droite** mesure la distance
    depuis le bord droit, et non depuis le bord gauche.
-4. Sélectionnez **Slides** et placez-le à côté du présentateur. Utilisez **Undo**
+4. Sélectionnez **Slides** et placez-le à côté du présentateur. Utilisez **Annuler**
    pour annuler un déplacement ou un redimensionnement qui ne vous convient pas.
 
-Le champ de résolution du calque ouvre **Layer properties**, où vous pouvez saisir
+Le champ de résolution du calque ouvre **Propriétés du calque**, où vous pouvez saisir
 une largeur et une hauteur exactes. Conservez les dimensions par défaut si vous
 souhaitez seulement essayer le placement.
 
+![Propriétés du calque Presenter : onglet Calque, dimensions 640 × 360 et verrouillage du ratio](../../images/fr/02-layer-properties.png)
+
 ## 3. Essayer le cadrage du contenu
 
-Avec **Presenter** sélectionné, ouvrez **Layer properties → Crop**. La mire de la
+Avec **Presenter** sélectionné, ouvrez **Propriétés du calque → Recadrage**. La mire de la
 source montre comment le contenu s’inscrit dans le rectangle visible du calque.
 Faites glisser le contenu pour ajuster sa position ou utilisez les poignées de
 recadrage pour modifier son zoom.
 
 Le rectangle visible du calque reste fixe pendant le recadrage. Utilisez
-**Reset crop** pour retrouver le cadrage par défaut, puis revenez à l’onglet
-**Layer** pour terminer. Vous pouvez ignorer cette étape si seules les positions
+**Réinitialiser le recadrage** pour retrouver le cadrage par défaut, puis revenez à l’onglet
+**Calque** pour terminer. Vous pouvez ignorer cette étape si seules les positions
 des rectangles vous intéressent.
+
+![Onglet Recadrage en français, avec la mire et les poignées de recadrage sur Presenter](../../images/fr/03-crop.png)
 
 ## 4. Enregistrer le projet modifiable
 
 Appliquez les modifications de propriétés en attente, puis choisissez
-**Project → Save project…** et enregistrez le fichier sous
+**Projet → Enregistrer le projet…** et enregistrez le fichier sous
 `first-layout.pilot.json`. C’est ce fichier qu’il faut rouvrir pour poursuivre
 l’édition : il conserve le projet, notamment les réglages des sources, le recadrage
 et les images de référence.
 
-Utilisez **Project → Open project…** pour le charger ultérieurement.
+Utilisez **Projet → Ouvrir un projet…** pour le charger ultérieurement.
 
 ## 5. Exporter la géométrie des calques
 
-Choisissez **Project → Export → Export layers…**, sélectionnez **SVG** et
-**All layers**, puis cliquez sur **Export…** et enregistrez le fichier. Pour exporter
+Choisissez **Projet → Exporter → Exporter les calques…**, sélectionnez **SVG** et
+**Tous les calques**, puis cliquez sur **Exporter…** et enregistrez le fichier. Pour exporter
 uniquement les rectangles des calques, laissez désactivées les images d’arrière-plan
 et les images de substitution. Le SVG peut être ouvert dans un éditeur vectoriel.
 

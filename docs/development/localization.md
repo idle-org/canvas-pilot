@@ -4,10 +4,12 @@
 
 ## Current pilot: French quick start only
 
-The [French quick start](../canvas-pilot/guide/fr/quickstart.md) is an explicitly
-unverified machine translation, requested as a small first step. English remains
-authoritative. The application now also has six translated UI previews (see below); screenshot changes
-and human review are not claimed. The rest of the manual remains English, with explicit fallback links.
+The [French quick start](../canvas-pilot/guide/fr/quickstart.md) is based on machine translation,
+requested as a small first step. French interface terminology was accepted on
+2026-11-16; the chapter now follows those French control labels and uses three
+fresh French screenshots. English remains authoritative. This records approval
+of UI wording, not an independent editorial review of the adapted chapter.
+The application also has six translated UI previews (see below). The rest of the manual remains English, with explicit fallback links.
 
 For this one-chapter pilot, use translated Markdown in `guide/fr/` and the existing
 mdBook build. The summary and reciprocal chapter links expose the language choice;
@@ -18,15 +20,15 @@ English URLs remain unchanged. Do not duplicate the whole book for this pilot.
 The translation comment records the English source commit. When updating the English
 quick start, compare it with that revision, update the French text (or visibly mark
 it outdated), and advance the recorded revision only after translating the changes.
-For the initial source revision:
+For the latest aligned source revision:
 
 ```sh
-git diff 1ac01cbf65dbad206f5b989f24924333e688f646 -- docs/canvas-pilot/guide/quickstart.md
+git diff daa8975 -- docs/canvas-pilot/guide/quickstart.md
 ```
 
-The initial difference is only the new reciprocal language link. Human review remains
-pending; build/link checks are not linguistic verification. Keep the visible warning
-until an actual review establishes a new status. Run the pinned manual build after
+The French chapter additionally explains language selection and uses French
+controls and images. Keep its machine-translation origin and English-authority
+notice visible. Build/link checks are not linguistic verification. Run the pinned manual build after
 updates and check French accents, links, screenshots, search and print output.
 
 For a larger translation effort, evaluate
@@ -37,9 +39,9 @@ sets book language metadata; it does not manage translation freshness. Separate
 language builds and a full language selector remain future work. Do not introduce
 both Markdown and gettext as competing maintained translation sources.
 
-The checklist below describes that broader future work. The pilot intentionally
-ships without a reviewer, with the explicit warning above; the later reviewed-book
-publication criteria do not describe its current status.
+The checklist below describes that broader future work. The later reviewed-book
+publication criteria do not describe the current status of the whole manual.
+The accepted French interface vocabulary does not imply review of other languages.
 
 ## Application implementation
 

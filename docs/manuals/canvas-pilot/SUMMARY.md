@@ -6,7 +6,7 @@
 
 - [Install and update](../../canvas-pilot/guide/install.md)
 - [Your first layout](../../canvas-pilot/guide/quickstart.md)
-  - [Français — démarrage rapide (non vérifié)](../../canvas-pilot/guide/fr/quickstart.md)
+  - [Français — démarrage rapide](../../canvas-pilot/guide/fr/quickstart.md)
 - [Starter files for every format](../../templates/canvas-pilot/catalog.md)
 
 # Using Canvas Pilot

@@ -126,3 +126,29 @@ images remain unchanged and retain their earlier provenance above.
 The export capture was refreshed on 2026-11-16 after simplifying the dialog:
 one scope dropdown, one Export button and collapsed optional groups. The capture
 uses a fresh isolated offline session and unchanged default geometry.
+
+## French quick-start captures
+
+Captured on **2026-11-16** from source commit **daa8975**, with the default-feature
+Linux/X11 debug build, at **1440 × 940**, 100% scaling and the default dark theme.
+These are separate, unedited client-area PNG captures for the French quick start;
+the English screenshots above remain unchanged. The temporary profile had
+`language: "fr"`, an empty device address and automatic connection disabled.
+No device, user project or external artwork was accessed.
+
+Use the same clean-session recipe above, then choose **Menu → Open all settings… →
+Language / Langue → Français**. Close Settings before capturing. Keep the default
+project, **Presenter** selected, dimensions and positions unchanged. Names and
+example artwork remain in English intentionally; a few advanced controls and
+technical descriptions also retain English text in the current UI.
+
+1. `fr/01-workspace.png`: no dialog open; both layers and the French inspector visible.
+2. `fr/02-layer-properties.png`: click the layer-resolution field; leave **Calque**
+   selected and **Conserver le ratio au redimensionnement** checked.
+3. `fr/03-crop.png`: select **Recadrage**; keep zoom at 100%, offsets at zero and
+   advanced fit disabled. Capture the source pattern and handles with the dialog.
+
+Verify the French control names against the chapter, keep the whole client area,
+and close only the temporary app after capture. Rebuild the book and inspect the
+French chapter's images and print view. Screenshot refreshes do not imply that
+other languages or the rest of the manual have received an editorial review.

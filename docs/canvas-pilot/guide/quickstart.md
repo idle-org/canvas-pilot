@@ -1,6 +1,6 @@
 # Quick start: your first layout
 
-**English — authoritative version** · [Français — traduction automatique non vérifiée](fr/quickstart.md)
+**English — authoritative version** · [Français — démarrage rapide](fr/quickstart.md)
 
 [Introduction](../introduction.md) · [Advanced guide](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
