@@ -451,5 +451,9 @@
   "viewport.screen": "ÉCRAN 1",
   "viewport.offline": "HORS LIGNE",
   "viewport.pixels": "Pixels écran / %{width} × %{height}",
-  "language.font-license": "Licences des polices"
+  "language.font-license": "Licences des polices",
+  "language.confirm": "Ce nouveau choix de langue vous convient-il ?",
+  "language.keep": "Oui",
+  "language.rollback": "Sans confirmation, la langue précédente sera rétablie dans %{seconds} secondes.",
+  "language.cancel": "Non, j’ai choisi cette langue par erreur"
 }

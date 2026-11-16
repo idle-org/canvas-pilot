@@ -26,7 +26,10 @@ project; older projects open with captions off.
 Open **Menu → Open all settings…** and use **Language / Langue** at the top.
 Choose **System default**, **English**, **Français**, **日本語**, **简体中文**,
 **Español**, **Ἑλληνικὴ ἀρχαία** (Ancient Greek), or **Esperanto**. The change takes effect
-immediately, saves automatically and survives restarting. In French, the route is
+immediately as a preview. Choose **Yes** within 20 seconds to save it for future
+launches. The cancellation button uses your previous language; clicking it, pressing
+Escape or letting the countdown expire restores that language. Closing the app
+without confirming also leaves the previous saved choice intact. In French, the route is
 **Menu → Ouvrir tous les réglages…**; language names stay recognizable in either UI.
 
 System default follows supported system languages, with English fallback. Chinese

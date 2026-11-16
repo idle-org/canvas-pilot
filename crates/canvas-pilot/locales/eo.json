@@ -451,5 +451,9 @@
   "viewport.screen": "SCREEN 1",
   "viewport.offline": "SENKONEKTE",
   "viewport.pixels": "Ekranaj bilderoj / %{width} × %{height}",
-  "language.font-license": "Tiparaj permesiloj"
+  "language.font-license": "Tiparaj permesiloj",
+  "language.confirm": "Ĉu ĉi tiu nova lingvo taŭgas por vi?",
+  "language.keep": "Jes",
+  "language.rollback": "Sen konfirmo, la antaŭa lingvo revenos post %{seconds} sekundoj.",
+  "language.cancel": "Ne, mi elektis ĉi tiun lingvon erare"
 }

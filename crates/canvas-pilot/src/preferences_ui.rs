@@ -18,7 +18,95 @@ impl Section {
         (Self::Device, "ui.device-integration"),
     ];
 }
+pub(super) struct LanguagePreview {
+    pub(super) previous: localization::Language,
+    previous_locale: &'static str,
+    deadline: std::time::Instant,
+}
+
 impl Editor {
+    fn preview_language(&mut self, ctx: &egui::Context, language: localization::Language) {
+        if language == self.language {
+            return;
+        }
+        let previous = self
+            .language_preview
+            .as_ref()
+            .map_or(self.language, |p| p.previous);
+        let previous_locale = self
+            .language_preview
+            .as_ref()
+            .map_or(localization::locale(ctx), |p| p.previous_locale);
+        self.language_preview = Some(LanguagePreview {
+            previous,
+            previous_locale,
+            deadline: std::time::Instant::now() + std::time::Duration::from_secs(20),
+        });
+        self.language = language;
+        language.apply(ctx);
+    }
+
+    fn finish_language_preview(&mut self, ctx: &egui::Context, keep: bool) {
+        let Some(preview) = self.language_preview.take() else {
+            return;
+        };
+        if keep {
+            self.settings.save(&self.application_settings(ctx));
+        } else {
+            self.language = preview.previous;
+            self.language.apply(ctx);
+        }
+    }
+
+    pub(super) fn language_confirmation(&mut self, ctx: &egui::Context) {
+        let Some(preview) = &self.language_preview else {
+            return;
+        };
+        let remaining = preview
+            .deadline
+            .saturating_duration_since(std::time::Instant::now());
+        if remaining.is_zero() {
+            self.finish_language_preview(ctx, false);
+            return;
+        }
+        ctx.request_repaint_after(std::time::Duration::from_millis(100));
+        let response = egui::Modal::new(egui::Id::new("confirm-language")).show(ctx, |ui| {
+            ui.set_max_width(480.0);
+            ui.heading(tr(ctx, "language.confirm"));
+            ui.label(
+                rust_i18n::t!(
+                    "language.rollback",
+                    locale = localization::locale(ctx),
+                    seconds = remaining.as_secs() + 1
+                )
+                .into_owned(),
+            );
+            // Use the previously displayed language, including the resolved System locale.
+            if preview.previous_locale != localization::locale(ctx) {
+                ui.label(
+                    rust_i18n::t!(
+                        "language.rollback",
+                        locale = preview.previous_locale,
+                        seconds = remaining.as_secs() + 1
+                    )
+                    .into_owned(),
+                );
+            }
+            let keep = ui.button(tr(ctx, "language.keep")).clicked();
+            let cancel = ui
+                .button(
+                    rust_i18n::t!("language.cancel", locale = preview.previous_locale).into_owned(),
+                )
+                .clicked();
+            (keep, cancel)
+        });
+        if response.inner.1 || response.should_close() {
+            self.finish_language_preview(ctx, false);
+        } else if response.inner.0 {
+            self.finish_language_preview(ctx, true);
+        }
+    }
+
     pub(super) fn preferences_window(&mut self, ctx: &egui::Context) {
         if !self.preferences_open {
             return;
@@ -38,8 +126,8 @@ impl Editor {
                         .show_ui(ui, |ui| {
                             for language in localization::Language::ALL {
                                 let name = language.name(ctx);
-                                if ui.selectable_value(&mut self.language, language, name).changed() {
-                                    self.language.apply(ctx);
+                                if ui.selectable_label(self.language == language, name).clicked() {
+                                    self.preview_language(ctx, language);
                                 }
                             }
                         });
@@ -225,9 +313,14 @@ mod tests {
             .skip(2)
             .chain(std::iter::once(localization::Language::En))
         {
+            let previous = app.language;
             let current_name = app.language.name(&ctx);
             click_label(&mut app, &ctx, &current_name);
             click_label(&mut app, &ctx, &language.name(&ctx));
+            assert_eq!(app.language, language);
+            assert_eq!(app.application_settings(&ctx).language, previous);
+            let yes = tr(&ctx, "language.keep");
+            click_label(&mut app, &ctx, &yes);
             assert_eq!(settings::Store::at(path.clone()).1.language, language);
             assert_eq!(app.project().to_json().unwrap(), project);
             assert_eq!(
@@ -239,6 +332,7 @@ mod tests {
         }
         click_label(&mut app, &ctx, "English");
         click_label(&mut app, &ctx, "Français");
+        click_label(&mut app, &ctx, "Oui");
         click_label(&mut app, &ctx, "Fermer");
         assert!(!app.preferences_open);
         let (store, saved) = settings::Store::at(path);
@@ -249,6 +343,52 @@ mod tests {
         click_label(&mut restored, &restored_ctx, "Français");
         click_label(&mut restored, &restored_ctx, "English");
         assert_eq!(localization::locale(&restored_ctx), "en");
+    }
+
+    #[test]
+    fn language_preview_cancel_escape_timeout_and_restart_keep_previous_choice() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let (mut store, mut saved) = settings::Store::at(path.clone());
+        saved.language = localization::Language::Fr;
+        store.save(&saved);
+        let ctx = egui::Context::default();
+        let mut app = Editor::with_settings(&ctx, store, saved);
+        let project = app.project().to_json().unwrap();
+        app.preview_language(&ctx, localization::Language::Ja);
+        // Even an unrelated preferences save or restart must not retain the preview.
+        app.settings.save(&app.application_settings(&ctx));
+        assert_eq!(
+            settings::Store::at(path.clone()).1.language,
+            localization::Language::Fr
+        );
+        click_label(&mut app, &ctx, "Non, j’ai choisi cette langue par erreur");
+        assert_eq!(localization::locale(&ctx), "fr");
+        assert!(app.language_preview.is_none());
+
+        app.preview_language(&ctx, localization::Language::ZhCn);
+        frame(&mut app, &ctx, vec![]);
+        frame(
+            &mut app,
+            &ctx,
+            vec![egui::Event::Key {
+                key: egui::Key::Escape,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: egui::Modifiers::NONE,
+            }],
+        );
+        assert_eq!(app.language, localization::Language::Fr);
+        app.preview_language(&ctx, localization::Language::Es);
+        app.language_preview.as_mut().unwrap().deadline = std::time::Instant::now();
+        frame(&mut app, &ctx, vec![]);
+        assert_eq!(app.language, localization::Language::Fr);
+        assert_eq!(localization::locale(&ctx), "fr");
+        assert!(app.language_preview.is_none());
+        app.preview_language(&ctx, localization::Language::Fr);
+        assert!(app.language_preview.is_none());
+        assert_eq!(app.project().to_json().unwrap(), project);
     }
 
     #[test]

@@ -45,6 +45,7 @@ pub struct Editor {
     layer_ui: layers_ui::LayerUi,
     settings: settings::Store,
     language: localization::Language,
+    language_preview: Option<preferences_ui::LanguagePreview>,
     recovery: recovery_ui::Recovery,
     themes_open: bool,
     preferences_open: bool,
@@ -363,6 +364,7 @@ impl Default for Editor {
             capture: Default::default(),
             layer_ui: Default::default(),
             language: localization::Language::default(),
+            language_preview: None,
             settings: settings::Store::default(),
             recovery: recovery_ui::Recovery::default(),
             themes_open: false,
@@ -504,7 +506,10 @@ impl Editor {
     }
     fn application_settings(&self, ctx: &egui::Context) -> settings::Settings {
         settings::Settings {
-            language: self.language,
+            language: self
+                .language_preview
+                .as_ref()
+                .map_or(self.language, |preview| preview.previous),
             midra_host: self.device.host.clone(),
             recent_midra_hosts: self.device.recent_hosts.clone(),
             autoconnect_at_startup: self.device.autoconnect_at_startup,
@@ -3906,6 +3911,10 @@ fn click(ui: &egui::Ui, ink: &Ink, b: [f32; 4], id: impl std::hash::Hash) -> boo
 }
 impl Editor {
     fn ui(&mut self, ctx: &egui::Context) {
+        self.main_ui(ctx);
+        self.language_confirmation(ctx);
+    }
+    fn main_ui(&mut self, ctx: &egui::Context) {
         if self.fields_edited
             && self.fields_pending()
             && !self.layout.dragging()

@@ -451,5 +451,9 @@
   "viewport.screen": "SCREEN 1",
   "viewport.offline": "Ἄνευ συνδέσεως",
   "viewport.pixels": "Ψηφῖδες πετάσματος / %{width} × %{height}",
-  "language.font-license": "Ἄδειαι γραμματοσειρῶν"
+  "language.font-license": "Ἄδειαι γραμματοσειρῶν",
+  "language.confirm": "Ἆρά σοι ἀρέσκει ἡ νέα γλῶττα;",
+  "language.keep": "Ναί",
+  "language.rollback": "Ἡ προτέρα γλῶττα ἐπανήξει μετὰ %{seconds} δευτερόλεπτα, ἐὰν μὴ βεβαιώσῃς.",
+  "language.cancel": "Οὔ, κατὰ τύχην ταύτην τὴν γλῶτταν εἱλόμην"
 }

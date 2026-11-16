@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Language changes now preview for 20 seconds and require confirmation. The
+  cancellation button stays in the previous language; cancellation, Escape or
+  timeout restores it. Unconfirmed choices are never saved. Regression tests cover
+  confirmation, cancellation, timeout, restart safety and unchanged project data.
+
 - Updated the French quick start to the accepted French interface terminology,
   with new offline workspace, layer-properties and crop screenshots. English
   remains the authoritative manual; English screenshots and project names are

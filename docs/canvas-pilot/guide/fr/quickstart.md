@@ -24,7 +24,9 @@ ligne : aucun processeur vidéo n’est nécessaire.
 Suivez d’abord les [instructions d’installation et de mise à jour (en anglais)](../install.md),
 puis lancez Canvas Pilot. Dans **Menu → Ouvrir tous les réglages…**, choisissez
 **Français** dans **Language / Langue**, en haut des réglages. Le changement est
-immédiat et reste enregistré au prochain lancement.
+immédiat : confirmez avec **Oui** dans les 20 secondes pour le conserver au prochain
+lancement. Le bouton de refus reste dans la langue précédente. Un refus, la touche
+Échap ou la fin du décompte rétablit cette langue.
 
 Si vous travaillez depuis les sources du projet, exécutez
 cette commande à la racine du dépôt :

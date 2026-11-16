@@ -39,8 +39,8 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 | `snapping` | Object with required boolean fields `enabled` (false), `pixels` (true), `screen_edges` (true; screen edges plus 25%, 50% and 75% guides on both axes), `layer_edges` (true), `grid` (false), `show_grid` (true), and `grid_divisions` ([8, 6]); unknown fields rejected |
 
 Language is a workstation preference, never a project field or exchange value.
-Changing **Settings → Language / Langue** applies immediately and saves without
-restarting or reinstalling the project. It preserves selections, undo, numeric
+Changing **Settings → Language / Langue** previews immediately and saves after
+confirmation, without restarting or reinstalling the project. It preserves selections, undo, numeric
 entry drafts, device links and staged proposals, and never connects or sends.
 Resetting defaults restores System default. System language is resolved at startup
 and when explicitly selected; external OS language changes are not watched live.
@@ -115,8 +115,16 @@ The picker includes both light and dark themes with color swatches.
 | Verdant Rebel | `verdant_rebel` | `theme-verdant-rebel.css` |
 | Weicat Industrial | `weicat_industrial` | `theme-weicat-industrial.css` |
 
+Language selection previews the new UI for 20 seconds. Only confirmation persists
+the new `language` value. Cancellation, Escape or timeout restores the previous
+choice. While a preview is pending, all settings writes retain the previous
+confirmed language, so quitting or crashing cannot persist an accidental selection.
+The cancel button uses the previously displayed locale, including resolved System
+default. Preview state and its deadline are not serialized; the v10 schema is unchanged.
+
 The Settings window and quick menus share the same settings. Changes apply
-and save immediately; closing the window requires no Apply step. Restore default
+and save immediately, except for language confirmation described above; closing
+the window requires no general Apply step. Restore default
 preferences resets appearance and editing values, including theme history and snapping, without
 changing layer geometry or pending position/size text fields. Snapping uses a
 fixed six-logical-pixel proximity radius converted by viewport scale. It affects

@@ -451,5 +451,9 @@
   "viewport.screen": "SCREEN 1",
   "viewport.offline": "SIN CONEXIÓN",
   "viewport.pixels": "Píxeles de pantalla / %{width} × %{height}",
-  "language.font-license": "Licencias de fuentes"
+  "language.font-license": "Licencias de fuentes",
+  "language.confirm": "¿Te parece bien este nuevo idioma?",
+  "language.keep": "Sí",
+  "language.rollback": "Si no confirmas, se volverá al idioma anterior en %{seconds} segundos.",
+  "language.cancel": "No, elegí este idioma por accidente"
 }

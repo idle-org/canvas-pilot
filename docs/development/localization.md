@@ -60,7 +60,11 @@ files; translators do not need to touch Rust code to trigger a rebuild.
 Settings v10 adds `ja`, `zh-CN`, `es`, `grc` and `eo` to v9’s `system`, `en`, `fr`.
 Versions 1–8 migrate with System default; v9 preserves its language and all other
 preferences. Unknown old language values are rejected rather than reinterpreted. The always
-visible **Language / Langue** selector at the top of Settings applies immediately.
+visible **Language / Langue** selector at the top of Settings previews immediately,
+then requires confirmation within 20 seconds. Question and acceptance use the new
+locale; cancellation and an additional countdown use the previously displayed
+locale. Escape and timeout roll back; settings writes retain the old choice until
+confirmation. The transient preview is not project or settings data.
 Project, export, clipboard and device contracts are unchanged. Every non-English
 language has the same preview status, not a human-reviewed complete translation: technical diagnostics, some advanced
 controls, device-supplied labels and native file dialogs can still be English.
