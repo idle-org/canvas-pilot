@@ -36,21 +36,40 @@ to 16 MiB; a failed document leaves the batch unapplied and reports its filename
    item** to skip an item. Each included item must map to a different destination;
    fewer source items than destinations are fine. Duplicate or missing mappings
    block import. Other layers stay unchanged.
-4. Choose independently what to paste: **Format (width / height)**, **Position**,
-   and **Crop zoom**. Zoom is enabled only when present in the data (new Midra
-   clipboard values include it; older copies, draw.io and SVG do not). All
-   available values are initially enabled. Unchecked values retain destination
-   settings; format-only paste keeps its top-left position. Choose **Include
-   outline in bounds** if the layer should cover the rectangle's outline too.
-   Zoom applies to the resulting layer size; existing crop offsets clamp if
-   necessary. Mixed batches keep destination zoom where the source lacks it.
-   At least one available value must be enabled.
+4. Choose **Format (width / height)** and **Position** independently. For Canvas
+   Pilot copies, expand **Appearance** to choose **Crop & fit** and **Blanking**;
+   the collapsed heading shows what will be applied. Legacy text offers **Crop
+   zoom** when present. Available values start enabled. Unchecked values retain
+   destination settings; resizing may adjust its existing crop. Outline bounds
+   are offered only when the source includes an outline. At least one available
+   geometry or appearance value must be enabled.
 5. Click **Import mapped values** to update the mapped layers in one undo step.
    Cancel leaves all layers unchanged. Invalid geometry
    blocks the whole batch, without partial changes.
 
 The workspace supports 1–256 layers; the import review handles all selected
 layers rather than choosing one rectangle from a larger clipboard selection.
+
+### Canvas Pilot layer clipboard
+
+**Copy layer values** preserves exact geometry, crop edges and offsets, all fit
+modes and blanking masks. The clipboard still begins with readable values; an
+appended versioned payload holds the exact data. Editing only the readable summary
+does not change what Canvas Pilot pastes.
+
+To copy only appearance, uncheck Position and Format. Expand **Appearance** to
+choose Crop & fit, Blanking, or both. Source assignments, device mappings and
+input settings stay unchanged. Crop & fit requires matching source dimensions
+after local input crop; normal crop also needs compatible box proportions. The
+review explains mismatches before allowing import. Match the source dimensions,
+include Format, or uncheck Crop & fit as appropriate. Blanking works independently
+of source dimensions. A failed batch changes nothing; a successful paste undoes
+in one step.
+
+Older normal-crop text remains supported, with its optional zoom. It cannot supply
+missing offsets or masks. The new full payload needs a current Canvas Pilot
+version; use a project or snapshot for references, inputs and other document state.
+See the [clipboard contract and example](../../interfaces/canvas-pilot-clipboard.md).
 
 ### SVG bounds
 

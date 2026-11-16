@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Copy layer values now includes an exact, versioned clipboard payload for crop
+  edges/offsets, all fit modes and blanking. Paste reviews Crop & fit and Blanking
+  separately, keeps source/device mappings unchanged, and rejects incompatible
+  dimensions atomically. Legacy normal-crop/zoom text remains readable.
+
 - Prepared issue drafts for all untracked stretch goals and linked the existing
   adapter issue. Gitea publication awaits a token with issue permissions.
 

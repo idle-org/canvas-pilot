@@ -48,6 +48,14 @@ means a supported exchange format exported with extra parameters and reopened th
 
 For a complete editable backup, **Save project** remains the recommended choice.
 
+## Copying layer appearance
+
+Canvas Pilot’s **Copy layer values** also preserves exact geometry, crop edges,
+offsets, fit and blanking through the clipboard. Its mapping review offers an
+optional **Appearance** group; source assignments and device links remain unchanged.
+See [clipboard preservation and limits](files.md#canvas-pilot-layer-clipboard).
+This is separate from plain geometry import and export snapshot restoration.
+
 ## Saved input corrections
 
 In the advanced input controls, explicitly choose **Save staged input edits as a

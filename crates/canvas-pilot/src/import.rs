@@ -11,6 +11,7 @@ pub struct DetectedShape {
     pub background: bool,
     pub background_only: bool,
     pub zoom: Option<f64>,
+    pub appearance: Option<crate::clipboard::Appearance>,
 }
 impl DetectedShape {
     pub fn paste_geometry(
@@ -56,6 +57,9 @@ pub fn parse_values(text: &str) -> Result<ImportDocument, String> {
     if text.len() > crate::exchange::MAX_EXCHANGE_BYTES {
         return Err("Import text exceeds 16 MiB.".into());
     }
+    if let Some((_, json)) = text.rsplit_once(crate::clipboard::MARKER) {
+        return crate::clipboard::parse(json);
+    }
     if let Some(geometry) = crate::exchange_metadata::geometry_text(text)? {
         return parse_values(&geometry);
     }
@@ -98,6 +102,7 @@ pub fn parse_values(text: &str) -> Result<ImportDocument, String> {
                 background: s.background,
                 background_only: s.background,
                 zoom: None,
+                appearance: None,
             })
             .collect(),
         svg: false,
@@ -177,6 +182,7 @@ fn parse_midra_values(text: &str) -> Result<ImportDocument, String> {
             background: false,
             background_only: false,
             zoom,
+            appearance: None,
         });
     }
     Ok(ImportDocument {
@@ -512,6 +518,7 @@ fn walk(
         background,
         background_only: background && (tag == "image" || marked_background),
         zoom: None,
+        appearance: None,
     });
     if out.iter().filter(|s| !s.background_only).count() > 256 || out.len() > 257 {
         return Err("Import is limited to 256 rectangles.".into());
@@ -608,6 +615,7 @@ fn drawio_svg_shapes(
             background,
             background_only: background,
             zoom: None,
+            appearance: None,
         });
         if out.iter().filter(|shape| !shape.background_only).count() > 256 || out.len() > 257 {
             return Err("Import is limited to 256 rectangles.".into());

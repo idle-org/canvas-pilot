@@ -80,7 +80,7 @@ applies to Illustrator and draw.io. “Paste” below means **into Canvas Pilot*
 
 | Clipboard path | Paste positions and sizes | Copy out in this format | Rename destination layers | Crop zoom | Crop edges / offsets, fit and masks |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| Canvas Pilot **Copy layer values**, normal crop | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Canvas Pilot **Copy layer values**, all fit modes | ✅ | ✅ | ❌ | ✅ | ✅ |
 | Figma **SVG text** copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Illustrator **SVG text** copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
 | draw.io diagram XML copy/paste | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -94,12 +94,16 @@ Figma SVG, Illustrator SVG and draw.io XML clipboard paths have been manually re
 or HTML clipboard payload. Use the corresponding file path if no supported text
 is available. PowerPoint and QCAD use file exchange in this workflow.
 
-Paste opens a mapping review with separate **Position**, **Format** (width/height)
-and, when present, **Crop zoom** choices. Names in copied values identify rows;
-they do not rename destination layers. Zoom alone does not reproduce the original
-crop offsets or source settings. Older Canvas Pilot values may omit zoom.
-**Advanced-fit container values are not the normal-crop paste format**; use a
-project or supported snapshot to retain those modes.
+Paste opens a mapping review with separate **Position** and **Format** (width/height)
+choices. Canvas Pilot copies also offer an **Appearance** group with **Crop & fit**
+and **Blanking**. Crop edges preserve normal zoom/offsets and all explicit fit
+modes; masks retain their proportions. Names identify rows without renaming them.
+
+Crop & fit requires matching source dimensions after input crop; it never changes
+source assignments or device mappings. If dimensions differ, match the local source
+or uncheck Crop & fit. Blanking can be pasted independently. Older clipboard text
+still offers **Crop zoom** when present, without full crop offsets or fit/masks.
+See [clipboard preservation and limits](files.md#canvas-pilot-layer-clipboard).
 
 SVG and draw.io imports can optionally include supported outline widths in the
 bounds. Colors, text styling and artwork are not applied to the destination.

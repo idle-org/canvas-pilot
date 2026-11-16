@@ -1,0 +1,170 @@
+//! Versioned clipboard appearance, separate from geometry-only external imports.
+use crate::{
+    Geometry, Layout,
+    formats::{self, Crop, LayerFit, Mask},
+    import::{DetectedShape, ImportDocument},
+};
+use serde::{Deserialize, Serialize};
+
+pub const MARKER: &str = "\n\nCanvas Pilot layer data:\n";
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Appearance {
+    pub input_size: [f64; 2],
+    pub crop: Crop,
+    #[serde(deserialize_with = "required_fit")]
+    pub fit: Option<LayerFit>,
+    pub mask: Mask,
+}
+fn required_fit<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<LayerFit>, D::Error> {
+    Option::<LayerFit>::deserialize(d)
+}
+impl Appearance {
+    fn validate(self, bounds: Geometry) -> Result<(), String> {
+        formats::validate_size(self.input_size)?;
+        self.mask.validate()?;
+        let retained = self.crop.remaining(self.input_size)?;
+        if let Some(fit) = self.fit {
+            fit.image(retained, bounds)?;
+        } else {
+            formats::mapping(self.input_size, [bounds.width, bounds.height], self.crop)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Layer {
+    name: String,
+    bounds: Geometry,
+    appearance: Appearance,
+}
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Payload {
+    format: String,
+    version: u32,
+    layers: Vec<Layer>,
+}
+/// Append exact, locale-independent values to the readable clipboard summary.
+pub fn encode(layout: &Layout, indices: &[usize], summary: &str) -> Result<String, String> {
+    if indices.is_empty() || indices.len() > 256 {
+        return Err("Copy between 1 and 256 layers.".into());
+    }
+    let mut layers = Vec::new();
+    for &i in indices {
+        let bounds = *layout.layers().get(i).ok_or("Invalid copied layer")?;
+        let appearance = Appearance {
+            input_size: layout.formats().input(i)?,
+            crop: layout.formats().advanced[i],
+            fit: layout.formats().layer_fit[i],
+            mask: layout.formats().masks[i],
+        };
+        bounds.validate()?;
+        appearance.validate(bounds)?;
+        layers.push(Layer {
+            name: layout.layer_label(i),
+            bounds,
+            appearance,
+        });
+    }
+    let json = serde_json::to_string_pretty(&Payload {
+        format: "canvas-pilot.layers".into(),
+        version: 1,
+        layers,
+    })
+    .map_err(|e| e.to_string())?;
+    let text = format!("{summary}{MARKER}{json}");
+    if text.len() > crate::exchange::MAX_EXCHANGE_BYTES {
+        return Err("Clipboard exceeds 16 MiB.".into());
+    }
+    Ok(text)
+}
+pub fn parse(json: &str) -> Result<ImportDocument, String> {
+    if json.len() > crate::exchange::MAX_EXCHANGE_BYTES {
+        return Err("Clipboard exceeds 16 MiB.".into());
+    }
+    let payload: Payload =
+        serde_json::from_str(json).map_err(|e| format!("Invalid Canvas Pilot clipboard: {e}"))?;
+    if payload.format != "canvas-pilot.layers" || payload.version != 1 {
+        return Err(
+            "Unsupported Canvas Pilot clipboard format/version; expected version 1.".into(),
+        );
+    }
+    if payload.layers.is_empty() || payload.layers.len() > 256 {
+        return Err("Clipboard must contain 1–256 layers.".into());
+    }
+    let mut shapes = Vec::new();
+    for layer in payload.layers {
+        if layer.name.trim().is_empty() || layer.name.chars().count() > 256 {
+            return Err("Invalid clipboard layer name.".into());
+        }
+        layer.bounds.validate()?;
+        layer.appearance.validate(layer.bounds)?;
+        shapes.push(DetectedShape {
+            id: layer.name,
+            geometry: layer.bounds,
+            outline: [0.; 2],
+            background: false,
+            background_only: false,
+            zoom: None,
+            appearance: Some(layer.appearance),
+        });
+    }
+    Ok(ImportDocument { shapes, svg: false, note: "Canvas Pilot layer values include exact crop, fit and blanking. Source assignments, names and device links stay unchanged.".into() })
+}
+impl Layout {
+    /// Apply geometry and optional appearance atomically, preserving selection and source identity.
+    pub fn apply_mapped_clipboard(
+        &mut self,
+        values: &[(usize, Geometry)],
+        zooms: &[(usize, f64)],
+        appearances: &[(usize, Appearance)],
+        crop_fit: bool,
+        masks: bool,
+    ) -> Result<(), String> {
+        let mut seen = std::collections::BTreeSet::new();
+        for &(i, a) in appearances {
+            if i >= self.layers.len() || !self.selectable(i) {
+                return Err("Clipboard destination must be an editable layer.".into());
+            }
+            if !values.iter().any(|(target, _)| *target == i) || !seen.insert(i) {
+                return Err("Each clipboard appearance must map to one imported layer.".into());
+            }
+            if zooms.iter().any(|(target, _)| *target == i) {
+                return Err("Choose full crop and fit or legacy zoom, not both.".into());
+            }
+            if crop_fit {
+                let input = self.formats.input(i)?;
+                if input
+                    .iter()
+                    .zip(a.input_size)
+                    .any(|(v, expected)| (v - expected).abs() > 1e-8)
+                {
+                    return Err("Crop & fit requires matching source dimensions after input crop. Match the destination source or uncheck Crop & fit.".into());
+                }
+            }
+        }
+        let mut draft = self.clone();
+        draft.apply_mapped_import_with_zoom(values, zooms)?;
+        for &(i, appearance) in appearances {
+            if crop_fit {
+                appearance.validate(draft.layers[i]).map_err(|error| {
+                    format!(
+                        "Cannot paste Crop & fit: {error} Include Format or uncheck Crop & fit."
+                    )
+                })?;
+                draft.formats.advanced[i] = appearance.crop;
+                draft.formats.layer_fit[i] = appearance.fit;
+            }
+            if masks {
+                draft.formats.masks[i] = appearance.mask.validate()?;
+            }
+        }
+        self.finish_drag();
+        let before = self.snapshot();
+        self.restore(draft.snapshot());
+        self.remember(before);
+        Ok(())
+    }
+}

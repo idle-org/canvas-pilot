@@ -26,6 +26,7 @@ Versioned examples and sanitized fixtures remain beside their contracts and in
 | [Project](docs/interfaces/canvas-pilot.md) | Project schema, versions and migrations |
 | [Settings](docs/interfaces/canvas-pilot-settings.md) | User preferences and settings compatibility |
 | [Recovery](docs/interfaces/canvas-pilot-recovery.md) | Recovery storage and restoration |
+| [Layer clipboard](docs/interfaces/canvas-pilot-clipboard.md) | Versioned geometry, crop, fit and blanking payload |
 | [Geometry exchange](docs/interfaces/canvas-pilot-exchange.md) | Precision, omissions and round trips |
 | [Extra parameters](docs/interfaces/midra-extra-parameters.md) | Embedded project snapshots |
 | [Device adapters](docs/interfaces/device-adapters.md) | Shared representation and family-specific behavior |

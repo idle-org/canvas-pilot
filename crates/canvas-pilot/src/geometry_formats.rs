@@ -127,6 +127,7 @@ fn document(
             background,
             background_only: background,
             zoom: None,
+            appearance: None,
         });
     }
     if backgrounds > 1

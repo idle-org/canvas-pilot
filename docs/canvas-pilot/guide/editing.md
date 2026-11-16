@@ -61,15 +61,15 @@ not affect device links or source assignments. All document edits support Undo.
   **Zoom to selection** frames the entire selection. A view warning appears only when a visible layer is completely out of view; select it in the layer list to frame it. The inspector separately flags layers partly or entirely beyond the output screen and suggests alignment or position edits. A divider separates view tools from Undo/Redo. Hover an icon for its label.
   Camera changes do not modify coordinates. Off-screen layers retain their exact
   coordinates, display a warning and remain selectable through the layer list.
-- **Copy position values** (or **Copy selected positions** for multiple layers)
-  copies labeled plain text with each selected layer's center position and
-  dimensions. **Ctrl/Cmd-C** does the same when the viewport has focus. These
-  values can be pasted back using **Ctrl/Cmd-V** or **Paste layer(s) values**, with
-  the usual destination mapping and exact layer-count requirement. Center values
-  are converted back to top-left bounds; whole-pixel export rounding still applies
-  (an odd width/height can produce a half-pixel top-left). Source formats and crop
-  offsets are not copied. Crop zoom is included separately as a percentage and
-  can be toggled on paste. This is not a native WebRCS clipboard payload.
+- **Copy layer values** (or **Copy selected layer values** for multiple layers)
+  copies a readable position summary plus exact geometry, crop, fit and blanking.
+  **Ctrl/Cmd-C** does the same when the viewport has focus. Paste with
+  **Ctrl/Cmd-V** or **Paste layer(s) values**, then review the destination mapping.
+  **Appearance** lets you choose **Crop & fit** and **Blanking** independently;
+  source assignments and device links stay unchanged. Crop & fit requires matching
+  source dimensions after input crop. See [layer clipboard](files.md#canvas-pilot-layer-clipboard)
+  for the paste options and compatibility details. This is not a native WebRCS
+  clipboard payload.
 
 Right-click a layer for **Source properties**, **Layer properties**, **Crop properties**, **Configure capture**,
 **Adjust layer crop**, alignment, **Copy layer values**, **Paste layer values**, and lock/hide actions.

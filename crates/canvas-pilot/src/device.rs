@@ -117,6 +117,7 @@ impl Screen {
                 background: false,
                 background_only: false,
                 zoom: None,
+                appearance: None,
             });
         }
         Ok(ImportDocument {

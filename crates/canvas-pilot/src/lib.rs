@@ -1,4 +1,5 @@
 //! Layer geometry, reversible edits and bounded imports.
+pub mod clipboard;
 pub mod device;
 pub mod device_capture;
 pub mod device_send;

@@ -16,6 +16,7 @@ fn shape(name: String, geometry: Geometry, background: bool) -> Result<DetectedS
         background,
         background_only: background,
         zoom: None,
+        appearance: None,
     })
 }
 fn page(name: String, shapes: Vec<DetectedShape>, note: String) -> Result<Page, String> {

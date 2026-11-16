@@ -134,6 +134,8 @@ struct Paste {
     include_size: bool,
     include_position: bool,
     include_zoom: bool,
+    include_crop_fit: bool,
+    include_masks: bool,
     include_outline: bool,
     closing: bool,
     error: String,
@@ -208,6 +210,12 @@ impl Paste {
             }
         }
     }
+    fn appearance_available(&self) -> bool {
+        self.shapes
+            .iter()
+            .zip(&self.ignored)
+            .any(|(s, ignored)| !ignored && s.appearance.is_some())
+    }
     fn zoom_available(&self) -> bool {
         self.shapes
             .iter()
@@ -239,7 +247,25 @@ impl Paste {
         } else {
             Vec::new()
         };
-        layout.apply_mapped_import_with_zoom(&values, &zooms)
+        let appearances: Vec<_> = self
+            .shapes
+            .iter()
+            .enumerate()
+            .filter_map(|(row, shape)| {
+                if self.ignored[row] {
+                    None
+                } else {
+                    shape.appearance.map(|a| (self.mapping[row].unwrap(), a))
+                }
+            })
+            .collect();
+        layout.apply_mapped_clipboard(
+            &values,
+            &zooms,
+            &appearances,
+            self.include_crop_fit,
+            self.include_masks,
+        )
     }
     fn destination_count_warning(&self, layout: &Layout) -> Option<String> {
         let count = self.ignored.iter().filter(|ignored| !**ignored).count();
@@ -253,9 +279,10 @@ impl Paste {
         if !self.include_size
             && !self.include_position
             && !(self.include_zoom && self.zoom_available())
+            && !((self.include_crop_fit || self.include_masks) && self.appearance_available())
         {
             return Err(
-                "Choose at least one available value to paste: format, position or zoom.".into(),
+                "Choose at least one available geometry or appearance value to paste.".into(),
             );
         }
         let count = self.ignored.iter().filter(|v| !**v).count();
@@ -711,6 +738,8 @@ impl Editor {
             include_size: true,
             include_position: true,
             include_zoom: true,
+            include_crop_fit: true,
+            include_masks: true,
             include_outline: false,
             closing: false,
             error: String::new(),
@@ -895,7 +924,7 @@ impl Editor {
             Err(e) => self.error = e,
         }
     }
-    fn copy(&self, ctx: &egui::Context) {
+    fn copy(&mut self, ctx: &egui::Context) {
         let entries: Vec<_> = self
             .layout
             .selected_indices()
@@ -920,7 +949,14 @@ impl Editor {
             })
             .collect();
         if !entries.is_empty() {
-            ctx.copy_text(entries.join("\n\n"));
+            match canvas_pilot::clipboard::encode(
+                &self.layout,
+                &self.layout.selected_indices(),
+                &entries.join("\n\n"),
+            ) {
+                Ok(text) => ctx.copy_text(text),
+                Err(error) => self.error = error,
+            }
         }
     }
     fn shortcuts(&mut self, ctx: &egui::Context) {
@@ -1153,6 +1189,18 @@ impl Editor {
                     ui.checkbox(&mut p.include_position,"Position");
                     if p.zoom_available() { ui.checkbox(&mut p.include_zoom,"Crop zoom"); }
                 });
+                if p.appearance_available() {
+                    let summary = match (p.include_crop_fit, p.include_masks) {
+                        (true, true) => "Appearance · crop, fit and blanking",
+                        (true, false) => "Appearance · crop and fit",
+                        (false, true) => "Appearance · blanking",
+                        (false, false) => "Appearance · keep destination",
+                    };
+                    egui::CollapsingHeader::new(summary).id_salt("paste-appearance").show(ui, |ui| {
+                        ui.checkbox(&mut p.include_crop_fit, "Crop & fit").on_hover_text("Copy exact crop edges, offsets and fit mode. Source dimensions after input crop must match; source assignments remain unchanged.");
+                        ui.checkbox(&mut p.include_masks, "Blanking").on_hover_text("Copy the four proportional mask edges without resizing the layer.");
+                    });
+                }
                 ui.small("Unchecked values keep the destination settings. Format changes may adjust existing crops to fit.");
                 if p.shapes.iter().any(|s|s.outline.iter().any(|v|*v>0.0)) {
                     ui.indent("outline-option", |ui| {
@@ -1161,7 +1209,7 @@ impl Editor {
                 }
                 egui::CollapsingHeader::new("Import details").show(ui, |ui| {
                     ui.label(&p.note);
-                    ui.small("Source format, crop offsets, colors and outline appearance are not imported.");
+                    ui.small(if p.appearance_available() { "Source assignments, layer names, device links and input proposals are not imported. Crop & fit requires matching source dimensions." } else { "Source format, crop offsets, colors and outline appearance are not imported." });
                 });
                 if !p.include_size {ui.small("Outline adjustment requires Format. Position uses the source top-left when enabled.");}
                 ui.separator();
@@ -1200,6 +1248,7 @@ impl Editor {
                             });
                             egui::CollapsingHeader::new("Geometry · before / after").show(ui, |ui| {
                             ui.small(bounds(shape.geometry));
+                            if let Some(a) = shape.appearance { ui.small(format!("Fit: {} · crop L/R/T/B: {} / {} / {} / {} px", a.fit.map(|f| f.label()).unwrap_or("Normal crop"), a.crop.left, a.crop.right, a.crop.top, a.crop.bottom)); ui.small(format!("Blanking L/R/T/B: {:.2}% / {:.2}% / {:.2}% / {:.2}%", a.mask.left*100., a.mask.right*100., a.mask.top*100., a.mask.bottom*100.)); }
                             if let Some(zoom) = shape.zoom { ui.small(format!("Crop zoom: {:.1}%", zoom * 100.0)); }
                             if let Some(target)=p.mapping[row].filter(|&i| i < self.layout.layers().len()) {
                                 let before=self.layout.layers()[target];
@@ -1757,7 +1806,7 @@ impl Editor {
             12.0,
             palette.muted,
         );
-        ink.button(0.0, 808.0, w, "Copy position values", true);
+        ink.button(0.0, 808.0, w, "Copy layer values", true);
         if click(ui, &ink, [0.0, 808.0, w, 34.0], "copy-values") {
             self.copy(ui.ctx());
         }
@@ -2230,7 +2279,7 @@ impl Editor {
                 palette.text,
             );
         }
-        ink.button(0.0, 552.0, w, "Copy selected positions", true);
+        ink.button(0.0, 552.0, w, "Copy selected layer values", true);
         if click(ui, ink, [0.0, 552.0, w, 34.0], "copy-selected") {
             self.copy(ui.ctx());
         }
@@ -6557,6 +6606,90 @@ mod tests {
         assert!(output.platform_output.commands.iter().any(|c|matches!(c,egui::OutputCommand::CopyText(text) if text.contains("Width: 300 px") && text.contains("Height: 251 px"))));
         assert_eq!(app.layout.layers()[1], g);
     }
+    #[test]
+    fn copy_and_review_preserve_all_fit_modes_and_allow_mask_only_paste() {
+        use canvas_pilot::formats::{Crop, LayerFit, Mask};
+        for fit in [
+            None,
+            Some(LayerFit::OneToOne),
+            Some(LayerFit::Centered),
+            Some(LayerFit::Fullscreen),
+            Some(LayerFit::Cropped),
+        ] {
+            let ctx = egui::Context::default();
+            let mut app = Editor::default();
+            app.layout.select(Some(0));
+            app.layout
+                .set_layer_fit(
+                    0,
+                    fit,
+                    Crop {
+                        left: 40.25,
+                        right: 60.5,
+                        top: 15.125,
+                        bottom: 25.25,
+                    },
+                )
+                .unwrap();
+            app.layout
+                .set_mask(
+                    0,
+                    Mask {
+                        left: 0.1,
+                        right: 0.2,
+                        top: 0.05,
+                        bottom: 0.15,
+                    },
+                )
+                .unwrap();
+            let output = ctx.run(egui::RawInput::default(), |ctx| app.copy(ctx));
+            let text = output
+                .platform_output
+                .commands
+                .iter()
+                .find_map(|c| match c {
+                    egui::OutputCommand::CopyText(text) => Some(text.clone()),
+                    _ => None,
+                })
+                .unwrap();
+            app.layout.select(Some(1));
+            app.open_paste(text.clone());
+            let p = app.paste.take().unwrap();
+            assert!(p.appearance_available());
+            assert!(!p.zoom_available());
+            p.apply(&mut app.layout).unwrap();
+            assert_eq!(app.layout.formats().layer_fit[1], fit);
+            assert_eq!(
+                app.layout.formats().advanced[1],
+                app.layout.formats().advanced[0]
+            );
+            assert_eq!(app.layout.formats().masks[1], app.layout.formats().masks[0]);
+            app.layout.undo();
+            let before = app.project();
+            app.open_paste(text);
+            let p = app.paste.as_mut().unwrap();
+            p.include_position = false;
+            p.include_size = false;
+            click_text(&mut app, &ctx, "Appearance · crop, fit and blanking");
+            click_text(&mut app, &ctx, "Crop & fit");
+            assert!(!app.paste.as_ref().unwrap().include_crop_fit);
+            click_text(&mut app, &ctx, "Import mapped values");
+            assert!(app.paste.is_none());
+            assert_eq!(app.layout.layers()[1], before.layers[1].bounds);
+            assert_eq!(
+                app.layout.formats().advanced[1],
+                before.layers[1].advanced_crop
+            );
+            assert_eq!(
+                app.layout.formats().layer_fit[1],
+                before.layers[1].layer_fit
+            );
+            assert_eq!(app.layout.formats().masks[1], app.layout.formats().masks[0]);
+            app.layout.undo();
+            assert_eq!(app.project(), before);
+        }
+    }
+
     #[test]
     fn resize_choice_survives_deselection_and_single_layer_gestures() {
         for mode in [ResizeMode::Same, ResizeMode::Mirror, ResizeMode::Opposite] {
