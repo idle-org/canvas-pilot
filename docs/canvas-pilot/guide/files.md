@@ -2,6 +2,9 @@
 
 [Canvas Pilot](../introduction.md) · [Guide contents](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
+Choosing an exchange format? See the [file and clipboard feature matrix](format-matrix.md)
+for naming, crop, pictures and editable-settings support.
+
 ## Paste layer values and import geometry
 
 Drop SVG, draw.io/XML, geometry JSON/CSV, DXF/DWG, HTML, PPTX, FIG, FIGCRAFT or AI files into

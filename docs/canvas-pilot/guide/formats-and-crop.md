@@ -2,6 +2,9 @@
 
 [Canvas Pilot](../introduction.md) · [Guide contents](overview.md) · [Starter files](../../templates/canvas-pilot/catalog.md)
 
+Choosing an exchange format? See the [file and clipboard feature matrix](format-matrix.md)
+for naming, crop, pictures and editable-settings support.
+
 ## Formats and content framing
 
 Open the **Output format** icon (screen with sliders), first in the toolbar, for HD (1280 × 720), Full HD (1920 × 1080), UHD 4K

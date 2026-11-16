@@ -13,6 +13,7 @@
 - [Guide overview](../../canvas-pilot/guide/overview.md)
   - [Layers and editing](../../canvas-pilot/guide/editing.md)
   - [Canvas and reference images](../../canvas-pilot/guide/canvas.md)
+  - [File and clipboard feature matrix](../../canvas-pilot/guide/format-matrix.md)
   - [Formats, crop and precision](../../canvas-pilot/guide/formats-and-crop.md)
   - [Import, export and project files](../../canvas-pilot/guide/files.md)
   - [Menus and preferences](../../canvas-pilot/guide/preferences.md)

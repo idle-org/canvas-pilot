@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Added user-guide feature matrices for all eleven exchange formats, project saves
+  and separate clipboard workflows. Distinguished geometry, names, visual crop/mask
+  pictures and editable snapshot restoration, checked against the codec behavior.
+
 - Simplified READMEs to navigation and kept user instructions in the book's source
   chapters. Moved task-list discovery behind Development and indexed contracts,
   research and handoffs in `AGENT_DOCUMENTATION.md`; removed internal records from
