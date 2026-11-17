@@ -337,3 +337,112 @@ fn crop_presets_letterbox_multi_selection_matching_ratio_and_errors() {
     layout.select(None);
     assert!(layout.apply_crop_preset(Aspect::FourThree).is_err());
 }
+
+#[test]
+fn proportional_presets_fit_each_layer_and_undo_as_one_edit() {
+    for (preset, columns, rows) in [
+        (SizePreset::Fullscreen, 1, 1),
+        (
+            SizePreset::Tiles {
+                columns: 1,
+                rows: 2,
+            },
+            1,
+            2,
+        ),
+        (
+            SizePreset::Tiles {
+                columns: 2,
+                rows: 1,
+            },
+            2,
+            1,
+        ),
+        (
+            SizePreset::Tiles {
+                columns: 3,
+                rows: 2,
+            },
+            3,
+            2,
+        ),
+    ] {
+        let mut layout = Layout::default();
+        layout.set_output([1919, 1079]).unwrap();
+        layout.select(Some(0));
+        layout
+            .apply(
+                0,
+                Geometry {
+                    x: 10.0,
+                    y: 20.0,
+                    width: 300.0,
+                    height: 600.0,
+                },
+            )
+            .unwrap();
+        layout.set_selection([true, true]);
+        let before = Project::from_layout(&layout);
+        let original = layout.layers().clone();
+        layout
+            .apply_size_preset_with_proportions(preset, true)
+            .unwrap();
+        for (position, i) in [1, 0].into_iter().enumerate() {
+            let g = layout.layers()[i];
+            let w = 1919.0 / columns as f64;
+            let h = 1079.0 / rows as f64;
+            let cell = position % (columns * rows);
+            close(g.width / g.height, original[i].width / original[i].height);
+            close(g.x + g.width / 2.0, (cell % columns) as f64 * w + w / 2.0);
+            close(g.y + g.height / 2.0, (cell / columns) as f64 * h + h / 2.0);
+            assert!(g.width <= w + 1e-8 && g.height <= h + 1e-8);
+            assert!((g.width - w).abs() < 1e-8 || (g.height - h).abs() < 1e-8);
+        }
+        let after = Project::from_layout(&layout);
+        layout.undo();
+        assert_eq!(Project::from_layout(&layout), before);
+        layout.redo();
+        assert_eq!(Project::from_layout(&layout), after);
+    }
+}
+
+#[test]
+fn proportional_quarters_center_in_all_nine_regions_and_orientation_stays_explicit() {
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    layout
+        .apply(
+            0,
+            Geometry {
+                x: 0.0,
+                y: 0.0,
+                width: 600.0,
+                height: 600.0,
+            },
+        )
+        .unwrap();
+    for row in 0..3 {
+        for column in 0..3 {
+            layout
+                .apply_size_preset_with_proportions(SizePreset::Quarter { column, row }, true)
+                .unwrap();
+            assert_eq!(
+                layout.layers()[0],
+                Geometry {
+                    x: column as f64 * 480.0 + 210.0,
+                    y: row as f64 * 270.0,
+                    width: 540.0,
+                    height: 540.0,
+                }
+            );
+        }
+    }
+    layout.apply_size_preset(SizePreset::Fullscreen).unwrap();
+    layout
+        .apply_size_preset_with_proportions(SizePreset::Portrait, true)
+        .unwrap();
+    assert_eq!(
+        [layout.layers()[0].width, layout.layers()[0].height],
+        [1080.0, 1920.0]
+    );
+}

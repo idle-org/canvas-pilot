@@ -114,7 +114,10 @@ impl Editor {
         if !self.size_presets_enabled() {
             return;
         }
-        match self.layout.apply_size_preset(preset) {
+        match self
+            .layout
+            .apply_size_preset_with_proportions(preset, self.size_keep_proportions)
+        {
             Ok(()) => {
                 if self.format_draft.is_some() {
                     self.format_draft = self
@@ -127,71 +130,67 @@ impl Editor {
             Err(error) => self.error = error,
         }
     }
-    pub(super) fn size_preset_toolbar(
-        &mut self,
-        ui: &mut egui::Ui,
-        rects: [Rect; 5],
-        captions: bool,
-    ) {
+    pub(super) fn size_preset_toolbar(&mut self, ui: &mut egui::Ui, rect: Rect, captions: bool) {
         let enabled = self.size_presets_enabled();
         let palette = theme::palette(ui.ctx());
-        for (rect, icon) in rects.into_iter().zip([
-            Icon::Fullscreen,
-            Icon::Quarter,
-            Icon::Tiles,
-            Icon::Portrait,
-            Icon::Landscape,
-        ]) {
-            let label = tr(ui.ctx(), icon.key());
-            let response = ui
-                .add_enabled_ui(enabled, |ui| {
-                    let response = ui.interact(
-                        rect,
-                        egui::Id::new(("size-preset", icon.key())),
-                        egui::Sense::click(),
-                    );
-                    response.widget_info(|| {
-                        egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, &label)
-                    });
-                    if response.hovered() || response.has_focus() {
-                        ui.painter()
-                            .rect_filled(rect.shrink(1.0), 3.0, palette.purple);
-                    }
-                    paint_icon(ui, rect, icon, enabled);
-                    response
-                })
-                .inner;
-            if matches!(icon, Icon::Quarter | Icon::Tiles) {
-                egui::Popup::menu(&response)
-                    .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
-                    .show(|ui| {
-                        if matches!(icon, Icon::Quarter) {
-                            self.quarter_presets_menu(ui);
-                        } else {
-                            self.tiling_presets_menu(ui);
+        let label = "Size presets";
+        let response = ui
+            .add_enabled_ui(enabled, |ui| {
+                let response =
+                    ui.interact(rect, egui::Id::new("size-presets"), egui::Sense::click());
+                response.widget_info(|| {
+                    egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, label)
+                });
+                if response.hovered() || response.has_focus() {
+                    ui.painter()
+                        .rect_filled(rect.shrink(1.0), 3.0, palette.purple);
+                }
+                paint_icon(ui, rect, Icon::Tiles, enabled);
+                response
+            })
+            .inner;
+        egui::Popup::menu(&response)
+            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
+            .show(|ui| {
+                ui.label(label);
+                ui.checkbox(&mut self.size_keep_proportions, "Keep proportions")
+                    .on_hover_text("Fit each layer inside its destination, centered, without changing its aspect ratio. Applies to fullscreen, quarters, halves and tiling.");
+                ui.separator();
+                for icon in [Icon::Fullscreen, Icon::Quarter, Icon::Tiles, Icon::Portrait, Icon::Landscape] {
+                    ui.horizontal(|ui| {
+                        let (_, rect) = ui.allocate_space(Vec2::new(30.0, 26.0));
+                        paint_icon(ui, rect, icon, true);
+                        let label = tr(ui.ctx(), icon.key());
+                        match icon {
+                            Icon::Quarter => { ui.collapsing(label, |ui| self.quarter_presets_menu(ui)); }
+                            Icon::Tiles => { ui.collapsing(label, |ui| self.tiling_presets_menu(ui)); }
+                            _ => {
+                                if ui.button(label).clicked() {
+                                    self.apply_size_preset(match icon {
+                                        Icon::Fullscreen => SizePreset::Fullscreen,
+                                        Icon::Portrait => SizePreset::Portrait,
+                                        _ => SizePreset::Landscape,
+                                    });
+                                    egui::Popup::close_all(ui.ctx());
+                                }
+                            }
                         }
                     });
-            } else if response.clicked() {
-                self.apply_size_preset(match icon {
-                    Icon::Fullscreen => SizePreset::Fullscreen,
-                    Icon::Portrait => SizePreset::Portrait,
-                    _ => SizePreset::Landscape,
-                });
-            }
-            response.on_hover_text(if enabled {
-                label.clone()
-            } else {
-                format!("{label} — select layers and finish pending numeric edits first")
+                }
             });
-            if captions {
-                ui.painter().text(
-                    rect.center_bottom() + Vec2::new(0.0, 7.0),
-                    Align2::CENTER_TOP,
-                    label,
-                    FontId::proportional(11.0),
-                    palette.muted,
-                );
-            }
+        response.on_hover_text(if enabled {
+            label.to_owned()
+        } else {
+            format!("{label} — select layers and finish pending numeric edits first")
+        });
+        if captions {
+            ui.painter().text(
+                rect.center_bottom() + Vec2::new(0.0, 7.0),
+                Align2::CENTER_TOP,
+                label,
+                FontId::proportional(11.0),
+                palette.muted,
+            );
         }
     }
     fn quarter_presets_menu(&mut self, ui: &mut egui::Ui) {
@@ -241,7 +240,7 @@ impl Editor {
                                 column: column as u8,
                                 row: row as u8,
                             });
-                            ui.close();
+                            egui::Popup::close_all(ui.ctx());
                         }
                     }
                 });
@@ -251,7 +250,7 @@ impl Editor {
                 for (label, columns, rows) in [("Up / Down", 1, 2), ("Left / Right", 2, 1)] {
                     if ui.button(label).clicked() {
                         self.apply_size_preset(SizePreset::Tiles { columns, rows });
-                        ui.close();
+                        egui::Popup::close_all(ui.ctx());
                     }
                 }
             }
@@ -260,7 +259,7 @@ impl Editor {
                     columns: 2,
                     rows: 2,
                 });
-                ui.close();
+                egui::Popup::close_all(ui.ctx());
             }
             if count > 4 {
                 ui.weak("After the fourth layer, quarter positions repeat.");
@@ -270,12 +269,22 @@ impl Editor {
     }
     fn tiling_presets_menu(&mut self, ui: &mut egui::Ui) {
         ui.label(tr(ui.ctx(), "preset.tiling"));
-        ui.horizontal(|ui| {
-            ui.label("X (columns)");
-            ui.add(egui::DragValue::new(&mut self.size_tiles[0]).range(1..=256));
-            ui.label("Y (rows)");
-            ui.add(egui::DragValue::new(&mut self.size_tiles[1]).range(1..=256));
-        });
+        egui::Grid::new("tiling-dimensions")
+            .spacing([16.0, 6.0])
+            .show(ui, |ui| {
+                for (axis, label) in ["X (columns)", "Y (rows)"].into_iter().enumerate() {
+                    ui.label(label);
+                    ui.scope(|ui| {
+                        ui.visuals_mut().widgets.inactive.bg_stroke =
+                            Stroke::new(1.0, theme::palette(ui.ctx()).line);
+                        ui.add_sized(
+                            [72.0, 24.0],
+                            egui::DragValue::new(&mut self.size_tiles[axis]).range(1..=256),
+                        );
+                    });
+                    ui.end_row();
+                }
+            });
         let count = self.layout.selected_indices().len();
         let [columns, rows] = self.size_tiles;
         ui.label(format!(
@@ -294,7 +303,7 @@ impl Editor {
             .clicked()
         {
             self.apply_size_preset(SizePreset::Tiles { columns, rows });
-            ui.close();
+            egui::Popup::close_all(ui.ctx());
         }
     }
 }
@@ -315,7 +324,23 @@ mod tests {
         frame(app, ctx, vec![mouse(point, false)]);
     }
     fn icon(app: &mut Editor, ctx: &egui::Context, key: &str) {
-        click_id(app, ctx, egui::Id::new(("size-preset", key)));
+        click_id(app, ctx, egui::Id::new("size-presets"));
+        if app.size_presets_enabled() {
+            let label = tr(ctx, key);
+            let output = frame(app, ctx, vec![]);
+            let expanded = output
+                .shapes
+                .iter()
+                .filter(|shape| {
+                    matches!(&shape.shape,
+                egui::Shape::Text(text) if text.galley.text() == label)
+                })
+                .count()
+                > 1;
+            if !expanded {
+                click_text(app, ctx, &label);
+            }
+        }
     }
     #[test]
     fn icon_box_applies_single_quarter_fullscreen_and_orientation() {
@@ -392,6 +417,29 @@ mod tests {
         assert_eq!(app.layout.layers()[4].height, 540.0);
         assert_eq!(app.layout.layers()[0].x, 640.0);
         assert_eq!(app.layout.layers()[0].y, 540.0);
+    }
+    #[test]
+    fn proportions_toggle_fits_halves_and_is_shared_with_fullscreen() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.layout.set_selection([true, true]);
+        app.sync();
+        let original = app.layout.layers().clone();
+        click_id(&mut app, &ctx, egui::Id::new("size-presets"));
+        click_text(&mut app, &ctx, "Keep proportions");
+        assert!(app.size_keep_proportions);
+        click_text(&mut app, &ctx, "Quarter");
+        click_text(&mut app, &ctx, "Left / Right");
+        for (i, g) in app.layout.layers().iter().enumerate() {
+            assert!((g.width / g.height - original[i].width / original[i].height).abs() < 1e-8);
+            assert!(g.width <= 960.0 && g.height <= 1080.0);
+            assert!((g.y + g.height / 2.0 - 540.0).abs() < 1e-8);
+        }
+        icon(&mut app, &ctx, "preset.fullscreen");
+        assert!(app.size_keep_proportions);
+        for (i, g) in app.layout.layers().iter().enumerate() {
+            assert!((g.width / g.height - original[i].width / original[i].height).abs() < 1e-8);
+        }
     }
     #[test]
     fn empty_selection_and_pending_numeric_values_disable_presets() {

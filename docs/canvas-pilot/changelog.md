@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.37
+
+- Grouped size presets under one toolbar icon and separated tiling labels from
+  bordered numeric fields. Added a session-only Keep proportions toggle for
+  fullscreen, quarters, halves and tiling: each layer fits centered inside its
+  region without changing aspect ratio. Portrait/Landscape remain explicit swaps.
+  Geometry and UI regression tests cover fitting, placement and Undo/Redo.
+
 ### v0.9.36
 
 - Fixed theme-pack reproducibility checks across build hosts by using stored ZIP

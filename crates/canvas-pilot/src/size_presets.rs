@@ -20,6 +20,16 @@ impl Layout {
     /// Apply a preset in layer-list order, including members of collapsed folders.
     /// All affected geometry/crop changes succeed together and share one Undo step.
     pub fn apply_size_preset(&mut self, preset: SizePreset) -> Result<(), String> {
+        self.apply_size_preset_with_proportions(preset, false)
+    }
+
+    /// Fit each layer inside its destination without changing its current aspect
+    /// ratio when requested. Orientation presets remain explicit dimension swaps.
+    pub fn apply_size_preset_with_proportions(
+        &mut self,
+        preset: SizePreset,
+        keep_proportions: bool,
+    ) -> Result<(), String> {
         let selected = self.selected_indices();
         if selected.is_empty() {
             return Err("Select at least one layer for a size preset.".into());
@@ -98,6 +108,18 @@ impl Layout {
                     ..original
                 },
             };
+            if keep_proportions && !matches!(preset, SizePreset::Portrait | SizePreset::Landscape) {
+                let target = next[i];
+                let scale = (target.width / original.width).min(target.height / original.height);
+                let width = original.width * scale;
+                let height = original.height * scale;
+                next[i] = Geometry {
+                    x: target.x + (target.width - width) / 2.0,
+                    y: target.y + (target.height - height) / 2.0,
+                    width,
+                    height,
+                };
+            }
         }
         self.finish_drag();
         self.commit(next)

@@ -42,9 +42,10 @@ not affect device links or source assignments. All document edits support Undo.
 
 *Use the Layer tab for precise dimensions; the inspector keeps the selected layer in view. The header still uses the former Midra Layout name.*
 
-## Size preset icon box
+## Size presets
 
-The toolbar's size preset icon box works on the selected visible, unlocked layers:
+Open the toolbar's **Size presets** icon to find all size and placement presets.
+They work on the selected visible, unlocked layers:
 
 - **Fullscreen:** place every selected layer at the output's top-left and set its
   width and height to the full output size. Multiple layers overlap intentionally.
@@ -63,8 +64,17 @@ The toolbar's size preset icon box works on the selected visible, unlocked layer
 Placement follows the layer list from top to bottom, including selected members
 of collapsed folders. Presets use the output dimensions and preserve fractional
 pixels for odd screen sizes or uneven tile divisions. These explicit sizes override
-the manual aspect-ratio lock. Tiling counts range from 1 to 256 on each axis and
-are retained for the current session.
+the manual aspect-ratio lock when **Keep proportions** is off.
+
+Enable **Keep proportions** at the top of the preset menu to preserve each layer's
+current width-to-height ratio. Fullscreen, all nine quarter positions, **Up / Down**,
+**Left / Right**, **Four quarters** and tiling then fit the layer inside its assigned
+region and center it, leaving space where needed instead of stretching it. Each
+selected layer keeps its own ratio. Portrait and Landscape still explicitly swap
+dimensions. The toggle starts off and is retained for the current session only.
+
+Tiling shows separate **X (columns)** and **Y (rows)** labels beside bordered numeric
+fields. Counts range from 1 to 256 on each axis and are retained for the session.
 
 Each operation is one Undo step, including any crop adjustment from resizing.
 Sources, masks, layer names, folders, stacking and device links remain unchanged;

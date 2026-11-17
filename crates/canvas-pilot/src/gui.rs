@@ -83,6 +83,7 @@ pub struct Editor {
     ratio_layer: Option<usize>,
     resize_mode: ResizeMode,
     size_tiles: [u16; 2],
+    size_keep_proportions: bool,
     grid_tool: Option<u32>,
     pivot_tool: bool,
     pivot_drag: Option<(usize, Layout)>,
@@ -410,6 +411,7 @@ impl Default for Editor {
             ratio_layer: None,
             resize_mode: ResizeMode::Individual,
             size_tiles: [2, 2],
+            size_keep_proportions: false,
             grid_tool: None,
             pivot_tool: false,
             pivot_drag: None,
@@ -2924,11 +2926,7 @@ impl Editor {
         }
         let button = |index: usize| buttons[index].translate(r.min.to_vec2());
         let extra_height = toolbar_bottom - 56.0;
-        self.size_preset_toolbar(
-            ui,
-            [button(17), button(18), button(19), button(20), button(21)],
-            names,
-        );
+        self.size_preset_toolbar(ui, button(17), names);
         if toolbar_icon(ui, button(13), "Output format", ToolbarIcon::Output).clicked() {
             self.output_draft = Some(OutputDraft::new(output));
         }
@@ -3150,7 +3148,7 @@ impl Editor {
                 );
             },
         );
-        for (slot, exporting) in [(1, false), (22, true)] {
+        for (slot, exporting) in [(1, false), (18, true)] {
             ui.scope_builder(
                 egui::UiBuilder::new()
                     .max_rect(button(slot))
@@ -3244,7 +3242,7 @@ impl Editor {
                 (3, "Redo"),
                 (10, "Align"),
                 (1, "Import"),
-                (22, "Export"),
+                (18, "Export"),
                 (14, "Options"),
                 (16, "Grid"),
             ] {
@@ -4521,28 +4519,28 @@ enum ToolbarIcon {
 }
 
 // Keep related tools together when wrapping; reserve caption space per group.
-fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 23], Vec<Rect>, f32) {
-    let mut buttons = [Rect::NOTHING; 23];
+fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 19], Vec<Rect>, f32) {
+    let mut buttons = [Rect::NOTHING; 19];
     let mut groups = Vec::new();
     let mut x = 24.0;
     let mut y = 20.0;
     let height = if captions { 58.0 } else { 36.0 };
     for slots in [
-        &[15, 0, 1, 22][..],
+        &[15, 0, 1, 18][..],
         &[2, 3],
         &[4, 5],
         &[6, 7, 8, 9],
         &[10, 11, 16, 12],
         &[13, 14],
-        &[17, 18, 19, 20, 21],
+        &[17],
     ] {
         let cell_width = |slot| match slot {
             0 | 15 => 68.0,
             11 => 56.0,
-            8 | 9 | 17..=21 if captions => 80.0,
+            8 | 9 | 17 if captions => 80.0,
             _ if captions => 56.0,
-            1 | 10 | 14 | 22 => 44.0,
-            17..=21 => 34.0,
+            1 | 10 | 14 | 18 => 44.0,
+            17 => 34.0,
             _ => 36.0,
         };
         let group_width = slots.iter().map(|&slot| cell_width(slot)).sum::<f32>() + 8.0;
@@ -4560,7 +4558,7 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 23], Vec<Rect>, f32) {
             let button_width = match slot {
                 0 | 15 => 64.0,
                 11 => 52.0,
-                1 | 10 | 14 | 22 => 40.0,
+                1 | 10 | 14 | 18 => 40.0,
                 _ => 32.0,
             };
             buttons[slot] = Rect::from_min_size(
@@ -5774,13 +5772,13 @@ mod tests {
                     assert!(buttons[..i].iter().all(|other| !other.intersects(*button)));
                 }
                 for slots in [
-                    &[15, 0, 1, 22][..],
+                    &[15, 0, 1, 18][..],
                     &[2, 3],
                     &[4, 5],
                     &[6, 7, 8, 9],
                     &[10, 11, 16, 12],
                     &[13, 14],
-                    &[17, 18, 19, 20, 21],
+                    &[17],
                 ] {
                     assert!(
                         slots
@@ -7364,7 +7362,7 @@ mod tests {
         let ctx = egui::Context::default();
         frame(&mut app, &ctx, vec![]);
         let before = app.project();
-        let pos = toolbar_test_position(&app, &ctx, 22);
+        let pos = toolbar_test_position(&app, &ctx, 18);
         frame(
             &mut app,
             &ctx,
