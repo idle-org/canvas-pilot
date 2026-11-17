@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.29
+
+- Added 4:3, 16:9 and 16:10 crop presets in Crop properties and the selected-layer
+  context menu. Trim symmetric embedded borders and shrink the layer around its
+  center together; matching ratios are no-ops. Multi-layer changes undo atomically,
+  preserve existing source/input settings and fit modes, and send no device writes.
+
 ### v0.9.28
 
 - Added a toolbar icon box for selected-layer Fullscreen, Quarter, X/Y Tiling,

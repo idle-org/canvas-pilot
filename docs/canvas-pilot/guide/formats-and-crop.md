@@ -78,6 +78,29 @@ for equations and worked examples.
 
 *The cyan helper frames the content while the visible layer box stays fixed. The header still uses the former Midra Layout name.*
 
+## Crop ratio presets for embedded black borders
+
+In **Layer properties → Crop**, use the **Crop borders to ratio** box: **4:3**,
+**16:9** or **16:10**. These presets trim symmetric borders baked into a signal,
+such as a 4:3 PowerPoint slide sent inside a 16:9 video resolution. They shrink
+the visible layer around its center to the requested ratio and crop its picture
+at the same time, rather than stretching the slide. The largest rectangle of
+the chosen ratio that fits inside the current layer is retained.
+
+For example, 4:3 on a full 1920×1080 layer removes 240 pixels from each side and
+leaves 1440×1080. Conversely, 16:9 on an 800×600 layer removes 75 pixels from the
+top and bottom and leaves 800×450. Already matching layers are unchanged,
+including existing crop, and repeated clicks do not crop again.
+
+Right-click selected layers in the viewport or layer list and choose **Crop
+presets** to apply the same correction to several layers in one Undo step.
+Existing crop is trimmed further; the presets do not detect black pixels or
+restore previously removed content. Use Undo to compare a different preset, and
+manual crop controls for asymmetric borders. Explicit layer-fit modes are retained
+and fit the cropped picture into the new box. Shared input settings, source routing
+and masks are unchanged. No device command is sent. Finish pending numeric or
+property edits before applying a preset.
+
 ## Display/export precision and midpoint handles
 
 Geometry in the viewport, inspector and calculation view is shown to the nearest

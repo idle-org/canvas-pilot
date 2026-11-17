@@ -219,3 +219,121 @@ fn preset_validation_and_hidden_locked_layers_cannot_partially_change_document()
             .is_err()
     );
 }
+
+#[test]
+fn crop_presets_trim_current_picture_without_scaling_and_round_trip() {
+    use canvas_pilot::formats::{Aspect, Framing, LayerFit};
+    for fit in [
+        None,
+        Some(LayerFit::Fullscreen),
+        Some(LayerFit::Centered),
+        Some(LayerFit::Cropped),
+        Some(LayerFit::OneToOne),
+    ] {
+        for (aspect, width, edge) in [
+            (Aspect::FourThree, 1440.0, 240.0),
+            (Aspect::SixteenTen, 1728.0, 96.0),
+        ] {
+            let mut layout = Layout::default();
+            layout.select(Some(0));
+            layout.apply_size_preset(SizePreset::Fullscreen).unwrap();
+            layout.set_layer_fit(0, fit, Default::default()).unwrap();
+            let before = Project::from_layout(&layout);
+            layout.apply_crop_preset(aspect).unwrap();
+            let g = layout.layers()[0];
+            close(g.x, edge);
+            close(g.y, 0.0);
+            close(g.width, width);
+            close(g.height, 1080.0);
+            let f = layout.formats();
+            close(f.advanced[0].left, edge);
+            close(f.advanced[0].right, edge);
+            close(f.advanced[0].top, 0.0);
+            assert_eq!(f.layer_fit[0], fit);
+            let after = Project::from_layout(&layout);
+            assert_eq!(
+                Project::from_json(&after.to_json().unwrap()).unwrap(),
+                after
+            );
+            layout.apply_crop_preset(aspect).unwrap();
+            assert_eq!(Project::from_layout(&layout), after);
+            layout.undo();
+            assert_eq!(Project::from_layout(&layout), before);
+            layout.redo();
+            assert_eq!(Project::from_layout(&layout), after);
+        }
+    }
+    // Existing off-center framing is trimmed in place, not reset or recentered.
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    layout
+        .set_framing(
+            0,
+            Framing {
+                zoom: 2.0,
+                offset: [30.0, -10.0],
+            },
+        )
+        .unwrap();
+    let old = layout.layers()[0];
+    let crop = layout.formats().advanced[0];
+    let scale = layout.formats().mapping(0, old).unwrap().scale;
+    layout.apply_crop_preset(Aspect::FourThree).unwrap();
+    let new = layout.layers()[0];
+    close(layout.formats().mapping(0, new).unwrap().scale, scale);
+    close(
+        layout.formats().advanced[0].left,
+        crop.left + (old.width - new.width) / 2.0 / scale,
+    );
+    close(layout.formats().advanced[0].top, crop.top);
+}
+
+#[test]
+fn crop_presets_letterbox_multi_selection_matching_ratio_and_errors() {
+    use canvas_pilot::formats::Aspect;
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    layout
+        .apply(
+            0,
+            Geometry {
+                x: 13.25,
+                y: 27.5,
+                width: 800.0,
+                height: 600.0,
+            },
+        )
+        .unwrap();
+    layout.set_selection([true, true]);
+    let before = Project::from_layout(&layout);
+    let same = layout.layers()[1];
+    let same_crop = layout.formats().advanced[1];
+    let old_crop = layout.formats().advanced[0];
+    let old_scale = layout
+        .formats()
+        .mapping(0, layout.layers()[0])
+        .unwrap()
+        .scale;
+    layout.apply_crop_preset(Aspect::SixteenNine).unwrap();
+    assert_eq!(
+        layout.layers()[0],
+        Geometry {
+            x: 13.25,
+            y: 102.5,
+            width: 800.0,
+            height: 450.0
+        }
+    );
+    close(
+        layout.formats().advanced[0].top,
+        old_crop.top + 75.0 / old_scale,
+    );
+    assert_eq!(layout.layers()[1], same);
+    assert_eq!(layout.formats().advanced[1], same_crop);
+    layout.undo();
+    assert_eq!(Project::from_layout(&layout), before);
+    assert!(layout.apply_crop_preset(Aspect::Custom).is_err());
+    assert_eq!(Project::from_layout(&layout), before);
+    layout.select(None);
+    assert!(layout.apply_crop_preset(Aspect::FourThree).is_err());
+}

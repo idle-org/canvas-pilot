@@ -79,7 +79,7 @@ fn paint_icon(ui: &egui::Ui, rect: Rect, icon: Icon, enabled: bool) {
 }
 
 impl Editor {
-    fn size_presets_enabled(&self) -> bool {
+    pub(super) fn size_presets_enabled(&self) -> bool {
         !self.layout.selected_indices().is_empty()
             && !self.layout.dragging()
             && !self
@@ -88,6 +88,27 @@ impl Editor {
                 .is_some_and(|draft| draft.pending(&self.layout))
             && !(self.fields_edited && self.fields_pending())
             && !self.ratio_edit.dirty
+    }
+    pub(super) fn crop_preset_buttons(&mut self, ui: &mut egui::Ui) -> bool {
+        let mut changed = false;
+        ui.label("Crop borders to ratio");
+        ui.horizontal(|ui| {
+            for aspect in [canvas_pilot::formats::Aspect::FourThree, canvas_pilot::formats::Aspect::SixteenNine, canvas_pilot::formats::Aspect::SixteenTen] {
+                if ui.add_enabled(self.size_presets_enabled(), egui::Button::new(aspect.label()))
+                    .on_hover_text("Trim centered borders and shrink the layer; keep its center. Matching ratios do nothing.").clicked() {
+                    match self.layout.apply_crop_preset(aspect) {
+                        Ok(()) => {
+                            if self.format_draft.is_some() {
+                                self.format_draft = self.layout.selected().map(|i| FormatDraft::new(&self.layout, i));
+                            }
+                            self.sync(); changed = true;
+                        }
+                        Err(error) => self.error = error,
+                    }
+                }
+            }
+        });
+        changed
     }
     fn apply_size_preset(&mut self, preset: SizePreset) {
         if !self.size_presets_enabled() {

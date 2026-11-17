@@ -539,6 +539,11 @@ impl Editor {
             }
             if self.property_tab == PropertyTab::Crop {
             ui.heading(tr(ui.ctx(), "ui.layer-crop-zoom-position"));
+            ui.add_enabled_ui(!d.pending(&self.layout), |ui| {
+                ui.group(|ui| {
+                    if self.crop_preset_buttons(ui) { d = FormatDraft::new(&self.layout, i); }
+                });
+            });
             let mut advanced_fit = self.layout.formats().layer_fit[i].is_some();
             if ui.checkbox(&mut advanced_fit, tr(ui.ctx(), "ui.advanced-layer-fit")).changed() {
                 let mode = advanced_fit.then_some(canvas_pilot::formats::LayerFit::Centered);
@@ -980,6 +985,43 @@ fn paint_pattern_clipped(
 mod tests {
     use super::super::tests::{click_text, frame, mouse};
     use super::*;
+    #[test]
+    fn crop_properties_presets_resize_and_crop_together_and_respect_pending_edits() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.layout.select(Some(0));
+        app.sync();
+        app.property_tab = PropertyTab::Crop;
+        app.format_draft = Some(FormatDraft::new(&app.layout, 0));
+        let before = canvas_pilot::project::Project::from_layout(&app.layout);
+        click_text(&mut app, &ctx, "4:3");
+        let g = app.layout.layers()[0];
+        assert!((g.width / g.height - 4.0 / 3.0).abs() < 1e-9);
+        assert!(app.layout.formats().advanced[0].left > 0.0);
+        let after = canvas_pilot::project::Project::from_layout(&app.layout);
+        click_text(&mut app, &ctx, "4:3");
+        assert_eq!(
+            canvas_pilot::project::Project::from_layout(&app.layout),
+            after
+        );
+        app.layout.undo();
+        assert_eq!(
+            canvas_pilot::project::Project::from_layout(&app.layout),
+            before
+        );
+        let mut draft = FormatDraft::new(&app.layout, 0);
+        draft.source.native = [1280, 720];
+        app.format_draft = Some(draft);
+        click_text(&mut app, &ctx, "4:3");
+        assert_eq!(
+            canvas_pilot::project::Project::from_layout(&app.layout),
+            before
+        );
+        assert_eq!(
+            app.format_draft.as_ref().unwrap().source.native,
+            [1280, 720]
+        );
+    }
     #[test]
     fn enter_from_crop_or_mask_reviews_pending_properties_without_discarding() {
         for tab in [PropertyTab::Crop, PropertyTab::Mask] {

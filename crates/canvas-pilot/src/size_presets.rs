@@ -103,3 +103,61 @@ impl Layout {
         self.commit(next)
     }
 }
+
+impl Layout {
+    /// Trim symmetric borders from the current picture and shrink its box around
+    /// its center. Matching ratios are exact no-ops, including existing crops.
+    pub fn apply_crop_preset(&mut self, aspect: crate::formats::Aspect) -> Result<(), String> {
+        use crate::formats::Aspect;
+        let ratio = match aspect {
+            Aspect::FourThree | Aspect::SixteenNine | Aspect::SixteenTen => aspect.ratio().unwrap(),
+            _ => return Err("Choose a 4:3, 16:9 or 16:10 crop preset.".into()),
+        };
+        let selected = self.selected_indices();
+        if selected.is_empty() {
+            return Err("Select at least one layer for a crop preset.".into());
+        }
+        let mut layers = self.layers.clone();
+        let mut formats = self.formats.clone();
+        for i in selected {
+            if !self.selectable(i) {
+                return Err("Unlock and show selected layers before cropping them.".into());
+            }
+            let old = layers[i];
+            if (old.width / old.height - ratio).abs() <= ratio * 1e-10 {
+                continue;
+            }
+            let width = old.width.min(old.height * ratio);
+            let height = old.height.min(old.width / ratio);
+            let next = Geometry {
+                x: old.x + (old.width - width) / 2.0,
+                y: old.y + (old.height - height) / 2.0,
+                width,
+                height,
+            }
+            .validate()?;
+            let input = formats.input(i)?;
+            let retained = formats.advanced[i].remaining(input)?;
+            let image = match formats.layer_fit[i] {
+                Some(mode) => mode.image(retained, old)?,
+                None => old,
+            };
+            let crop = &mut formats.advanced[i];
+            crop.left += ((next.x - image.x) / image.width * retained[0]).max(0.0);
+            crop.right +=
+                ((image.x + image.width - next.x - width) / image.width * retained[0]).max(0.0);
+            crop.top += ((next.y - image.y) / image.height * retained[1]).max(0.0);
+            crop.bottom +=
+                ((image.y + image.height - next.y - height) / image.height * retained[1]).max(0.0);
+            crop.remaining(input)?;
+            formats.mapping(i, next)?;
+            layers[i] = next;
+        }
+        self.finish_drag();
+        let before = self.snapshot();
+        self.layers = layers;
+        self.formats = formats;
+        self.remember(before);
+        Ok(())
+    }
+}

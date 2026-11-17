@@ -2355,6 +2355,11 @@ impl Editor {
         }
         let selected = self.layout.selected_indices();
         if !selected.is_empty() {
+            ui.menu_button("Crop presets", |ui| {
+                if self.crop_preset_buttons(ui) {
+                    ui.close();
+                }
+            });
             if ui.button(tr(ui.ctx(), "ui.copy-layer-values")).clicked() {
                 self.copy(ui.ctx());
                 ui.close();
