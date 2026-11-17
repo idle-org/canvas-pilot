@@ -51,9 +51,34 @@ MIDRA_VECTORCRAFT_CLI=/path/to/vectorcraft-cli cargo test --locked -p canvas-pil
 | Illustrator, VectorCraft | Native Illustrator via VectorCraft CLI | Yes; artboard picker on import | Embedded PNG | Embedded PNG |
 
 PSD, VSDX and ODG remain future adapters rather than implied support.
-PDF is a useful final visual but does not retain a
-reliable editable-rectangle contract for import, so it is not presented as a
-round-trip format.
+PDF supports reference-picture import through Hayro 0.9, with page selection;
+it is not a geometry round-trip format. SVG reference artwork uses resvg 0.50,
+FIG/FIGCRAFT uses figcraft-svg 0.5.1, PPTX uses optional LibreOffice-to-PDF,
+draw.io uses optional draw.io Desktop-to-PDF, and AI uses VectorCraft-to-SVG.
+JSON and HTML references render the validated exchange schema and embedded PNGs.
+CSV/DXF/DWG references draw the existing importer's supported boxes only. Every
+compiled geometry importer also offers an explicit layout-box rendering mode.
+See [reference import instructions](../canvas-pilot/guide/files.md#pdf-pages-and-documents-as-reference-pictures).
+
+Reference conversion is asynchronous and does not apply geometry, read embedded
+project snapshots, change the save path or modify the source. The selected page is
+rasterized with preserved proportions to 64–4096 px on its longest edge (UI choices
+1280–4096, default 1920), then encoded to PNG. PDF uses a white page background;
+SVG retains alpha and disables external image resolution. PDF crop boxes and
+rotation are applied by Hayro. Input and converted files are bounded at 64 MiB;
+PDF accepts 1–256 pages, Illustrator 1–64 artboards. Geometry-only mode retains
+the exchange codec's 16 MiB limit. Page rendering is serialized, and only the chosen
+page is rasterized. These bounds do not impose a hard process-memory limit on
+compressed document contents or renderer internals. Cancel discards late results;
+it does not interrupt an in-process render already underway. External conversion
+has a 60-second process timeout and uses temporary files; LibreOffice gets a fresh
+isolated profile. Password-required PDFs report an error rather than prompting.
+
+The project schema remains version 18: the existing reference `image_base64`
+contains the generated PNG, and its name includes the source filename and chosen
+page label. No document bytes, source paths, converter settings or live links are
+persisted. Reopening a project only decodes that PNG. Source editability, resolution
+independence, fonts and unused pages are intentionally absent from this snapshot.
 
 ## Scope, coordinates and artwork
 

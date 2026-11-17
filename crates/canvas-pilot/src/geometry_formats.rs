@@ -581,3 +581,71 @@ pub(crate) fn looks_like_dxf(text: &str) -> bool {
         || (start.starts_with("0\r\nSECTION") && text.contains("LWPOLYLINE"))
         || (start.starts_with("0\nSECTION") && text.contains("LWPOLYLINE"))
 }
+
+/// Render the supported HTML/JSON exchange schema, retaining embedded pictures.
+pub(crate) fn reference_svg(text: &str, html: bool) -> Result<String, String> {
+    let (size, shapes) = if html {
+        let parsed = parse_html(text)?;
+        let xml = roxmltree::Document::parse_with_options(
+            text,
+            roxmltree::ParsingOptions {
+                allow_dtd: true,
+                nodes_limit: 200_000,
+            },
+        )
+        .map_err(|e| e.to_string())?;
+        let canvas = xml
+            .descendants()
+            .find(|n| n.attribute("id") == Some("midra-canvas"))
+            .ok_or("Missing canvas")?;
+        let nodes = canvas
+            .descendants()
+            .filter(|n| n.is_element() && n.attribute("data-midra-role").is_some());
+        let shapes = parsed
+            .shapes
+            .into_iter()
+            .zip(nodes)
+            .map(|(s, node)| {
+                let image = node
+                    .attribute("src")
+                    .and_then(|s| s.strip_prefix("data:image/png;base64,"))
+                    .map(str::to_owned);
+                ExportShape {
+                    id: crate::exchange::escape(node.attribute("id").unwrap_or("")),
+                    name: s.name.unwrap_or_default(),
+                    geometry: s.geometry,
+                    background: s.background,
+                    image_png_base64: image,
+                }
+            })
+            .collect::<Vec<_>>();
+        (
+            [
+                xml_number(canvas, "data-width")? as u32,
+                xml_number(canvas, "data-height")? as u32,
+            ],
+            shapes,
+        )
+    } else {
+        parse_json(text)?;
+        let json: JsonDocument = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        let shapes = json
+            .layers
+            .into_iter()
+            .map(|s| ExportShape {
+                id: crate::exchange::escape(&s.id),
+                name: s.name,
+                geometry: Geometry {
+                    x: s.x as f64,
+                    y: s.y as f64,
+                    width: s.width as f64,
+                    height: s.height as f64,
+                },
+                background: s.role == "background",
+                image_png_base64: s.image_png_base64,
+            })
+            .collect::<Vec<_>>();
+        ([json.canvas.width, json.canvas.height], shapes)
+    };
+    crate::exchange::encode_shapes(Format::Svg, size, &shapes)
+}

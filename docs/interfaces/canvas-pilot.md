@@ -117,7 +117,7 @@ Each reference object:
 | Field | Representation / meaning |
 | --- | --- |
 | `name` | Display filename, not a path to read |
-| `image_base64` | Standard padded RFC 4648 base64 of the original PNG/JPEG/BMP file bytes; no data-URL prefix |
+| `image_base64` | Standard padded RFC 4648 base64 of the PNG/JPEG/BMP file bytes (generated PNG for document references); no data-URL prefix |
 | `visible` | Boolean |
 | `opacity` | Number from 0 to 1 |
 | `preserve_ratio` | Boolean: fit proportionally if true, stretch to screen if false; applies when native sizing is off |
@@ -143,7 +143,10 @@ decoding run in a background worker. The editor is replaced only after every
 image succeeds; Cancel loading ignores late worker results. Recovery checkpoints
 pause during loading. Texture upload/presentation still depends on the GUI/GPU.
 Captured Midra stills use the same reference object and embedded PNG bytes, with
-no device request on reload; no schema/version change is required.
+no device request on reload; no schema/version change is required. PDF/document
+references also use embedded PNG bytes, with proportions preserved initially and
+a source/page label as their name; original documents and converter paths are not
+stored. See [document reference conversion](canvas-pilot-exchange.md#application-and-format-matrix).
 
 Editor object:
 

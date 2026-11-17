@@ -466,6 +466,80 @@ fn import_ai(bytes: &[u8]) -> Result<Vec<Page>, String> {
     Ok(pages)
 }
 
+pub(crate) fn reference_ai(bytes: &[u8]) -> Result<Vec<(String, String)>, String> {
+    let dir = tempfile::tempdir().map_err(|e| e.to_string())?;
+    let input = dir.path().join("input.ai");
+    std::fs::write(&input, bytes).map_err(|e| e.to_string())?;
+    let mut command = std::process::Command::new(vectorcraft());
+    command.arg("--safe-mode").arg("info").arg(&input);
+    let info = run_vectorcraft(&mut command, dir.path())?;
+    let boards = info
+        .get("artboards")
+        .and_then(|v| v.as_array())
+        .ok_or("No Illustrator artboards")?;
+    if boards.is_empty() || boards.len() > 64 {
+        return Err("Illustrator supports 1–64 artboards.".into());
+    }
+    boards
+        .iter()
+        .enumerate()
+        .map(|(index, board)| {
+            let (svg, warnings) = convert_ai(bytes, "ai", "svg", Some(index))?;
+            let label = format!(
+                "Artboard {} · {} {}",
+                index + 1,
+                board
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Unnamed"),
+                warnings.join("; ")
+            );
+            Ok((label, String::from_utf8(svg).map_err(|e| e.to_string())?))
+        })
+        .collect()
+}
+
+pub(crate) fn reference_fig(
+    bytes: &[u8],
+    name: &str,
+    native: bool,
+) -> Result<(Vec<(String, String)>, String), String> {
+    use figcraft_doc::NodeKind;
+    let (doc, warnings) = if native {
+        figcraft_format::load_bytes(bytes)
+    } else {
+        figcraft_format::fig::import(bytes, name)
+    }
+    .map_err(|e| e.to_string())?;
+    let mut pages = Vec::new();
+    for id in &doc.pages {
+        let Some(page) = doc.node(*id) else { continue };
+        let mut loose = Vec::new();
+        for id in &page.children {
+            let Some(node) = doc.node(*id) else { continue };
+            if matches!(node.kind, NodeKind::Frame | NodeKind::Component { .. }) {
+                let svg = figcraft_svg::export_svg(&doc, &[*id], &Default::default())
+                    .ok_or("Cannot render Figma frame")?;
+                pages.push((format!("{} / {}", page.name, node.name), svg));
+            } else {
+                loose.push(*id);
+            }
+        }
+        if !loose.is_empty() {
+            let svg = figcraft_svg::export_svg(&doc, &loose, &Default::default())
+                .ok_or("Cannot render Figma page")?;
+            pages.push((page.name.clone(), svg));
+        }
+        if pages.len() > 256 {
+            return Err("Reference supports up to 256 pages/frames.".into());
+        }
+    }
+    if pages.is_empty() {
+        return Err("No visible Figma pages/frames.".into());
+    }
+    Ok((pages, warnings.join("; ")))
+}
+
 fn convert_ai(
     bytes: &[u8],
     from: &str,

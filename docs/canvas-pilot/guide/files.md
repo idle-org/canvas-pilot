@@ -10,6 +10,51 @@ of a box) icons. They open the same import/export menus available from Menu;
 opening a menu does not read or write device values. Hover for the label, or
 turn on toolbar icon names in Options.
 
+## PDF pages and documents as reference pictures
+
+Choose **Add reference images** from the reference list or Import menu, then
+select a picture or supported document. For documents, choose **Artwork** or
+**Layout boxes**, select the page/slide/frame and resolution, inspect the preview,
+and click **Add reference**. Repeat to add another page. Closing the dialog
+leaves the document unchanged. PDF drops open this dialog directly; other exchange
+files normally open geometry review, unless the **Reference image** window is open.
+
+| Source | Artwork reference |
+| --- | --- |
+| PDF | Built-in page rendering; no external application required |
+| SVG | Built-in rendering of artwork, text and embedded images |
+| PPTX | Slides converted locally by an installed LibreOffice |
+| draw.io / XML | Pages converted locally by an installed draw.io Desktop |
+| FIG / FIGCRAFT | Built-in FigCraft artwork rendering in the normal build; best effort for native FIG |
+| Illustrator | Artboards converted by the existing optional VectorCraft CLI |
+| Geometry JSON / Canvas Pilot HTML | Layout artwork including embedded PNG images; HTML uses the exchange data, not custom CSS/scripts |
+| CSV / DXF / DWG | Layout boxes from supported geometry, with labels; not a full CAD drawing renderer |
+
+**Layout boxes** is available for every compiled geometry importer. It draws the
+detected rectangles and their labels, fitted to their bounds; it does not reproduce
+original artwork. This is useful when a converter is unavailable. For a faithful
+reference from an unsupported drawing feature, export PDF or SVG from its editor.
+
+PDF pages render on a white background; SVG transparency is retained. References
+preserve proportions by default and contain the rendered PNG, so saving and reopening
+a project needs neither the source document nor its converter. These are static
+pictures, without editable text, automatic layer detection or playback.
+
+The default longest edge is 1920 px; choose up to 4096 px for detailed artwork.
+Input files are limited to 64 MiB, PDFs to 256 pages, and the existing 32-reference /
+64 MiB combined image limits still apply. Render only the pages you need. Export an
+unlocked copy of password-protected PDFs. Inspect font substitutions and complex
+PDF effects in the preview; SVG external linked images are omitted.
+
+For PPTX conversion, install LibreOffice and put `libreoffice` (`soffice.exe` on
+Windows) on PATH, or set `CANVAS_PILOT_LIBREOFFICE` to the executable. For draw.io,
+use `drawio` (`draw.io.exe` on Windows) or `CANVAS_PILOT_DRAWIO`. Executables beside
+Canvas Pilot or in its `bin/` folder are also found. On macOS, the executable may
+be inside the installed application's `Contents/MacOS/` directory. Conversion uses
+temporary copies and has a 60-second timeout; source files are never overwritten.
+These converters are optional and are not bundled. Draw.io Desktop may require a
+graphical desktop session. The existing VectorCraft setup is described below.
+
 ## Paste layer values and import geometry
 
 Check the [clipboard feature matrix](format-matrix.md#clipboard-matrix) for your
@@ -18,7 +63,9 @@ application: its file and copy/paste workflows can support different features.
 Drop SVG, draw.io/XML, geometry JSON/CSV, DXF/DWG, HTML, PPTX, FIG, FIGCRAFT or Illustrator files into
 the window to open the same geometry review as **Import → Geometry file…**.
 Native codecs still require their normal build options/dependencies. Filename
-extensions are case-insensitive; PNG/JPEG/BMP drops remain reference images.
+extensions are case-insensitive; PNG/JPEG/BMP and PDF drops open as references.
+While the **Reference image** window is open, supported document drops also open
+as references instead of layer geometry.
 Multiple geometry files appear in the **File / page / frame / slide** chooser;
 choose one document/page to map at a time. Reading runs in the background, and
 nothing changes in the layout until Apply. The entire geometry drop is limited
@@ -111,7 +158,8 @@ SVG import accepts square-corner rectangles and simple closed rectangular
 paths/polygons, including translated/scaled groups and inline styles. It applies
 page dimensions and `viewBox` transforms, using CSS units at 96 px/in. Coordinates
 are relative to the SVG page; exporting only a selection may lose its original
-document position. The SVG is used for bounds, not rendered as a reference image.
+document position. This geometry-import action uses bounds. For the complete
+SVG artwork, use **Add reference images** instead.
 
 A first full-page rectangle or image is marked as a possible background. Uncheck
 **Include full-page background** to exclude it from the count and mapping. This

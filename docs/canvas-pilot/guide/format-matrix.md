@@ -45,6 +45,15 @@ See the [advanced feature matrix](advanced-exchange.md) for every saved feature.
 
 See also [conversion examples and losses](conversion-losses.md) before passing files through several editors.
 
+## Document reference pictures
+
+PDF pages and SVG artwork can be rendered directly as reference images. Other
+supported documents also have reference import, using built-in artwork rendering,
+optional local converters or an explicitly labelled layout-box preview.
+See the [reference-picture support table](files.md#pdf-pages-and-documents-as-reference-pictures)
+for each format's requirements and limits. This does not add PDF geometry export
+or recover editable layers from a PDF.
+
 ## File exchange matrix
 
 All eleven exchange formats import and export layer positions and sizes. Geometry

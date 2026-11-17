@@ -13,7 +13,7 @@ bin-dir = "{ name }-{ target }-v{ version }/{ bin }{ binary-ext }"
 
 [features]
 default = ["vendor_formats"]
-vendor_formats = ["dep:craft-dwg", "dep:deckcraft-pptx", "dep:deckcraft-model", "dep:deckcraft-geom", "dep:figcraft-format", "dep:figcraft-doc", "dep:figcraft-geom"]
+vendor_formats = ["dep:craft-dwg", "dep:deckcraft-pptx", "dep:deckcraft-model", "dep:deckcraft-geom", "dep:figcraft-format", "dep:figcraft-doc", "dep:figcraft-geom", "dep:figcraft-svg"]
 # Use with --no-default-features to exclude the optional codecs and their dependencies.
 no_proprietary = []
 
@@ -40,9 +40,13 @@ base64 = "0.22"
 flate2 = "1"
 csv = "1.4"
 tempfile = "3"
+url = "2"
 directories = "6"
 reqwest = { version = "0.12.28", default-features = false, features = ["blocking"] }
 tungstenite = { version = "0.28", default-features = false, features = ["handshake"] }
+hayro = "0.9"
+resvg = "0.50"
+figcraft-svg = { version = "=0.5.1", optional = true }
 
 [build-dependencies]
 winresource = "0.1.17"

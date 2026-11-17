@@ -3,6 +3,8 @@ use super::*;
 mod capture_ui;
 #[path = "device_ui.rs"]
 mod device_ui;
+#[path = "document_reference_ui.rs"]
+mod document_reference_ui;
 #[path = "format_ui.rs"]
 mod format_ui;
 #[path = "input_ui.rs"]
@@ -105,6 +107,7 @@ pub struct Editor {
     reference_pending: std::collections::VecDeque<
         std::sync::mpsc::Receiver<Result<super::reference::Reference, String>>,
     >,
+    document_reference: document_reference_ui::DocumentReferenceUi,
     outline_layers: bool,
     backdrop_title: String,
     reference_open: bool,
@@ -431,6 +434,7 @@ impl Default for Editor {
             references: Vec::new(),
             reference_selected: None,
             reference_pending: Default::default(),
+            document_reference: Default::default(),
             outline_layers: false,
             backdrop_title: canvas_pilot::project::DEFAULT_BACKDROP_TITLE.into(),
             reference_open: false,
@@ -695,6 +699,16 @@ impl Editor {
         }
     }
     fn load_reference(&mut self, ctx: &egui::Context, file: &egui::DroppedFile) {
+        let path = file
+            .path
+            .as_deref()
+            .unwrap_or_else(|| std::path::Path::new(&file.name));
+        if canvas_pilot::reference_document::is_document(path) {
+            if let Err(error) = self.document_reference.enqueue(file.clone()) {
+                self.reference_error = error;
+            }
+            return;
+        }
         let (tx, rx) = std::sync::mpsc::channel();
         if self.references.len() + self.reference_pending.len() >= 32 {
             self.reference_error = "Up to 32 reference images can be stored.".into();
@@ -721,19 +735,22 @@ impl Editor {
         };
         self.reference_pending.pop_front();
         match result {
-            Ok(reference) => {
-                if self.references.iter().map(|r| r.bytes.len()).sum::<usize>()
-                    + reference.bytes.len()
-                    > 64 * 1024 * 1024
-                {
-                    self.reference_error =
-                        "Reference images exceed the combined 64 MiB limit.".into();
-                    return;
-                }
-                self.references.push(reference);
-                self.reference_selected = Some(self.references.len() - 1);
-            }
+            Ok(reference) => self.add_reference(reference),
             Err(error) => self.reference_error = error,
+        }
+    }
+    fn add_reference(&mut self, reference: super::reference::Reference) {
+        if self.references.len() >= 32 {
+            self.reference_error = "Up to 32 reference images can be stored.".into();
+        } else if self.references.iter().map(|r| r.bytes.len()).sum::<usize>()
+            + reference.bytes.len()
+            > 64 * 1024 * 1024
+        {
+            self.reference_error = "Reference images exceed the combined 64 MiB limit.".into();
+        } else {
+            self.references.push(reference);
+            self.reference_selected = Some(self.references.len() - 1);
+            self.reference_error.clear();
         }
     }
     #[cfg(test)]
@@ -747,7 +764,10 @@ impl Editor {
     }
     fn import_reference_file(&mut self, ctx: &egui::Context) {
         if let Some(paths) = rfd::FileDialog::new()
-            .add_filter("Pictures", &["png", "jpg", "jpeg", "bmp"])
+            .add_filter(
+                "Pictures and documents",
+                &canvas_pilot::reference_document::extensions(),
+            )
             .pick_files()
         {
             for path in paths {
@@ -772,10 +792,7 @@ impl Editor {
                 if ui.button(tr(ui.ctx(), "ui.import-picture")).clicked() {
                     self.import_reference_file(ctx);
                 }
-                ui.label(tr(
-                    ui.ctx(),
-                    "ui.or-drag-png-jpeg-or-bmp-images-into-the-window",
-                ));
+                ui.label("Add pictures, PDF pages or supported documents as references. Drop geometry files here while this window is open to import them as pictures.");
                 if !self.reference_pending.is_empty() {
                     ui.spinner();
                     ui.label(tr(
@@ -4245,12 +4262,15 @@ impl Editor {
             || self.layer_ui.rename.is_some()
             || self.layer_ui.folder_rename.is_some();
         self.poll_reference();
+        if let Some(reference) = self.document_reference.show(ctx) {
+            self.add_reference(reference);
+        }
         let palette = theme::palette(ctx);
         let dropped = ctx.input(|i| i.raw.dropped_files.clone());
         if self.files.loading.is_none() {
             let mut geometry = Vec::new();
             for file in &dropped {
-                if Self::geometry_drop(file) {
+                if Self::geometry_drop(file) && !self.reference_open {
                     geometry.push(file.clone());
                 } else {
                     self.load_reference(ctx, file);

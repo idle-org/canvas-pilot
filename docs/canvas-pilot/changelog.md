@@ -4,6 +4,19 @@
 
 ## Unreleased
 
+### v0.9.46
+
+- Added PDF/document reference import with page selection, resolution control and
+  preview before adding. PDF/SVG and Figma artwork render locally; JSON/HTML retain
+  embedded pictures. PPTX and draw.io artwork use optional local converters, AI
+  uses VectorCraft, and all geometry formats offer labelled layout-box pictures.
+  Rendered PNGs preserve proportions and reopen without the source/converter.
+  PDF remains reference-only; complex rendering and external converters have the
+  documented limits. Added page/crop/rotation, artwork, cancellation and save/load
+  regression checks; checked the showcase PDFs and LibreOffice slide conversion.
+  Required Rust checks and the manual build passed; whole-app coverage is 91.99%.
+  External draw.io/VectorCraft rendering was not exercised (tools unavailable).
+
 ### v0.9.45
 
 - Split bundled themes into video-game-themes (6, including Ravenswatch) and
