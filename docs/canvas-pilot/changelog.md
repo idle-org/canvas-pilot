@@ -4,6 +4,18 @@
 
 ## Unreleased
 
+### v0.9.17
+
+- Added isolated feature-recording recipes, a shot-by-shot capture guide and a
+  Git-ignored local video gallery with captions, contact sheets and fresh profiles.
+  Recorded 21 clips covering editing, crop/mask, exchange, language packs and
+  simulator transfers. Offline imagery and simulator footage are labelled.
+- The simulator Preview send passed device readback; baseline restoration verified
+  all captured S1 layer fields in both banks. Python tests and the pinned manual
+  build pass; this is not physical-output acceptance.
+- Added the requested backlog item to validate every Aquilon and Midra model,
+  starting with AQL C+; existing support claims and adapter checks are unchanged.
+
 ### v0.9.16
 
 - Added language-pack management in Settings: installed revisions/languages,

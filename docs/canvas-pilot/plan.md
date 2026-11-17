@@ -78,6 +78,13 @@ checks and stretch goals below remain open; the tag does not mark them complete.
 
 ## To-do list
 
+- [ ] **Broaden coverage to every Aquilon and Midra model.** Requested 2026-11-17:
+  inventory both product ranges and their firmware/link modes; validate identity,
+  bounded reads, geometry/crop/mask conversion, input previews and reviewed writes
+  per model. Start with the AQL C+ simulator encountered during showcase recording.
+  Preserve explicit unsupported-mode errors until each adapter path is validated;
+  emulator coverage and physical-output acceptance remain separate.
+
 - [ ] **Resolve local input-ratio correction scope.** Shared-input Content ratio
   and Transform to controls already exist and are [documented](guide/formats-and-crop.md#content-ratio-versus-transform-to).
   Whether to add a local correction/preview model remains an unanswered question;

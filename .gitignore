@@ -9,3 +9,6 @@ __pycache__/
 .env
 /.rust-release/
 /dist/
+
+# Local showcase recordings, profiles and generated exchange files.
+/showcase-videos/
