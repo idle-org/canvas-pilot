@@ -12,17 +12,19 @@ appears in **More themes…** and recent themes. The picker stays open while you
 try alternatives. Selecting **High Contrast** twice returns to your last theme,
 including an installed one.
 
-Download [extra-themes.zip](../../theme-packs/extra-themes.zip) to install **all
-16 themes in one operation**. It is a single pack: select **extra-themes** in the
+Download [extra-themes.zip](../../theme-packs/extra-themes.zip) to install **16 themes in one operation**. It is a single pack: select **extra-themes** in the
 manager and scroll its contents to try each palette. Removal or replacement applies
 to the whole collection. Individual packs remain available below; installing both
-keeps separate copies, so you only need one option.
+keeps separate copies, so you only need one option for those themes.
+**Ravenswatch** is available separately: the collection is at the version-1 limit
+of 16 themes. Install its standalone ZIP alongside the collection.
 
 | Pack | Palette | Editable manifest |
 | --- | --- | --- |
 | [Tokyo Night](../../theme-packs/tokyo-night.zip) | Dark blue with cool cyan accents | [manifest.json](../../theme-packs/tokyo-night/manifest.json) |
 | [Catppuccin Mocha](../../theme-packs/catppuccin.zip) | Soft charcoal and pastel accents | [manifest.json](../../theme-packs/catppuccin/manifest.json) |
 | [Detroit: Become Human](../../theme-packs/detroit-become-human.zip) | Deep blue, pale text and cyan android-inspired accents | [manifest.json](../../theme-packs/detroit-become-human/manifest.json) |
+| [Ravenswatch](../../theme-packs/ravenswatch.zip) | Midnight blue, ivory and crimson (standalone) | [manifest.json](../../theme-packs/ravenswatch/manifest.json) |
 | [Vivid World](../../theme-packs/vivid-world.zip) | Midnight navy, violet, pink and cyan crystal accents | [manifest.json](../../theme-packs/vivid-world/manifest.json) |
 | [Deep Rock Galactic](../../theme-packs/deep-rock-galactic.zip) | Dark, gold/molten-orange accents | [manifest.json](../../theme-packs/deep-rock-galactic/manifest.json) |
 | [Dispatch](../../theme-packs/dispatch.zip) | Dark, yellow/cyan accents | [manifest.json](../../theme-packs/dispatch/manifest.json) |
@@ -40,7 +42,7 @@ keeps separate copies, so you only need one option.
 Tokyo Night adapts the [upstream palette](https://github.com/folke/tokyonight.nvim),
 and Catppuccin uses [Mocha colors](https://catppuccin.com/palette/). Their license
 notices travel inside the ZIP and can be viewed under **Attribution and licenses**.
-The Detroit, Vivid World, Dispatch, Helldivers and Deep Rock Galactic themes are
+The Detroit, Vivid World, Ravenswatch, Dispatch, Helldivers and Deep Rock Galactic themes are
 original, unofficial color interpretations;
 they include no game artwork, fonts or code and are not endorsed by the games' owners.
 

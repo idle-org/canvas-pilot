@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "ravenswatch",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Ravenswatch",
+      "light": false,
+      "colors": {
+        "canvas": "#161b2a",
+        "banner": "#30252d",
+        "grid": "#626779",
+        "layer": "#3b2834",
+        "pattern": [
+          "#3b2834",
+          "#252d40"
+        ],
+        "bg": "#10121f",
+        "panel": "#191d2a",
+        "field": "#262b3a",
+        "line": "#626779",
+        "text": "#f5edcf",
+        "muted": "#c5c1ae",
+        "cyan": "#e5d9a0",
+        "amber": "#f06b68",
+        "purple": "#782533"
+      }
+    }
+  ],
+  "notices": "Original Canvas Pilot palette inspired by the supplied Ravenswatch title-art reference: midnight blue, aged ivory and crimson. Unofficial; no game artwork, fonts, logos or code included. Not affiliated with or endorsed by the game owners. Palette provided under the Canvas Pilot MIT license."
+}

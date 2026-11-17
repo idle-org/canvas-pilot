@@ -7,6 +7,13 @@ import json
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+# Curated v1 collection: new standalone packs must not silently replace its entries.
+COLLECTION_PACKS = frozenset({
+    'catppuccin', 'deep-rock-galactic', 'detroit-become-human', 'dispatch',
+    'dracula', 'github-dark', 'github-light', 'gruvbox-dark', 'helldivers',
+    'monokai', 'nord', 'one-dark', 'solarized-dark', 'solarized-light',
+    'tokyo-night', 'vivid-world',
+})
 
 
 def archive(manifest):
@@ -23,6 +30,9 @@ def archive(manifest):
 
 def collection(sources):
     """One normal v1 pack: the existing importer installs every contained theme."""
+    sources = [source for source in sources if source.parent.name in COLLECTION_PACKS]
+    if {source.parent.name for source in sources} != COLLECTION_PACKS:
+        raise ValueError('A required collection manifest is missing')
     themes = []
     notices = []
     for source in sorted(sources):

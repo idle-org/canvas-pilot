@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.43
+
+- Added a standalone Ravenswatch palette with midnight-blue surfaces, aged ivory
+  text and crimson accents inspired by the supplied reference. Kept the existing
+  16-theme collection unchanged at the version-1 limit; packaging now lists its
+  members explicitly. Added import/contrast and collection membership checks.
+
 ### v0.9.42
 
 - Replaced the distributed Minecraft palette with Vivid World: midnight navy,

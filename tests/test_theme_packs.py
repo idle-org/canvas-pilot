@@ -30,7 +30,7 @@ class ThemePackExamples(unittest.TestCase):
 
     def test_archives_match_sources_and_rebuild_exactly(self):
         manifests = list((ROOT / 'docs/theme-packs').glob('*/manifest.json'))
-        self.assertEqual(len(manifests), 16)
+        self.assertEqual(len(manifests), 17)
         for source in manifests:
             with self.subTest(pack=source.parent.name):
                 expected = source.parent.with_suffix('.zip').read_bytes()
@@ -39,7 +39,7 @@ class ThemePackExamples(unittest.TestCase):
                     self.assertEqual(archive.namelist(), ['manifest.json'])
                     self.assertEqual(archive.read('manifest.json'), source.read_bytes())
 
-    def test_collection_contains_every_theme_and_notice(self):
+    def test_collection_contains_curated_themes_and_notices(self):
         sources = list((ROOT / 'docs/theme-packs').glob('*/manifest.json'))
         data = module.collection(sources)
         self.assertEqual(data, module.collection(reversed(sources)))
@@ -48,8 +48,16 @@ class ThemePackExamples(unittest.TestCase):
         self.assertEqual(combined['id'], 'extra-themes')
         self.assertEqual(len(combined['themes']), 16)
         self.assertEqual(len({t['id'] for t in combined['themes']}), 16)
+        self.assertNotIn('ravenswatch-default', {t['id'] for t in combined['themes']})
         for source in sources:
+            if source.parent.name not in module.COLLECTION_PACKS:
+                continue
             manifest = json.loads(source.read_bytes())
             self.assertIn(manifest['notices'], combined['notices'])
             for theme in manifest['themes']:
                 self.assertIn({**theme, 'id': manifest['id'] + '-' + theme['id']}, combined['themes'])
+
+    def test_missing_collection_manifest_is_rejected(self):
+        sources = list((ROOT / 'docs/theme-packs').glob('*/manifest.json'))
+        with self.assertRaisesRegex(ValueError, 'required collection manifest'):
+            module.collection(source for source in sources if source.parent.name != 'dispatch')

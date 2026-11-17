@@ -104,9 +104,9 @@ the importer continues to accept both stored and DEFLATE-compressed packs.
 ## Bundled collection
 
 `docs/theme-packs/extra-themes.zip` is a normal version-1 pack (`extra-themes`,
-revision 4), containing all 16 distributed themes. One import validates and installs
+revision 4), containing 16 curated themes. One import validates and installs
 all entries atomically; it does not unpack nested ZIPs. The build script combines
-individual manifests in sorted path order, prefixes theme IDs with their source
+the explicitly listed collection manifests in sorted path order, prefixes theme IDs with their source
 pack ID and preserves all notices. Individual packs and the collection have distinct
 saved choices and can coexist. Updates and removal operate on the whole collection.
 
@@ -114,3 +114,7 @@ Collection revision 4 replaces `minecraft-overworld` with `vivid-world-default`.
 Updating while Minecraft is active uses the existing removed-theme fallback to
 Midra Dark; Vivid World can then be selected explicitly. Older standalone Minecraft
 installations are not deleted or remapped by this collection update.
+
+Ravenswatch is a separate version-1 pack, not a seventeenth collection entry.
+The build script validates every standalone archive and requires every listed
+collection manifest; adding a standalone pack does not change collection contents.

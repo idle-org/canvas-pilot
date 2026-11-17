@@ -357,7 +357,7 @@ pub fn install(ctx: &egui::Context, directory: &Path, source: &Path) -> Result<(
 mod tests {
     use super::*;
     use crate::theme::Theme;
-    const EXAMPLES: [(&str, &[u8], &str); 4] = [
+    const EXAMPLES: [(&str, &[u8], &str); 5] = [
         (
             "tokyo-night",
             include_bytes!("../../../docs/theme-packs/tokyo-night.zip"),
@@ -377,6 +377,11 @@ mod tests {
             "vivid-world",
             include_bytes!("../../../docs/theme-packs/vivid-world.zip"),
             include_str!("../../../docs/theme-packs/vivid-world/manifest.json"),
+        ),
+        (
+            "ravenswatch",
+            include_bytes!("../../../docs/theme-packs/ravenswatch.zip"),
+            include_str!("../../../docs/theme-packs/ravenswatch/manifest.json"),
         ),
     ];
     fn zip(files: &[(&str, &[u8])]) -> Vec<u8> {
@@ -446,13 +451,13 @@ mod tests {
                 }
             }
         }
-        assert_eq!(choices(&ctx).len(), 4);
+        assert_eq!(choices(&ctx).len(), EXAMPLES.len());
         let restarted = egui::Context::default();
         assert!(load(&restarted, &packs).is_empty());
         assert_eq!(choices(&restarted), choices(&ctx));
         let isolated = egui::Context::default();
         assert!(choices(&isolated).is_empty());
-        let missing = Theme::Pack("vivid-world/default".into());
+        let missing = Theme::Pack("ravenswatch/default".into());
         missing.apply(&isolated);
         assert_eq!(Theme::current(&isolated), missing);
         assert_eq!(
