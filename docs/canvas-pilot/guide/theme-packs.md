@@ -23,7 +23,7 @@ keeps separate copies, so you only need one option.
 | [Tokyo Night](../../theme-packs/tokyo-night.zip) | Dark blue with cool cyan accents | [manifest.json](../../theme-packs/tokyo-night/manifest.json) |
 | [Catppuccin Mocha](../../theme-packs/catppuccin.zip) | Soft charcoal and pastel accents | [manifest.json](../../theme-packs/catppuccin/manifest.json) |
 | [Detroit: Become Human](../../theme-packs/detroit-become-human.zip) | Deep blue, pale text and cyan android-inspired accents | [manifest.json](../../theme-packs/detroit-become-human/manifest.json) |
-| [Minecraft Overworld](../../theme-packs/minecraft.zip) | Earth and stone surfaces with grass-green accents | [manifest.json](../../theme-packs/minecraft/manifest.json) |
+| [Vivid World](../../theme-packs/vivid-world.zip) | Midnight navy, violet, pink and cyan crystal accents | [manifest.json](../../theme-packs/vivid-world/manifest.json) |
 | [Deep Rock Galactic](../../theme-packs/deep-rock-galactic.zip) | Dark, gold/molten-orange accents | [manifest.json](../../theme-packs/deep-rock-galactic/manifest.json) |
 | [Dispatch](../../theme-packs/dispatch.zip) | Dark, yellow/cyan accents | [manifest.json](../../theme-packs/dispatch/manifest.json) |
 | [Dracula](../../theme-packs/dracula.zip) | Dark | [manifest.json](../../theme-packs/dracula/manifest.json) |
@@ -40,9 +40,13 @@ keeps separate copies, so you only need one option.
 Tokyo Night adapts the [upstream palette](https://github.com/folke/tokyonight.nvim),
 and Catppuccin uses [Mocha colors](https://catppuccin.com/palette/). Their license
 notices travel inside the ZIP and can be viewed under **Attribution and licenses**.
-The Detroit, Minecraft, Dispatch, Helldivers and Deep Rock Galactic themes are
+The Detroit, Vivid World, Dispatch, Helldivers and Deep Rock Galactic themes are
 original, unofficial color interpretations;
 they include no game artwork, fonts or code and are not endorsed by the games' owners.
+
+The current collection replaces Minecraft with Vivid World. Reimport the collection
+to update; if Minecraft was selected, choose Vivid World after the update returns
+to Midra Dark. A separately installed Minecraft pack remains until you remove it.
 
 ## Manage packs
 
@@ -51,7 +55,7 @@ one selected pack. Search by pack ID or theme name; **Clear** restores the full
 list. Rows show the theme count and revision, with a dot marking packs currently
 in use. Large collections scroll within the list instead of stretching Settings.
 
-Select a pack to see its theme swatches, light/dark labels, attribution and
+Select a pack to see its theme names, swatches, attribution and
 **Remove pack…** action. The contents and license text scroll independently;
 removal stays above them. On narrower windows, details appear below the list.
 Newly installed or updated packs are selected automatically.

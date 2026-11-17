@@ -115,10 +115,10 @@ close it with its window close button when finished. Reusing a theme moves it to
 the top without duplicates.
 Closing the picker without choosing leaves the theme and history unchanged.
 Use **Theme packs** to install additional palettes; see [Add a theme pack](theme-packs.md)
-for Tokyo Night, Catppuccin, Detroit: Become Human and Minecraft examples.
+for Tokyo Night, Catppuccin, Detroit: Become Human and Vivid World examples.
 
 The viewport, grid, layer boxes and source test patterns use the selected palette;
-selected layers remain gold (darker gold for contrast in light themes). Imported
+selected layers use the palette’s selection accent. Imported
 reference images retain their colors. Theme and history survive opening projects
 and are not included in project JSON or geometry exports.
 

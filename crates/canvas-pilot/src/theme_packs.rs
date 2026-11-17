@@ -374,9 +374,9 @@ mod tests {
             include_str!("../../../docs/theme-packs/detroit-become-human/manifest.json"),
         ),
         (
-            "minecraft",
-            include_bytes!("../../../docs/theme-packs/minecraft.zip"),
-            include_str!("../../../docs/theme-packs/minecraft/manifest.json"),
+            "vivid-world",
+            include_bytes!("../../../docs/theme-packs/vivid-world.zip"),
+            include_str!("../../../docs/theme-packs/vivid-world/manifest.json"),
         ),
     ];
     fn zip(files: &[(&str, &[u8])]) -> Vec<u8> {
@@ -452,7 +452,7 @@ mod tests {
         assert_eq!(choices(&restarted), choices(&ctx));
         let isolated = egui::Context::default();
         assert!(choices(&isolated).is_empty());
-        let missing = Theme::Pack("minecraft/overworld".into());
+        let missing = Theme::Pack("vivid-world/default".into());
         missing.apply(&isolated);
         assert_eq!(Theme::current(&isolated), missing);
         assert_eq!(

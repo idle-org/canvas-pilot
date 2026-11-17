@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "vivid-world",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Vivid World",
+      "light": false,
+      "colors": {
+        "canvas": "#14162e",
+        "banner": "#2a2545",
+        "grid": "#68618c",
+        "layer": "#323154",
+        "pattern": [
+          "#41304f",
+          "#234252"
+        ],
+        "bg": "#101023",
+        "panel": "#19172f",
+        "field": "#24233f",
+        "line": "#68618c",
+        "text": "#fff1dc",
+        "muted": "#c4bddc",
+        "cyan": "#77e4f2",
+        "amber": "#ff9dcc",
+        "purple": "#633e77"
+      }
+    }
+  ],
+  "notices": "Original Canvas Pilot palette inspired by the supplied Vivid World title-art reference: midnight navy, violet, pink and luminous crystal accents. Unofficial; no game artwork, fonts, logos or code included. Not affiliated with or endorsed by the game owners. Palette provided under the Canvas Pilot MIT license."
+}

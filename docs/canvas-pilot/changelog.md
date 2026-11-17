@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.42
+
+- Replaced the distributed Minecraft palette with Vivid World: midnight navy,
+  violet, pink and cyan crystal accents inspired by the supplied reference.
+  Added its standalone pack and updated extra-themes to revision 4. Existing
+  standalone Minecraft installs remain user-managed; an active removed collection
+  theme falls back to Midra Dark. Updated downloads, docs and contrast coverage.
+
 ### v0.9.41
 
 - Retuned Deep Rock Galactic to gold and molten-orange accents on dark rock/brown
