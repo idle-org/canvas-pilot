@@ -4,6 +4,7 @@ import io
 import json
 from pathlib import Path
 import unittest
+from unittest import mock
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +14,20 @@ spec.loader.exec_module(module)
 
 
 class ThemePackExamples(unittest.TestCase):
+    def test_rebuild_does_not_depend_on_zlib_or_host_platform(self):
+        sources = sorted((ROOT / 'docs/theme-packs').glob('*/manifest.json'))
+        manifests = [source.read_bytes() for source in sources]
+        manifests.append(module.collection(sources))
+        for manifest in manifests:
+            expected = module.archive(manifest)
+            with mock.patch.object(zipfile, 'zlib', None), mock.patch('sys.platform', 'win32'):
+                self.assertEqual(module.archive(manifest), expected)
+            with zipfile.ZipFile(io.BytesIO(expected)) as archive:
+                info = archive.getinfo('manifest.json')
+                self.assertEqual(info.compress_type, zipfile.ZIP_STORED)
+                self.assertEqual(info.create_system, 3)
+                self.assertEqual(archive.read(info), manifest)
+
     def test_archives_match_sources_and_rebuild_exactly(self):
         manifests = list((ROOT / 'docs/theme-packs').glob('*/manifest.json'))
         self.assertEqual(len(manifests), 16)

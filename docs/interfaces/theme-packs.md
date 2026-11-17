@@ -96,6 +96,11 @@ and `python3 scripts/build-theme-packs.py --check`. Lifecycle tests cover startu
 selection persistence, live updates, overwrite review/cancellation, changed-file
 protection, removal, limits, malformed colors/archives and context isolation.
 
+Distributed example ZIPs use stored (uncompressed) entries with a fixed timestamp
+and Unix file metadata so exact rebuilds do not depend on the host or zlib version.
+Their manifest bytes, pack revisions and version-1 representation are unchanged;
+the importer continues to accept both stored and DEFLATE-compressed packs.
+
 ## Bundled collection
 
 `docs/theme-packs/extra-themes.zip` is a normal version-1 pack (`extra-themes`,

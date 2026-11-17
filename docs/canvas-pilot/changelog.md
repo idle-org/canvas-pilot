@@ -6,6 +6,10 @@
 
 ### v0.9.36
 
+- Fixed theme-pack reproducibility checks across build hosts by using stored ZIP
+  entries and fixed Unix metadata, avoiding zlib-dependent compressed bytes.
+  Regenerated all 17 downloads without changing manifests; regression coverage
+  rebuilds them without zlib and with simulated Windows platform metadata.
 - Added extra-themes.zip: one import installs all 16 themes, with individual ZIPs
   still available. Added Dracula, Nord, Gruvbox Dark, Solarized Dark/Light, One Dark,
   GitHub Dark/Light, Monokai and original Dispatch, Helldivers and Deep Rock Galactic

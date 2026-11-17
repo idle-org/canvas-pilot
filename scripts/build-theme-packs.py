@@ -13,7 +13,9 @@ def archive(manifest):
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w') as output:
         info = zipfile.ZipInfo('manifest.json', (2026, 1, 1, 0, 0, 0))
-        info.compress_type = zipfile.ZIP_DEFLATED
+        # DEFLATE bytes vary with zlib versions, even for identical input.
+        info.compress_type = zipfile.ZIP_STORED
+        info.create_system = 3  # Fixed Unix metadata on every build host.
         info.external_attr = 0o100644 << 16
         output.writestr(info, manifest)
     return buffer.getvalue()
