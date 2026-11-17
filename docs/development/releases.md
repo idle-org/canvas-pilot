@@ -1,6 +1,44 @@
 # Release preparation
 
-## Published release: v0.9.18
+## Published release: v0.9.34
+
+[Download v0.9.34](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.9.34)
+was published on 2026-11-17 from annotated tag `v0.9.34`, source commit
+`952f409e52b617f7ed21325347977acc19c82bd5`. The source changes, theme and language
+pack files, and tag were pushed to Gitea. Publication records do not move the tag.
+See the [release notes](release-notes/v0.9.34.md).
+
+The release contains 24 assets: four portable bundles, four canonical cargo-binstall
+archives, four raw binaries, the artifact manifest/checksums, and ten extras.
+The extras include all four theme packs (Tokyo Night, Catppuccin Mocha, Detroit:
+Become Human and Minecraft Overworld), `language-pack.zip`, extras checksums,
+effective build configuration, compiler recipe, build instructions and the
+release-tool patch. The language pack is the existing format-2, revision-1
+Ukrainian/Bhojpuri teaching example; translations remain partial and unreviewed.
+Theme ZIPs match their tracked manifests and include their attribution notices.
+
+All 24 assets were downloaded and SHA-256 checked before publication and again
+anonymously afterward. cargo-binstall retrieved all four targets; each installed
+binary matched the built release artifact. The packaged Linux executable passed
+an isolated GUI startup/render check with an empty log. Portable tree/hash and
+architecture checks passed for all targets; both macOS targets also passed macOS
+13.0 deployment-minimum and system-library checks. Native Windows/macOS runtime
+acceptance remains outstanding.
+
+Formatting, both Clippy configurations, all required Rust test configurations,
+rustdoc, all 27 Python checks and the pinned manual build passed. Whole-application
+line coverage is 92.14%. The source tests were reused for the upload step, which
+reused the completed builds for the exact tagged commit. No device writes were
+performed for this release.
+
+Packaging used the same locally patched rust_realease 0.1.6-rc.3 and immutable
+Apple compiler image as v0.9.18 below. Linux/Windows used Rust 1.102.0-nightly
+(`5df8c02af`, 2026-11-16), and macOS used Rust 1.100.0. Rebuild from the clean tag
+using the attached `BUILDING-v0.9.34.md`, `rust-release-v0.9.34.toml`, compiler recipe
+and release-tool patch. Generated archives, credentials and build caches are not
+committed to Git.
+
+## Previous release: v0.9.18
 
 [Download v0.9.18](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.9.18)
 was published on 2026-11-17 from annotated tag `v0.9.18`, source commit
