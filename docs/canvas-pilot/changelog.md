@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.44
+
+- Added a separate, reproducible Lumen Forum showcase kit: polished PIP infodecor,
+  synthetic speaker media, an editable three-slide deck, raster-only/editable
+  handoffs, three layouts in five exchange formats, projects and silent demo loops.
+  Generated assets stay local and Git-ignored. Verified native geometry imports,
+  LibreOffice rendering and video dimensions/durations; no device activity.
+
 ### v0.9.43
 
 - Added a standalone Ravenswatch palette with midnight-blue surfaces, aged ivory

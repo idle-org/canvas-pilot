@@ -41,6 +41,49 @@ The SVG demonstrations exercise interchange without pretending to record Illustr
 Figma or draw.io. Actual captures from those applications, live input capture, other
 file codecs and physical device output require separate application/device sessions.
 
+## Conference handoff kit
+
+A separate local `showcase-conference-kit/` directory supplies a fictional **Lumen
+Forum** event for recording the raster-only versus editable-client workflow.
+It leaves the existing `showcase-videos/` recordings intact. Start with its
+`index.html` preview and `START-HERE.txt` recording guide.
+
+The kit includes a clean 1920 × 1080 background, empty PIP infodecor, a placement
+guide and a complete speaker/slide composite; three editable presentation slides;
+a synthetic portrait; and silent speaker-motion, presentation and background MP4s.
+The speaker loop is a pan/zoom of a generated still, not a real recorded talk.
+All names, event content and slide data are fictional.
+
+`delivery-jpg-only/` contains flattened PNG/JPGs and a deliberately degraded
+960 × 540 JPEG. Raster files are reference artwork, not editable geometry.
+`delivery-editable/` contains native PPTX text/shapes, vector SVG slides and a
+composition whose speaker/slide pictures move independently in PPTX/draw.io/SVG.
+Three layout folders each contain a project plus SVG, draw.io, PPTX, JSON and CSV
+geometry. The main speaker box is `(72,260,432,576)`; the slide box is
+`(552,260,1296,729)`. Coordinates are top-left screen pixels. The other layouts
+show a large slide and a side-by-side pair. Projects have no device links.
+
+Rebuild into a **new** directory with the supplied 3:4 speaker PNG:
+
+```sh
+python3 scripts/prepare-conference-showcase.py \
+  --speaker showcase-conference-kit/media/speaker/alex-morgan-synthetic.png \
+  --output /tmp/lumen-forum-rebuilt
+```
+
+The recipe uses Python's standard library, `rsvg-convert`, FFmpeg and ffprobe,
+and refuses to replace an existing output folder. DejaVu Sans is the design font.
+The portrait was made with the built-in image-generation tool using
+[the saved prompt](../../scripts/showcase-speaker-prompt.txt); rebuilds reuse the
+image rather than make new network calls. Generated assets remain local and ignored
+by Git. The recipe, prompt and checks are versioned.
+
+Prepared-kit validation includes exact geometry imports through Canvas Pilot,
+project loading, LibreOffice PDF renders of the native decks, and ffprobe checks
+of dimensions and durations. PowerPoint itself and the draw.io GUI were not used;
+draw.io geometry was checked by the application importer. `verification/` holds
+the local evidence. This is offline artwork evidence, not device acceptance.
+
 ## Recording environment
 
 Use a dedicated X11 display, not the working desktop. The script sends real mouse
