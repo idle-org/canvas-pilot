@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+## v0.9.18 — 2026-11-17
+
+Release preparation: see the [release notes](../development/release-notes/v0.9.18.md).
+
 ### v0.9.18
 
 - Recognize all eleven standalone Aquilon models with exact HTTP/AWJ model checks
