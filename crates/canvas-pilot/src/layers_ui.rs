@@ -529,6 +529,18 @@ impl Editor {
         let palette = theme::palette(ui.ctx());
         let root = ui.interact(rect, id, egui::Sense::hover());
         let hovering = root.dnd_hover_payload::<LayerDrag>().is_some();
+        if hovering {
+            ui.painter()
+                .rect_filled(rect, 3.0, palette.cyan.gamma_multiply(0.18));
+            if !caption {
+                let c = rect.center();
+                ui.painter().arrow(
+                    c + Vec2::new(8.0, 0.0),
+                    Vec2::new(-16.0, 0.0),
+                    Stroke::new(2.0, palette.cyan),
+                );
+            }
+        }
         if caption || hovering {
             ui.painter().rect_stroke(
                 rect,
@@ -541,7 +553,11 @@ impl Editor {
             ui.painter().text(
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
-                "No folder — drop layer here",
+                if hovering {
+                    "Release to move out of folder"
+                } else {
+                    "No folder — drop layer here"
+                },
                 egui::FontId::proportional(12.0),
                 if hovering {
                     palette.cyan
@@ -1027,6 +1043,80 @@ mod tests {
         assert_eq!(app.layout.layer_info(2).id, 3);
         app.layout.undo();
         assert_eq!(app.layout.layer_info(0).id, 3);
+    }
+
+    #[test]
+    fn folder_gutter_accepts_edges_and_row_gaps_without_reordering_and_can_cancel() {
+        use super::super::tests::{frame, mouse};
+        for gap in [false, true] {
+            for cancel in [false, true] {
+                let mut app = Editor::default();
+                let ctx = egui::Context::default();
+                app.layout.assign_folder(&[1, 2], "Video").unwrap();
+                let before = app.project();
+                let geometry = app.layout.layers().clone();
+                let order: Vec<_> = (0..app.layout.layers().len())
+                    .map(|i| app.layout.layer_info(i).id)
+                    .collect();
+                frame(&mut app, &ctx, vec![]);
+                frame(&mut app, &ctx, vec![]);
+                let start = ctx
+                    .read_response(egui::Id::new(("layer", 1_usize)))
+                    .unwrap()
+                    .rect
+                    .center();
+                let gutter = ctx
+                    .read_response(egui::Id::new(("layer-root-gutter", 2_usize)))
+                    .unwrap()
+                    .rect;
+                assert!(gutter.width() >= 32.0);
+                let end = if gap {
+                    gutter.left_bottom() + Vec2::new(1.0, -1.0)
+                } else {
+                    gutter.right_center() - Vec2::new(1.0, 0.0)
+                };
+                frame(
+                    &mut app,
+                    &ctx,
+                    vec![egui::Event::PointerMoved(start), mouse(start, true)],
+                );
+                frame(
+                    &mut app,
+                    &ctx,
+                    vec![egui::Event::PointerMoved(start + Vec2::new(0.0, 12.0))],
+                );
+                frame(&mut app, &ctx, vec![egui::Event::PointerMoved(end)]);
+                if cancel {
+                    frame(
+                        &mut app,
+                        &ctx,
+                        vec![egui::Event::Key {
+                            key: egui::Key::Escape,
+                            physical_key: None,
+                            pressed: true,
+                            repeat: false,
+                            modifiers: egui::Modifiers::NONE,
+                        }],
+                    );
+                }
+                frame(&mut app, &ctx, vec![mouse(end, false)]);
+                frame(&mut app, &ctx, vec![]);
+                assert_eq!(app.layout.layers(), &geometry);
+                assert_eq!(
+                    (0..app.layout.layers().len())
+                        .map(|i| app.layout.layer_info(i).id)
+                        .collect::<Vec<_>>(),
+                    order
+                );
+                if cancel {
+                    assert_eq!(app.project(), before);
+                } else {
+                    assert_eq!(app.layout.folder_members("Video").len(), 1);
+                    app.layout.undo();
+                    assert_eq!(app.project(), before);
+                }
+            }
+        }
     }
 
     #[test]

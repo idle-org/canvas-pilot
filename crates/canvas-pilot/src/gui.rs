@@ -1610,7 +1610,7 @@ impl Editor {
                         layers_ui::TreeRow::Layer(i)
                             if !self.layout.layer_info(*i).folder.is_empty() =>
                         {
-                            18.0
+                            36.0
                         }
                         _ => 0.0,
                     };
@@ -1641,8 +1641,16 @@ impl Editor {
             let indent = if self.layout.layer_info(i).folder.is_empty() {
                 0.0
             } else {
-                18.0
+                36.0
             };
+            if indent > 0.0 {
+                self.root_drop_target(
+                    ui,
+                    Rect::from_min_size(ink.point(0.0, y), Vec2::new(indent - 2.0, 44.0)),
+                    egui::Id::new(("layer-root-gutter", self.layout.layer_info(i).id)),
+                    false,
+                );
+            }
             let color = if self.layout.selection_mask()[i] {
                 palette.amber
             } else {
@@ -1757,7 +1765,7 @@ impl Editor {
             ui,
             Rect::from_min_size(
                 ink.point(0.0, 28.0 + layer_row_count as f32 * 44.0),
-                Vec2::new(w, 32.0),
+                Vec2::new(w, 42.0),
             ),
             egui::Id::new("layer-root-drop"),
             true,

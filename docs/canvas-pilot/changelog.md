@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.32
+
+- Made dragging layers out of folders easier: doubled the child-row gutter and
+  made it a root drop target, including row gaps. Enlarged the No folder strip
+  and added cyan drag feedback with an explicit release hint. Folder membership
+  changes preserve geometry and stacking and remain undoable.
+
 ### v0.9.31
 
 - Extended Mask edges snapping to include visible masked-area centers as movement

@@ -13,7 +13,10 @@ to every member; Undo restores each member's previous state, including mixed sta
 
 Use the **Create folder** icon to create an empty folder, regardless of selection. Drag a layer onto a folder
 name to move it inside, or onto **LAYERS** or the full-width **No folder** drop
-area below the list to return it to the root. Dropping on
+area below the list to return it to the root. You can also drag left into the
+wide gutter beside any folder child; the gutter accepts drops along the full row,
+including the gap below it. Root drop targets highlight cyan while dragging, and
+the bottom strip shows **Release to move out of folder**. Dropping on
 another layer also changes stacking order and adopts that layer's folder.
 Drag folder names above/below another folder to reorder all their layers as one
 block. Right-click offers rename, selection, visibility, locking, moving up/down,
