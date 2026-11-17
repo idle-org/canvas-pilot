@@ -166,8 +166,9 @@ Cmax. All firmware versions may connect; versions outside 6.2.x display a warnin
 that backward compatibility is not guaranteed. The adapter requires compatible
 protocol fields and stops with an explicit error when they differ. Older firmware,
 especially before 4.x, may therefore fail to connect. Linked systems remain unsupported.
-Cmax 6.2.79 is verified on the emulator; other models/firmware have synthetic test
-coverage, and physical-output acceptance remains outstanding.
+Cmax 6.2.79 has emulator acceptance; RS1 6.2.79 mask testing is recorded in the
+[acceptance record](../aquilon-compatibility.md). Other models/firmware have synthetic
+test coverage, and physical-output acceptance remains outstanding.
 Connect using the same Device connection window.
 The device identifies its family automatically. Screens use `S1`, `S2`, …;
 auxiliaries use `A1`, `A2`, … and stay distinct in saved mappings. Only enabled
@@ -181,8 +182,11 @@ or a changed bank/source before Send requires a refresh, without writing.
 Centered live-input framing supports layer crop and zoom. Fractional geometry is
 retained in projects; sends round device sizes/centers to whole pixels for WebRCS
 compatibility and check the visible-box error within one pixel.
-Masks, non-centered fit modes and shared input aspect/crop corrections are
-reported explicitly when their visible bounds cannot be imported. Shared input
+Rectangular masks load and send without resizing the image. Both editor mask
+origins are supported; device loads return a Layer-relative mask. A zero mask
+explicitly clears destination blanking during a reviewed send. Fully blanked axes
+are allowed. Non-centered fit modes, malformed masks and shared input aspect/crop
+corrections are reported explicitly when their visible bounds cannot be imported. Shared input
 correction controls remain managed in WebRCS for this adapter. Ordinary sends
 never route inputs, TAKE, or change shared input processing.
 

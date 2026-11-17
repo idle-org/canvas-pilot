@@ -3,7 +3,7 @@ use super::*;
 use crate::{
     Layout,
     device_send::{Change, Plan, Sizing, Target},
-    formats::{Aspect, Crop, Source},
+    formats::{Aspect, Crop, Mask, Source},
 };
 use serde_json::json;
 use std::collections::BTreeSet;
@@ -59,12 +59,39 @@ fn crop(layer: &Value, native: [u32; 2]) -> Result<Crop, String> {
         bottom: edge("bottom", 1)?,
     })
 }
-fn unmasked(layer: &Value) -> Result<(), String> {
-    for edge in ["left", "right", "top", "bottom"] {
-        if number(layer, &format!("/cropping/mask/pp/{edge}"))? != 0.0 {
-            return Err("Nonzero mask: visible-bound conversion is not supported.".into());
+fn native_mask(layer: &Value) -> Result<Mask, String> {
+    let edge = |key: &str| -> Result<f64, String> {
+        let n = number(layer, &format!("/cropping/mask/pp/{key}"))?;
+        if n.fract() != 0.0 || !(0.0..=65535.0).contains(&n) {
+            return Err("Invalid Aquilon mask units.".into());
         }
+        Ok(n / 65535.0)
+    };
+    Mask {
+        left: edge("left")?,
+        right: edge("right")?,
+        top: edge("top")?,
+        bottom: edge("bottom")?,
+        ..Default::default()
     }
+    .validate()
+}
+// Aquilon blanking is relative to its container; the normal editor workflow
+// uses the visible centered image. Preserve their intersection without resizing.
+fn relative_mask(reveal: Geometry, reference: Geometry) -> Mask {
+    let left = ((reveal.x - reference.x) / reference.width).clamp(0.0, 1.0);
+    let top = ((reveal.y - reference.y) / reference.height).clamp(0.0, 1.0);
+    Mask {
+        left,
+        right: ((reference.x + reference.width - reveal.x - reveal.width) / reference.width)
+            .clamp(0.0, 1.0 - left),
+        top,
+        bottom: ((reference.y + reference.height - reveal.y - reveal.height) / reference.height)
+            .clamp(0.0, 1.0 - top),
+        ..Default::default()
+    }
+}
+fn anchor(layer: &Value) -> Result<(), String> {
     if text(layer, "/position/pp/anchor")? != "MIDDLE_CENTER" {
         return Err("Only middle-center layer anchors are currently supported.".into());
     }
@@ -76,7 +103,7 @@ fn framing(
     source: &str,
     container: Geometry,
 ) -> Result<(Geometry, Option<(Source, Crop)>), String> {
-    unmasked(layer)?;
+    anchor(layer)?;
     let Some((source, inherited)) = source_info(raw, source)? else {
         if ["left", "right", "top", "bottom"]
             .iter()
@@ -169,10 +196,19 @@ pub(super) fn parse(identity: String, raw: &Value) -> Result<Snapshot, String> {
                     height,
                 }
                 .validate()?;
-                let (geometry, framing, unsupported) = match framing(raw, layer, &source, container)
-                {
-                    Ok((geometry, framing)) => (geometry, framing, None),
-                    Err(error) => (container, None, Some(error)),
+                let appearance =
+                    framing(raw, layer, &source, container).and_then(|(geometry, framing)| {
+                        let mask = native_mask(layer)?;
+                        let mask = if mask.is_empty() {
+                            mask
+                        } else {
+                            relative_mask(mask.bounds(container), geometry)
+                        };
+                        Ok((geometry, framing, mask))
+                    });
+                let (geometry, framing, mask, unsupported) = match appearance {
+                    Ok((geometry, framing, mask)) => (geometry, framing, mask, None),
+                    Err(error) => (container, None, Mask::default(), Some(error)),
                 };
                 layers.push(Layer {
                     id: layer_id,
@@ -180,7 +216,7 @@ pub(super) fn parse(identity: String, raw: &Value) -> Result<Snapshot, String> {
                     geometry,
                     container,
                     fit: None,
-                    mask: Default::default(),
+                    mask,
                     framing,
                     unsupported,
                     warning: None,
@@ -248,11 +284,6 @@ pub(super) fn prepare(
         let i = (0..layout.layers().len())
             .find(|&i| layout.layer_info(i).id == *id)
             .ok_or("An editor layer was removed.")?;
-        if !layout.formats().masks[i].is_empty() {
-            return Err(format!(
-                "Layer {destination}: Aquilon masking conversion is not supported yet."
-            ));
-        }
         if layout.formats().layer_fit[i].is_some() {
             return Err("Explicit layer fit is currently supported for Midra only. Disable advanced layer fit before sending to Aquilon.".into());
         }
@@ -261,7 +292,8 @@ pub(super) fn prepare(
         let source = &layout.formats().sources[layout.formats().source_for[i]];
         let path = snapshot.profile.layer_path(&screen.id, bank, destination);
         let layer = value(&snapshot.raw, &path)?;
-        unmasked(layer)?;
+        anchor(layer)?;
+        native_mask(layer)?;
         let routed = text(layer, "/source/pp/inputNum")?;
         if let Some((native, _)) = source_info(&snapshot.raw, &routed)?
             && native.native != source.native
@@ -337,6 +369,73 @@ pub(super) fn prepare(
         {
             requested.push((suffix, json!(units[j] as u32)));
         }
+        let editor_mask = layout.formats().masks[i].validate()?;
+        let container = Geometry {
+            x: center[0] - size[0] / 2.0,
+            y: center[1] - size[1] / 2.0,
+            width: size[0],
+            height: size[1],
+        };
+        let reveal = layout.formats().mask_bounds(i, g)?;
+        let mask = if editor_mask.is_empty() {
+            Mask::default()
+        } else {
+            relative_mask(reveal, container)
+        };
+        let mut mask_units = [mask.left, mask.right, mask.top, mask.bottom]
+            .map(|edge| (edge * 65535.0).round() as u32);
+        mask_units[1] = mask_units[1].min(65535 - mask_units[0]);
+        mask_units[3] = mask_units[3].min(65535 - mask_units[2]);
+        if !editor_mask.is_empty() {
+            let quantized = Mask {
+                left: mask_units[0] as f64 / 65535.0,
+                right: mask_units[1] as f64 / 65535.0,
+                top: mask_units[2] as f64 / 65535.0,
+                bottom: mask_units[3] as f64 / 65535.0,
+                ..Default::default()
+            };
+            let visible = Geometry {
+                x: center[0] - retained[0] * scale / 2.0,
+                y: center[1] - retained[1] * scale / 2.0,
+                width: retained[0] * scale,
+                height: retained[1] * scale,
+            };
+            let expected = relative_mask(reveal, visible).bounds(visible);
+            let actual = relative_mask(quantized.bounds(container), visible).bounds(visible);
+            if [
+                (expected.x, actual.x),
+                (expected.y, actual.y),
+                (expected.width, actual.width),
+                (expected.height, actual.height),
+            ]
+            .iter()
+            .any(|(a, b)| (a - b).abs() > 1.0)
+            {
+                return Err(
+                    "Mask quantization differs from the reveal bounds by more than one pixel."
+                        .into(),
+                );
+            }
+        }
+        for (edge, units) in ["left", "right", "top", "bottom"]
+            .into_iter()
+            .zip(mask_units)
+        {
+            let full = format!("{path}/cropping/mask/pp/{edge}");
+            let before = value(&snapshot.raw, &full)?.clone();
+            let after = json!(units);
+            if before != after {
+                plan.changes.push(Change {
+                    path: full
+                        .trim_start_matches('/')
+                        .split('/')
+                        .map(str::to_owned)
+                        .collect(),
+                    before,
+                    after,
+                });
+            }
+        }
         for (suffix, after) in requested {
             let full = format!("{path}/{suffix}");
             let before = value(&snapshot.raw, &full)?.clone();
@@ -354,7 +453,7 @@ pub(super) fn prepare(
         }
     }
     plan.changes.sort_by_key(|c| {
-        !(c.path.iter().any(|p| p == "classic")
+        !(c.path.iter().any(|p| p == "classic" || p == "mask")
             && c.after
                 .as_f64()
                 .zip(c.before.as_f64())

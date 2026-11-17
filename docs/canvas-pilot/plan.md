@@ -74,7 +74,8 @@ checks and stretch goals below remain open; the tag does not mark them complete.
 - [x] **Export/workflow cleanup.** Shared transfer scopes, mapping review and
   direct linked send/load are implemented. Manually reviewed and marked solved on 2026-11-15.
 
-- [x] **Aquilon / LivePremier: standalone model range recognized; Cmax 6.2.x emulator verified.** Device-neutral snapshots, family-aware v13 links, bounded targeted AWJ reads, geometry/crop import, mapped Preview/Program sends and pooled input previews. See [adapter contract](../interfaces/device-adapters.md) and [emulator acceptance](aquilon-compatibility.md). All firmware versions are attempted with a compatibility warning outside 6.2.x; incompatible schemas fail explicitly. Linked units, shared input corrections and non-centered/masked import remain unsupported.
+- [x] **Aquilon / LivePremier: standalone model range recognized; Cmax and RS1 6.2.x emulator verified.** Device-neutral snapshots, family-aware v13 links, bounded targeted AWJ reads, geometry/crop import, mapped Preview/Program sends and pooled input previews. See [adapter contract](../interfaces/device-adapters.md) and [emulator acceptance](aquilon-compatibility.md). All firmware versions are attempted with a compatibility warning outside 6.2.x; incompatible schemas fail explicitly. Linked units, shared input corrections and non-centered fit import remain unsupported; rectangular masks now import/send
+  with both editor origins (see the acceptance record).
 
 ## To-do list
 

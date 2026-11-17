@@ -34,7 +34,8 @@ Model codes follow the manufacturer's AWJ V6.2 guide, section 2.1:
 `NLC_CMAX`. HTTP names use the `AQL ` prefix and model spelling above; RS alpha
 also accepts `RS Alpha`. The HTTP model must match the exact AWJ model, not just
 another member of the Aquilon family. Capacities still come from discovered state.
-Only **Cmax 6.2.79** has recorded emulator acceptance. Other models and firmware
+**Cmax 6.2.79** has recorded emulator acceptance; see the later **RS1 6.2.79**
+mask round trips in the [acceptance record](../canvas-pilot/aquilon-compatibility.md). Other models and firmware
 have synthetic regression coverage; physical-output acceptance remains outstanding.
 
 `/api/tpp/v1/system`
@@ -103,8 +104,9 @@ Only `MIDDLE_CENTER` anchors are currently accepted. Source routing is
 `cropping.classic.pp.{left,right,top,bottom}` are integer fractions 0–65535.
 Layer crop combines the editor input crop and dynamic crop in native source pixels,
 then rounds `edge/native_axis*65535`. Exhausted axes are rejected. Sends set
-`cropping.classic.pp.aspectOverride` to `CENTERED`. Masked destinations are rejected;
-mask fields are never cleared implicitly. Crop decreases precede increases.
+`cropping.classic.pp.aspectOverride` to `CENTERED`. Rectangular blanking uses the
+independent `cropping.mask.pp.{left,right,top,bottom}` fields described below.
+Crop and mask decreases precede increases, releasing opposite edges first.
 
 Live input `LIVE_n` resolves `inputList.items.IN_n` and its active plug. The
 plug's `status.signal.pp.imageWidth/imageHeight` supply native dimensions.
@@ -118,13 +120,13 @@ Both Output-sized and Source aspect use the existing editor sizing contract.
 The retained cropped source fits inside the chosen container with a uniform
 minimum-axis scale. Quantized crop must reproduce the requested visible size
 within one output pixel. Import reverses this conversion for centered framing;
-unsupported fit/mask modes are reported on each layer and block its import.
+unsupported fit modes and malformed masks are reported on each layer and block its import.
 
 Explicit sends refresh state first and reject stale banks, source/framing values
 or changed destinations before writing. They use the shared root WebSocket
 `DEVICE` framing documented in [Midra exchange](midra-device-send.md), then pulse
 `device/screenAuxGroupList/control/pp/xUpdate` false → true. No TAKE, routing,
-shared input, mask or effect writes occur. Changed fields are read back; partial
+shared input or effect writes occur. Reviewed mask fields are part of the geometry transfer. Changed fields are read back; partial
 writes, failed applies and mismatches report uncertain outcomes without automatic
 retry writes or rollback. The emulator diagnostic explicitly restores its baseline.
 
@@ -146,9 +148,39 @@ physical-output behavior remain unverified.
 
 ## Mask appearance
 
-Device-neutral layer appearance pairs optional fit with an independent normalized
-container mask (`LayerAppearance`). Imports apply geometry, source/crop, fit and
-mask atomically. New/legacy unmasked layers use four zero edges. Midra maps this
-mask to its own integer attributes; Aquilon rejects nonzero editor masks before
-planning writes. Adding adapter support must preserve blanking rather than
-discard it or convert it into source crop.
+Device-neutral layer appearance pairs optional fit with independent blanking
+(`LayerAppearance`). Imports apply geometry, source/crop, fit and mask atomically.
+Aquilon now imports and sends rectangular masks, including fully blanked axes.
+This does not implement Cut & Fill, keying, effects or explicit layer-fit sends.
+
+WebRCS 6.2.79 (`app.1a22b5b509cf7c14eb86.js`) defines all four mask fields as
+integers **0–65535**. Its Mask panel converts those values to percentages or
+**layer width/height** pixels and limits an edge to 65535 minus its opposite.
+Its rendering clips the layer with the same percentage rectangle. These fields
+are independent of classic source crop. The `canUseMask` resource flag exposed by
+the AWJ guide concerns Cut & Fill; it is not used to enable rectangular blanking.
+
+Sends convert either editor mask origin (Layer or Source) to an output-space
+reveal rectangle, then express it relative to the rounded device container.
+For Source aspect sizing this includes the centered margins around the visible
+image. Clip edges to the container, round fractions ×65535 and cap opposite sums
+at 65535. Reject a quantized reveal position/size error above one output pixel,
+measured on the centered visible image. A completely zero editor mask explicitly
+sends four zeros, clearing any destination mask in the reviewed send. Geometry,
+classic crop and source routing are not changed by mask conversion itself.
+
+Import validates integer ranges and opposite-edge sums, builds the device-container
+reveal rectangle, then intersects it with the centered visible image. The imported
+mask is relative to that image (Layer origin), preserving its geometry and crop
+rather than shrinking the layer to the mask. An unrouted layer with zero classic
+crop can retain container geometry and its mask. Fully blanked axes are legal;
+malformed masks block that layer's import and send planning.
+The device cannot preserve the editor's Source-origin editing intent; retain the
+project for that. Blanking in already empty container margins has no visible effect.
+
+All mask values participate in the exact before/after review, stale-destination
+checks, apply pulse and readback. Failure does not trigger an automatic retry or
+rollback. The explicitly invoked diagnostic backs up its baseline to a temporary
+JSON file before writes, exercises both banks, origins, sizing strategies and
+mask/reset cases, then restores routing, geometry, crop and masks and verifies
+all targeted screen/auxiliary state. It is never a CI/hardware test.

@@ -212,11 +212,11 @@ fn plans_round_trip_fractional_geometry_crop_and_both_sizing_modes() {
     }
 }
 #[test]
-fn masks_fit_modes_and_shared_input_corrections_are_explicit() {
+fn invalid_masks_fit_modes_and_shared_input_corrections_are_explicit() {
     for (path, value) in [
         (
             "/device/screenList/items/S1/presetList/items/A/layerList/items/1/cropping/mask/pp/left",
-            json!(100),
+            json!(-1),
         ),
         (
             "/device/screenList/items/S1/presetList/items/A/layerList/items/1/cropping/classic/pp/aspectOverride",
@@ -329,32 +329,191 @@ fn explicit_midra_fit_is_not_silently_sent_to_aquilon() {
     }
 }
 
+fn clipped(reveal: Geometry, g: Geometry) -> Geometry {
+    let x = reveal.x.clamp(g.x, g.x + g.width);
+    let y = reveal.y.clamp(g.y, g.y + g.height);
+    Geometry {
+        x,
+        y,
+        width: (reveal.x + reveal.width).clamp(g.x, g.x + g.width) - x,
+        height: (reveal.y + reveal.height).clamp(g.y, g.y + g.height) - y,
+    }
+}
+
 #[test]
-fn masked_editor_layers_are_rejected_before_aquilon_send() {
-    let snapshot = Snapshot::parse(&identity(), &routed()).unwrap();
-    let mut layout = Layout::default();
-    layout
-        .set_mask(
-            0,
-            canvas_pilot::formats::Mask {
-                origin: Default::default(),
-                left: 0.1,
-                ..Default::default()
-            },
-        )
-        .unwrap();
-    assert!(
-        Plan::prepare(
-            &snapshot,
-            &layout,
-            0,
-            &[(layout.layer_info(0).id, "1".into())],
-            Target::Preview,
-            Sizing::OutputBox
-        )
-        .unwrap_err()
-        .contains("masking")
-    );
+fn masks_roundtrip_both_origins_sizing_modes_and_banks_without_changing_crop() {
+    use canvas_pilot::formats::{Mask, MaskOrigin};
+    for origin in [MaskOrigin::Layer, MaskOrigin::Source] {
+        for sizing in [Sizing::OutputBox, Sizing::SourceAspect] {
+            for target in [Target::Preview, Target::Program] {
+                for (width, height, zoom, offset) in [
+                    (640.5, 360.25, 1.0, [0.0, 0.0]),
+                    (301.25, 251.5, 2.0, [30.0, -10.0]),
+                    (100.0, 200.0, 4.0, [-15.0, 20.0]),
+                ] {
+                    let mut layout = Layout::default();
+                    layout
+                        .apply(
+                            0,
+                            Geometry {
+                                x: 12.125,
+                                y: 34.375,
+                                width,
+                                height,
+                            },
+                        )
+                        .unwrap();
+                    layout.set_framing(0, Framing { zoom, offset }).unwrap();
+                    let mut raw = routed();
+                    let mut unmasked_fields = None;
+                    for mask in [
+                        Mask {
+                            origin,
+                            left: 0.2,
+                            right: 0.1,
+                            top: 0.3,
+                            bottom: 0.2,
+                        },
+                        Mask {
+                            origin,
+                            left: 0.8,
+                            right: 0.2,
+                            top: 0.0,
+                            bottom: 0.0,
+                        },
+                        Mask {
+                            origin,
+                            left: 0.0,
+                            right: 0.0,
+                            top: 0.4,
+                            bottom: 0.6,
+                        },
+                        Mask::default(),
+                    ] {
+                        layout.set_mask(0, mask).unwrap();
+                        let snapshot = Snapshot::parse(&identity(), &raw).unwrap();
+                        let plan = Plan::prepare(
+                            &snapshot,
+                            &layout,
+                            0,
+                            &[(layout.layer_info(0).id, "1".into())],
+                            target,
+                            sizing,
+                        )
+                        .unwrap();
+                        let mut increasing_mask_seen = false;
+                        for change in &plan.changes {
+                            let path = format!("/{}", change.path.join("/"));
+                            assert!(
+                                !path.contains("/source/")
+                                    && !path.contains("/inputList/")
+                                    && !path.contains("xTake")
+                            );
+                            if path.contains("/mask/") {
+                                let decrease = change.after.as_u64().unwrap()
+                                    < change.before.as_u64().unwrap();
+                                if decrease {
+                                    assert!(!increasing_mask_seen);
+                                } else {
+                                    increasing_mask_seen = true;
+                                }
+                            }
+                            *raw.pointer_mut(&path).unwrap() = change.after.clone();
+                        }
+                        let base = Profile::Aquilon6.layer_path("S1", &plan.bank, "1");
+                        let unchanged = (
+                            raw.pointer(&format!("{base}/position")).unwrap().clone(),
+                            raw.pointer(&format!("{base}/cropping/classic"))
+                                .unwrap()
+                                .clone(),
+                        );
+                        if let Some(previous) = &unmasked_fields {
+                            assert_eq!(
+                                previous, &unchanged,
+                                "Masking must not resize or recrop the image"
+                            );
+                        }
+                        unmasked_fields = Some(unchanged);
+                        let mut decoded_raw = raw.clone();
+                        let group = &mut decoded_raw["device"]["screenAuxGroupList"]["items"]["S1"];
+                        group["status"]["pp"]["transition"] =
+                            json!(if group["control"]["pp"]["presetDown"] == plan.bank {
+                                "AT_UP"
+                            } else {
+                                "AT_DOWN"
+                            });
+                        let decoded = Snapshot::parse(&identity(), &decoded_raw).unwrap();
+                        let layer = &decoded.screens[0].layers[0];
+                        assert!(layer.unsupported.is_none(), "{:?}", layer.unsupported);
+                        decoded.screens[0].import(&[0]).unwrap();
+                        let expected = clipped(
+                            layout.formats().mask_bounds(0, layout.layers()[0]).unwrap(),
+                            layer.geometry,
+                        );
+                        let actual = layer.mask.bounds(layer.geometry);
+                        for (a, b) in [
+                            (expected.x, actual.x),
+                            (expected.y, actual.y),
+                            (expected.width, actual.width),
+                            (expected.height, actual.height),
+                        ] {
+                            assert!(
+                                (a - b).abs() < 1.0,
+                                "{origin:?} {sizing:?} {target:?}: {expected:?} vs {actual:?}"
+                            );
+                        }
+                        if mask.is_empty() {
+                            let base = Profile::Aquilon6.layer_path("S1", &plan.bank, "1");
+                            for edge in ["left", "right", "top", "bottom"] {
+                                assert_eq!(
+                                    raw.pointer(&format!("{base}/cropping/mask/pp/{edge}")),
+                                    Some(&json!(0))
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn malformed_masks_block_import_and_send_but_valid_unrouted_masks_import() {
+    let base = Profile::Aquilon6.layer_path("S1", "A", "1");
+    for (left, right) in [
+        (json!(-1), json!(0)),
+        (json!(65536), json!(0)),
+        (json!(0.5), json!(0)),
+        (json!(40000), json!(30000)),
+        (json!(null), json!(0)),
+    ] {
+        let mut r = raw();
+        *r.pointer_mut(&format!("{base}/cropping/mask/pp/left"))
+            .unwrap() = left;
+        *r.pointer_mut(&format!("{base}/cropping/mask/pp/right"))
+            .unwrap() = right;
+        let s = Snapshot::parse(&identity(), &r).unwrap();
+        assert!(s.screens[0].import(&[0]).is_err());
+        let layout = Layout::default();
+        assert!(
+            Plan::prepare(
+                &s,
+                &layout,
+                0,
+                &[(layout.layer_info(0).id, "1".into())],
+                Target::Preview,
+                Sizing::OutputBox
+            )
+            .is_err()
+        );
+    }
+    let mut r = raw();
+    *r.pointer_mut(&format!("{base}/cropping/mask/pp/left"))
+        .unwrap() = json!(16384);
+    let s = Snapshot::parse(&identity(), &r).unwrap();
+    s.screens[0].import(&[0]).unwrap();
+    assert!((s.screens[0].layers[0].mask.left - 16384.0 / 65535.0).abs() < 1e-9);
 }
 
 #[test]
@@ -410,4 +569,69 @@ fn all_models_and_firmware_versions_use_checked_geometry_with_compatibility_warn
         id["type"] = json!(model);
         assert!(Snapshot::parse(&id, &raw()).is_err());
     }
+}
+
+#[test]
+fn excessive_mask_quantization_is_rejected_before_writing() {
+    let snapshot = Snapshot::parse(&identity(), &routed()).unwrap();
+    let mut layout = Layout::default();
+    layout
+        .apply(
+            0,
+            Geometry {
+                x: 0.0,
+                y: 0.0,
+                width: 900000.0,
+                height: 506250.0,
+            },
+        )
+        .unwrap();
+    layout
+        .set_mask(
+            0,
+            canvas_pilot::formats::Mask {
+                left: 0.123456,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let err = Plan::prepare(
+        &snapshot,
+        &layout,
+        0,
+        &[(layout.layer_info(0).id, "1".into())],
+        Target::Preview,
+        Sizing::OutputBox,
+    )
+    .unwrap_err();
+    assert!(err.contains("Mask quantization"), "{err}");
+}
+
+#[test]
+fn captured_rs1_mask_import_preserves_visible_geometry_and_reveal_bounds() {
+    let capture: Value =
+        serde_json::from_str(include_str!("fixtures/aquilon-rs1-mask-6.2.json")).unwrap();
+    let mut state = raw();
+    let path = Profile::Aquilon6.layer_path("S1", "A", "1");
+    *state.pointer_mut(&path).unwrap() = capture["layer"].clone();
+    let snapshot = Snapshot::parse(&capture["identity"], &state).unwrap();
+    let layer = &snapshot.screens[0].layers[0];
+    snapshot.screens[0].import(&[0]).unwrap();
+    let expected: Geometry = serde_json::from_value(capture["editor_geometry"].clone()).unwrap();
+    let mask: canvas_pilot::formats::Mask =
+        serde_json::from_value(capture["editor_mask"].clone()).unwrap();
+    let expected_reveal = clipped(mask.bounds(expected), layer.geometry);
+    let actual_reveal = layer.mask.bounds(layer.geometry);
+    for (want, got) in [(expected, layer.geometry), (expected_reveal, actual_reveal)] {
+        for (a, b) in [
+            (want.x, got.x),
+            (want.y, got.y),
+            (want.width, got.width),
+            (want.height, got.height),
+        ] {
+            assert!((a - b).abs() < 1.0, "{want:?} vs {got:?}");
+        }
+    }
+    assert_eq!(layer.source, "LIVE_1");
+    assert_eq!(layer.mask.origin, canvas_pilot::formats::MaskOrigin::Layer);
 }

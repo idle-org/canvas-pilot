@@ -2180,8 +2180,10 @@ mod tests {
     }
     #[test]
     fn aquilon_import_links_load_and_capture_preselection_use_the_device_family() {
-        let raw: serde_json::Value =
+        let mut raw: serde_json::Value =
             serde_json::from_str(include_str!("../tests/fixtures/aquilon-6.2.json")).unwrap();
+        raw["device"]["screenList"]["items"]["S1"]["presetList"]["items"]["A"]["layerList"]["items"]
+            ["1"]["cropping"]["mask"]["pp"]["left"] = serde_json::json!(16384);
         let identity = serde_json::json!({"type":"AQL Cmax","isLinked":false,"version":{"major":6,"minor":2,"patch":79}});
         let snapshot = device::Snapshot::parse(&identity, &raw).unwrap();
         let mut app = Editor::default();
@@ -2196,6 +2198,7 @@ mod tests {
             Destination::Skip,
         ];
         app.apply_device_import().unwrap();
+        assert!((app.layout.formats().masks.last().unwrap().left - 16384.0 / 65535.0).abs() < 1e-9);
         let link = app
             .layout
             .layer_info(app.layout.layers().len() - 1)

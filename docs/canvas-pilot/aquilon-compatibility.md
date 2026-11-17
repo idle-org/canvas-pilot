@@ -21,7 +21,71 @@ Synthetic tests cover model identity agreement, cross-model rejection, firmware
 warnings and Preview/Program send planning. These do not establish actual older
 firmware compatibility or extend the Cmax emulator evidence below to other models.
 
-## Current acceptance
+## Rectangular-mask acceptance — RS1 6.2.79, 2026-11-17
+
+The local simulator identifies as **AQL RS1, standalone, firmware 6.2.79**.
+Canvas Pilot's HTTP identity and bounded AWJ connection succeeded. The previously
+recorded remote emulator endpoint did not respond; no remote-device writes were made.
+
+Rectangular blanking now imports and sends using `cropping.mask.pp` without
+resizing the image or converting blanking to source crop. Both Layer and Source
+editor origins convert to the device container; import returns a Layer-relative
+mask on the visible centered image. See the [mask contract](../interfaces/device-adapters.md#mask-appearance).
+Cut & Fill/keying, explicit layer-fit sends and physical-output acceptance remain
+outside this result.
+
+**96 combinations passed across the completed checks:** Preview/Program ×
+Output-sized/Source aspect × three fractional/portrait/asymmetric-crop layouts
+(zoom 1, 2 and 4) × both mask origins × asymmetric blanking, fully blanked
+horizontal axis, fully blanked vertical axis and reset-to-zero. Sends passed exact
+native-field readback; re-imported image geometry and reveal bounds matched within
+one output pixel. The diagnostic temporarily routed S1 layer 1 to LIVE_1;
+production sends never route sources, TAKE or alter shared input settings.
+
+The initial combined run was interrupted by the execution environment after 94
+successful cases, before its cleanup. The pre-write temporary recovery record
+restored and verified all 28 original routing/geometry/crop/mask fields in both
+physical banks. The diagnostic now accepts a bank scope: a subsequent Program-only
+run passed all 48 cases and verified full targeted screen/auxiliary baseline
+restoration. The first run had already passed all 48 Preview cases. This is not
+represented as one uninterrupted 96-case run.
+
+A final Preview-only visual check on the final implementation passed mathematical
+readback and displayed the expected mask in WebRCS with no captured JavaScript
+runtime exceptions. Its native mask values were left **13161**, right **6536**,
+top **19560**, bottom **13184**; the rendered clipping percentages were **20.08%**,
+**9.97%**, **29.85%**, **20.12%**. The slight difference from requested
+20/10/30/20 percent is the expected conversion from fractional editor geometry to
+the rounded device container. The baseline was restored and all targeted screen
+and auxiliary fields matched afterward.
+
+Final repository checks passed: 467 default-feature tests, 461 in each restricted
+configuration, both Clippy configurations, formatting, rustdoc and the pinned
+manual build. Whole-application line coverage is 91.72%.
+
+The separate sanitized `aquilon-rs1-mask-6.2.json` regression fixture preserves that
+one masked layer and its requested editor geometry/mask. Existing Cmax fixtures
+retain their original provenance. WebRCS bundle `app.1a22b5b509cf7c14eb86.js`
+(SHA-256 `9233ad54d9c2e0aa2b640bc080aea82c0450d85cd1d855a481533b6de9a67eb5`)
+provided the independent mask-unit, opposite-edge-limit and layer-container
+reference evidence. Raw simulator state, recovery files and screenshots remain
+local temporary artifacts, not repository contents.
+
+The diagnostic saves an exclusive temporary recovery JSON before its first write.
+Run banks separately on hosts with execution time limits:
+
+```sh
+cargo run --locked -p canvas-pilot --example check_aquilon_send -- --apply-and-restore IP:PORT preview
+cargo run --locked -p canvas-pilot --example check_aquilon_send -- --apply-and-restore IP:PORT program
+```
+
+The optional `--visual-check-and-restore IP:PORT preview` mode holds an asymmetric
+mask for 60 seconds and restores afterward. These are explicitly invoked device
+writes, never CI tests. Interrupted processes cannot promise cleanup: preserve the
+printed recovery record and restore/verify its captured native fields before
+another run. The recovery record contains private device context and stays outside Git.
+
+## Original Cmax acceptance — 2026-11-15
 
 - Identity, bounded targeted AWJ reads, screen/layer allocations and
   Preview/Program transition-group resolution work on the emulator.

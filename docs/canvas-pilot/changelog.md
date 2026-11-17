@@ -4,6 +4,22 @@
 
 ## Unreleased
 
+### v0.9.19
+
+- Added Aquilon rectangular-mask import and reviewed sends for Layer/Source
+  origins, both sizing strategies, fully blanked axes and explicit reset-to-zero.
+  Container/visible-image conversion preserves crop and image scale; malformed
+  masks and excessive quantization error fail explicitly. Opposite-edge releases
+  precede increases, with existing preflight, apply and readback safeguards.
+- Expanded the explicit Aquilon diagnostic to preserve a temporary recovery
+  baseline and verify masks as well as geometry/crop in Preview and Program.
+  The RS1 6.2.79 simulator passed the 96-case mask matrix across runs and a WebRCS
+  rendering check. Baselines were restored and verified, including recovery after
+  an interrupted run. A sanitized RS1 readback fixture guards the round trip.
+  Cut & Fill, explicit fit modes and physical-output acceptance remain separate.
+- Formatting, both Clippy configurations, rustdoc, 467 default/461 restricted
+  tests and the pinned manual build pass. Whole-application line coverage: 91.72%.
+
 ## v0.9.18 — 2026-11-17
 
 Published with four-platform portable bundles, cargo-binstall archives and raw

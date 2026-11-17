@@ -260,10 +260,12 @@ Opposite edges can meet to blank the whole layer, and remain draggable afterward
 Masking never modifies the crop, fit, image scale or layer bounds. Blank areas
 reveal lower layers. A mask over already cropped or transparent pixels has no
 visible effect. Mask proportions stay relative to the selected reference. Project files and
-embedded snapshots retain masks; plain geometry exports omit them. Midra load/send
-supports the resulting blanking for either mode. Loading from Midra returns a
-layer-relative mask because the device does not store the editor’s source reference.
-Aquilon masking remains unavailable.
+embedded snapshots retain masks; plain geometry exports omit them. Midra and Aquilon
+load/send support the resulting blanking for either mode. Device loads return a
+layer-relative mask because devices do not store the editor’s source reference.
+Aquilon supports rectangular blanking with Centered framing; its explicit fit and
+Cut & Fill modes are separate limitations. Sending a zero mask clears destination
+blanking in the reviewed transfer.
 
 <!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
 ![Mask tab showing left-edge blanking and a smaller magenta reveal window inside the layer](../images/07-guide-mask.png)

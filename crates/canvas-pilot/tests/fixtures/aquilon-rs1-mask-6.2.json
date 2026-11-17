@@ -1,0 +1,60 @@
+{
+  "identity": {
+    "type": "AQL RS1",
+    "isLinked": false,
+    "version": {
+      "major": 6,
+      "minor": 2,
+      "patch": 79,
+      "beta": false
+    }
+  },
+  "layer": {
+    "position": {
+      "pp": {
+        "posH": 332,
+        "posV": 215,
+        "sizeH": 641,
+        "sizeV": 360,
+        "anchor": "MIDDLE_CENTER"
+      }
+    },
+    "source": {
+      "pp": {
+        "inputNum": "LIVE_1"
+      }
+    },
+    "cropping": {
+      "classic": {
+        "pp": {
+          "aspectOverride": "CENTERED",
+          "left": 0,
+          "right": 0,
+          "top": 3,
+          "bottom": 3
+        }
+      },
+      "mask": {
+        "pp": {
+          "left": 13161,
+          "right": 6536,
+          "top": 19560,
+          "bottom": 13184
+        }
+      }
+    }
+  },
+  "editor_geometry": {
+    "x": 12.125,
+    "y": 34.375,
+    "width": 640.5,
+    "height": 360.25
+  },
+  "editor_mask": {
+    "origin": "layer",
+    "left": 0.2,
+    "right": 0.1,
+    "top": 0.3,
+    "bottom": 0.2
+  }
+}

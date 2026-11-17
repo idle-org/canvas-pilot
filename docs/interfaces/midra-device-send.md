@@ -264,8 +264,8 @@ The canvas, saved project and export artwork implement the same clipping model.
 Automated tests cover gesture cancellation, pixel preservation, migration and
 wire round trips for every fit and both sizing strategies. Physical raster-edge
 accuracy remains part of the engineering follow-up; no hardware write was used
-to establish it. Aquilon masking is still unsupported and rejects masked editor
-layers before any send rather than silently dropping the mask.
+to establish it. Aquilon rectangular masking is described separately in the
+[adapter contract](device-adapters.md#mask-appearance).
 
 ### Source-relative editor masks
 
@@ -274,4 +274,5 @@ quantization. Source bounds follow usable input after local input cropping and b
 layer crop/fit; reveal bounds are clipped to the device container. Masking does not
 change routing, input settings or crop values. The device stores blanking only, so
 a later device load returns a layer-relative mask; retain the project to preserve
-source-relative editing intent. Aquilon continues rejecting nonzero masks.
+source-relative editing intent. Aquilon uses the same editor reveal bounds with
+its own container-relative conversion.
