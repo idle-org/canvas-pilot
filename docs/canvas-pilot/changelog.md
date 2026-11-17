@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.39
+
+- Removed the secondary Dark/Light/In use lines from theme choices and locale-code
+  lines from language choices in installed packs, leaving compact named buttons
+  with theme swatches and selected-state highlighting.
+
 ### v0.9.38
 
 - Keep resize, crop and mask handles visible above overlapping layers. Covered

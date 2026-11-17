@@ -261,7 +261,6 @@ impl Editor {
                         {
                             self.preview_language(&ctx, choice);
                         }
-                        ui.weak(&language.locale);
                     }
                 });
         });
@@ -374,13 +373,6 @@ impl Editor {
                             {
                                 choice.select(&ctx);
                             }
-                        });
-                        ui.weak(if choice == theme::Theme::current(&ctx) {
-                            "In use"
-                        } else if entry.light {
-                            "Light"
-                        } else {
-                            "Dark"
                         });
                     }
                     if !pack.notices.is_empty() {
