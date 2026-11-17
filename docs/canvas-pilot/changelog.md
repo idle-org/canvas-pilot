@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## Release v0.9.34 — 2026-11-17
+
 ### v0.9.34
 
 - Renamed Visible layer edges to Layer borders and made disabling it exclude moving
