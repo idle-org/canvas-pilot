@@ -80,6 +80,25 @@ page label. No document bytes, source paths, converter settings or live links ar
 persisted. Reopening a project only decodes that PNG. Source editability, resolution
 independence, fonts and unused pages are intentionally absent from this snapshot.
 
+### Optional software discovery
+
+The GUI initializes a process-wide software snapshot before opening its native
+window. It records LibreOffice, draw.io Desktop and VectorCraft executable paths,
+explicit override presence and build availability. Search order is override (no
+fallback if invalid), application directory, its `bin/`, PATH, then common installed
+application locations on macOS/Windows. Unix candidates must be regular executable
+files (symlinks are followed); Windows searches the named `.exe` files. Detection
+does not execute a version probe or guarantee successful conversion.
+
+Converters consume this same snapshot. GUI export codecs and geometry/reference
+file filters omit Illustrator without VectorCraft. PPTX/draw.io geometry remains
+available without its artwork converter; the reference dialog hides Artwork and
+starts in Layout boxes. Software integrations lists missing or build-disabled tools
+as well as detected ones, their capabilities and setup. Installing software requires
+a restart to update the snapshot. No persistence schema, network connection or
+project state is added. The library's compiled codec registry remains independent
+of runtime discovery for programmatic use; calls needing a missing tool fail explicitly.
+
 ## Scope, coordinates and artwork
 
 All formats offer Current layer (exactly one selected), Selected layers,

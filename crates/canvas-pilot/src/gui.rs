@@ -111,6 +111,7 @@ pub struct Editor {
     outline_layers: bool,
     backdrop_title: String,
     reference_open: bool,
+    software_integrations_open: bool,
     reference_error: String,
 }
 #[derive(Clone)]
@@ -438,6 +439,7 @@ impl Default for Editor {
             outline_layers: false,
             backdrop_title: canvas_pilot::project::DEFAULT_BACKDROP_TITLE.into(),
             reference_open: false,
+            software_integrations_open: false,
             reference_error: String::new(),
         };
         this.sync();
@@ -994,7 +996,10 @@ impl Editor {
     }
     fn import_geometry_file(&mut self) {
         if let Some(path) = rfd::FileDialog::new()
-            .add_filter("Layer geometry", &canvas_pilot::interchange::extensions())
+            .add_filter(
+                "Layer geometry",
+                &canvas_pilot::software::geometry_extensions(),
+            )
             .pick_file()
         {
             self.open_paste(String::new());
@@ -4262,6 +4267,7 @@ impl Editor {
             || self.layer_ui.rename.is_some()
             || self.layer_ui.folder_rename.is_some();
         self.poll_reference();
+        self.software_integrations_window(ctx);
         if let Some(reference) = self.document_reference.show(ctx) {
             self.add_reference(reference);
         }

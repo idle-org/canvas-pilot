@@ -285,10 +285,44 @@ impl Editor {
             self.pan = Vec2::new(sw / 2.0 - c[0] as f32, sh / 2.0 - c[1] as f32);
         }
     }
+    pub(super) fn software_integrations_window(&mut self, ctx: &egui::Context) {
+        if !self.software_integrations_open {
+            return;
+        }
+        egui::Window::new("Software integrations")
+            .id(egui::Id::new("software-integrations"))
+            .open(&mut self.software_integrations_open)
+            .default_width(560.0)
+            .max_height((ctx.content_rect().height() - 100.0).max(200.0))
+            .vscroll(true)
+            .show(ctx, |ui| {
+                ui.label("Optional local applications detected at startup. Restart Canvas Pilot after installing or changing a converter.");
+                for integration in canvas_pilot::software::detected() {
+                    ui.separator();
+                    ui.horizontal_wrapped(|ui| {
+                        ui.strong(integration.software.name());
+                        ui.label(integration.status());
+                    });
+                    ui.label(integration.software.functionality());
+                    if let Some(path) = &integration.path { ui.small(path.display().to_string()); }
+                    if integration.enabled && !integration.available() {
+                        ui.small(format!("Install the application on PATH, beside Canvas Pilot, or in its bin folder; alternatively set {} to its executable.", integration.software.environment()));
+                    }
+                }
+                ui.separator();
+                ui.label("PDF and SVG rendering are built in. Figma artwork rendering is also built in when vendor formats are enabled.");
+                ui.weak("Detection checks for an executable file; conversion errors are still reported if that application cannot run or read the document.");
+            });
+    }
+
     pub(super) fn application_menu(&mut self, ui: &mut egui::Ui) {
         ui.set_min_width(185.0);
         if ui.button(tr(ui.ctx(), "ui.open-all-settings")).clicked() {
             self.preferences_open = true;
+            ui.close();
+        }
+        if ui.button("Software integrations…").clicked() {
+            self.software_integrations_open = true;
             ui.close();
         }
         ui.separator();
@@ -600,5 +634,38 @@ mod tests {
             }
             assert_eq!(*app.layout.layers(), boxes);
         }
+    }
+}
+
+#[cfg(test)]
+mod software_tests {
+    use super::super::tests::frame;
+    use super::*;
+
+    #[test]
+    fn integrations_window_lists_tools_status_and_enabled_functions_without_editing_project() {
+        let ctx = egui::Context::default();
+        let mut app = Editor {
+            software_integrations_open: true,
+            ..Default::default()
+        };
+        let before = app.project();
+        frame(&mut app, &ctx, vec![]);
+        let output = frame(&mut app, &ctx, vec![]);
+        let labels: Vec<_> = output
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::Shape::Text(t) => Some(t.galley.text()),
+                _ => None,
+            })
+            .collect();
+        assert!(labels.contains(&"Software integrations"));
+        for integration in canvas_pilot::software::detected() {
+            assert!(labels.contains(&integration.software.name()));
+            assert!(labels.contains(&integration.status()));
+            assert!(labels.contains(&integration.software.functionality()));
+        }
+        assert_eq!(app.project(), before);
     }
 }

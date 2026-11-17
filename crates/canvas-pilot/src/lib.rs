@@ -16,6 +16,7 @@ pub mod project;
 pub mod reference_document;
 pub mod size_presets;
 pub mod snapping;
+pub mod software;
 #[cfg(all(feature = "vendor_formats", not(feature = "no_proprietary")))]
 mod vendor_formats;
 use formats::{Formats, Framing, Source};

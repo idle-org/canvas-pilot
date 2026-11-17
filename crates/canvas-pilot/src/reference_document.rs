@@ -22,7 +22,7 @@ pub struct Document {
 
 /// Pictures plus every geometry format compiled into this build.
 pub fn extensions() -> Vec<&'static str> {
-    let mut extensions = crate::interchange::extensions();
+    let mut extensions = crate::software::geometry_extensions();
     extensions.extend(["pdf", "png", "jpg", "jpeg", "bmp"]);
     extensions
 }
@@ -250,22 +250,6 @@ fn layout_svg(document: &crate::import::ImportDocument) -> Result<String, String
     Ok(svg)
 }
 
-fn converter(env: &str, name: &str) -> std::path::PathBuf {
-    if let Some(path) = std::env::var_os(env) {
-        return path.into();
-    }
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(parent) = exe.parent()
-    {
-        for path in [parent.join(name), parent.join("bin").join(name)] {
-            if path.is_file() {
-                return path;
-            }
-        }
-    }
-    name.into()
-}
-
 fn office_pdf(bytes: &[u8]) -> Result<Vec<u8>, String> {
     let dir = tempfile::tempdir().map_err(|e| e.to_string())?;
     let input = dir.path().join("source.pptx");
@@ -273,14 +257,7 @@ fn office_pdf(bytes: &[u8]) -> Result<Vec<u8>, String> {
     // A separate profile prevents handing the document to an already running user session.
     let profile = url::Url::from_directory_path(dir.path().join("profile"))
         .map_err(|_| "Invalid converter profile path")?;
-    let mut cmd = std::process::Command::new(converter(
-        "CANVAS_PILOT_LIBREOFFICE",
-        if cfg!(windows) {
-            "soffice.exe"
-        } else {
-            "libreoffice"
-        },
-    ));
+    let mut cmd = std::process::Command::new(crate::software::Software::LibreOffice.executable()?);
     cmd.arg(format!("-env:UserInstallation={profile}"))
         .args([
             "--headless",
@@ -299,14 +276,7 @@ fn drawio_pdf(bytes: &[u8]) -> Result<Vec<u8>, String> {
     let input = dir.path().join("source.drawio");
     let output = dir.path().join("source.pdf");
     std::fs::write(&input, bytes).map_err(|e| e.to_string())?;
-    let mut cmd = std::process::Command::new(converter(
-        "CANVAS_PILOT_DRAWIO",
-        if cfg!(windows) {
-            "draw.io.exe"
-        } else {
-            "drawio"
-        },
-    ));
+    let mut cmd = std::process::Command::new(crate::software::Software::Drawio.executable()?);
     cmd.args(["--export", "--format", "pdf", "--all-pages", "--output"])
         .arg(&output)
         .arg(input);

@@ -407,31 +407,14 @@ fn collect_fig(
     Ok(())
 }
 
-fn vectorcraft() -> std::path::PathBuf {
-    if let Some(path) = std::env::var_os("MIDRA_VECTORCRAFT_CLI") {
-        return path.into();
-    }
-    let name = if cfg!(windows) {
-        "vectorcraft-cli.exe"
-    } else {
-        "vectorcraft-cli"
-    };
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(parent) = exe.parent()
-    {
-        for path in [parent.join(name), parent.join("bin").join(name)] {
-            if path.is_file() {
-                return path;
-            }
-        }
-    }
-    name.into()
+fn vectorcraft() -> Result<&'static std::path::Path, String> {
+    crate::software::Software::VectorCraft.executable()
 }
 fn import_ai(bytes: &[u8]) -> Result<Vec<Page>, String> {
     let dir = tempfile::tempdir().map_err(|e| e.to_string())?;
     let input = dir.path().join("input.ai");
     std::fs::write(&input, bytes).map_err(|e| e.to_string())?;
-    let mut command = std::process::Command::new(vectorcraft());
+    let mut command = std::process::Command::new(vectorcraft()?);
     command.arg("--safe-mode").arg("info").arg(&input);
     let info = run_vectorcraft(&mut command, dir.path())?;
     let artboards = info
@@ -470,7 +453,7 @@ pub(crate) fn reference_ai(bytes: &[u8]) -> Result<Vec<(String, String)>, String
     let dir = tempfile::tempdir().map_err(|e| e.to_string())?;
     let input = dir.path().join("input.ai");
     std::fs::write(&input, bytes).map_err(|e| e.to_string())?;
-    let mut command = std::process::Command::new(vectorcraft());
+    let mut command = std::process::Command::new(vectorcraft()?);
     command.arg("--safe-mode").arg("info").arg(&input);
     let info = run_vectorcraft(&mut command, dir.path())?;
     let boards = info
@@ -550,7 +533,7 @@ fn convert_ai(
     let input = dir.path().join(format!("input.{from}"));
     let output = dir.path().join(format!("output.{to}"));
     std::fs::write(&input, bytes).map_err(|e| e.to_string())?;
-    let mut command = std::process::Command::new(vectorcraft());
+    let mut command = std::process::Command::new(vectorcraft()?);
     command
         .arg("--safe-mode")
         .arg("convert")

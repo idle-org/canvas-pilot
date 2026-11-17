@@ -123,8 +123,12 @@ impl DocumentReferenceUi {
         if self.file.is_none()
             && let Some(file) = self.queue.pop_front()
         {
+            let path = file
+                .path
+                .as_deref()
+                .unwrap_or_else(|| std::path::Path::new(&file.name));
+            self.layout_only = !canvas_pilot::software::artwork_available(path);
             self.file = Some(file);
-            self.layout_only = false;
             self.page = 0;
             self.resolution = 1920;
             self.load(ctx);
@@ -145,7 +149,12 @@ impl DocumentReferenceUi {
                 Err(error) => self.error = error,
             }
         }
-        self.file.as_ref()?;
+        let file = self.file.as_ref()?;
+        let path = file
+            .path
+            .as_deref()
+            .unwrap_or_else(|| std::path::Path::new(&file.name));
+        let artwork_available = canvas_pilot::software::artwork_available(path);
         let mut open = true;
         let mut add = false;
         let mut cancel = false;
@@ -160,9 +169,11 @@ impl DocumentReferenceUi {
                 ui.add_enabled_ui(self.loading.is_none() && self.rendering.is_none(), |ui| {
                     ui.horizontal(|ui| {
                         ui.label("Render:");
-                        reload |= ui
-                            .selectable_value(&mut self.layout_only, false, "Artwork")
-                            .changed();
+                        if artwork_available {
+                            reload |= ui
+                                .selectable_value(&mut self.layout_only, false, "Artwork")
+                                .changed();
+                        }
                         reload |= ui
                             .selectable_value(&mut self.layout_only, true, "Layout boxes")
                             .changed();
@@ -319,6 +330,33 @@ mod tests {
         assert_eq!(restored.references[0].bytes, reference.bytes);
         assert!(restored.references[0].preserve_ratio);
         assert!(app.document_reference.file.is_none());
+    }
+
+    #[test]
+    fn layout_only_documents_start_without_an_artwork_option() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let csv = "midra_geometry_version,canvas_width,canvas_height,id,name,role,x,y,width,height\n1,1920,1080,speaker,Speaker,layer,10,20,300,400\n";
+        app.load_reference(
+            &ctx,
+            &egui::DroppedFile {
+                name: "layout.csv".into(),
+                bytes: Some(csv.as_bytes().to_vec().into()),
+                ..Default::default()
+            },
+        );
+        wait_preview(&mut app, &ctx);
+        assert!(app.document_reference.layout_only);
+        let output = frame(&mut app, &ctx, vec![]);
+        assert!(
+            !output
+                .shapes
+                .iter()
+                .any(|s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == "Artwork"))
+        );
+        assert!(output.shapes.iter().any(
+            |s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == "Layout boxes")
+        ));
     }
 
     #[test]

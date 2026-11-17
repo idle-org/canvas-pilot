@@ -608,7 +608,7 @@ impl Editor {
                     egui::ComboBox::new("Format", tr(ui.ctx(), "ui.format"))
                         .selected_text(self.files.export_codec.label())
                         .show_ui(ui, |ui| {
-                            for codec in canvas_pilot::interchange::Codec::available() {
+                            for codec in canvas_pilot::software::codecs() {
                                 ui.stable_selectable_value(
                                     &mut self.files.export_codec,
                                     codec,

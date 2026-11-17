@@ -12,6 +12,7 @@ const AMBER: Color32 = Color32::from_rgb(246, 197, 119);
 const PURPLE: Color32 = Color32::from_rgb(102, 85, 217);
 
 fn main() -> eframe::Result {
+    canvas_pilot::software::detected();
     eframe::run_native(
         "Canvas Pilot",
         eframe::NativeOptions {

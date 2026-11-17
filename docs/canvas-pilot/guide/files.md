@@ -13,8 +13,8 @@ turn on toolbar icon names in Options.
 ## PDF pages and documents as reference pictures
 
 Choose **Add reference images** from the reference list or Import menu, then
-select a picture or supported document. For documents, choose **Artwork** or
-**Layout boxes**, select the page/slide/frame and resolution, inspect the preview,
+select a picture or supported document. For documents, choose **Artwork** (when
+available) or **Layout boxes**, select the page/slide/frame and resolution, inspect the preview,
 and click **Add reference**. Repeat to add another page. Closing the dialog
 leaves the document unchanged. PDF drops open this dialog directly; other exchange
 files normally open geometry review, unless the **Reference image** window is open.
@@ -52,8 +52,23 @@ use `drawio` (`draw.io.exe` on Windows) or `CANVAS_PILOT_DRAWIO`. Executables be
 Canvas Pilot or in its `bin/` folder are also found. On macOS, the executable may
 be inside the installed application's `Contents/MacOS/` directory. Conversion uses
 temporary copies and has a 60-second timeout; source files are never overwritten.
-These converters are optional and are not bundled. Draw.io Desktop may require a
-graphical desktop session. The existing VectorCraft setup is described below.
+These converters are optional and are not bundled. At startup Canvas Pilot looks
+for executable files using the configured environment override, its own folder
+and `bin/`, PATH, and common macOS/Windows installation folders. An invalid explicit
+override is reported rather than silently using another installation. Discovery
+does not launch the applications or verify their versions. The same detected path
+is used for conversion; runtime failures are still reported.
+
+Open **Application menu → Software integrations…** to see each tool, its status,
+path and the features it enables. Missing integrations remain listed there for
+setup, but their unavailable actions are hidden: PPTX/draw.io references default to
+**Layout boxes** without an Artwork choice, and Illustrator is omitted from file
+filters and export choices when VectorCraft is missing. Built-in geometry import
+and export remain available for PPTX/draw.io. Restart Canvas Pilot after installing
+software or changing an override; discovery is a session snapshot, not a live
+connection. No executable paths are saved in the project.
+
+Draw.io Desktop may require a graphical desktop session. The existing VectorCraft setup is described below.
 
 ## Paste layer values and import geometry
 
@@ -506,7 +521,9 @@ $env:MIDRA_VECTORCRAFT_CLI = 'C:\Tools\VectorCraft\vectorcraft-cli.exe'
 
 Select **Illustrator (VectorCraft)** in Export layers, or import an `.ai` file
 through Geometry file. Conversion is local and temporary; it does not use a cloud
-service. A missing converter produces an error without changing the project.
+service. Illustrator choices appear only when VectorCraft was detected at startup.
+A converter that subsequently disappears or fails produces an error without changing
+the project. See **Software integrations…** for detection and setup.
 Use SVG if you do not want to install or configure the converter.
 
 Illustrator exchanges layer geometry and optional artwork, not the complete editor project.

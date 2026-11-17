@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### v0.9.47
+
+- Detect optional software at startup and use the same executable paths for
+  conversion. Hide unavailable artwork modes and Illustrator format choices;
+  retain built-in geometry and layout-box workflows. Added Software integrations
+  to the application menu, listing detected/missing tools, paths, setup and enabled
+  functions. Discovery checks executable files without launching applications.
+  Added executable-search precedence, capability and UI regression checks.
+  Required Rust checks and manual build passed; whole-app coverage is 92.06%.
+
 ### v0.9.46
 
 - Added PDF/document reference import with page selection, resolution control and
