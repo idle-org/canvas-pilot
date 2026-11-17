@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.23
+
+- Clicking High Contrast again restores the previous theme in the theme browser,
+  recent-theme menus and Appearance settings. The saved theme history supplies
+  the previous choice, with Midra Dark as the fallback.
+
 ### v0.9.22
 
 - Fix High Contrast source-helper coordinates disappearing on white checkerboard

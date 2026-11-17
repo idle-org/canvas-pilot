@@ -280,6 +280,19 @@ impl Theme {
             },
         }
     }
+    /// Apply a user choice; selecting active High Contrast restores the previous theme.
+    pub fn select(self, ctx: &egui::Context) {
+        let choice = if self == Self::HighContrast && Self::current(ctx) == self {
+            Self::recent(ctx)
+                .into_iter()
+                .find(|theme| *theme != Self::HighContrast)
+                .unwrap_or_default()
+        } else {
+            self
+        };
+        choice.apply(ctx);
+    }
+
     pub fn apply(self, ctx: &egui::Context) {
         let mut recent = Self::recent(ctx);
         recent.retain(|theme| *theme != self);

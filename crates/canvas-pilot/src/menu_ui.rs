@@ -174,7 +174,7 @@ impl Editor {
                     .stable_selectable_label(current == choice, choice.name())
                     .clicked()
                 {
-                    choice.apply(ui.ctx());
+                    choice.select(ui.ctx());
                     ui.close();
                 }
             }
@@ -262,7 +262,7 @@ impl Editor {
                 });
             });
         if let Some(choice) = selected {
-            choice.apply(ctx);
+            choice.select(ctx);
             self.settings.save(&self.application_settings(ctx));
         }
     }
@@ -501,13 +501,22 @@ mod tests {
         click_label(&mut app, &ctx, "Theme: Midra Dark");
         click_label(&mut app, &ctx, "More themes…");
         click_label(&mut app, &ctx, "Corporate Light");
+        click_label(&mut app, &ctx, "High Contrast");
+        assert_eq!(theme::Theme::current(&ctx), theme::Theme::HighContrast);
+        click_label(&mut app, &ctx, "High Contrast");
+        assert_eq!(theme::Theme::current(&ctx), theme::Theme::CorporateLight);
+        assert!(app.themes_open);
         let (store, saved) = settings::Store::at(path);
         assert!(store.error.is_none());
         let fresh_ctx = egui::Context::default();
         let restored = Editor::with_settings(&fresh_ctx, store, saved);
         assert_eq!(
             theme::Theme::recent(&fresh_ctx),
-            vec![theme::Theme::CorporateLight, theme::Theme::Midra]
+            vec![
+                theme::Theme::CorporateLight,
+                theme::Theme::HighContrast,
+                theme::Theme::Midra
+            ]
         );
         assert!(restored.show_toolbar_icon_names);
         assert!(!restored.keep_aspect_ratio);

@@ -325,14 +325,14 @@ impl Editor {
                                     ui.weak(tr(ctx, "access.text-help"));
                                 }
                                 if scaling_before != (self.ui_scale, self.text_scale) { apply_scaling(ctx, self.ui_scale, self.text_scale); }
-                                if ui.button(tr(ctx, "access.contrast")).clicked() { theme::Theme::HighContrast.apply(ctx); }
+                                if ui.button(tr(ctx, "access.contrast")).clicked() { theme::Theme::HighContrast.select(ctx); }
                                 ui.separator();
                                 ui.label(rust_i18n::t!("theme.current", locale = &localization::locale(ctx), name = theme::Theme::current(ctx).name()).into_owned());
                                 if ui.button(tr(ui.ctx(), "ui.browse-all-themes")).clicked() { self.themes_open = true; }
                                 ui.label(tr(ui.ctx(), "ui.recently-used"));
                                 for choice in theme::Theme::recent(ctx) {
                                     if ui.stable_selectable_label(choice == theme::Theme::current(ctx), choice.name()).clicked() {
-                                        choice.apply(ctx);
+                                        choice.select(ctx);
                                     }
                                 }
                                 ui.separator();

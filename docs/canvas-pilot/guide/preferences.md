@@ -86,6 +86,8 @@ Open **Menu → Open all settings… → Appearance**:
   **50% to 200%**. Canvas artwork and fixed-size labels follow interface scale only.
 - **Use high contrast:** select a black-based theme with white text, bright accents
   and stronger control borders. It also appears as **High Contrast** in the theme browser.
+  Click it again while active to return to your previous theme. This also works in
+  the recent-theme menu; if there is no previous theme, it returns to Midra Dark.
 
 Scale values update while dragging, but resizing applies only after releasing
 the pointer. Typed values apply after finishing text entry. Preferences are
