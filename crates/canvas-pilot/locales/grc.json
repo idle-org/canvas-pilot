@@ -2,7 +2,7 @@
   "language.packs": "Δέματα γλωσσῶν",
   "language.remove-pack": "Ἀφαιρεῖν τὸ δέμα…",
   "language.overwrite-pack": "Ἀντικαθιστάναι τὸ δέμα",
-  "ui.mask-edges": "Ἄκρα τῶν καλυμμάτων",
+  "ui.mask-edges": "Ἄκρα καὶ κέντρα καλυμμάτων",
   "ui.rename-layer": "Μετονόμασον τὸ στρῶμα…",
   "ui.move-to-folder": "Εἰς φάκελον μετάθεσον",
   "ui.no-folder": "Ἄνευ φακέλου",

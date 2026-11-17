@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.31
+
+- Extended Mask edges snapping to include visible masked-area centers as movement
+  anchors and move/resize/pivot targets. Centers use the clipped visible picture,
+  including source-relative masks and explicit fit modes; hidden or fully blanked
+  targets stay excluded. Existing preferences, group movement and Undo are preserved.
+
 ### v0.9.30
 
 - Replaced the toolbar Import tray with an inward-arrow box and added a matching

@@ -94,10 +94,14 @@ impl Snapping {
             .mask_edges
             .then(|| mask_geometry(formats, index, g))
             .flatten();
-        [self.layer_edges.then_some(g), mask]
+        self.layer_edges
+            .then_some(g)
             .into_iter()
-            .flatten()
             .flat_map(move |g| edges(g, axis))
+            .chain(mask.into_iter().flat_map(move |g| {
+                let [low, high] = edges(g, axis);
+                [low, high, g.center()[axis]]
+            }))
     }
 }
 
@@ -211,10 +215,16 @@ impl Layout {
                 Vec::new()
             };
             targets.extend(grid_targets.iter().copied());
+            let mut mask_centers = Vec::new();
             if options.layer_edges || options.mask_edges {
                 for (i, g) in before.layers.iter().enumerate() {
                     if !selected[i] && self.visible[i] {
                         targets.extend(options.targets(&before.formats, i, *g, axis));
+                        if options.mask_edges
+                            && let Some(mask) = mask_geometry(&before.formats, i, *g)
+                        {
+                            mask_centers.push(mask.center()[axis]);
+                        }
                     }
                 }
             }
@@ -232,14 +242,16 @@ impl Layout {
                     .chain(mask.into_iter().flat_map(|g| edge(g, axis)))
                     .map(|v| (false, v))
                     .chain(std::iter::once((true, g.center()[axis])))
+                    .chain(mask.map(|g| (true, g.center()[axis])))
                 {
                     for target in &targets {
-                        // Centers align to screen interior guides and overlay grid lines;
-                        // other targets retain edge-to-edge behavior.
+                        // Centers align to screen interior/grid lines and visible mask
+                        // centers; existing layer-edge behavior stays unchanged.
                         if is_center
                             && (!options.screen_edges
                                 || !screen_guides(self.formats.output[axis])[1..4].contains(target))
                             && !grid_targets.contains(target)
+                            && !mask_centers.contains(target)
                         {
                             continue;
                         }

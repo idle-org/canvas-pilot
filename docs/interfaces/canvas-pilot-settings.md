@@ -144,9 +144,12 @@ layer movement, resize handles and pivot placement; numeric entry, nudges and cr
 bypass it. Resize snapping preserves anchors and proportions and shows guides only
 when the resulting edge actually reaches its target.
 `mask_edges` adds the nonempty intersection of mask reveal, layer aperture and
-fitted picture as edge targets. Hidden layers are skipped, locked layers included.
-Movement also adds selected mask edges as anchors; resize handles remain on the
-outer rectangle, with masked edges available on stationary targets. Mirrored
+fitted picture as edge and center targets. Hidden layers are skipped, locked layers included.
+Movement also adds selected mask edges and centers as anchors; resize handles remain on the
+outer rectangle, with masked edges and centers available on stationary targets.
+Moving centers align to screen interior guides, overlay grid lines and stationary
+mask centers. This extends the existing `mask_edges` flag without changing its
+serialized name, default or schema version. Mirrored
 contact uses outer edges. The option defaults to false.
 
 The session-only toolbar grid tools select 10 or 100 screen pixels (mutually exclusive). Shift temporarily selects the 10 px grid; Ctrl+Shift selects 100 px. If that same grid tool is selected, the matching shortcut temporarily disables it instead. Alt overrides both grids and temporarily inverts the saved snapping-enabled value (off becomes on; on becomes off), including on release. The chosen pixel/screen/layer-edge targets still apply. These modifiers do not change the saved options or settings version.

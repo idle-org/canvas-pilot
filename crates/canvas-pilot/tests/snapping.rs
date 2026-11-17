@@ -934,6 +934,154 @@ fn mask_targets_follow_all_fit_modes_and_skip_letterbox_space() {
             );
             assert_eq!(actual, expected, "{fit:?} {origin:?}");
             assert_eq!(guides, expected.map(Some));
+            let high = [
+                (g.x + g.width)
+                    .min(mask.x + mask.width)
+                    .min(picture.x + picture.width),
+                (g.y + g.height)
+                    .min(mask.y + mask.height)
+                    .min(picture.y + picture.height),
+            ];
+            let center = std::array::from_fn(|axis| (expected[axis] + high[axis]) / 2.0);
+            assert_eq!(
+                layout.snap_pivot(1, center.map(|v| v + 2.0), mask_options(), 6.0, None, false),
+                (center, center.map(Some)),
+                "{fit:?} {origin:?}"
+            );
         }
+    }
+}
+
+#[test]
+fn mask_centers_snap_pivots_resizes_and_moves_and_respect_visibility() {
+    use canvas_pilot::{
+        ResizeHandle,
+        formats::{Mask, MaskOrigin},
+    };
+    for origin in [MaskOrigin::Layer, MaskOrigin::Source] {
+        let mut layout = Layout::default();
+        layout
+            .set_mask(
+                0,
+                Mask {
+                    origin,
+                    right: 0.25,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        layout.set_locked(0, true);
+        // Visible mask spans x=120..600; its center is 360, not the layer's 440.
+        let options = mask_options();
+        assert_eq!(
+            layout.snap_pivot(1, [362.0, 362.0], options, 6.0, None, false),
+            ([360.0, 360.0], [Some(360.0), Some(360.0)])
+        );
+        layout.start_handle_resize(1, ResizeHandle::Left, [1160.0, 360.0], false);
+        assert_eq!(
+            layout.drag_to_snapped([362.0, 360.0], options, 6.0)[0],
+            Some(360.0)
+        );
+        assert_eq!(layout.layers()[1].x, 360.0);
+        layout.cancel_drag();
+        // A whole layer's center can also align to the visible mask center.
+        layout.start_drag([1200.0, 200.0]);
+        assert_eq!(
+            layout.drag_to_snapped([82.0, 200.0], options, 6.0)[0],
+            Some(360.0)
+        );
+        assert_eq!(layout.layers()[1].center()[0], 360.0);
+        layout.cancel_drag();
+        for hidden in [false, true] {
+            layout.set_visible(0, !hidden);
+            for enabled in [false, true] {
+                let options = Snapping {
+                    mask_edges: enabled,
+                    ..options
+                };
+                assert_eq!(
+                    layout
+                        .snap_pivot(1, [362.0, 362.0], options, 6.0, None, false)
+                        .1,
+                    if enabled && !hidden {
+                        [Some(360.0); 2]
+                    } else {
+                        [None; 2]
+                    }
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn moving_mask_center_aligns_to_masks_screen_and_grid_with_rigid_groups_and_undo() {
+    use canvas_pilot::formats::Mask;
+    let mut layout = Layout::default();
+    layout
+        .set_mask(
+            0,
+            Mask {
+                right: 0.375,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    layout
+        .set_mask(
+            1,
+            Mask {
+                left: 0.25,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let before = layout.layers().clone();
+    let formats = layout.formats().clone();
+    layout.start_drag([1200.0, 200.0]);
+    assert_eq!(
+        layout.drag_to_snapped([-37.0, 200.0], mask_options(), 6.0)[0],
+        Some(320.0)
+    );
+    assert_eq!(
+        layout
+            .formats()
+            .mask_bounds(1, layout.layers()[1])
+            .unwrap()
+            .center()[0],
+        320.0
+    );
+    layout.finish_drag();
+    assert_eq!(*layout.formats(), formats);
+    layout.undo();
+    assert_eq!(*layout.layers(), before);
+    layout.set_selection([true, true]);
+    for grid in [false, true] {
+        layout.start_drag([1200.0, 200.0]);
+        let options = Snapping {
+            screen_edges: !grid,
+            grid,
+            grid_divisions: [2, 2],
+            ..mask_options()
+        };
+        assert_eq!(
+            layout.drag_to_snapped([603.0, 200.0], options, 6.0)[0],
+            Some(960.0)
+        );
+        assert_eq!(
+            layout
+                .formats()
+                .mask_bounds(1, layout.layers()[1])
+                .unwrap()
+                .center()[0],
+            960.0
+        );
+        assert_eq!(
+            layout.layers()[1].x - layout.layers()[0].x,
+            before[1].x - before[0].x
+        );
+        layout.cancel_drag();
+        assert_eq!(*layout.layers(), before);
+        assert_eq!(*layout.formats(), formats);
     }
 }

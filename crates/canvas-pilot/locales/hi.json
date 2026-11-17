@@ -2,7 +2,7 @@
   "language.packs": "भाषा पैक",
   "language.remove-pack": "पैक हटाएँ…",
   "language.overwrite-pack": "पैक बदलें",
-  "ui.mask-edges": "मास्क के किनारे",
+  "ui.mask-edges": "मास्क के किनारे और केंद्र",
   "ui.rename-layer": "परत का नाम बदलें…",
   "ui.move-to-folder": "फ़ोल्डर में ले जाएँ",
   "ui.no-folder": "कोई फ़ोल्डर नहीं",

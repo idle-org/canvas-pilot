@@ -156,10 +156,15 @@ or document history. Existing project saves still preserve zoom/pan values.
 
 ### Snap to masks
 
-Enable **Mask edges** in the snapping options to add the visible mask boundaries
-as targets, independently of **Visible layer edges**. Movement can align either
+Enable **Mask edges & centers** in the snapping options to add the visible mask boundaries
+and their centers as targets, independently of **Visible layer edges**. Movement can align either
 outer layer edges or mask edges to those targets, screen guides and grid lines.
-Resize handles and pivots can snap to stationary layers’ mask boundaries;
+The center of a moving visible masked area can align to screen interior guides,
+overlay grid lines and other masked-area centers. Whole-layer centers can also
+align to masked-area centers. The center comes from the visible remainder after
+masking, rather than the hidden/blanked part. Groups move rigidly and Undo restores
+the complete move without changing mask values.
+Resize handles and pivots can snap to stationary layers’ mask boundaries or centers;
 resize handles still belong to the outer layer rectangle. Mirrored/opposite
 resize contact remains based on outer layer edges.
 

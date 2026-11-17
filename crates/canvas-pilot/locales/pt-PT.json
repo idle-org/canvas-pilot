@@ -2,7 +2,7 @@
   "language.packs": "Pacotes de idiomas",
   "language.remove-pack": "Remover pacote…",
   "language.overwrite-pack": "Substituir pacote",
-  "ui.mask-edges": "Limites da máscara",
+  "ui.mask-edges": "Bordas e centros da máscara",
   "ui.rename-layer": "Mudar nome da camada…",
   "ui.move-to-folder": "Mover para pasta",
   "ui.no-folder": "Sem pasta",

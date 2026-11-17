@@ -482,7 +482,7 @@ mod tests {
         click_label(&mut app, &ctx, "Options");
         click_label(&mut app, &ctx, "Snapping");
         click_label(&mut app, &ctx, "Snap movement & resizing");
-        click_label(&mut app, &ctx, "Mask edges");
+        click_label(&mut app, &ctx, "Mask edges & centers");
         assert!(app.snapping.mask_edges);
         assert_eq!(*app.layout.layers(), before);
         let (store, saved) = settings::Store::at(path);

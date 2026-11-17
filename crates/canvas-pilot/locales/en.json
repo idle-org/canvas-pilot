@@ -2,7 +2,7 @@
   "language.packs": "Language packs",
   "language.remove-pack": "Remove pack…",
   "language.overwrite-pack": "Overwrite pack",
-  "ui.mask-edges": "Mask edges",
+  "ui.mask-edges": "Mask edges & centers",
   "ui.rename-layer": "Rename layer…",
   "ui.move-to-folder": "Move to folder",
   "ui.no-folder": "No folder",
