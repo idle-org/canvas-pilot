@@ -5,6 +5,11 @@
 Choosing an exchange format? See the [file and clipboard feature matrix](format-matrix.md)
 for naming, crop, pictures and editable-settings support.
 
+The toolbar has adjacent **Import** (arrow into a box) and **Export** (arrow out
+of a box) icons. They open the same import/export menus available from Menu;
+opening a menu does not read or write device values. Hover for the label, or
+turn on toolbar icon names in Options.
+
 ## Paste layer values and import geometry
 
 Check the [clipboard feature matrix](format-matrix.md#clipboard-matrix) for your

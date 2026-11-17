@@ -3140,50 +3140,30 @@ impl Editor {
                 );
             },
         );
-        ui.scope_builder(
-            egui::UiBuilder::new()
-                .max_rect(button(1))
-                .layout(egui::Layout::left_to_right(egui::Align::Center)),
-            |ui| {
-                ui.spacing_mut().interact_size = Vec2::new(36.0, 32.0);
-                ui.spacing_mut().button_padding.x = 11.0;
-                let menu = toolbar_menu(ui, "    ", |ui| self.import_menu(ui));
-                let response = menu
-                    .response
-                    .on_hover_text(tr(ui.ctx(), "ui.import-layer-values-or-reference-image"));
-                response.widget_info(|| {
-                    egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Import")
-                });
-                let c = response.rect.center();
-                let stroke = Stroke::new(
-                    1.6_f32,
-                    if response.hovered() || response.has_focus() {
-                        palette.cyan
-                    } else {
-                        palette.text
-                    },
-                );
-                let p = ui.painter();
-                p.line_segment([c + Vec2::new(0.0, -10.0), c + Vec2::new(0.0, 3.0)], stroke);
-                p.add(egui::Shape::line(
-                    vec![
-                        c + Vec2::new(-5.0, -2.0),
-                        c + Vec2::new(0.0, 3.0),
-                        c + Vec2::new(5.0, -2.0),
-                    ],
-                    stroke,
-                ));
-                p.add(egui::Shape::line(
-                    vec![
-                        c + Vec2::new(-9.0, 4.0),
-                        c + Vec2::new(-9.0, 9.0),
-                        c + Vec2::new(9.0, 9.0),
-                        c + Vec2::new(9.0, 4.0),
-                    ],
-                    stroke,
-                ));
-            },
-        );
+        for (slot, exporting) in [(1, false), (22, true)] {
+            ui.scope_builder(
+                egui::UiBuilder::new()
+                    .max_rect(button(slot))
+                    .layout(egui::Layout::left_to_right(egui::Align::Center)),
+                |ui| {
+                    ui.spacing_mut().interact_size = Vec2::new(36.0, 32.0);
+                    ui.spacing_mut().button_padding.x = 11.0;
+                    let menu = toolbar_menu(ui, "    ", |ui| {
+                        if exporting {
+                            self.export_menu(ui);
+                        } else {
+                            self.import_menu(ui);
+                        }
+                    });
+                    let label = tr(ui.ctx(), if exporting { "ui.export" } else { "ui.import" });
+                    let response = menu.response.on_hover_text(label.clone());
+                    response.widget_info(|| {
+                        egui::WidgetInfo::labeled(egui::WidgetType::Button, true, &label)
+                    });
+                    paint_transfer_icon(ui, &response, exporting);
+                },
+            );
+        }
         ui.scope_builder(
             egui::UiBuilder::new()
                 .max_rect(button(15))
@@ -3254,6 +3234,7 @@ impl Editor {
                 (3, "Redo"),
                 (10, "Align"),
                 (1, "Import"),
+                (22, "Export"),
                 (14, "Options"),
                 (16, "Grid"),
             ] {
@@ -4530,14 +4511,14 @@ enum ToolbarIcon {
 }
 
 // Keep related tools together when wrapping; reserve caption space per group.
-fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 22], Vec<Rect>, f32) {
-    let mut buttons = [Rect::NOTHING; 22];
+fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 23], Vec<Rect>, f32) {
+    let mut buttons = [Rect::NOTHING; 23];
     let mut groups = Vec::new();
     let mut x = 24.0;
     let mut y = 20.0;
     let height = if captions { 58.0 } else { 36.0 };
     for slots in [
-        &[15, 0, 1][..],
+        &[15, 0, 1, 22][..],
         &[2, 3],
         &[4, 5],
         &[6, 7, 8, 9],
@@ -4550,7 +4531,7 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 22], Vec<Rect>, f32) {
             11 => 56.0,
             8 | 9 | 17..=21 if captions => 80.0,
             _ if captions => 56.0,
-            1 | 10 | 14 => 44.0,
+            1 | 10 | 14 | 22 => 44.0,
             17..=21 => 34.0,
             _ => 36.0,
         };
@@ -4569,7 +4550,7 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 22], Vec<Rect>, f32) {
             let button_width = match slot {
                 0 | 15 => 64.0,
                 11 => 52.0,
-                1 | 10 | 14 => 40.0,
+                1 | 10 | 14 | 22 => 40.0,
                 _ => 32.0,
             };
             buttons[slot] = Rect::from_min_size(
@@ -4581,6 +4562,40 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 22], Vec<Rect>, f32) {
         x += group_width + 10.0;
     }
     (buttons, groups, y + height)
+}
+
+// Inward/outward arrows share the same open box for a recognizable pair.
+fn paint_transfer_icon(ui: &egui::Ui, response: &egui::Response, exporting: bool) {
+    let palette = theme::palette(ui.ctx());
+    let color = if response.hovered() || response.has_focus() {
+        palette.cyan
+    } else {
+        palette.text
+    };
+    let stroke = Stroke::new(1.8, color);
+    let c = response.rect.center();
+    let p = ui.painter();
+    p.add(egui::Shape::line(
+        vec![
+            c + Vec2::new(-1.0, -5.0),
+            c + Vec2::new(-1.0, -10.0),
+            c + Vec2::new(10.0, -10.0),
+            c + Vec2::new(10.0, 10.0),
+            c + Vec2::new(-1.0, 10.0),
+            c + Vec2::new(-1.0, 5.0),
+        ],
+        stroke,
+    ));
+    p.line_segment([c + Vec2::new(-11.0, 0.0), c + Vec2::new(5.0, 0.0)], stroke);
+    let (tip, tail) = if exporting { (-11.0, -6.0) } else { (5.0, 0.0) };
+    p.add(egui::Shape::line(
+        vec![
+            c + Vec2::new(tail, -5.0),
+            c + Vec2::new(tip, 0.0),
+            c + Vec2::new(tail, 5.0),
+        ],
+        stroke,
+    ));
 }
 
 impl ToolbarIcon {
@@ -5749,7 +5764,7 @@ mod tests {
                     assert!(buttons[..i].iter().all(|other| !other.intersects(*button)));
                 }
                 for slots in [
-                    &[15, 0, 1][..],
+                    &[15, 0, 1, 22][..],
                     &[2, 3],
                     &[4, 5],
                     &[6, 7, 8, 9],
@@ -6124,7 +6139,20 @@ mod tests {
                 vec![egui::Event::PointerMoved(pos), event(true)],
             );
             frame(&mut app, &ctx, vec![event(false)]);
-            click_text(&mut app, &ctx, "Snapping");
+            // Submenus open on hover. Let their placement settle before clicking
+            // an item; clicking the submenu itself can toggle it shut after hover.
+            let output = frame(&mut app, &ctx, vec![]);
+            let snapping = output
+                .shapes
+                .iter()
+                .find_map(|s| match &s.shape {
+                    egui::epaint::Shape::Text(t) if t.galley.job.text == "Snapping" => {
+                        Some(t.pos + t.galley.size() / 2.0)
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            frame(&mut app, &ctx, vec![egui::Event::PointerMoved(snapping)]);
             click_text(&mut app, &ctx, "Snap movement & resizing");
             assert!(app.snapping.enabled);
             for label in [
@@ -7318,6 +7346,25 @@ mod tests {
         assert!(paste.error.is_empty());
         assert_eq!(paste.shapes.len(), 1);
         assert_eq!(*app.layout.layers(), before);
+    }
+
+    #[test]
+    fn export_toolbar_opens_existing_review_without_editing_the_project() {
+        let mut app = Editor::default();
+        let ctx = egui::Context::default();
+        frame(&mut app, &ctx, vec![]);
+        let before = app.project();
+        let pos = toolbar_test_position(&app, &ctx, 22);
+        frame(
+            &mut app,
+            &ctx,
+            vec![egui::Event::PointerMoved(pos), mouse(pos, true)],
+        );
+        frame(&mut app, &ctx, vec![mouse(pos, false)]);
+        click_text(&mut app, &ctx, "Export layers…");
+        let output = frame(&mut app, &ctx, vec![]);
+        assert!(output.shapes.iter().any(|s| matches!(&s.shape, egui::epaint::Shape::Text(t) if t.galley.job.text == "Export layers")));
+        assert_eq!(app.project(), before);
     }
 
     #[test]

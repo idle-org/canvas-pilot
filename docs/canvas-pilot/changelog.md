@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.30
+
+- Replaced the toolbar Import tray with an inward-arrow box and added a matching
+  outward-arrow Export icon beside it. Both open the existing reviewed workflows;
+  export supports the same layer files and device-transfer options as the menu.
+
 ### v0.9.29
 
 - Added 4:3, 16:9 and 16:10 crop presets in Crop properties and the selected-layer
