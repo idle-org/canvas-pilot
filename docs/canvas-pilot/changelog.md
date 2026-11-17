@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.9.22
+
+- Fix High Contrast source-helper coordinates disappearing on white checkerboard
+  tiles: labels now use black on white tiles and white on black tiles.
+
 ### v0.9.21
 
 - Keep the More themes picker open after each selection so multiple themes can

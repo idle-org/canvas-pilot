@@ -927,15 +927,14 @@ fn paint_pattern_clipped(
             if !cell.intersects(clip) {
                 continue;
             }
-            p.rect_filled(
-                cell,
-                0.0,
-                if (row + col) % 2 == 0 {
-                    palette.pattern[0]
-                } else {
-                    palette.pattern[1]
-                },
-            );
+            let tile = (row + col) % 2;
+            let label_color = if theme::Theme::current(painter.ctx()) == theme::Theme::HighContrast
+            {
+                palette.pattern[1 - tile]
+            } else {
+                palette.text
+            };
+            p.rect_filled(cell, 0.0, palette.pattern[tile]);
             p.rect_stroke(
                 cell,
                 0.0,
@@ -948,7 +947,7 @@ fn paint_pattern_clipped(
                     Align2::CENTER_CENTER,
                     format!("{},{}", col, row),
                     FontId::proportional(11.0),
-                    palette.text,
+                    label_color,
                 );
             }
         }
@@ -1806,6 +1805,37 @@ mod preview_paint_tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn high_contrast_coordinate_labels_contrast_with_both_tile_colors() {
+        let ctx = egui::Context::default();
+        theme::Theme::HighContrast.apply(&ctx);
+        let rect = Rect::from_min_size(Pos2::new(20.0, 20.0), Vec2::new(1000.0, 600.0));
+        let output = ctx.run_ui(egui::RawInput::default(), |ui| {
+            paint_pattern_clipped(ui.painter(), rect, Source::default(), Crop::default(), rect);
+        });
+        let mut labels = 0;
+        for shape in &output.shapes {
+            if let egui::Shape::Text(text) = &shape.shape {
+                let (col, row) = text.galley.text().split_once(',').unwrap();
+                let tile = (col.parse::<usize>().unwrap() + row.parse::<usize>().unwrap()) % 2;
+                let expected = if tile == 0 {
+                    egui::Color32::WHITE
+                } else {
+                    egui::Color32::BLACK
+                };
+                assert!(
+                    text.galley
+                        .job
+                        .sections
+                        .iter()
+                        .all(|section| section.format.color == expected)
+                );
+                labels += 1;
+            }
+        }
+        assert_eq!(labels, 60);
     }
 
     #[test]
