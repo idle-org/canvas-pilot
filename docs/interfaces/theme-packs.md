@@ -104,7 +104,7 @@ the importer continues to accept both stored and DEFLATE-compressed packs.
 ## Bundled collection
 
 `docs/theme-packs/extra-themes.zip` is a normal version-1 pack (`extra-themes`,
-revision 2), containing all 16 distributed themes. One import validates and installs
+revision 3), containing all 16 distributed themes. One import validates and installs
 all entries atomically; it does not unpack nested ZIPs. The build script combines
 individual manifests in sorted path order, prefixes theme IDs with their source
 pack ID and preserves all notices. Individual packs and the collection have distinct

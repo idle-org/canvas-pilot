@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.41
+
+- Retuned Deep Rock Galactic to gold and molten-orange accents on dark rock/brown
+  surfaces, following the supplied title-art reference. Updated its standalone
+  pack to revision 2 and extra-themes to revision 3; regenerated downloads and
+  checked text contrast.
+
 ### v0.9.40
 
 - Retuned Dispatch to vivid yellow and cyan accents on charcoal/olive surfaces,

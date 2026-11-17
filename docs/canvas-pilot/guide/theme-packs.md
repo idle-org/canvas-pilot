@@ -24,7 +24,7 @@ keeps separate copies, so you only need one option.
 | [Catppuccin Mocha](../../theme-packs/catppuccin.zip) | Soft charcoal and pastel accents | [manifest.json](../../theme-packs/catppuccin/manifest.json) |
 | [Detroit: Become Human](../../theme-packs/detroit-become-human.zip) | Deep blue, pale text and cyan android-inspired accents | [manifest.json](../../theme-packs/detroit-become-human/manifest.json) |
 | [Minecraft Overworld](../../theme-packs/minecraft.zip) | Earth and stone surfaces with grass-green accents | [manifest.json](../../theme-packs/minecraft/manifest.json) |
-| [Deep Rock Galactic](../../theme-packs/deep-rock-galactic.zip) | Dark | [manifest.json](../../theme-packs/deep-rock-galactic/manifest.json) |
+| [Deep Rock Galactic](../../theme-packs/deep-rock-galactic.zip) | Dark, gold/molten-orange accents | [manifest.json](../../theme-packs/deep-rock-galactic/manifest.json) |
 | [Dispatch](../../theme-packs/dispatch.zip) | Dark, yellow/cyan accents | [manifest.json](../../theme-packs/dispatch/manifest.json) |
 | [Dracula](../../theme-packs/dracula.zip) | Dark | [manifest.json](../../theme-packs/dracula/manifest.json) |
 | [GitHub Dark](../../theme-packs/github-dark.zip) | Dark | [manifest.json](../../theme-packs/github-dark/manifest.json) |
