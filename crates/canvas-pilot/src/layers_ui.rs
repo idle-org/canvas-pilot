@@ -49,6 +49,7 @@ pub(super) struct LayerDrag(pub usize);
 #[derive(Clone)]
 pub(super) struct FolderDrag(pub String);
 
+#[derive(Clone, PartialEq)]
 pub(super) enum TreeRow {
     Folder(String),
     Layer(usize),
@@ -60,6 +61,8 @@ pub(super) struct LayerUi {
     pub(super) collapsed: std::collections::BTreeSet<String>,
     pub(super) folder_rename: Option<(Option<String>, String, Vec<usize>)>,
     folder_move: Option<(String, usize, bool)>,
+    reorder_requested: Option<(usize, usize)>,
+    pub(super) add_requested: bool,
     last_folder_click: Option<String>,
     assign: Option<(Vec<usize>, String)>,
     pub context_layer: Option<usize>,
@@ -108,6 +111,16 @@ impl Editor {
         } else {
             vec![id]
         };
+        for (label, up) in [("Move up", true), ("Move down", false)] {
+            let target = self.tree_step_target(&TreeRow::Layer(i), up);
+            if ui
+                .add_enabled(target.is_some(), egui::Button::new(label))
+                .clicked()
+            {
+                self.layer_ui.reorder_requested = target.map(|to| (id, to));
+                ui.close();
+            }
+        }
         ui.menu_button(tr(ui.ctx(), "ui.move-to-folder"), |ui| {
             if ui.button(tr(ui.ctx(), "ui.no-folder")).clicked() {
                 self.layer_ui.assign = Some((ids.clone(), String::new()));
@@ -450,6 +463,102 @@ impl Editor {
         rows
     }
 
+    // Step through visible siblings: folder contents stay in their folder,
+    // while root layers and nonempty folders move past one another as blocks.
+    fn tree_step_target(&self, row: &TreeRow, up: bool) -> Option<usize> {
+        if let TreeRow::Layer(i) = row {
+            let folder = &self.layout.layer_info(*i).folder;
+            if !folder.is_empty() {
+                let members = self.layout.folder_members(folder);
+                let position = members.iter().position(|j| j == i)?;
+                return members
+                    .get(if up {
+                        position + 1
+                    } else {
+                        position.checked_sub(1)?
+                    })
+                    .copied();
+            }
+        }
+        let roots: Vec<_> = self
+            .layer_tree_rows()
+            .into_iter()
+            .filter(|row| match row {
+                TreeRow::Layer(i) => self.layout.layer_info(*i).folder.is_empty(),
+                TreeRow::Folder(name) => !self.layout.folder_members(name).is_empty(),
+            })
+            .collect();
+        let position = roots.iter().position(|candidate| candidate == row)?;
+        match roots.get(if up {
+            position.checked_sub(1)?
+        } else {
+            position + 1
+        })? {
+            TreeRow::Layer(i) => Some(*i),
+            TreeRow::Folder(name) => {
+                let members = self.layout.folder_members(name);
+                if up {
+                    members.last().copied()
+                } else {
+                    members.first().copied()
+                }
+            }
+        }
+    }
+
+    pub(super) fn add_layer_menu(&mut self, ui: &mut egui::Ui) {
+        if ui
+            .add_enabled(
+                self.layout.layers().len() < 256,
+                egui::Button::new(tr(ui.ctx(), "ui.add-layer")),
+            )
+            .clicked()
+        {
+            self.layer_ui.add_requested = true;
+            ui.close();
+        }
+    }
+
+    pub(super) fn root_drop_target(
+        &mut self,
+        ui: &mut egui::Ui,
+        rect: Rect,
+        id: egui::Id,
+        caption: bool,
+    ) {
+        let palette = theme::palette(ui.ctx());
+        let root = ui.interact(rect, id, egui::Sense::hover());
+        let hovering = root.dnd_hover_payload::<LayerDrag>().is_some();
+        if caption || hovering {
+            ui.painter().rect_stroke(
+                rect,
+                3.0,
+                Stroke::new(1.0, if hovering { palette.cyan } else { palette.line }),
+                StrokeKind::Inside,
+            );
+        }
+        if caption {
+            ui.painter().text(
+                rect.center(),
+                egui::Align2::CENTER_CENTER,
+                "No folder — drop layer here",
+                egui::FontId::proportional(12.0),
+                if hovering {
+                    palette.cyan
+                } else {
+                    palette.muted
+                },
+            );
+        }
+        if let Some(payload) = root.dnd_release_payload::<LayerDrag>() {
+            self.layer_ui.assign = Some((vec![payload.0], String::new()));
+        }
+        root.on_hover_text(tr(
+            ui.ctx(),
+            "ui.drop-a-layer-here-to-move-it-out-of-its-folder",
+        ));
+    }
+
     pub(super) fn layer_tree_header(&mut self, ui: &mut egui::Ui, ink: &Ink, width: f32) {
         if toolbar_icon(
             ui,
@@ -462,26 +571,28 @@ impl Editor {
             self.layer_ui.folder_rename = Some((None, "New folder".into(), Vec::new()));
             self.layer_ui.rename_focus = true;
         }
-        let root = ui.interact(
-            Rect::from_min_size(ink.point(0.0, -5.0), Vec2::new(60.0, 24.0)),
+        self.root_drop_target(
+            ui,
+            Rect::from_min_size(
+                ink.point(0.0, -5.0),
+                Vec2::new((width - 132.0).max(60.0), 24.0),
+            ),
             egui::Id::new("layer-root"),
-            egui::Sense::hover(),
+            false,
         );
-        if root.dnd_hover_payload::<LayerDrag>().is_some() {
-            ui.painter().rect_stroke(
-                root.rect,
-                3.0,
-                Stroke::new(1.0_f32, theme::palette(ui.ctx()).cyan),
-                StrokeKind::Inside,
-            );
+        let add = ui
+            .add_enabled_ui(self.layout.layers().len() < 256, |ui| {
+                toolbar_icon(
+                    ui,
+                    Rect::from_min_size(ink.point(width - 124.0, -5.0), Vec2::new(28.0, 24.0)),
+                    "Add layer",
+                    ToolbarIcon::AddLayer,
+                )
+            })
+            .inner;
+        if add.clicked() {
+            self.layer_ui.add_requested = true;
         }
-        if let Some(payload) = root.dnd_release_payload::<LayerDrag>() {
-            self.layer_ui.assign = Some((vec![payload.0], String::new()));
-        }
-        root.on_hover_text(tr(
-            ui.ctx(),
-            "ui.drop-a-layer-here-to-move-it-out-of-its-folder",
-        ));
     }
 
     pub(super) fn folder_drop_on_layer(&mut self, row: &egui::Response, i: usize) {
@@ -671,34 +782,14 @@ impl Editor {
                     ui.close();
                 }
             }
-            let folders = self.layout.folders();
-            let position = folders.iter().position(|name| name == folder).unwrap();
-            for (label, target, above) in [
-                ("Move folder up", position.checked_sub(1), true),
-                (
-                    "Move folder down",
-                    (position + 1 < folders.len()).then_some(position + 1),
-                    false,
-                ),
-            ] {
+            for (label, up) in [("Move up", true), ("Move down", false)] {
+                let target = self.tree_step_target(&TreeRow::Folder(folder.into()), up);
                 if ui
-                    .add_enabled(
-                        !members.is_empty()
-                            && target.is_some_and(|i| {
-                                !self.layout.folder_members(&folders[i]).is_empty()
-                            }),
-                        egui::Button::new(label),
-                    )
+                    .add_enabled(target.is_some(), egui::Button::new(label))
                     .clicked()
                 {
-                    let target_members = self.layout.folder_members(&folders[target.unwrap()]);
-                    let index = if above {
-                        *target_members.last().unwrap()
-                    } else {
-                        target_members[0]
-                    };
                     self.layer_ui.folder_move =
-                        Some((folder.into(), self.layout.layer_info(index).id, above));
+                        target.map(|i| (folder.into(), self.layout.layer_info(i).id, up));
                     ui.close();
                 }
             }
@@ -738,6 +829,20 @@ impl Editor {
     }
 
     fn folder_commands(&mut self, ctx: &egui::Context) {
+        if std::mem::take(&mut self.layer_ui.add_requested) {
+            match self.layout.add_layer() {
+                Ok(_) => {
+                    self.sync();
+                    if self.layer_ui.open {
+                        self.manage_layers();
+                    }
+                }
+                Err(error) => self.error = error,
+            }
+        }
+        if let Some((id, to)) = self.layer_ui.reorder_requested.take() {
+            self.reorder_layer(id, to);
+        }
         let result = if let Some(folder) = self.layer_ui.folder_remove.take() {
             self.layer_ui.collapsed.remove(&folder);
             Some(self.layout.ungroup_folder(&folder))
@@ -841,6 +946,112 @@ impl Editor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn quick_add_icon_selects_new_layer_without_opening_manager() {
+        use super::super::tests::{frame, mouse};
+        let mut app = Editor::default();
+        let ctx = egui::Context::default();
+        frame(&mut app, &ctx, vec![]);
+        frame(&mut app, &ctx, vec![]);
+        let header = ctx.read_response(egui::Id::new("layer-root")).unwrap().rect;
+        let point = Pos2::new(header.right() + 22.0, header.center().y);
+        frame(
+            &mut app,
+            &ctx,
+            vec![egui::Event::PointerMoved(point), mouse(point, true)],
+        );
+        frame(&mut app, &ctx, vec![mouse(point, false)]);
+        assert_eq!(app.layout.layers().len(), 3);
+        assert_eq!(app.layout.selected(), Some(2));
+        assert!(!app.layer_ui.open);
+        app.layout.undo();
+        assert_eq!(app.layout.layers().len(), 2);
+    }
+
+    #[test]
+    fn viewport_add_layer_is_available_without_selection() {
+        use super::super::tests::mouse;
+        let mut app = Editor::default();
+        app.layout.select(None);
+        let ctx = egui::Context::default();
+        let mut render = |events| {
+            ctx.run_ui(
+                egui::RawInput {
+                    events,
+                    ..Default::default()
+                },
+                |root| {
+                    egui::CentralPanel::default().show(root, |ui| app.layer_context_menu(ui));
+                },
+            )
+        };
+        render(vec![]);
+        let output = render(vec![]);
+        let point = output
+            .shapes
+            .iter()
+            .find_map(|s| match &s.shape {
+                egui::Shape::Text(t) if t.galley.text() == "Add layer" => {
+                    Some(t.pos + t.galley.size() * 0.5)
+                }
+                _ => None,
+            })
+            .unwrap();
+        render(vec![egui::Event::PointerMoved(point), mouse(point, true)]);
+        render(vec![mouse(point, false)]);
+        app.folder_commands(&ctx);
+        assert_eq!(app.layout.layers().len(), 3);
+        assert_eq!(app.layout.selected(), Some(2));
+        assert!(!app.layer_ui.open);
+    }
+
+    #[test]
+    fn stacking_steps_cross_whole_folders_and_keep_children_inside() {
+        let mut app = Editor::default();
+        app.layout.add_layer().unwrap();
+        app.layout.assign_folder(&[1, 2], "Video").unwrap();
+        assert_eq!(app.tree_step_target(&TreeRow::Layer(2), true), None);
+        assert_eq!(app.tree_step_target(&TreeRow::Layer(2), false), Some(0));
+        let target = app.tree_step_target(&TreeRow::Layer(2), false).unwrap();
+        app.reorder_layer(3, target);
+        assert_eq!(app.layout.layer_info(0).id, 3);
+        assert_eq!(app.layout.folder_members("Video"), [1, 2]);
+        assert_eq!(app.tree_step_target(&TreeRow::Layer(1), true), Some(2));
+        assert_eq!(app.tree_step_target(&TreeRow::Layer(2), true), None);
+        let target = app
+            .tree_step_target(&TreeRow::Folder("Video".into()), false)
+            .unwrap();
+        let id = app.layout.layer_info(target).id;
+        app.layout.move_folder("Video", id, false).unwrap();
+        assert_eq!(app.layout.folder_members("Video"), [0, 1]);
+        assert_eq!(app.layout.layer_info(2).id, 3);
+        app.layout.undo();
+        assert_eq!(app.layout.layer_info(0).id, 3);
+    }
+
+    #[test]
+    fn wide_root_drop_ungroups_and_undo_restores_membership() {
+        let mut app = Editor::default();
+        let ctx = egui::Context::default();
+        app.layout.assign_folder(&[1, 2], "Video").unwrap();
+        drag_tree(
+            &mut app,
+            &ctx,
+            egui::Id::new(("layer", 1_usize)),
+            egui::Id::new("layer-root-drop"),
+            false,
+        );
+        let members = app.layout.folder_members("Video");
+        assert_eq!(members.len(), 1);
+        assert_eq!(app.layout.layer_info(members[0]).id, 2);
+        let moved = (0..app.layout.layers().len())
+            .find(|&i| app.layout.layer_info(i).id == 1)
+            .unwrap();
+        assert!(app.layout.layer_info(moved).folder.is_empty());
+        app.layout.undo();
+        assert_eq!(app.layout.folder_members("Video"), [0, 1]);
+    }
+
     #[test]
     fn empty_layer_list_space_clears_selection() {
         use super::super::tests::{frame, mouse};

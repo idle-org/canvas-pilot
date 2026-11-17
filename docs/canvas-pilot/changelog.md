@@ -4,6 +4,17 @@
 
 ## Unreleased
 
+### v0.9.20
+
+- Added a full-width No folder drop area and widened the heading drop target to
+  make dragging layers out of folders easier. Layer/folder context menus offer
+  Move up/down, preserving folder membership and whole-folder stacking blocks.
+- Added an Add layer icon and viewport/empty-list context-menu action, selecting
+  the new layer without opening the manager. The 256-layer limit still applies.
+- Formatting, both Clippy configurations, all required Rust test suites, rustdoc,
+  native rendering and the pinned manual build pass. Whole-application line
+  coverage: 91.79%.
+
 ### v0.9.19
 
 - Added Aquilon rectangular-mask import and reviewed sends for Layer/Source

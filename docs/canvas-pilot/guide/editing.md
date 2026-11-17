@@ -12,12 +12,20 @@ Double-click a folder or layer name to rename it. Folder eye and lock icons appl
 to every member; Undo restores each member's previous state, including mixed states.
 
 Use the **Create folder** icon to create an empty folder, regardless of selection. Drag a layer onto a folder
-name to move it inside, or onto **LAYERS** to return it to the root. Dropping on
+name to move it inside, or onto **LAYERS** or the full-width **No folder** drop
+area below the list to return it to the root. Dropping on
 another layer also changes stacking order and adopts that layer's folder.
 Drag folder names above/below another folder to reorder all their layers as one
 block. Right-click offers rename, selection, visibility, locking, moving up/down,
 and **Ungroup folder** (keeps the layers). A layer's right-click **Move to folder**
 menu also offers existing folders, the root, and a new folder. Right-click a selected layer in either the list or viewport to move all selected layers together; right-click an unselected layer to move only that layer.
+
+Use the **Add layer** (+) icon beside the Layers heading, or right-click the
+viewport or empty layer-list space and choose **Add layer**. These shortcuts add
+and select a layer without opening the manager. Right-click a layer or folder for
+**Move up** / **Move down**. Layers inside a folder move among its members; root
+layers and populated folders move past adjacent root entries, keeping folder
+members together. Up moves toward the front. Boundary actions are disabled.
 
 Folders are local, single-level groups. Explicitly created folders survive empty,
 can be renamed or deleted, and are saved with their collapse state. Legacy groups

@@ -1506,6 +1506,7 @@ impl Editor {
         let rows = self.layer_tree_rows();
         let layer_row_count = rows.len();
         let row_count = layer_row_count
+            + 1
             + if self.references.is_empty() {
                 0
             } else {
@@ -1553,19 +1554,17 @@ impl Editor {
         let background = ui.interact(
             Rect::from_min_max(
                 ink.point(0.0, 20.0),
-                ink.point(
-                    w,
-                    28.0 + layer_row_count as f32 * 44.0
-                        + if self.references.is_empty() {
-                            14.0
-                        } else {
-                            0.0
-                        },
-                ),
+                ink.point(w, 28.0 + (layer_row_count + 1) as f32 * 44.0),
             ),
             ui.id().with("layer-list-background"),
             egui::Sense::click(),
         );
+        background.context_menu(|ui| {
+            self.add_layer_menu(ui);
+            if let Some(i) = self.layout.selected() {
+                self.layer_organize_menu(ui, self.layout.layer_info(i).id);
+            }
+        });
         if background.clicked()
             && background.interact_pointer_pos().is_some_and(|pos| {
                 !rows.iter().enumerate().any(|(index, row)| {
@@ -1716,7 +1715,16 @@ impl Editor {
                 Err(error) => self.error = error,
             }
         }
-        self.reference_rows(ui, &ink, 28.0 + layer_row_count as f32 * 44.0, w);
+        self.root_drop_target(
+            ui,
+            Rect::from_min_size(
+                ink.point(0.0, 28.0 + layer_row_count as f32 * 44.0),
+                Vec2::new(w, 32.0),
+            ),
+            egui::Id::new("layer-root-drop"),
+            true,
+        );
+        self.reference_rows(ui, &ink, 28.0 + (layer_row_count + 1) as f32 * 44.0, w);
         let r = r.translate(Vec2::new(0.0, (row_count as f32 - 2.0) * 44.0));
         let ink = Ink::new(ui, r);
         ink.line([0.0, 130.0], [w, 130.0], palette.line);
@@ -2287,6 +2295,8 @@ impl Editor {
     }
 
     fn layer_context_menu(&mut self, ui: &mut egui::Ui) {
+        self.add_layer_menu(ui);
+        ui.separator();
         self.layer_editing_menu(ui);
         let selected = self.layout.selected_indices();
         if !selected.is_empty() || self.layer_ui.context_layer.is_some() {
@@ -4456,6 +4466,7 @@ fn apply_button(ui: &mut egui::Ui, label: &str, pending: bool) -> egui::Response
 
 #[derive(Clone, Copy)]
 enum ToolbarIcon {
+    AddLayer,
     AddFolder,
     AddImage,
     ManageLayers,
@@ -4525,6 +4536,7 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 17], Vec<Rect>, f32) {
 impl ToolbarIcon {
     fn title_key(self) -> &'static str {
         match self {
+            Self::AddLayer => "ui.add-layer",
             Self::AddFolder => "toolbar.addfolder",
             Self::AddImage => "toolbar.addimage",
             Self::ManageLayers => "toolbar.managelayers",
@@ -4787,6 +4799,23 @@ fn toolbar_icon(ui: &mut egui::Ui, rect: Rect, label: &str, icon: ToolbarIcon) -
     let c = rect.center();
     let point = |x, y| c + Vec2::new(x, y);
     match icon {
+        ToolbarIcon::AddLayer => {
+            painter.rect_stroke(
+                Rect::from_min_max(point(-9.0, -8.0), point(5.0, 5.0)),
+                1.0,
+                stroke,
+                StrokeKind::Inside,
+            );
+            painter.line_segment([point(-6.0, 8.0), point(0.0, 8.0)], stroke);
+            painter.line_segment(
+                [point(6.0, 2.0), point(6.0, 12.0)],
+                Stroke::new(1.6, palette.cyan),
+            );
+            painter.line_segment(
+                [point(1.0, 7.0), point(11.0, 7.0)],
+                Stroke::new(1.6, palette.cyan),
+            );
+        }
         ToolbarIcon::AddFolder | ToolbarIcon::AddImage => {
             if matches!(icon, ToolbarIcon::AddFolder) {
                 painter.add(egui::Shape::closed_line(
@@ -4959,6 +4988,7 @@ fn toolbar_icon(ui: &mut egui::Ui, rect: Rect, label: &str, icon: ToolbarIcon) -
         }
     }
     response.on_hover_text(match icon {
+        ToolbarIcon::AddLayer => "Add a layer",
         ToolbarIcon::AddFolder => "Create an empty folder",
         ToolbarIcon::AddImage => "Add reference image",
         ToolbarIcon::ManageLayers => "Manage layers and folders",
