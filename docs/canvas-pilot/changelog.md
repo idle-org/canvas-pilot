@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.24
+
+- Group installed language packs under bold, collapsible ID/revision headings,
+  with languages and the removal action indented beneath their pack. Packs start
+  expanded and retain their open/closed state while browsing settings.
+
 ### v0.9.23
 
 - Clicking High Contrast again restores the previous theme in the theme browser,

@@ -210,11 +210,16 @@ impl Editor {
         }
         for pack in packs {
             ui.separator();
-            ui.label(format!("{} · revision {}", pack.id, pack.revision));
-            for language in &pack.languages {
-                ui.label(format!("{} — {}", language.native_name, language.name));
-            }
-            ui.push_id(&pack.id, |ui| {
+            egui::CollapsingHeader::new(
+                egui::RichText::new(format!("{} · revision {}", pack.id, pack.revision)).strong(),
+            )
+            .id_salt(("language-pack", &pack.id))
+            .default_open(true)
+            .show(ui, |ui| {
+                for language in &pack.languages {
+                    ui.label(format!("{} — {}", language.native_name, language.name));
+                }
+                ui.add_space(4.0);
                 if ui.button(tr(&ctx, "language.remove-pack")).clicked() {
                     self.finish_language_preview(&ctx, false);
                     self.language_pack_action = Some(PackAction::Remove(pack.clone()));

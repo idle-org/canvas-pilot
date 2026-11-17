@@ -25,6 +25,10 @@ These packs reuse the fonts already bundled with Canvas Pilot. Version 1 and 2 p
 contain translations only: they neither install fonts nor reduce the current
 application download size. Ukrainian uses the existing Cyrillic coverage.
 
+Installed packs appear under bold, collapsible headings showing the pack ID and
+revision. Click a heading or its arrow to hide or show the indented language list
+and **Remove pack…** action. Packs start expanded.
+
 ## Make your own pack
 
 Download these three editable example files into the same folder:
