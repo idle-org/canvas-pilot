@@ -486,5 +486,7 @@
   "language.name.tok": "टोकी पोना",
   "language.install-pack": "भाषा प्याक स्थापना गर्नुहोस्…",
   "ui.crop-mask": "क्रप र मास्क",
-  "ui.canvas": "क्यानभास"
+  "ui.canvas": "क्यानभास",
+  "theme.packs": "थिम प्याकहरू",
+  "theme.install-pack": "थिम प्याक स्थापना गर्नुहोस्…"
 }

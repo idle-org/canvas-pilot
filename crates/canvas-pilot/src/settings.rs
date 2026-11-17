@@ -24,7 +24,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            version: 14,
+            version: 15,
             ui_scale: 1.0,
             text_scale: None,
             language: Default::default(),
@@ -45,6 +45,14 @@ impl Default for Settings {
 impl Settings {
     fn parse(text: &str) -> Result<Self, String> {
         let mut value: serde_json::Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        if value["version"].as_u64().is_some_and(|v| v <= 14)
+            && (value["theme"].is_object()
+                || value["recent_themes"]
+                    .as_array()
+                    .is_some_and(|themes| themes.iter().any(|t| t.is_object())))
+        {
+            return Err("Theme packs require settings version 15".into());
+        }
         if value["version"] == 1 {
             if value.get("recent_themes").is_some() {
                 return Err("Unexpected recent_themes in version 1 settings".into());
@@ -173,16 +181,26 @@ impl Settings {
             snapping.insert("mask_edges".into(), false.into());
             value["version"] = 14.into();
         }
-        if value["version"] == 14 && value.get("text_scale").is_none() {
-            return Err("Missing text_scale in version 14 settings".into());
+        if matches!(value["version"].as_u64(), Some(14 | 15)) && value.get("text_scale").is_none() {
+            return Err("Missing text_scale in current settings".into());
+        }
+        if value["version"] == 14 {
+            value["version"] = 15.into();
         }
         let settings: Self = serde_json::from_value(value).map_err(|e| e.to_string())?;
         settings.validate()?;
         Ok(settings)
     }
     fn validate(&self) -> Result<(), String> {
-        if self.version != 14 {
+        if self.version != 15 {
             return Err(format!("unsupported settings version {}", self.version));
+        }
+        for theme in std::iter::once(&self.theme).chain(&self.recent_themes) {
+            if let Theme::Pack(id) = theme
+                && !crate::theme_packs::valid_choice(id)
+            {
+                return Err("Invalid installed theme identifier".into());
+            }
         }
         if let crate::localization::Language::Pack(id) = &self.language
             && !crate::language_packs::valid_id(id)
@@ -324,11 +342,37 @@ impl Store {
 mod tests {
     use super::*;
     #[test]
+    fn installed_themes_require_v15_and_round_trip_without_losing_other_options() {
+        let legacy =
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v14.example.json");
+        let current =
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v15.example.json");
+        assert_eq!(
+            Settings::parse(legacy).unwrap(),
+            Settings::parse(current).unwrap()
+        );
+        let mut value: serde_json::Value = serde_json::from_str(current).unwrap();
+        value["theme"] = serde_json::json!({"pack":"tokyo-night/night"});
+        value["recent_themes"] =
+            serde_json::json!([{"pack":"tokyo-night/night"},"high_contrast","midra"]);
+        let saved = Settings::parse(&value.to_string()).unwrap();
+        assert_eq!(serde_json::to_value(saved).unwrap(), value);
+        value["version"] = 14.into();
+        assert!(Settings::parse(&value.to_string()).is_err());
+        value["version"] = 15.into();
+        for id in ["", "no-slash", "../theme", "pack/a/b", "pack/Upper"] {
+            value["theme"] = serde_json::json!({"pack":id});
+            value["recent_themes"][0] = value["theme"].clone();
+            assert!(Settings::parse(&value.to_string()).is_err());
+        }
+    }
+
+    #[test]
     fn mask_snapping_migrates_and_requires_current_schema() {
         let legacy =
             include_str!("../../../docs/interfaces/canvas-pilot-settings-v13.example.json");
         let current =
-            include_str!("../../../docs/interfaces/canvas-pilot-settings-v14.example.json");
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v15.example.json");
         assert_eq!(
             Settings::parse(legacy).unwrap(),
             Settings::parse(current).unwrap()
@@ -417,7 +461,7 @@ mod tests {
         let old = include_str!("../../../docs/interfaces/canvas-pilot-settings-v8.example.json");
         let migrated = Settings::parse(old).unwrap();
         assert_eq!(migrated.language, Language::System);
-        assert_eq!(migrated.version, 14);
+        assert_eq!(migrated.version, 15);
         let current =
             include_str!("../../../docs/interfaces/canvas-pilot-settings-v10.example.json");
         assert_eq!(Settings::parse(current).unwrap(), migrated);
@@ -426,12 +470,12 @@ mod tests {
             let mut old: serde_json::Value = serde_json::from_str(v9).unwrap();
             old["language"] = old_language.into();
             let upgraded = Settings::parse(&old.to_string()).unwrap();
-            assert_eq!(upgraded.version, 14);
+            assert_eq!(upgraded.version, 15);
             assert_eq!(
                 serde_json::to_value(&upgraded.language).unwrap(),
                 old["language"]
             );
-            old["version"] = 14.into();
+            old["version"] = 15.into();
             old["snapping"]["mask_edges"] = false.into();
             old["ui_scale"] = serde_json::json!(1.0);
             old["text_scale"] = serde_json::Value::Null;
@@ -474,7 +518,7 @@ mod tests {
         assert!(Settings::parse(&value.to_string()).is_err());
         value["version"] = 13.into();
         let saved = Settings::parse(&value.to_string()).unwrap();
-        value["version"] = 14.into();
+        value["version"] = 15.into();
         value["snapping"]["mask_edges"] = false.into();
         assert_eq!(serde_json::to_value(saved).unwrap(), value);
         for id in ["", "../uk", "uk_UA"] {
@@ -510,7 +554,7 @@ mod tests {
             value["ui_scale"] = 1.5.into();
             value["text_scale"] = 1.25.into();
             let saved = Settings::parse(&value.to_string()).unwrap();
-            value["version"] = 14.into();
+            value["version"] = 15.into();
             value["snapping"]["mask_edges"] = false.into();
             assert_eq!(serde_json::to_value(saved).unwrap(), value);
         }
@@ -584,7 +628,7 @@ mod tests {
         for text in [
             "broken".to_string(),
             serde_json::to_string(&Settings {
-                version: 15,
+                version: 16,
                 ..Default::default()
             })
             .unwrap(),

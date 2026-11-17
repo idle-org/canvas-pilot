@@ -4,6 +4,21 @@
 
 ## Unreleased
 
+### v0.9.26
+
+- Added offline theme ZIP packs with bounded validation, live installation/update,
+  reviewed overwrites/removal and collapsible management with swatches and notices.
+  Packed themes appear in the persistent picker/recent history and work with the
+  High Contrast return toggle. Missing packs retain their saved choice with a
+  Midra Dark fallback; removing an active theme saves Midra Dark.
+- Added downloadable Tokyo Night, Catppuccin Mocha, Detroit: Become Human and
+  Minecraft Overworld examples, editable manifests and reproducible ZIP tooling.
+  Upstream notices are included; game-inspired palettes contain no game assets.
+- Settings v15 migrates versions 1–14 and documents namespaced theme references.
+  Project, recovery, geometry and device formats are unchanged.
+- All required Rust/Python checks, reproducible example ZIP checks, native palette
+  rendering and the pinned manual build pass. Whole-application coverage: 91.92%.
+
 ### v0.9.25
 
 - Fix Load collapsing Device mapping & transfer to its title bar: the shared

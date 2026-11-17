@@ -42,15 +42,17 @@ pub(super) enum Section {
     #[default]
     Appearance,
     Languages,
+    Themes,
     Editing,
     Reference,
     Storage,
     Device,
 }
 impl Section {
-    const ALL: [(Self, &'static str); 6] = [
+    const ALL: [(Self, &'static str); 7] = [
         (Self::Appearance, "ui.appearance"),
         (Self::Languages, "language.packs"),
+        (Self::Themes, "theme.packs"),
         (Self::Editing, "ui.editing"),
         (Self::Reference, "ui.reference-images"),
         (Self::Storage, "ui.files-settings"),
@@ -66,6 +68,8 @@ pub(super) struct LanguagePreview {
 pub(super) enum PackAction {
     Install(crate::language_packs::Prepared),
     Remove(crate::language_packs::Installed),
+    InstallTheme(crate::theme_packs::Prepared),
+    RemoveTheme(crate::theme_packs::Installed),
 }
 
 impl Editor {
@@ -228,6 +232,102 @@ impl Editor {
         }
     }
 
+    fn refresh_pack_theme(&mut self, ctx: &egui::Context, was_available: bool) {
+        let current = theme::Theme::current(ctx);
+        if current.available(ctx) || !was_available {
+            current.apply(ctx);
+        } else {
+            theme::Theme::Midra.apply(ctx);
+        }
+        let current = theme::Theme::current(ctx);
+        let recent = theme::Theme::recent(ctx)
+            .into_iter()
+            .filter(|t| t.available(ctx) || *t == current)
+            .collect();
+        theme::Theme::restore_recent(ctx, recent);
+        self.settings.save(&self.application_settings(ctx));
+    }
+    fn prepare_theme_pack(&mut self, ctx: &egui::Context, path: &std::path::Path) {
+        let result = self
+            .settings
+            .path
+            .as_ref()
+            .and_then(|p| p.parent())
+            .ok_or_else(|| "Settings directory unavailable".to_owned())
+            .and_then(|directory| {
+                crate::theme_packs::prepare(ctx, &directory.join("theme-packs"), path)
+            });
+        match result {
+            Ok(pending) if pending.needs_confirmation() => {
+                self.language_pack_action = Some(PackAction::InstallTheme(pending))
+            }
+            Ok(pending) => {
+                let was_available = theme::Theme::current(ctx).available(ctx);
+                match crate::theme_packs::commit(ctx, pending, false) {
+                    Ok(()) => self.refresh_pack_theme(ctx, was_available),
+                    Err(error) => self.error = error,
+                }
+            }
+            Err(error) => self.error = error,
+        }
+    }
+    fn theme_pack_settings(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+        ui.heading(tr(&ctx, "theme.packs"));
+        if ui.button(tr(&ctx, "theme.install-pack")).clicked()
+            && let Some(path) = rfd::FileDialog::new()
+                .add_filter("Theme pack", &["zip"])
+                .pick_file()
+        {
+            self.prepare_theme_pack(&ctx, &path);
+        }
+        ui.weak("Choose a ZIP to install or update. Newer revisions update immediately; equal or older revisions ask before replacing.");
+        let packs = crate::theme_packs::installed(&ctx);
+        if packs.is_empty() {
+            ui.label("No theme packs installed.");
+        }
+        for pack in packs {
+            ui.separator();
+            egui::CollapsingHeader::new(
+                egui::RichText::new(format!("{} · revision {}", pack.id, pack.revision)).strong(),
+            )
+            .id_salt(("theme-pack", &pack.id))
+            .default_open(true)
+            .show(ui, |ui| {
+                for entry in &pack.themes {
+                    let choice = theme::Theme::Pack(format!("{}/{}", pack.id, entry.id));
+                    ui.horizontal(|ui| {
+                        let palette = choice.resolved_palette(&ctx);
+                        for color in [palette.bg, palette.layer, palette.cyan] {
+                            let (rect, _) =
+                                ui.allocate_exact_size(Vec2::splat(10.0), egui::Sense::hover());
+                            ui.painter().rect_filled(rect, 2.0, color);
+                        }
+                        if ui
+                            .stable_selectable_label(
+                                choice == theme::Theme::current(&ctx),
+                                &entry.name,
+                            )
+                            .clicked()
+                        {
+                            choice.select(&ctx);
+                        }
+                    });
+                }
+                if !pack.notices.is_empty() {
+                    egui::CollapsingHeader::new("Attribution and licenses")
+                        .id_salt(("theme-notices", &pack.id))
+                        .show(ui, |ui| {
+                            ui.label(&pack.notices);
+                        });
+                }
+                if ui.button(tr(&ctx, "language.remove-pack")).clicked() {
+                    self.language_pack_action = Some(PackAction::RemoveTheme(pack.clone()));
+                }
+            });
+        }
+    }
+
     pub(super) fn language_pack_confirmation(&mut self, ctx: &egui::Context) {
         let Some(action) = &self.language_pack_action else {
             return;
@@ -240,6 +340,19 @@ impl Editor {
                     ui.label(format!("{}: installed revision {} → revision {}", pack.id(), pack.previous_revision.map_or_else(|| "unknown".into(), |v| v.to_string()), pack.revision()));
                     ui.label("This is not a newer revision. Replacing it overwrites the installed translations.");
                     "language.overwrite-pack"
+                },
+                PackAction::InstallTheme(pack) => {
+                    ui.heading(tr(ctx, "language.overwrite-pack"));
+                    ui.label(format!("{}: installed revision {} → revision {}", pack.id(), pack.previous_revision.map_or_else(|| "unknown".into(), |v| v.to_string()), pack.revision()));
+                    ui.label("This is not a newer revision. Replacing it overwrites the installed themes.");
+                    "language.overwrite-pack"
+                },
+                PackAction::RemoveTheme(pack) => {
+                    ui.heading(tr(ctx, "language.remove-pack"));
+                    ui.label(&pack.id);
+                    ui.label(pack.themes.iter().map(|p| p.name.as_str()).collect::<Vec<_>>().join(", "));
+                    ui.label("All themes in this pack will be removed. If the current theme is removed, the interface switches to Midra Dark. You can reinstall the ZIP later.");
+                    "language.remove-pack"
                 },
                 PackAction::Remove(pack) => {
                     ui.heading(tr(ctx, "language.remove-pack"));
@@ -255,11 +368,19 @@ impl Editor {
             self.language_pack_action = None;
         } else if response.inner.0 {
             let previous = crate::language_packs::available(ctx);
+            let theme_was_available = theme::Theme::current(ctx).available(ctx);
+            let theme_action = matches!(
+                self.language_pack_action,
+                Some(PackAction::InstallTheme(_) | PackAction::RemoveTheme(_))
+            );
             let result = match self.language_pack_action.take().unwrap() {
                 PackAction::Install(pack) => crate::language_packs::commit(ctx, pack, true),
                 PackAction::Remove(pack) => crate::language_packs::remove(ctx, &pack),
+                PackAction::InstallTheme(pack) => crate::theme_packs::commit(ctx, pack, true),
+                PackAction::RemoveTheme(pack) => crate::theme_packs::remove(ctx, &pack),
             };
             match result {
+                Ok(()) if theme_action => self.refresh_pack_theme(ctx, theme_was_available),
                 Ok(()) => self.refresh_pack_language(ctx, &previous),
                 Err(error) => self.error = error,
             }
@@ -332,11 +453,11 @@ impl Editor {
                                 if scaling_before != (self.ui_scale, self.text_scale) { apply_scaling(ctx, self.ui_scale, self.text_scale); }
                                 if ui.button(tr(ctx, "access.contrast")).clicked() { theme::Theme::HighContrast.select(ctx); }
                                 ui.separator();
-                                ui.label(rust_i18n::t!("theme.current", locale = &localization::locale(ctx), name = theme::Theme::current(ctx).name()).into_owned());
+                                ui.label(rust_i18n::t!("theme.current", locale = &localization::locale(ctx), name = theme::Theme::current(ctx).display_name(ctx)).into_owned());
                                 if ui.button(tr(ui.ctx(), "ui.browse-all-themes")).clicked() { self.themes_open = true; }
                                 ui.label(tr(ui.ctx(), "ui.recently-used"));
                                 for choice in theme::Theme::recent(ctx) {
-                                    if ui.stable_selectable_label(choice == theme::Theme::current(ctx), choice.name()).clicked() {
+                                    if ui.stable_selectable_label(choice == theme::Theme::current(ctx), choice.display_name(ctx)).clicked() {
                                         choice.select(ctx);
                                     }
                                 }
@@ -346,6 +467,7 @@ impl Editor {
                                 ui.weak(tr(ui.ctx(), "ui.themes-also-apply-to-the-viewport-imported-pictures-retain-their-colors"));
                             }
                             Section::Languages => self.language_pack_settings(ui),
+                            Section::Themes => self.theme_pack_settings(ui),
                             Section::Editing => {
                                 ui.heading(tr(ui.ctx(), "ui.editing"));
                                 self.resize_ratio_option(ui);
@@ -473,6 +595,72 @@ mod tests {
                 .unwrap();
         }
         writer.finish().unwrap().into_inner()
+    }
+
+    #[test]
+    fn theme_pack_manager_selects_updates_restarts_and_removes_with_confirmation() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let source = dir.path().join("theme.zip");
+        let (store, saved) = settings::Store::at(path.clone());
+        let ctx = egui::Context::default();
+        let mut app = Editor::with_settings(&ctx, store, saved);
+        let project = app.project();
+        std::fs::write(
+            &source,
+            include_bytes!("../../../docs/theme-packs/tokyo-night.zip"),
+        )
+        .unwrap();
+        app.prepare_theme_pack(&ctx, &source);
+        app.preferences_open = true;
+        app.preferences_section = Section::Themes;
+        click_label(&mut app, &ctx, "Tokyo Night");
+        let choice = theme::Theme::Pack("tokyo-night/night".into());
+        assert_eq!(theme::Theme::current(&ctx), choice);
+        assert_eq!(settings::Store::at(path.clone()).1.theme, choice);
+        let restarted = egui::Context::default();
+        let (store, saved) = settings::Store::at(path.clone());
+        let _restored = Editor::with_settings(&restarted, store, saved);
+        assert_eq!(theme::palette(&restarted).bg, theme::palette(&ctx).bg);
+        theme::Theme::HighContrast.select(&ctx);
+        theme::Theme::HighContrast.select(&ctx);
+        assert_eq!(theme::Theme::current(&ctx), choice);
+        let mut manifest: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/theme-packs/tokyo-night/manifest.json"
+        ))
+        .unwrap();
+        manifest["revision"] = 2.into();
+        manifest["themes"][0]["colors"]["bg"] = "#223344".into();
+        manifest["themes"][0]["light"] = true.into();
+        let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        use std::io::Write;
+        zip.start_file("manifest.json", zip::write::SimpleFileOptions::default())
+            .unwrap();
+        zip.write_all(&serde_json::to_vec(&manifest).unwrap())
+            .unwrap();
+        std::fs::write(&source, zip.finish().unwrap().into_inner()).unwrap();
+        app.prepare_theme_pack(&ctx, &source);
+        assert_eq!(theme::palette(&ctx).bg, Color32::from_rgb(0x22, 0x33, 0x44));
+        assert!(!ctx.global_style().visuals.dark_mode);
+        app.prepare_theme_pack(&ctx, &source);
+        assert!(matches!(
+            app.language_pack_action,
+            Some(PackAction::InstallTheme(_))
+        ));
+        click_label(&mut app, &ctx, "Cancel");
+        app.prepare_theme_pack(&ctx, &source);
+        click_label(&mut app, &ctx, "Overwrite pack");
+        assert!(app.language_pack_action.is_none());
+        click_label(&mut app, &ctx, "Remove pack…");
+        click_label(&mut app, &ctx, "Cancel");
+        assert_eq!(theme::Theme::current(&ctx), choice);
+        click_label(&mut app, &ctx, "Remove pack…");
+        click_label(&mut app, &ctx, "Remove pack…");
+        assert!(crate::theme_packs::installed(&ctx).is_empty());
+        assert_eq!(theme::Theme::current(&ctx), theme::Theme::Midra);
+        assert_eq!(settings::Store::at(path).1.theme, theme::Theme::Midra);
+        assert_eq!(app.project(), project);
+        assert!(source.exists());
     }
 
     #[test]

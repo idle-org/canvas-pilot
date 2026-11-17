@@ -486,5 +486,7 @@
   "language.name.tok": "Tokipono",
   "language.install-pack": "Instali lingvopakaĵon…",
   "ui.crop-mask": "Tondado kaj masko",
-  "ui.canvas": "Kanvaso"
+  "ui.canvas": "Kanvaso",
+  "theme.packs": "Temaj pakoj",
+  "theme.install-pack": "Instali teman pakon…"
 }

@@ -52,6 +52,7 @@ mod gui;
 mod reference;
 mod settings;
 mod theme;
+mod theme_packs;
 mod widgets;
 use widgets::StableSelectableUi;
 

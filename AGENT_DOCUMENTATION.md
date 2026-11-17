@@ -25,6 +25,7 @@ Versioned examples and sanitized fixtures remain beside their contracts and in
 | --- | --- |
 | [Project](docs/interfaces/canvas-pilot.md) | Project schema, versions and migrations |
 | [Settings](docs/interfaces/canvas-pilot-settings.md) | User preferences and settings compatibility |
+| [Theme packs](docs/interfaces/theme-packs.md) | Runtime palette ZIPs, installation, updates and fallback |
 | [Language packs](docs/interfaces/language-packs.md) | Runtime ZIP catalogs, installation and fallback |
 | [Recovery](docs/interfaces/canvas-pilot-recovery.md) | Recovery storage and restoration |
 | [Layer clipboard](docs/interfaces/canvas-pilot-clipboard.md) | Versioned geometry, crop, fit and blanking payload |

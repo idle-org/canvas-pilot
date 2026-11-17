@@ -486,5 +486,7 @@
   "language.name.tok": "トキポナ",
   "language.install-pack": "言語パックをインストール…",
   "ui.crop-mask": "クロップとマスク",
-  "ui.canvas": "キャンバス"
+  "ui.canvas": "キャンバス",
+  "theme.packs": "テーマパック",
+  "theme.install-pack": "テーマパックをインストール…"
 }

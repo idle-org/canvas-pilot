@@ -168,10 +168,10 @@ impl Editor {
         });
         let before = self.application_settings(ui.ctx());
         let current = theme::Theme::current(ui.ctx());
-        ui.menu_button(format!("Theme: {}", current.name()), |ui| {
+        ui.menu_button(format!("Theme: {}", current.display_name(ui.ctx())), |ui| {
             for choice in theme::Theme::recent(ui.ctx()) {
                 if ui
-                    .stable_selectable_label(current == choice, choice.name())
+                    .stable_selectable_label(current == choice, choice.display_name(ui.ctx()))
                     .clicked()
                 {
                     choice.select(ui.ctx());
@@ -229,6 +229,8 @@ impl Editor {
             .id(egui::Id::new("All themes"))
             .open(&mut self.themes_open)
             .default_width(540.0)
+            .max_height((ctx.content_rect().height() - 100.0).max(200.0))
+            .vscroll(true)
             .resizable(false)
             .collapsible(false)
             .show(ctx, |ui| {
@@ -236,19 +238,26 @@ impl Editor {
                     ui.ctx(),
                     "ui.choose-a-theme-your-three-most-recent-choices-stay-in-the-menu",
                 ));
+                if ui.button(tr(ctx, "theme.packs")).clicked() {
+                    self.preferences_open = true;
+                    self.preferences_section = preferences_ui::Section::Themes;
+                }
                 ui.separator();
                 ui.columns(2, |columns| {
-                    for (index, choice) in theme::Theme::ALL.into_iter().enumerate() {
+                    for (index, choice) in theme::Theme::choices(ctx).into_iter().enumerate() {
                         columns[index % 2].horizontal(|ui| {
-                            let palette = choice.palette();
+                            let palette = choice.resolved_palette(ctx);
                             for color in [palette.bg, palette.layer, palette.cyan] {
                                 let (rect, _) =
                                     ui.allocate_exact_size(Vec2::splat(10.0), egui::Sense::hover());
                                 ui.painter().rect_filled(rect, 2.0, color);
                             }
                             if ui
-                                .stable_selectable_label(current == choice, choice.name())
-                                .on_hover_text(if choice.is_light() {
+                                .stable_selectable_label(
+                                    current == choice,
+                                    choice.display_name(ui.ctx()),
+                                )
+                                .on_hover_text(if choice.resolved_light(ctx) {
                                     "Light theme"
                                 } else {
                                     "Dark theme"

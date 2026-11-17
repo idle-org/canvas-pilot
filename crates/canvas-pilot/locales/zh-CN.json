@@ -486,5 +486,7 @@
   "language.name.tok": "道本语",
   "language.install-pack": "安装语言包…",
   "ui.crop-mask": "裁剪与遮罩",
-  "ui.canvas": "画布"
+  "ui.canvas": "画布",
+  "theme.packs": "主题包",
+  "theme.install-pack": "安装主题包…"
 }

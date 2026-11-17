@@ -486,5 +486,7 @@
   "language.name.tok": "toki pona",
   "language.install-pack": "o pana e kulupu toki…",
   "ui.crop-mask": "kipisi en len",
-  "ui.canvas": "supa sitelen"
+  "ui.canvas": "supa sitelen",
+  "theme.packs": "kulupu kule",
+  "theme.install-pack": "o pana e kulupu kule…"
 }

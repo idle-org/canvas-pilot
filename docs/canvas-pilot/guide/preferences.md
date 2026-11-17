@@ -114,6 +114,8 @@ history across restarts. The picker stays open so you can try several themes;
 close it with its window close button when finished. Reusing a theme moves it to
 the top without duplicates.
 Closing the picker without choosing leaves the theme and history unchanged.
+Use **Theme packs** to install additional palettes; see [Add a theme pack](theme-packs.md)
+for Tokyo Night, Catppuccin, Detroit: Become Human and Minecraft examples.
 
 The viewport, grid, layer boxes and source test patterns use the selected palette;
 selected layers remain gold (darker gold for contrast in light themes). Imported
@@ -169,6 +171,7 @@ Open **Menu → Open all settings…**, **Options → Open all settings…**, th
 **Open all settings…** entry, or **Ctrl/Cmd+,**. The window groups the available controls:
 
 - **Appearance:** themes, recent choices, icon captions and source-coordinate preview.
+- **Theme packs:** install/update ZIP palettes, try their themes and remove packs.
 - **Editing:** aspect-ratio lock, movement snapping and a keyboard/mouse reference.
 - **Reference images:** import and access to the current project's image settings.
 - **Files & settings:** the settings-file path, copy-path action and restore defaults.

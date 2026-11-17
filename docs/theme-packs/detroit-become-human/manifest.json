@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "detroit-become-human",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "android",
+      "name": "Detroit: Become Human",
+      "light": false,
+      "colors": {
+        "canvas": "#101a26",
+        "banner": "#172b3d",
+        "grid": "#42617c",
+        "layer": "#203b50",
+        "pattern": [
+          "#203b50",
+          "#0c1521"
+        ],
+        "bg": "#101a26",
+        "panel": "#172b3d",
+        "field": "#0c1521",
+        "line": "#42617c",
+        "text": "#edf6ff",
+        "muted": "#b6cddd",
+        "cyan": "#66d9ff",
+        "amber": "#f3ce79",
+        "purple": "#214e6a"
+      }
+    }
+  ],
+  "notices": "Original Canvas Pilot palette inspired by the blue-and-white android interface aesthetic of Detroit: Become Human. Unofficial; no game artwork, fonts or code included. Not affiliated with Quantic Dream or Sony. Palette provided under the Canvas Pilot MIT license."
+}

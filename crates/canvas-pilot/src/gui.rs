@@ -599,6 +599,12 @@ impl Editor {
         store: settings::Store,
         saved: settings::Settings,
     ) -> Self {
+        let mut theme_errors = store
+            .path
+            .as_ref()
+            .and_then(|p| p.parent())
+            .map(|directory| crate::theme_packs::load(ctx, &directory.join("theme-packs")))
+            .unwrap_or_default();
         theme::Theme::restore_recent(ctx, saved.recent_themes.clone());
         saved.theme.apply(ctx);
         let pack_errors = store
@@ -607,6 +613,7 @@ impl Editor {
             .and_then(|p| p.parent())
             .map(|directory| crate::language_packs::load(ctx, &directory.join("language-packs")))
             .unwrap_or_default();
+        theme_errors.extend(pack_errors);
         saved.language.apply(ctx);
         preferences_ui::apply_scaling(ctx, saved.ui_scale, saved.text_scale);
         let mut device = device_ui::DeviceUi::with_connection_preferences(
@@ -618,7 +625,7 @@ impl Editor {
         Self {
             device,
             settings: store,
-            error: pack_errors.join("\n"),
+            error: theme_errors.join("\n"),
             language: saved.language,
             ui_scale: saved.ui_scale,
             text_scale: saved.text_scale,

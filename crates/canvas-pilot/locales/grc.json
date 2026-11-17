@@ -486,5 +486,7 @@
   "language.name.tok": "Τόκι Πόνα",
   "language.install-pack": "Install language pack…",
   "ui.crop-mask": "Περικοπὴ καὶ κάλυμμα",
-  "ui.canvas": "Πίναξ"
+  "ui.canvas": "Πίναξ",
+  "theme.packs": "Δέσμαι θεμάτων",
+  "theme.install-pack": "Ἐγκατάστησον δέσμην θεμάτων…"
 }

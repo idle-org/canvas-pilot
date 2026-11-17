@@ -1,7 +1,7 @@
 //! Application palettes adapted from SOTV's song database; see docs/canvas-pilot/README.md.
 use super::*;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Theme {
     #[default]
@@ -25,6 +25,7 @@ pub enum Theme {
     Ustf,
     VerdantRebel,
     WeicatIndustrial,
+    Pack(String),
 }
 
 #[derive(Clone, Copy)]
@@ -68,8 +69,9 @@ impl Theme {
         Self::VerdantRebel,
         Self::WeicatIndustrial,
     ];
-    pub fn name(self) -> &'static str {
+    pub fn name(&self) -> &str {
         match self {
+            Self::Pack(id) => id,
             Self::Midra => "Midra Dark",
             Self::HighContrast => "High Contrast",
             Self::FoxifiedDark => "Foxified Dark",
@@ -92,7 +94,7 @@ impl Theme {
             Self::WeicatIndustrial => "Weicat Industrial",
         }
     }
-    pub fn is_light(self) -> bool {
+    pub fn is_light(&self) -> bool {
         matches!(
             self,
             Self::CorporateLight
@@ -101,6 +103,39 @@ impl Theme {
                 | Self::Peaceframe
                 | Self::Solarized
         )
+    }
+    pub fn display_name(&self, ctx: &egui::Context) -> String {
+        match self {
+            Self::Pack(id) => crate::theme_packs::find(ctx, id)
+                .map_or_else(|| format!("{id} (unavailable)"), |t| t.name),
+            _ => self.name().to_owned(),
+        }
+    }
+    pub fn available(&self, ctx: &egui::Context) -> bool {
+        match self {
+            Self::Pack(id) => crate::theme_packs::find(ctx, id).is_some(),
+            _ => true,
+        }
+    }
+    pub fn resolved_palette(&self, ctx: &egui::Context) -> Palette {
+        match self {
+            Self::Pack(id) => crate::theme_packs::find(ctx, id)
+                .and_then(|t| t.colors.palette().ok())
+                .unwrap_or_else(|| Self::Midra.palette()),
+            _ => self.palette(),
+        }
+    }
+    pub fn resolved_light(&self, ctx: &egui::Context) -> bool {
+        match self {
+            Self::Pack(id) => crate::theme_packs::find(ctx, id).is_some_and(|t| t.light),
+            _ => self.is_light(),
+        }
+    }
+    pub fn choices(ctx: &egui::Context) -> Vec<Self> {
+        Self::ALL
+            .into_iter()
+            .chain(crate::theme_packs::choices(ctx))
+            .collect()
     }
     pub fn recent(ctx: &egui::Context) -> Vec<Self> {
         ctx.data(|d| d.get_temp(egui::Id::new("recent-themes")))
@@ -115,9 +150,10 @@ impl Theme {
                 .unwrap_or_default()
         })
     }
-    pub fn palette(self) -> Palette {
+    pub fn palette(&self) -> Palette {
         let rgb = |hex: u32| Color32::from_rgb((hex >> 16) as u8, (hex >> 8) as u8, hex as u8);
         match self {
+            Self::Pack(_) => Self::Midra.palette(),
             Self::HighContrast => Palette {
                 canvas: rgb(0x000000),
                 banner: rgb(0x101010),
@@ -281,26 +317,26 @@ impl Theme {
         }
     }
     /// Apply a user choice; selecting active High Contrast restores the previous theme.
-    pub fn select(self, ctx: &egui::Context) {
-        let choice = if self == Self::HighContrast && Self::current(ctx) == self {
+    pub fn select(&self, ctx: &egui::Context) {
+        let choice = if *self == Self::HighContrast && Self::current(ctx) == *self {
             Self::recent(ctx)
                 .into_iter()
                 .find(|theme| *theme != Self::HighContrast)
                 .unwrap_or_default()
         } else {
-            self
+            self.clone()
         };
         choice.apply(ctx);
     }
 
-    pub fn apply(self, ctx: &egui::Context) {
+    pub fn apply(&self, ctx: &egui::Context) {
         let mut recent = Self::recent(ctx);
-        recent.retain(|theme| *theme != self);
-        recent.insert(0, self);
+        recent.retain(|theme| theme != self);
+        recent.insert(0, self.clone());
         recent.truncate(3);
         Self::restore_recent(ctx, recent);
-        let p = self.palette();
-        let mut v = if self.is_light() {
+        let p = self.resolved_palette(ctx);
+        let mut v = if self.resolved_light(ctx) {
             egui::Visuals::light()
         } else {
             egui::Visuals::dark()
@@ -314,7 +350,7 @@ impl Theme {
         v.code_bg_color = p.field;
         v.hyperlink_color = p.cyan;
         v.warn_fg_color = p.amber;
-        v.error_fg_color = if self.is_light() {
+        v.error_fg_color = if self.resolved_light(ctx) {
             Color32::from_rgb(165, 30, 40)
         } else {
             Color32::LIGHT_RED
@@ -335,7 +371,7 @@ impl Theme {
             widget.bg_stroke = Stroke::new(1.0_f32, border);
             widget.fg_stroke = Stroke::new(1.0_f32, p.text);
         }
-        if self == Self::HighContrast {
+        if *self == Self::HighContrast {
             v.window_stroke.width = 2.0;
             for widget in [
                 &mut v.widgets.noninteractive,
@@ -349,13 +385,15 @@ impl Theme {
             }
         }
         ctx.set_visuals(v);
-        ctx.data_mut(|d| d.insert_temp(egui::Id::new("application-theme"), self));
+        ctx.data_mut(|d| d.insert_temp(egui::Id::new("application-palette"), p));
+        ctx.data_mut(|d| d.insert_temp(egui::Id::new("application-theme"), self.clone()));
         ctx.request_repaint();
     }
 }
 
 pub fn palette(ctx: &egui::Context) -> Palette {
-    Theme::current(ctx).palette()
+    ctx.data(|d| d.get_temp::<Palette>(egui::Id::new("application-palette")))
+        .unwrap_or_else(|| Theme::current(ctx).resolved_palette(ctx))
 }
 
 // SOTV CSS tokens: body, panel, sidebar, tab, main/subtle text, button, border.
@@ -429,7 +467,7 @@ mod tests {
     fn selectable_hover_focus_and_selection_keep_rows_and_neighbors_stationary() {
         for (theme, menu) in Theme::ALL
             .into_iter()
-            .flat_map(|theme| [(theme, false), (theme, true)])
+            .flat_map(|theme| [(theme.clone(), false), (theme, true)])
         {
             let ctx = egui::Context::default();
             theme.apply(&ctx);

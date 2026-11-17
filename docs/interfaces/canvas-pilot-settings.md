@@ -1,15 +1,15 @@
-# Canvas Pilot application settings, version 14
+# Canvas Pilot application settings, version 15
 
 Canvas Pilot was formerly named Midra Layout. The rename preserves existing wire-format identifiers, `.midra.json` projects, settings/recovery locations and `MIDRA_VECTORCRAFT_CLI` configuration. No schema version changes are needed. New exports use Canvas Pilot in human-readable titles; legacy files remain readable.
 
 Implementation: `crates/canvas-pilot/src/settings.rs`. This per-user JSON file is
 independent of the [project JSON and SVG contracts](canvas-pilot.md).
-[Complete default example](canvas-pilot-settings-v14.example.json).
+[Complete default example](canvas-pilot-settings-v15.example.json).
 Version 1 files migrate automatically: the saved theme becomes the only entry in
 `recent_themes`, with all other preferences preserved. The [version 1 example](canvas-pilot-settings-v1.example.json)
 remains a migration fixture. Version 2 files then migrate by adding disabled
 snapping with all target types enabled. The [version 2 example](canvas-pilot-settings-v2.example.json)
-remains a migration fixture too. Version 3 files migrate by adding an empty `midra_host`; the [version 3 example](canvas-pilot-settings-v3.example.json) remains a migration fixture. Version 4 files migrate by adding `allow_sending_to_program: false`; the [version 4 example](canvas-pilot-settings-v4.example.json) remains a migration fixture. Version 5 files migrate with `autoconnect_at_startup: false`; the [version 5 example](canvas-pilot-settings-v5.example.json) remains a migration fixture. Version 6 files migrate with the overlay grid visible, snapping to it disabled, and `grid_divisions: [8, 6]`; the [version 6 example](canvas-pilot-settings-v6.example.json) remains a migration fixture. Version 7 migrates with an empty `recent_midra_hosts` list; the [version 7 example](canvas-pilot-settings-v7.example.json) remains a migration fixture. Version 8 migrates with `language: "system"`; the [version 8 example](canvas-pilot-settings-v8.example.json) remains a migration fixture. Version 9 migrates without changing any preferences; its `system`, `en` and `fr` values remain valid. The [version 9 example](canvas-pilot-settings-v9.example.json) remains a migration fixture. Version 10 adds language choices. Version 11 adds `ui_scale` and `text_scale`; v1–v10 settings migrate to 100% interface scale with separate text scaling disabled, preserving all existing preferences. The [version 10 example](canvas-pilot-settings-v10.example.json) remains a migration fixture. Version 12 adds `pt-PT`, `ne`, `th`, `hi` and `tok`; v1–v11 settings migrate without changing existing preferences. Values outside each old version’s language set are rejected before migration. The [version 11 example](canvas-pilot-settings-v11.example.json) remains a migration fixture. Version 13 adds installed language choices; v12 preferences migrate unchanged. The [version 12 example](canvas-pilot-settings-v12.example.json) remains a fixture. Version 14 adds required `snapping.mask_edges` (false). Versions 1–13 migrate with mask snapping disabled; supplying the field under an older version is rejected. The [version 13 example](canvas-pilot-settings-v13.example.json) remains a migration fixture. Saving writes version 14, which older applications reject.
+remains a migration fixture too. Version 3 files migrate by adding an empty `midra_host`; the [version 3 example](canvas-pilot-settings-v3.example.json) remains a migration fixture. Version 4 files migrate by adding `allow_sending_to_program: false`; the [version 4 example](canvas-pilot-settings-v4.example.json) remains a migration fixture. Version 5 files migrate with `autoconnect_at_startup: false`; the [version 5 example](canvas-pilot-settings-v5.example.json) remains a migration fixture. Version 6 files migrate with the overlay grid visible, snapping to it disabled, and `grid_divisions: [8, 6]`; the [version 6 example](canvas-pilot-settings-v6.example.json) remains a migration fixture. Version 7 migrates with an empty `recent_midra_hosts` list; the [version 7 example](canvas-pilot-settings-v7.example.json) remains a migration fixture. Version 8 migrates with `language: "system"`; the [version 8 example](canvas-pilot-settings-v8.example.json) remains a migration fixture. Version 9 migrates without changing any preferences; its `system`, `en` and `fr` values remain valid. The [version 9 example](canvas-pilot-settings-v9.example.json) remains a migration fixture. Version 10 adds language choices. Version 11 adds `ui_scale` and `text_scale`; v1–v10 settings migrate to 100% interface scale with separate text scaling disabled, preserving all existing preferences. The [version 10 example](canvas-pilot-settings-v10.example.json) remains a migration fixture. Version 12 adds `pt-PT`, `ne`, `th`, `hi` and `tok`; v1–v11 settings migrate without changing existing preferences. Values outside each old version’s language set are rejected before migration. The [version 11 example](canvas-pilot-settings-v11.example.json) remains a migration fixture. Version 13 adds installed language choices; v12 preferences migrate unchanged. The [version 12 example](canvas-pilot-settings-v12.example.json) remains a fixture. Version 14 adds required `snapping.mask_edges` (false). Versions 1–13 migrate with mask snapping disabled; supplying the field under an older version is rejected. The [version 13 example](canvas-pilot-settings-v13.example.json) remains a migration fixture. Version 15 adds installed theme choices and migrates v1–v14 without changing other preferences. The [version 14 example](canvas-pilot-settings-v14.example.json) remains a migration fixture. Saving writes version 15, which older applications reject.
 
 The `directories` 6 crate resolves `ProjectDirs::from("org", "beffroi", "midra-layout")`.
 The filename is `settings.json` beneath `config_dir()`:
@@ -26,15 +26,15 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 
 | Field | Values / default |
 | --- | --- |
-| `version` | Integer `14` |
+| `version` | Integer `15` |
 | `ui_scale` | Finite number, 0.5–4.0 inclusive; default 1.0. egui interface zoom relative to the OS display scale. |
 | `text_scale` | `null` (default, disabled) or finite number 0.5–2.0 inclusive. Additional standard-widget text multiplier. |
 | `language` | `"system"` (default), `"en"`, `"fr"`, `"ja"`, `"zh-CN"`, `"es"`, `"grc"`, `"eo"`, `"pt-PT"`, `"ne"`, `"th"`, `"hi"`, `"tok"`, or `{"pack":"uk"}` for an installed language. Pack identifiers use 1–63 lowercase ASCII letters, digits and hyphens, without a leading/trailing hyphen. Unknown built-in string values are rejected. |
 | `autoconnect_at_startup` | Boolean; default false. Try one background connection at application startup if the saved address is nonblank. |
 | `allow_sending_to_program` | Boolean; default false. Enables the Program destination in the exporter. Turning it off restores Preview; applies to quick Apply too. |
 | `midra_host` | Device IP address text with optional TCP port (e.g. `192.168.10.146:3000`, `[::1]:3000`; default port 80); default `""`. Saved as typed, including incomplete drafts; validated when connecting. |
-| `theme` | Theme ID from the catalog below; default `"midra"` |
-| `recent_themes` | 1–3 unique theme IDs, newest first; first must equal `theme`; default `["midra"]` |
+| `theme` | Built-in theme ID below or `{"pack":"pack-id/theme-id"}`; default `"midra"` |
+| `recent_themes` | 1–3 unique built-in IDs or pack references, newest first; first must equal `theme`; default `["midra"]` |
 | `show_toolbar_icon_names` | Boolean; default false |
 | `keep_aspect_ratio` | Boolean; default true |
 | `show_source_pattern` | Boolean; default false. Shows source patterns on other layers only during crop editing; normal editing always hides patterns. |
@@ -211,3 +211,13 @@ Installed language choices are described by the [language-pack contract](languag
 They are allowed only in v13; older versions reject object-valued language fields.
 Unavailable packs preserve the identifier and render English rather than discarding
 preferences. Installation re-applies a saved missing-pack choice.
+
+## Installed themes
+
+Theme packs use `{"pack":"pack-id/theme-id"}` in `theme` and `recent_themes`.
+Identifiers follow the [theme-pack contract](theme-packs.md). Built-in string IDs
+remain unchanged; packed choices in settings versions 1–14 are rejected. Missing
+packs retain the preference with Midra Dark rendering and an unavailable label.
+Explicit removal or updates that remove the active theme save Midra Dark instead.
+Re-clicking active High Contrast restores the preceding recent theme, including a
+packed theme; applying startup settings never toggles High Contrast off.

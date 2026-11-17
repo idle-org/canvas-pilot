@@ -486,5 +486,7 @@
   "language.name.tok": "Toki Pona",
   "language.install-pack": "Instalar pacote de idiomas…",
   "ui.crop-mask": "Recorte e máscara",
-  "ui.canvas": "Tela"
+  "ui.canvas": "Tela",
+  "theme.packs": "Pacotes de temas",
+  "theme.install-pack": "Instalar pacote de temas…"
 }

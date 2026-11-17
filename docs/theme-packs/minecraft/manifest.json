@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "minecraft",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "overworld",
+      "name": "Minecraft Overworld",
+      "light": false,
+      "colors": {
+        "canvas": "#182018",
+        "banner": "#283024",
+        "grid": "#65704b",
+        "layer": "#363d28",
+        "pattern": [
+          "#363d28",
+          "#1e241b"
+        ],
+        "bg": "#182018",
+        "panel": "#283024",
+        "field": "#1e241b",
+        "line": "#65704b",
+        "text": "#f1eddb",
+        "muted": "#c5cbb2",
+        "cyan": "#a8dc70",
+        "amber": "#f2ce76",
+        "purple": "#3e5830"
+      }
+    }
+  ],
+  "notices": "Original Canvas Pilot palette inspired by Minecraft grass, stone and earth colors. Unofficial; no game artwork, fonts or code included. Not affiliated with Mojang or Microsoft. Palette provided under the Canvas Pilot MIT license."
+}
