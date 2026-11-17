@@ -4,7 +4,7 @@ Theme packs add palettes without rebuilding Canvas Pilot. They change the app,
 viewport and source-coordinate helper colors; they do not change projects,
 device transfers, imported pictures, fonts or interface size.
 
-## Install and try the collection
+## Install and try the collections
 
 Download a ZIP, leave it zipped, then open **Settings → Theme packs → Install theme
 pack…**. Select a pack, then click one of its themes to try it immediately. It also
@@ -12,27 +12,41 @@ appears in **More themes…** and recent themes. The picker stays open while you
 try alternatives. Selecting **High Contrast** twice returns to your last theme,
 including an installed one.
 
-Download [extra-themes.zip](../../theme-packs/extra-themes.zip) to install **16 themes in one operation**. It is a single pack: select **extra-themes** in the
-manager and scroll its contents to try each palette. Removal or replacement applies
-to the whole collection. Individual packs remain available below; installing both
-keeps separate copies, so you only need one option for those themes.
-**Ravenswatch** is available separately: the collection is at the version-1 limit
-of 16 themes. Install its standalone ZIP alongside the collection.
+Choose either collection, or install both:
+
+- [Video-game themes](../../theme-packs/video-game-themes.zip): **6 themes** —
+  Deep Rock Galactic, Detroit: Become Human, Dispatch, Helldivers, Ravenswatch
+  and Vivid World.
+- [Classic themes](../../theme-packs/classic-themes.zip): **11 themes** —
+  Catppuccin Mocha, Dracula, GitHub Dark/Light, Gruvbox Dark, Monokai, Nord,
+  One Dark, Solarized Dark/Light and Tokyo Night.
+
+Each ZIP is one normal theme pack. Select **video-game-themes** or **classic-themes**
+in the manager to try its palettes. Removal or replacement applies to that whole
+collection. Individual downloads below remain available; installing both an
+individual pack and its collection keeps separate copies.
+
+### Video-game themes
+
+| Pack | Palette | Editable manifest |
+| --- | --- | --- |
+| [Detroit: Become Human](../../theme-packs/detroit-become-human.zip) | Deep blue, pale text and cyan android-inspired accents | [manifest.json](../../theme-packs/detroit-become-human/manifest.json) |
+| [Ravenswatch](../../theme-packs/ravenswatch.zip) | Midnight blue, ivory and crimson | [manifest.json](../../theme-packs/ravenswatch/manifest.json) |
+| [Vivid World](../../theme-packs/vivid-world.zip) | Midnight navy, violet, pink and cyan crystal accents | [manifest.json](../../theme-packs/vivid-world/manifest.json) |
+| [Deep Rock Galactic](../../theme-packs/deep-rock-galactic.zip) | Dark, gold/molten-orange accents | [manifest.json](../../theme-packs/deep-rock-galactic/manifest.json) |
+| [Dispatch](../../theme-packs/dispatch.zip) | Dark, yellow/cyan accents | [manifest.json](../../theme-packs/dispatch/manifest.json) |
+| [Helldivers](../../theme-packs/helldivers.zip) | Dark | [manifest.json](../../theme-packs/helldivers/manifest.json) |
+
+### Classic themes
 
 | Pack | Palette | Editable manifest |
 | --- | --- | --- |
 | [Tokyo Night](../../theme-packs/tokyo-night.zip) | Dark blue with cool cyan accents | [manifest.json](../../theme-packs/tokyo-night/manifest.json) |
 | [Catppuccin Mocha](../../theme-packs/catppuccin.zip) | Soft charcoal and pastel accents | [manifest.json](../../theme-packs/catppuccin/manifest.json) |
-| [Detroit: Become Human](../../theme-packs/detroit-become-human.zip) | Deep blue, pale text and cyan android-inspired accents | [manifest.json](../../theme-packs/detroit-become-human/manifest.json) |
-| [Ravenswatch](../../theme-packs/ravenswatch.zip) | Midnight blue, ivory and crimson (standalone) | [manifest.json](../../theme-packs/ravenswatch/manifest.json) |
-| [Vivid World](../../theme-packs/vivid-world.zip) | Midnight navy, violet, pink and cyan crystal accents | [manifest.json](../../theme-packs/vivid-world/manifest.json) |
-| [Deep Rock Galactic](../../theme-packs/deep-rock-galactic.zip) | Dark, gold/molten-orange accents | [manifest.json](../../theme-packs/deep-rock-galactic/manifest.json) |
-| [Dispatch](../../theme-packs/dispatch.zip) | Dark, yellow/cyan accents | [manifest.json](../../theme-packs/dispatch/manifest.json) |
 | [Dracula](../../theme-packs/dracula.zip) | Dark | [manifest.json](../../theme-packs/dracula/manifest.json) |
 | [GitHub Dark](../../theme-packs/github-dark.zip) | Dark | [manifest.json](../../theme-packs/github-dark/manifest.json) |
 | [GitHub Light](../../theme-packs/github-light.zip) | Light | [manifest.json](../../theme-packs/github-light/manifest.json) |
 | [Gruvbox Dark](../../theme-packs/gruvbox-dark.zip) | Dark | [manifest.json](../../theme-packs/gruvbox-dark/manifest.json) |
-| [Helldivers](../../theme-packs/helldivers.zip) | Dark | [manifest.json](../../theme-packs/helldivers/manifest.json) |
 | [Monokai](../../theme-packs/monokai.zip) | Dark | [manifest.json](../../theme-packs/monokai/manifest.json) |
 | [Nord](../../theme-packs/nord.zip) | Dark | [manifest.json](../../theme-packs/nord/manifest.json) |
 | [One Dark](../../theme-packs/one-dark.zip) | Dark | [manifest.json](../../theme-packs/one-dark/manifest.json) |
@@ -46,9 +60,14 @@ The Detroit, Vivid World, Ravenswatch, Dispatch, Helldivers and Deep Rock Galact
 original, unofficial color interpretations;
 they include no game artwork, fonts or code and are not endorsed by the games' owners.
 
-The current collection replaces Minecraft with Vivid World. Reimport the collection
-to update; if Minecraft was selected, choose Vivid World after the update returns
-to Midra Dark. A separately installed Minecraft pack remains until you remove it.
+### Moving from the old combined pack
+
+The two collections replace the former `extra-themes.zip` download and have new
+pack IDs. Install the desired collections, select a theme from one of them, then
+remove **extra-themes** in Settings if you no longer need its duplicate entries.
+Existing installations and saved choices are not renamed or deleted automatically.
+Removing a pack while its theme is active falls back to Midra Dark. Standalone
+packs, including older Minecraft installations, remain user-managed.
 
 ## Manage packs
 
@@ -88,4 +107,4 @@ poorly contrasted colors automatically.
 
 The [theme-pack contract](../../interfaces/theme-packs.md) lists all palette roles,
 validation limits, settings compatibility and round-trip behavior. Repository
-contributors regenerate the individual ZIPs and the combined collection with `python3 scripts/build-theme-packs.py`.
+contributors regenerate the individual ZIPs and both collections with `python3 scripts/build-theme-packs.py`.

@@ -101,20 +101,26 @@ and Unix file metadata so exact rebuilds do not depend on the host or zlib versi
 Their manifest bytes, pack revisions and version-1 representation are unchanged;
 the importer continues to accept both stored and DEFLATE-compressed packs.
 
-## Bundled collection
+## Bundled collections
 
-`docs/theme-packs/extra-themes.zip` is a normal version-1 pack (`extra-themes`,
-revision 4), containing 16 curated themes. One import validates and installs
-all entries atomically; it does not unpack nested ZIPs. The build script combines
-the explicitly listed collection manifests in sorted path order, prefixes theme IDs with their source
-pack ID and preserves all notices. Individual packs and the collection have distinct
-saved choices and can coexist. Updates and removal operate on the whole collection.
+Two normal version-1 packs partition the 17 distributed themes, with no duplicate
+membership and each below the 16-theme limit:
 
-Collection revision 4 replaces `minecraft-overworld` with `vivid-world-default`.
-Updating while Minecraft is active uses the existing removed-theme fallback to
-Midra Dark; Vivid World can then be selected explicitly. Older standalone Minecraft
-installations are not deleted or remapped by this collection update.
+| File / pack ID | Revision | Contents |
+| --- | --- | --- |
+| `video-game-themes.zip` / `video-game-themes` | 1 | 6: Deep Rock Galactic, Detroit: Become Human, Dispatch, Helldivers, Ravenswatch, Vivid World |
+| `classic-themes.zip` / `classic-themes` | 1 | 11: Catppuccin, Dracula, GitHub Dark/Light, Gruvbox Dark, Monokai, Nord, One Dark, Solarized Dark/Light, Tokyo Night |
 
-Ravenswatch is a separate version-1 pack, not a seventeenth collection entry.
-The build script validates every standalone archive and requires every listed
-collection manifest; adding a standalone pack does not change collection contents.
+The build script combines explicitly assigned manifests in sorted path order,
+prefixes each theme ID with its source pack ID and preserves notices. Missing or
+uncategorized sources fail the build. Import installs each collection atomically;
+it does not unpack nested archives. Individual packs and collections have distinct
+saved choices and can coexist. Updates and removal operate on the chosen pack.
+
+These replace the distributed `extra-themes.zip` (last revision 4), without
+reusing or silently reinterpreting its ID. Old saved `extra-themes/<theme-id>`
+choices continue to resolve while the old pack is installed. Users install the
+new collections, explicitly select their new choice, and optionally remove the
+old pack. Removing an active old pack uses the existing Midra Dark fallback.
+No settings/project version or automatic migration changes. Standalone pack IDs,
+revisions, palette bytes and installed copies remain unchanged.

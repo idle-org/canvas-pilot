@@ -7,13 +7,17 @@ import json
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-# Curated v1 collection: new standalone packs must not silently replace its entries.
-COLLECTION_PACKS = frozenset({
-    'catppuccin', 'deep-rock-galactic', 'detroit-become-human', 'dispatch',
-    'dracula', 'github-dark', 'github-light', 'gruvbox-dark', 'helldivers',
-    'monokai', 'nord', 'one-dark', 'solarized-dark', 'solarized-light',
-    'tokyo-night', 'vivid-world',
-})
+# Explicit membership keeps each normal v1 pack below its 16-theme limit.
+COLLECTIONS = {
+    'video-game-themes': frozenset({
+        'deep-rock-galactic', 'detroit-become-human', 'dispatch', 'helldivers',
+        'ravenswatch', 'vivid-world',
+    }),
+    'classic-themes': frozenset({
+        'catppuccin', 'dracula', 'github-dark', 'github-light', 'gruvbox-dark',
+        'monokai', 'nord', 'one-dark', 'solarized-dark', 'solarized-light', 'tokyo-night',
+    }),
+}
 
 
 def archive(manifest):
@@ -28,10 +32,14 @@ def archive(manifest):
     return buffer.getvalue()
 
 
-def collection(sources):
+def collection(sources, collection_id):
     """One normal v1 pack: the existing importer installs every contained theme."""
-    sources = [source for source in sources if source.parent.name in COLLECTION_PACKS]
-    if {source.parent.name for source in sources} != COLLECTION_PACKS:
+    members = COLLECTIONS[collection_id]
+    sources = list(sources)
+    if {source.parent.name for source in sources} - set().union(*COLLECTIONS.values()):
+        raise ValueError('A theme has no collection assignment')
+    sources = [source for source in sources if source.parent.name in members]
+    if {source.parent.name for source in sources} != members:
         raise ValueError('A required collection manifest is missing')
     themes = []
     notices = []
@@ -42,7 +50,7 @@ def collection(sources):
         notices.append(manifest['id'] + '\n' + manifest.get('notices', ''))
     if not 1 <= len(themes) <= 16:
         raise ValueError('The collection must respect the v1 limit of 16 themes')
-    manifest = dict(version=1, id='extra-themes', revision=4,
+    manifest = dict(version=1, id=collection_id, revision=1,
                     themes=themes, notices='\n\n'.join(notices))
     return (json.dumps(manifest, indent=2) + '\n').encode()
 
@@ -53,7 +61,8 @@ def main():
     args = parser.parse_args()
     sources = sorted((ROOT / 'docs/theme-packs').glob('*/manifest.json'))
     outputs = [(source.parent.with_suffix('.zip'), source.read_bytes()) for source in sources]
-    outputs.append((ROOT / 'docs/theme-packs/extra-themes.zip', collection(sources)))
+    outputs.extend((ROOT / f'docs/theme-packs/{name}.zip', collection(sources, name))
+                   for name in COLLECTIONS)
     for target, manifest in outputs:
         data = archive(manifest)
         if args.check:

@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.45
+
+- Split bundled themes into video-game-themes (6, including Ravenswatch) and
+  classic-themes (11). Retired the combined extra-themes download; standalone
+  palettes are unchanged. New pack IDs coexist with old installations, with
+  explicit selection/removal instructions. Checked partitioning, notices,
+  reproducible archives, simultaneous installation, restart and contrast.
+
 ### v0.9.44
 
 - Added a separate, reproducible Lumen Forum showcase kit: polished PIP infodecor,
