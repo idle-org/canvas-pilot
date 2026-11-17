@@ -562,7 +562,7 @@ impl Editor {
         };
         if response.on_hover_text(tooltip).clicked() {
             self.start_scoped_load(ui.ctx());
-            ui.close();
+            ui.close_kind(egui::UiKind::Menu);
         }
     }
     fn start_scoped_load(&mut self, ctx: &egui::Context) {
@@ -790,7 +790,22 @@ impl Editor {
         let mut open = true;
         let mut imported = false;
         let mut send_plan = None;
-        egui::Window::new(if self.device.prepare_send { "Device mapping & transfer" } else { "Import layers from device" })
+        let title = if self.device.prepare_send {
+            "Device mapping & transfer"
+        } else {
+            "Import layers from device"
+        };
+        let window_id = egui::Id::new(title);
+        // Older Load clicks could close egui's internal collapsing body even with
+        // collapsible(false). Restore that saved state; this window must stay expanded.
+        let mut body = egui::collapsing_header::CollapsingState::load_with_default_open(
+            ctx,
+            window_id.with("collapsing"),
+            true,
+        );
+        body.set_open(true);
+        body.store(ctx);
+        egui::Window::new(title).id(window_id)
             .enabled(!self.format_draft.as_ref().is_some_and(|d| d.pending(&self.layout)))
             .open(&mut open).default_width(660.0).collapsible(false)
             .max_height((ctx.content_rect().height() - 100.0).max(200.0)).vscroll(true)
@@ -1516,6 +1531,99 @@ mod tests {
         assert!(load_linked_layers(&mut layout, &snapshot, &[(id, link)]).is_err());
         assert_eq!(*layout.layers(), before);
     }
+    #[test]
+    fn load_keeps_mapping_window_contents_visible() {
+        let ctx = egui::Context::default();
+        ctx.global_style_mut(|style| style.animation_time = 0.0);
+        let mut app = Editor::default();
+        app.device.open = true;
+        app.device.prepare_send = true;
+        app.device.snapshot = Some(linked_test_snapshot());
+        // No saved links: exercise the real Load button without contacting hardware.
+        let render = |app: &mut Editor, events| {
+            ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1400.0, 1200.0))),
+                    events,
+                    ..Default::default()
+                },
+                |_| app.device_window(&ctx),
+            )
+        };
+        render(&mut app, vec![]);
+        render(
+            &mut app,
+            vec![
+                egui::Event::PointerMoved(Pos2::new(300.0, 200.0)),
+                egui::Event::MouseWheel {
+                    phase: egui::TouchPhase::Move,
+                    unit: egui::MouseWheelUnit::Point,
+                    delta: Vec2::new(0.0, -1000.0),
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ],
+        );
+        let output = render(&mut app, vec![]);
+        let point = output
+            .shapes
+            .iter()
+            .find_map(|shape| match &shape.shape {
+                egui::Shape::Text(text) if text.galley.text().trim() == "Load linked layers" => {
+                    Some(text.pos + text.galley.size() * 0.5)
+                }
+                _ => None,
+            })
+            .unwrap();
+        render(
+            &mut app,
+            vec![
+                egui::Event::PointerMoved(point),
+                super::super::tests::mouse(point, true),
+            ],
+        );
+        render(&mut app, vec![super::super::tests::mouse(point, false)]);
+        let output = render(&mut app, vec![]);
+        assert!(app.device.open);
+        assert!(app.device.error.contains("No linked layers"));
+        assert!(output.shapes.iter().any(|shape| matches!(&shape.shape,
+            egui::Shape::Text(text) if text.galley.text().trim() == "Load linked layers")));
+    }
+
+    #[test]
+    fn mapping_window_recovers_old_collapsed_state_and_shows_connection_error() {
+        let ctx = egui::Context::default();
+        ctx.global_style_mut(|style| style.animation_time = 0.0);
+        let mut app = Editor::default();
+        app.device.open = true;
+        app.device.prepare_send = true;
+        let id = egui::Id::new("Device mapping & transfer").with("collapsing");
+        let mut body =
+            egui::collapsing_header::CollapsingState::load_with_default_open(&ctx, id, false);
+        body.set_open(false);
+        body.store(&ctx);
+        let (tx, rx) = mpsc::channel();
+        app.device.pending = Some(rx);
+        tx.send(Err("Simulated connection error".into())).unwrap();
+        let mut output = None;
+        for _ in 0..2 {
+            output = Some(ctx.run_ui(egui::RawInput::default(), |_| app.device_window(&ctx)));
+        }
+        assert!(app.device.open);
+        assert!(
+            egui::collapsing_header::CollapsingState::load(&ctx, id)
+                .unwrap()
+                .is_open()
+        );
+        assert!(
+            output
+                .unwrap()
+                .shapes
+                .iter()
+                .any(|shape| matches!(&shape.shape,
+            egui::Shape::Text(text) if text.galley.text() == "Simulated connection error"))
+        );
+    }
+
     #[test]
     fn linked_load_finishes_from_fresh_read_without_sending() {
         let mut app = Editor::default();

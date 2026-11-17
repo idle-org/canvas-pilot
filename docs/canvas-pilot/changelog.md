@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.25
+
+- Fix Load collapsing Device mapping & transfer to its title bar: the shared
+  control now closes only menus, not the window's internal collapsible body.
+  Mapping/import windows also recover previously saved collapsed states.
+- Regression checks reproduce the Load click and cover recovery with a connection
+  error visible; no physical device is needed for these UI checks.
+
 ### v0.9.24
 
 - Group installed language packs under bold, collapsible ID/revision headings,
