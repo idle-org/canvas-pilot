@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.27
+
+- Enter now finishes viewport crop/mask editing, including clean Crop/Mask
+  properties, while retaining live changes and Undo history. Numeric fields keep
+  their Enter-to-commit behavior; pending properties receive Apply/Discard review.
+  Held Enter and active pointer drags do not accidentally finish the helper.
+
 ### v0.9.26
 
 - Added offline theme ZIP packs with bounded validation, live installation/update,

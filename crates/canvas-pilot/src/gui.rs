@@ -88,6 +88,7 @@ pub struct Editor {
     edit_mask: bool,
     alt_mask: bool,
     crop_mask_tab_held: bool,
+    crop_mask_enter_held: bool,
     crop_tab_editing: bool,
     show_pattern: bool,
     show_toolbar_icon_names: bool,
@@ -413,6 +414,7 @@ impl Default for Editor {
             edit_mask: false,
             alt_mask: false,
             crop_mask_tab_held: false,
+            crop_mask_enter_held: false,
             crop_tab_editing: false,
             show_pattern: false,
             show_toolbar_icon_names: false,
@@ -454,11 +456,12 @@ impl Editor {
         self.edit_mask || (self.edit_content && self.alt_mask)
     }
 
-    // Consume before egui processes Tab as focus navigation. A held-key latch is
-    // needed here: egui-winit leaves repeat detection to egui, after this hook.
-    fn crop_mask_tab_input(&mut self, ctx: &egui::Context, input: &mut egui::RawInput) {
+    // Handle canvas Enter/Tab before egui focus navigation, leaving text fields alone.
+    // Held-key latches are needed: egui-winit leaves repeat detection to egui.
+    fn crop_mask_key_input(&mut self, ctx: &egui::Context, input: &mut egui::RawInput) {
         if !input.focused {
             self.crop_mask_tab_held = false;
+            self.crop_mask_enter_held = false;
             return;
         }
         let eligible = self.edit_content
@@ -476,7 +479,6 @@ impl Editor {
             && !ctx.egui_wants_keyboard_input()
             && ctx.memory(|m| m.focused().is_none())
             && !ctx.any_popup_open()
-            && self.format_draft.is_none()
             && self.output_draft.is_none()
             && self.paste.is_none()
             && !self.preferences_open
@@ -490,13 +492,38 @@ impl Editor {
             && !self.files.new_after_save
             && !self.files.new_ready
             && !(self.fields_edited && self.fields_pending())
+            && self
+                .layout
+                .selected()
+                .is_some_and(|i| !self.layout.locked(i) && self.layout.visible(i));
+        let tab_eligible = eligible
+            && self.format_draft.is_none()
             && self.layout.selected().is_some_and(|i| {
-                !self.layout.locked(i)
-                    && self.layout.visible(i)
-                    && self.layout.formats().layer_fit[i]
-                        .is_none_or(|fit| fit == canvas_pilot::formats::LayerFit::OneToOne)
+                self.layout.formats().layer_fit[i]
+                    .is_none_or(|fit| fit == canvas_pilot::formats::LayerFit::OneToOne)
             });
+        let enter_eligible = eligible
+            && !self.device.open
+            && !self.device.connection_open
+            && (self.format_draft.is_none()
+                || matches!(self.property_tab, PropertyTab::Crop | PropertyTab::Mask));
         input.events.retain(|event| {
+            if let egui::Event::Key {
+                key: egui::Key::Enter,
+                pressed,
+                modifiers,
+                ..
+            } = event
+            {
+                let was_held = self.crop_mask_enter_held;
+                self.crop_mask_enter_held = *pressed;
+                if enter_eligible && modifiers.is_none() {
+                    if *pressed && !was_held {
+                        self.finish_crop_edit();
+                    }
+                    return false;
+                }
+            }
             if let egui::Event::Key {
                 key: egui::Key::Tab,
                 pressed,
@@ -506,7 +533,7 @@ impl Editor {
             {
                 let was_held = self.crop_mask_tab_held;
                 self.crop_mask_tab_held = *pressed;
-                if eligible && modifiers.is_none() {
+                if tab_eligible && modifiers.is_none() {
                     if *pressed && !was_held {
                         self.edit_mask = !self.edit_mask;
                         self.alt_mask = false;
@@ -3981,7 +4008,7 @@ impl Editor {
             ink.text(
             24.0,
             r.height() - 40.0,
-            if move_pointer { "Move tool · Drag anywhere to move the current selection · V: Select · H: Pan" } else if self.navigation_tool == NavigationTool::Pan { "Pan tool · Drag to move the view · V: Select · Z: Zoom · Space/middle-drag pans from any tool" } else if self.navigation_tool == NavigationTool::Zoom { "Zoom tool · Click to zoom in · Alt-click to zoom out · Drag right/left to zoom · V: Select · H: Pan" } else if self.edit_content && self.mask_editing() { "Mask · Tab: crop · Drag edges to blank · Drag inside layer or use arrows to move window · Shift+arrows: 10 px · Escape cancels" } else if self.edit_content && self.layout.selected().is_some_and(|i| self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)) { "1:1 crop · Tab: mask · Drag edges to trim · Drag picture or use arrows to reposition · Double-click or click outside to finish" } else if pivot_visible { "Pivot resize · Drag pivot to position · Double-click to center · Ctrl temporarily toggles pivot" } else if self.edit_content { "Crop mode · Tab: mask · Hold Alt/Option for temporary mask · Drag crop handles to zoom content · Drag image to reposition · Double-click or click outside to finish" } else { match self.active_resize_mode() {
+            if move_pointer { "Move tool · Drag anywhere to move the current selection · V: Select · H: Pan" } else if self.navigation_tool == NavigationTool::Pan { "Pan tool · Drag to move the view · V: Select · Z: Zoom · Space/middle-drag pans from any tool" } else if self.navigation_tool == NavigationTool::Zoom { "Zoom tool · Click to zoom in · Alt-click to zoom out · Drag right/left to zoom · V: Select · H: Pan" } else if self.edit_content && self.mask_editing() { "Mask · Enter: finish · Tab: crop · Drag edges to blank · Drag inside layer or use arrows to move window · Shift+arrows: 10 px · Escape cancels" } else if self.edit_content && self.layout.selected().is_some_and(|i| self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)) { "1:1 crop · Tab: mask · Drag edges to trim · Drag picture or use arrows to reposition · Enter, double-click or click outside to finish" } else if pivot_visible { "Pivot resize · Drag pivot to position · Double-click to center · Ctrl temporarily toggles pivot" } else if self.edit_content { "Crop mode · Tab: mask · Hold Alt/Option for temporary mask · Drag crop handles to zoom content · Drag image to reposition · Enter, double-click or click outside to finish" } else { match self.active_resize_mode() {
                 ResizeMode::Individual => "Corners resize · Side handles keep opposite edge fixed · Shift-click selects",
                 ResizeMode::Same => "Same handles · Matching handles scale selected layers proportionally · Escape cancels drag",
                 ResizeMode::Mirror => "Mirror horizontally · Left/right mirrored handles · Escape cancels drag",
@@ -4338,7 +4365,7 @@ impl Editor {
 
 impl eframe::App for Editor {
     fn raw_input_hook(&mut self, ctx: &egui::Context, input: &mut egui::RawInput) {
-        self.crop_mask_tab_input(ctx, input);
+        self.crop_mask_key_input(ctx, input);
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _: &mut eframe::Frame) {
@@ -5026,7 +5053,7 @@ mod tests {
             events,
             ..Default::default()
         };
-        app.crop_mask_tab_input(ctx, &mut input);
+        app.crop_mask_key_input(ctx, &mut input);
         ctx.run_ui(input, |ui| app.ui(ui))
     }
     fn key(key: egui::Key) -> egui::Event {
@@ -6505,6 +6532,90 @@ mod tests {
     }
 
     #[test]
+    fn enter_finishes_crop_and_mask_without_changing_live_edits_or_undo() {
+        for mask in [false, true] {
+            for properties in [false, true] {
+                let ctx = egui::Context::default();
+                let mut app = Editor::default();
+                app.layout.select(Some(1));
+                let before = app.layout.formats().clone();
+                if mask {
+                    app.layout
+                        .set_mask(
+                            1,
+                            canvas_pilot::formats::Mask {
+                                left: 0.1,
+                                ..Default::default()
+                            },
+                        )
+                        .unwrap();
+                } else {
+                    app.layout
+                        .set_framing(
+                            1,
+                            canvas_pilot::formats::Framing {
+                                zoom: 1.2,
+                                ..Default::default()
+                            },
+                        )
+                        .unwrap();
+                }
+                app.edit_content = true;
+                app.edit_mask = mask;
+                if properties {
+                    app.property_tab = if mask {
+                        PropertyTab::Mask
+                    } else {
+                        PropertyTab::Crop
+                    };
+                    app.format_draft = Some(FormatDraft::new(&app.layout, 1));
+                }
+                frame(&mut app, &ctx, vec![]);
+                let applied = app.project();
+                frame(&mut app, &ctx, vec![key(egui::Key::Enter)]);
+                assert!(!app.edit_content);
+                assert!(!app.edit_mask);
+                assert!(app.format_draft.is_none());
+                assert_eq!(app.project(), applied);
+                app.layout.undo();
+                assert_eq!(*app.layout.formats(), before);
+            }
+        }
+    }
+
+    #[test]
+    fn enter_leaves_numeric_input_and_active_drags_alone() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.layout.select(Some(1));
+        app.edit_content = true;
+        let field = egui::Id::new("numeric-crop-field");
+        ctx.memory_mut(|m| m.request_focus(field));
+        let mut input = egui::RawInput {
+            events: vec![key(egui::Key::Enter)],
+            ..Default::default()
+        };
+        app.crop_mask_key_input(&ctx, &mut input);
+        assert!(app.edit_content);
+        assert_eq!(input.events.len(), 1);
+        ctx.memory_mut(|m| m.surrender_focus(field));
+        // A repeat after field submission must not also finish the helper.
+        app.crop_mask_key_input(&ctx, &mut input);
+        assert!(app.edit_content);
+        app.crop_mask_enter_held = false;
+        app.layout.start_mask_drag(1, [0.0; 2], None);
+        let mut input = egui::RawInput {
+            events: vec![key(egui::Key::Enter)],
+            ..Default::default()
+        };
+        app.crop_mask_key_input(&ctx, &mut input);
+        assert!(app.edit_content);
+        assert!(app.layout.dragging());
+        assert_eq!(input.events.len(), 1);
+        app.layout.cancel_drag();
+    }
+
+    #[test]
     fn tab_toggles_crop_and_mask_without_focus_or_document_changes() {
         for fit in [None, Some(canvas_pilot::formats::LayerFit::OneToOne)] {
             let ctx = egui::Context::default();
@@ -6567,7 +6678,7 @@ mod tests {
                 events: vec![key(egui::Key::Tab)],
                 ..Default::default()
             };
-            app.crop_mask_tab_input(&ctx, &mut input);
+            app.crop_mask_key_input(&ctx, &mut input);
             assert!(!app.mask_editing(), "case {case}");
             assert_eq!(input.events.len(), 1, "case {case}");
         }
@@ -6593,11 +6704,11 @@ mod tests {
                 }],
                 ..Default::default()
             };
-            app.crop_mask_tab_input(&ctx, &mut input);
+            app.crop_mask_key_input(&ctx, &mut input);
             assert!(!app.mask_editing());
             assert_eq!(input.events.len(), 1);
         }
-        app.crop_mask_tab_input(
+        app.crop_mask_key_input(
             &ctx,
             &mut egui::RawInput {
                 focused: false,

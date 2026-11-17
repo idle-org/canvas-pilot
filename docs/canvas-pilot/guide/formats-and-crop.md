@@ -39,7 +39,7 @@ Select one layer and click its **Layer resolution** card to open **Layer propert
 5. Click **Adjust layer crop** in the selected layer’s parameters, below its format
    summary, or **double-click a layer on the canvas**, to drag or arrow-nudge
    content inside the fixed box. The button
-   highlights while active; double-click again or click **Done adjusting crop** to leave the mode.
+   highlights while active; press **Enter**, double-click again or click **Done adjusting crop** to leave the mode.
    Drags clamp at valid crop boundaries; Escape cancels a drag and leaves this
    mode. Wheel zoom still controls the camera. A source-coordinate test pattern
    illustrates framing; it is deliberately separate from the screen reference.
@@ -254,6 +254,10 @@ they are never exported or sent to the device. It works with normal crop and eve
 - Enter Left/Right/Top/Bottom distances in output pixels.
 - The alignment menu aligns the mask window to the selected reference’s edges or center.
 - **Center mask** preserves its size; **Reset mask** removes all blanking.
+- **Enter** finishes crop/mask editing and keeps the live changes. When typing in
+  a numeric field, Enter confirms that value first; press Enter again after leaving
+  the field to finish. Other unapplied properties use the existing Apply/Discard
+  review, so finishing cannot silently discard them.
 - Undo restores a complete drag; Escape cancels the active drag.
 
 Opposite edges can meet to blank the whole layer, and remain draggable afterwards.

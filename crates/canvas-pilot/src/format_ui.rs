@@ -330,6 +330,21 @@ impl Editor {
             self.output_draft = Some(d);
         }
     }
+    pub(super) fn finish_crop_edit(&mut self) {
+        if let Some(draft) = self
+            .format_draft
+            .as_mut()
+            .filter(|d| d.pending(&self.layout))
+        {
+            draft.closing = true;
+        } else {
+            self.format_draft = None;
+        }
+        self.edit_content = false;
+        self.edit_mask = false;
+        self.alt_mask = false;
+    }
+
     pub(super) fn sync_crop_tab_mode(&mut self) {
         let mask = self.property_tab == PropertyTab::Mask;
         let active = (self.property_tab == PropertyTab::Crop || mask)
@@ -965,6 +980,37 @@ fn paint_pattern_clipped(
 mod tests {
     use super::super::tests::{click_text, frame, mouse};
     use super::*;
+    #[test]
+    fn enter_from_crop_or_mask_reviews_pending_properties_without_discarding() {
+        for tab in [PropertyTab::Crop, PropertyTab::Mask] {
+            let ctx = egui::Context::default();
+            let mut app = Editor::default();
+            app.layout.select(Some(1));
+            app.property_tab = tab;
+            let mut draft = FormatDraft::new(&app.layout, 1);
+            draft.size = [800.0, 450.0];
+            app.format_draft = Some(draft);
+            frame(&mut app, &ctx, vec![]);
+            let applied = app.project();
+            frame(
+                &mut app,
+                &ctx,
+                vec![egui::Event::Key {
+                    key: egui::Key::Enter,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: egui::Modifiers::NONE,
+                }],
+            );
+            assert!(app.format_draft.as_ref().unwrap().closing);
+            assert_eq!(app.project(), applied);
+            click_text(&mut app, &ctx, "Discard");
+            assert!(app.format_draft.is_none());
+            assert_eq!(app.project(), applied);
+        }
+    }
+
     fn enter_value(app: &mut Editor, ctx: &egui::Context, label: &str, text: &str) {
         // DragValue renders prefix, number and suffix as separate atoms in egui 0.35.
         frame(app, ctx, vec![]);
