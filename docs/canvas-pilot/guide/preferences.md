@@ -108,7 +108,9 @@ used themes, newest first. **More themes…** opens the complete picker with col
 swatches: Midra Dark plus all 18 themes from the SOTV song-database theme folder.
 A fresh installation lists only Midra Dark until other themes are selected.
 Selecting a theme updates the UI and viewport immediately and saves the recent
-history across restarts. Reusing a theme moves it to the top without duplicates.
+history across restarts. The picker stays open so you can try several themes;
+close it with its window close button when finished. Reusing a theme moves it to
+the top without duplicates.
 Closing the picker without choosing leaves the theme and history unchanged.
 
 The viewport, grid, layer boxes and source test patterns use the selected palette;

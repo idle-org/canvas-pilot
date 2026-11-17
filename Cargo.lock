@@ -548,7 +548,7 @@ dependencies = [
 
 [[package]]
 name = "canvas-pilot"
-version = "0.9.20"
+version = "0.9.21"
 dependencies = [
  "base64",
  "craft-dwg",

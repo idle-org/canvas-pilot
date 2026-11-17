@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.9.21
+
+- Keep the More themes picker open after each selection so multiple themes can
+  be previewed before closing it. Each choice still applies and saves immediately.
+
 ### v0.9.20
 
 - Added a full-width No folder drop area and widened the heading drop target to

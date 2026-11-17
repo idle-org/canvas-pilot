@@ -263,7 +263,6 @@ impl Editor {
             });
         if let Some(choice) = selected {
             choice.apply(ctx);
-            self.themes_open = false;
             self.settings.save(&self.application_settings(ctx));
         }
     }
@@ -524,13 +523,14 @@ mod tests {
         let ctx = egui::Context::default();
         let boxes = app.layout.layers().clone();
         let formats = app.layout.formats().clone();
+        click_label(&mut app, &ctx, "Menu");
+        click_label(&mut app, &ctx, "Options");
+        let label = format!("Theme: {}", theme::Theme::current(&ctx).name());
+        click_label(&mut app, &ctx, &label);
+        click_label(&mut app, &ctx, "More themes…");
         for choice in theme::Theme::ALL {
-            click_label(&mut app, &ctx, "Menu");
-            click_label(&mut app, &ctx, "Options");
-            let label = format!("Theme: {}", theme::Theme::current(&ctx).name());
-            click_label(&mut app, &ctx, &label);
-            click_label(&mut app, &ctx, "More themes…");
             click_label(&mut app, &ctx, choice.name());
+            assert!(app.themes_open);
             assert!(theme::Theme::current(&ctx) == choice);
             assert_eq!(ctx.global_style().visuals.dark_mode, !choice.is_light());
             let output = frame(&mut app, &ctx, vec![]);
