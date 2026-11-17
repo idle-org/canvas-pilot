@@ -488,5 +488,10 @@
   "ui.crop-mask": "Recorte e máscara",
   "ui.canvas": "Tela",
   "theme.packs": "Pacotes de temas",
-  "theme.install-pack": "Instalar pacote de temas…"
+  "theme.install-pack": "Instalar pacote de temas…",
+  "preset.fullscreen": "Ecrã inteiro",
+  "preset.quarter": "Quarto",
+  "preset.tiling": "Mosaico",
+  "preset.portrait": "Retrato",
+  "preset.landscape": "Paisagem"
 }

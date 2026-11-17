@@ -488,5 +488,10 @@
   "ui.crop-mask": "Crop & mask",
   "ui.canvas": "Canvas",
   "theme.packs": "Theme packs",
-  "theme.install-pack": "Install theme pack…"
+  "theme.install-pack": "Install theme pack…",
+  "preset.fullscreen": "Fullscreen",
+  "preset.quarter": "Quarter",
+  "preset.tiling": "Tiling",
+  "preset.portrait": "Portrait",
+  "preset.landscape": "Landscape"
 }

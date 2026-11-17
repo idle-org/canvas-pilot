@@ -488,5 +488,10 @@
   "ui.crop-mask": "クロップとマスク",
   "ui.canvas": "キャンバス",
   "theme.packs": "テーマパック",
-  "theme.install-pack": "テーマパックをインストール…"
+  "theme.install-pack": "テーマパックをインストール…",
+  "preset.fullscreen": "全画面",
+  "preset.quarter": "4分の1",
+  "preset.tiling": "タイル配置",
+  "preset.portrait": "縦向き",
+  "preset.landscape": "横向き"
 }

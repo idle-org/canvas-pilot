@@ -488,5 +488,10 @@
   "ui.crop-mask": "क्रॉप और मास्क",
   "ui.canvas": "कैनवास",
   "theme.packs": "थीम पैक",
-  "theme.install-pack": "थीम पैक स्थापित करें…"
+  "theme.install-pack": "थीम पैक स्थापित करें…",
+  "preset.fullscreen": "पूर्ण स्क्रीन",
+  "preset.quarter": "चौथाई",
+  "preset.tiling": "टाइल व्यवस्था",
+  "preset.portrait": "लंबवत",
+  "preset.landscape": "क्षैतिज"
 }

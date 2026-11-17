@@ -488,5 +488,10 @@
   "ui.crop-mask": "Tondado kaj masko",
   "ui.canvas": "Kanvaso",
   "theme.packs": "Temaj pakoj",
-  "theme.install-pack": "Instali teman pakon…"
+  "theme.install-pack": "Instali teman pakon…",
+  "preset.fullscreen": "Plenekrane",
+  "preset.quarter": "Kvarono",
+  "preset.tiling": "Kahelado",
+  "preset.portrait": "Vertikale",
+  "preset.landscape": "Horizontale"
 }

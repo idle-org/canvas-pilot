@@ -39,6 +39,35 @@ not affect device links or source assignments. All document edits support Undo.
 
 *Use the Layer tab for precise dimensions; the inspector keeps the selected layer in view. The header still uses the former Midra Layout name.*
 
+## Size preset icon box
+
+The toolbar's size preset icon box works on the selected visible, unlocked layers:
+
+- **Fullscreen:** place every selected layer at the output's top-left and set its
+  width and height to the full output size. Multiple layers overlap intentionally.
+- **Quarter:** with one layer, choose one of nine positions: top/middle/bottom and
+  left/center/right. The layer is half the output width and half its height.
+  With two selected layers, choose **Up / Down** halves or **Left / Right** halves.
+  With three or more, choose **Four quarters**. Selections over four repeat the
+  quarter positions, so extra layers overlap earlier ones.
+- **Tiling:** set **X (columns)** and **Y (rows)**, then **Apply tiling**. Layers fill
+  cells left to right, then top to bottom. Empty cells remain empty; if there are
+  more layers than cells, positions repeat and the menu explains the overlap.
+- **Portrait / Landscape:** swap each layer's dimensions only when needed for
+  that orientation. Its top-left position stays unchanged; square layers stay square.
+  This changes the box dimensions, not the rotation of the source picture.
+
+Placement follows the layer list from top to bottom, including selected members
+of collapsed folders. Presets use the output dimensions and preserve fractional
+pixels for odd screen sizes or uneven tile divisions. These explicit sizes override
+the manual aspect-ratio lock. Tiling counts range from 1 to 256 on each axis and
+are retained for the current session.
+
+Each operation is one Undo step, including any crop adjustment from resizing.
+Sources, masks, layer names, folders, stacking and device links remain unchanged;
+no device transfer occurs. Finish pending numeric/property edits before applying
+a preset. Hover an icon for its name, or enable toolbar icon names in Options.
+
 ## Move and edit layers
 
 - Click a layer or its list entry to select it alone. **Shift-click** toggles that

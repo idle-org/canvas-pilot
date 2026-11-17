@@ -13,6 +13,7 @@ pub mod import;
 pub mod input_proposal;
 pub mod interchange;
 pub mod project;
+pub mod size_presets;
 pub mod snapping;
 #[cfg(all(feature = "vendor_formats", not(feature = "no_proprietary")))]
 mod vendor_formats;

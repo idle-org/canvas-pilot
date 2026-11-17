@@ -21,6 +21,8 @@ mod ratio_ui;
 mod recovery_ui;
 #[path = "reference_ui.rs"]
 mod reference_ui;
+#[path = "size_presets_ui.rs"]
+mod size_presets_ui;
 #[path = "viewport_guides.rs"]
 mod viewport_guides;
 use canvas_pilot::import::{DetectedShape, ImportDocument, parse_values};
@@ -78,6 +80,7 @@ pub struct Editor {
     ratio_edit: ratio_ui::RatioEdit,
     ratio_layer: Option<usize>,
     resize_mode: ResizeMode,
+    size_tiles: [u16; 2],
     grid_tool: Option<u32>,
     pivot_tool: bool,
     pivot_drag: Option<(usize, Layout)>,
@@ -404,6 +407,7 @@ impl Default for Editor {
             ratio_edit: Default::default(),
             ratio_layer: None,
             resize_mode: ResizeMode::Individual,
+            size_tiles: [2, 2],
             grid_tool: None,
             pivot_tool: false,
             pivot_drag: None,
@@ -2905,6 +2909,11 @@ impl Editor {
         }
         let button = |index: usize| buttons[index].translate(r.min.to_vec2());
         let extra_height = toolbar_bottom - 56.0;
+        self.size_preset_toolbar(
+            ui,
+            [button(17), button(18), button(19), button(20), button(21)],
+            names,
+        );
         if toolbar_icon(ui, button(13), "Output format", ToolbarIcon::Output).clicked() {
             self.output_draft = Some(OutputDraft::new(output));
         }
@@ -4516,8 +4525,8 @@ enum ToolbarIcon {
 }
 
 // Keep related tools together when wrapping; reserve caption space per group.
-fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 17], Vec<Rect>, f32) {
-    let mut buttons = [Rect::NOTHING; 17];
+fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 22], Vec<Rect>, f32) {
+    let mut buttons = [Rect::NOTHING; 22];
     let mut groups = Vec::new();
     let mut x = 24.0;
     let mut y = 20.0;
@@ -4529,13 +4538,15 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 17], Vec<Rect>, f32) {
         &[6, 7, 8, 9],
         &[10, 11, 16, 12],
         &[13, 14],
+        &[17, 18, 19, 20, 21],
     ] {
         let cell_width = |slot| match slot {
             0 | 15 => 68.0,
             11 => 56.0,
-            8 | 9 if captions => 80.0,
+            8 | 9 | 17..=21 if captions => 80.0,
             _ if captions => 56.0,
             1 | 10 | 14 => 44.0,
+            17..=21 => 34.0,
             _ => 36.0,
         };
         let group_width = slots.iter().map(|&slot| cell_width(slot)).sum::<f32>() + 8.0;
@@ -5739,6 +5750,7 @@ mod tests {
                     &[6, 7, 8, 9],
                     &[10, 11, 16, 12],
                     &[13, 14],
+                    &[17, 18, 19, 20, 21],
                 ] {
                     assert!(
                         slots

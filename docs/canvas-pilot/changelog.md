@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### v0.9.28
+
+- Added a toolbar icon box for selected-layer Fullscreen, Quarter, X/Y Tiling,
+  Portrait and Landscape presets. Quarter offers nine positions for one layer,
+  halves for two and four quarters for larger selections. Overflow repeats cells
+  with an explanation; placement follows the layer list, including folder members.
+- Presets retain fractional geometry, preserve source/link/mask identity and commit
+  atomically with crop adjustment in one Undo step. Orientation keeps top-left
+  positions; explicit preset sizes override manual aspect-ratio locking.
+
 ### v0.9.27
 
 - Enter now finishes viewport crop/mask editing, including clean Crop/Mask

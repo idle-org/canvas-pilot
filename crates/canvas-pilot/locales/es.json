@@ -488,5 +488,10 @@
   "ui.crop-mask": "Recorte y máscara",
   "ui.canvas": "Lienzo",
   "theme.packs": "Paquetes de temas",
-  "theme.install-pack": "Instalar paquete de temas…"
+  "theme.install-pack": "Instalar paquete de temas…",
+  "preset.fullscreen": "Pantalla completa",
+  "preset.quarter": "Cuarto",
+  "preset.tiling": "Mosaico",
+  "preset.portrait": "Vertical",
+  "preset.landscape": "Horizontal"
 }

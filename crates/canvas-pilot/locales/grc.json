@@ -488,5 +488,10 @@
   "ui.crop-mask": "Περικοπὴ καὶ κάλυμμα",
   "ui.canvas": "Πίναξ",
   "theme.packs": "Δέσμαι θεμάτων",
-  "theme.install-pack": "Ἐγκατάστησον δέσμην θεμάτων…"
+  "theme.install-pack": "Ἐγκατάστησον δέσμην θεμάτων…",
+  "preset.fullscreen": "Ὅλη ὀθόνη",
+  "preset.quarter": "Τέταρτον",
+  "preset.tiling": "Πλακόστρωσις",
+  "preset.portrait": "Ὄρθιον",
+  "preset.landscape": "Πλάγιον"
 }

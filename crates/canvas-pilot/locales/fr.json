@@ -488,5 +488,10 @@
   "ui.crop-mask": "Recadrage et masque",
   "ui.canvas": "Canevas",
   "theme.packs": "Packs de thèmes",
-  "theme.install-pack": "Installer un pack de thèmes…"
+  "theme.install-pack": "Installer un pack de thèmes…",
+  "preset.fullscreen": "Plein écran",
+  "preset.quarter": "Quart",
+  "preset.tiling": "Mosaïque",
+  "preset.portrait": "Portrait",
+  "preset.landscape": "Paysage"
 }

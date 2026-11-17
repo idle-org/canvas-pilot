@@ -488,5 +488,10 @@
   "ui.crop-mask": "kipisi en len",
   "ui.canvas": "supa sitelen",
   "theme.packs": "kulupu kule",
-  "theme.install-pack": "o pana e kulupu kule…"
+  "theme.install-pack": "o pana e kulupu kule…",
+  "preset.fullscreen": "selo ale",
+  "preset.quarter": "kipisi pi tu tu",
+  "preset.tiling": "kulupu leko",
+  "preset.portrait": "poka sewi",
+  "preset.landscape": "poka lili"
 }

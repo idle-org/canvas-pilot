@@ -488,5 +488,10 @@
   "ui.crop-mask": "裁剪与遮罩",
   "ui.canvas": "画布",
   "theme.packs": "主题包",
-  "theme.install-pack": "安装主题包…"
+  "theme.install-pack": "安装主题包…",
+  "preset.fullscreen": "全屏",
+  "preset.quarter": "四分之一",
+  "preset.tiling": "平铺",
+  "preset.portrait": "纵向",
+  "preset.landscape": "横向"
 }
