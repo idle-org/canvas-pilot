@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "Ajustar movimiento y tamaño",
   "ui.pixel-edges": "Bordes de píxeles",
   "ui.screen-edges-center-quarters": "Bordes, centro y cuartos de pantalla",
-  "ui.visible-layer-edges": "Bordes de capas visibles",
+  "ui.visible-layer-edges": "Bordes de capa",
   "ui.outline-only-layers-this-project": "Solo contornos de capas (este proyecto)",
   "ui.show-toolbar-icon-names": "Mostrar nombres de iconos",
   "ui.show-source-patterns-on-other-layers-while-cropping": "Mostrar patrones de otras capas al recortar",

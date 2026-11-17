@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "Snap movement & resizing",
   "ui.pixel-edges": "Pixel edges",
   "ui.screen-edges-center-quarters": "Screen edges, center & quarters",
-  "ui.visible-layer-edges": "Visible layer edges",
+  "ui.visible-layer-edges": "Layer borders",
   "ui.outline-only-layers-this-project": "Outline-only layers (this project)",
   "ui.show-toolbar-icon-names": "Show toolbar icon names",
   "ui.show-source-patterns-on-other-layers-while-cropping": "Show source patterns on other layers while cropping",

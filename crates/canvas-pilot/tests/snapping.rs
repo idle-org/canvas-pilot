@@ -3,11 +3,12 @@ use canvas_pilot::{Layout, snapping::Snapping};
 #[test]
 fn screen_snapping_recomputes_from_original_and_is_one_undo_step() {
     let mut layout = Layout::default();
+    layout.set_visible(0, false);
     let before = layout.layers().clone();
     let formats = layout.formats().clone();
     let options = Snapping {
         enabled: true,
-        layer_edges: false,
+        layer_edges: true,
         ..Default::default()
     };
     layout.start_drag([1200.0, 200.0]);
@@ -563,12 +564,13 @@ fn screen_quarters_snap_moving_edges_and_centers_and_survive_release() {
     let options = Snapping {
         enabled: true,
         pixels: false,
-        layer_edges: false,
+        layer_edges: true,
         ..Default::default()
     };
     for fraction in [0.25, 0.5, 0.75] {
         for anchor in [0.0, 0.5, 1.0] {
             let mut layout = Layout::default();
+            layout.set_visible(0, false);
             let g = layout.layers()[1];
             let target = [1920.0 * fraction, 1080.0 * fraction];
             let point = [
@@ -647,7 +649,7 @@ fn overlay_grid_snaps_moves_resizes_and_pivots_with_fractional_divisions() {
         enabled: true,
         pixels: false,
         screen_edges: false,
-        layer_edges: false,
+        layer_edges: true,
         grid: true,
         show_grid: false,
         grid_divisions: [7, 5],
@@ -710,7 +712,7 @@ fn mask_options() -> Snapping {
         enabled: true,
         pixels: false,
         screen_edges: false,
-        layer_edges: false,
+        layer_edges: true,
         mask_edges: true,
         ..Default::default()
     }
@@ -1083,5 +1085,58 @@ fn moving_mask_center_aligns_to_masks_screen_and_grid_with_rigid_groups_and_undo
         layout.cancel_drag();
         assert_eq!(*layout.layers(), before);
         assert_eq!(*layout.formats(), formats);
+    }
+}
+
+#[test]
+fn layer_borders_and_mask_anchors_can_be_disabled_independently() {
+    use canvas_pilot::formats::Mask;
+    for borders in [false, true] {
+        for masks in [false, true] {
+            let mut layout = Layout::default();
+            layout.select(Some(1));
+            layout
+                .set_mask(
+                    1,
+                    Mask {
+                        left: 0.25,
+                        right: 0.1,
+                        ..Default::default()
+                    },
+                )
+                .unwrap();
+            let g = layout.layers()[1];
+            let formats = layout.formats().clone();
+            let options = Snapping {
+                enabled: true,
+                pixels: false,
+                screen_edges: true,
+                layer_edges: borders,
+                mask_edges: masks,
+                ..Default::default()
+            };
+            // Outer border near screen edge; masked edges and both centers are far away.
+            layout.start_drag([g.x, g.y]);
+            let guides = layout.drag_to_snapped([2.0, g.y + 17.0], options, 6.0);
+            assert_eq!(guides[0], borders.then_some(0.0));
+            assert_eq!(layout.layers()[1].x, if borders { 0.0 } else { 2.0 });
+            layout.cancel_drag();
+            // Mask's left edge near screen edge; outer border is far from guides.
+            layout.start_drag([g.x, g.y]);
+            let guides = layout.drag_to_snapped(
+                [-158.0, g.y + 17.0],
+                Snapping {
+                    screen_edges: true,
+                    layer_edges: false,
+                    ..options
+                },
+                6.0,
+            );
+            assert_eq!(guides[0], masks.then_some(0.0));
+            assert_eq!(layout.layers()[1].x, if masks { -160.0 } else { -158.0 });
+            layout.cancel_drag();
+            assert_eq!(layout.layers()[1], g);
+            assert_eq!(*layout.formats(), formats);
+        }
     }
 }

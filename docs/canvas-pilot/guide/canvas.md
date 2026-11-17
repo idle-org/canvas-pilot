@@ -154,10 +154,19 @@ Navigation tool choice survives selection changes and project loads in the curre
 session; a new launch starts with Select. Pan/Zoom do not alter geometry, crop values
 or document history. Existing project saves still preserve zoom/pan values.
 
+### Layer border snapping
+
+**Layer borders** is independent of **Mask edges & centers**. Turn it off to stop
+using outer layer borders as movement anchors or stationary snapping targets.
+You can leave mask snapping on to position the visible masked picture, or disable
+both options. Neither checkbox changes the other. Screen/grid center alignment,
+pixel rounding and directly dragged resize handles retain their own behavior;
+mirrored/opposite border-contact snapping follows **Layer borders**.
+
 ### Snap to masks
 
 Enable **Mask edges & centers** in the snapping options to add the visible mask boundaries
-and their centers as targets, independently of **Visible layer edges**. Movement can align either
+and their centers as targets, independently of **Layer borders**. Movement can align either
 outer layer edges or mask edges to those targets, screen guides and grid lines.
 The center of a moving visible masked area can align to screen interior guides,
 overlay grid lines and other masked-area centers. Whole-layer centers can also

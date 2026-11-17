@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "Ἐνέργει πρόσφυσιν κινήσεως καὶ μεγέθους",
   "ui.pixel-edges": "Ὅρια ψηφίδων",
   "ui.screen-edges-center-quarters": "Ὅρια, κέντρον καὶ τεταρτημόρια πετάσματος",
-  "ui.visible-layer-edges": "Ὅρια ὁρατῶν στρωμάτων",
+  "ui.visible-layer-edges": "Ἄκρα στρωμάτων",
   "ui.outline-only-layers-this-project": "Μόνα περιγράμματα στρωμάτων (τόδε τὸ σχέδιον)",
   "ui.show-toolbar-icon-names": "Δεῖξον τὰ ὀνόματα τῶν εἰκονιδίων",
   "ui.show-source-patterns-on-other-layers-while-cropping": "Ἐν τῇ ἀποτομῇ δεῖξον τὰ ὑποδείγματα πηγῶν τῶν ἄλλων στρωμάτων",

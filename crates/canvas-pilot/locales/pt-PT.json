@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "Encaixar movimento e tamanho",
   "ui.pixel-edges": "Limites dos píxeis",
   "ui.screen-edges-center-quarters": "Limites, centro e quartos do ecrã",
-  "ui.visible-layer-edges": "Limites das camadas visíveis",
+  "ui.visible-layer-edges": "Bordas das camadas",
   "ui.outline-only-layers-this-project": "Só contornos das camadas (neste projeto)",
   "ui.show-toolbar-icon-names": "Mostrar nomes dos ícones",
   "ui.show-source-patterns-on-other-layers-while-cropping": "Mostrar padrões nas outras camadas durante o recorte",

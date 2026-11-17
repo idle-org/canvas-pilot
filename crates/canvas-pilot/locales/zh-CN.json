@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "移动和缩放吸附",
   "ui.pixel-edges": "像素边缘",
   "ui.screen-edges-center-quarters": "屏幕边缘、中心和四分点",
-  "ui.visible-layer-edges": "可见图层边缘",
+  "ui.visible-layer-edges": "图层边框",
   "ui.outline-only-layers-this-project": "仅显示图层轮廓（此项目）",
   "ui.show-toolbar-icon-names": "显示工具栏图标名称",
   "ui.show-source-patterns-on-other-layers-while-cropping": "裁剪时显示其他图层的源图案",

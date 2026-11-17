@@ -237,8 +237,11 @@ impl Layout {
                     .mask_edges
                     .then(|| mask_geometry(&before.formats, i, *g))
                     .flatten();
-                for (is_center, moving) in edge(*g, axis)
+                for (is_center, moving) in options
+                    .layer_edges
+                    .then_some(*g)
                     .into_iter()
+                    .flat_map(|g| edge(g, axis))
                     .chain(mask.into_iter().flat_map(|g| edge(g, axis)))
                     .map(|v| (false, v))
                     .chain(std::iter::once((true, g.center()[axis])))

@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "Aimantation du déplacement et du redimensionnement",
   "ui.pixel-edges": "Bords des pixels",
   "ui.screen-edges-center-quarters": "Bords, centre et quarts de l’écran",
-  "ui.visible-layer-edges": "Bords des calques visibles",
+  "ui.visible-layer-edges": "Bords des calques",
   "ui.outline-only-layers-this-project": "Contours seuls (ce projet)",
   "ui.show-toolbar-icon-names": "Afficher les noms des outils",
   "ui.show-source-patterns-on-other-layers-while-cropping": "Afficher les mires des autres calques pendant le recadrage",

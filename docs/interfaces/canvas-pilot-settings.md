@@ -143,6 +143,10 @@ fixed six-logical-pixel proximity radius converted by viewport scale. It affects
 layer movement, resize handles and pivot placement; numeric entry, nudges and crop-content gestures
 bypass it. Resize snapping preserves anchors and proportions and shows guides only
 when the resulting edge actually reaches its target.
+`layer_edges` independently controls outer borders as movement anchors and
+stationary targets, including mirrored/opposite resize contact. Disabling it does
+not change `mask_edges`. Centers, pixel rounding and directly dragged resize handles
+retain their existing behavior. The serialized field and default remain unchanged.
 `mask_edges` adds the nonempty intersection of mask reveal, layer aperture and
 fitted picture as edge and center targets. Hidden layers are skipped, locked layers included.
 Movement also adds selected mask edges and centers as anchors; resize handles remain on the

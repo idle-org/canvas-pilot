@@ -6069,7 +6069,7 @@ mod tests {
                         let mut app = Editor::default();
                         app.snapping.enabled = enabled;
                         app.snapping.pixels = false;
-                        app.snapping.layer_edges = false;
+                        app.snapping.layer_edges = true;
                         let before = app.layout.layers().clone();
                         let saved = app.snapping;
                         let point = if resize {
@@ -6166,7 +6166,7 @@ mod tests {
             for label in [
                 "Pixel edges",
                 "Screen edges, center & quarters",
-                "Visible layer edges",
+                "Layer borders",
             ] {
                 click_text(&mut app, &ctx, label);
             }
@@ -8583,7 +8583,7 @@ mod tests {
                 };
                 app.snapping.enabled = true;
                 app.snapping.pixels = false;
-                app.snapping.layer_edges = false;
+                app.snapping.layer_edges = true;
                 let before = app.layout.layers().clone();
                 let output = frame(&mut app, &ctx, vec![]);
                 let rect = layer_rects(&output)[1];

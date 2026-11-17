@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.34
+
+- Renamed Visible layer edges to Layer borders and made disabling it exclude moving
+  outer borders as well as stationary border targets. Mask edges & centers remains
+  independently selectable, with both choices preserved in preferences/projects.
+  Center alignment and direct resize-handle snapping retain their existing behavior.
+
 ### v0.9.33
 
 - Device mapping/transfer and import now use wider solid scrollbars whenever their

@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "स्थान और आकार बदलते समय स्नैप करें",
   "ui.pixel-edges": "पिक्सेल के किनारे",
   "ui.screen-edges-center-quarters": "स्क्रीन के किनारे, केंद्र और चौथाई",
-  "ui.visible-layer-edges": "दृश्यमान परतों के किनारे",
+  "ui.visible-layer-edges": "लेयर की सीमाएँ",
   "ui.outline-only-layers-this-project": "केवल परतों की रूपरेखा (इस परियोजना में)",
   "ui.show-toolbar-icon-names": "टूलबार आइकन के नाम दिखाएँ",
   "ui.show-source-patterns-on-other-layers-while-cropping": "क्रॉप करते समय अन्य परतों पर स्रोत पैटर्न दिखाएँ",

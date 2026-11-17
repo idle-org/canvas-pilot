@@ -112,10 +112,7 @@ impl Editor {
                 &mut self.snapping.layer_edges,
                 tr(ui.ctx(), "ui.visible-layer-edges"),
             )
-            .on_hover_text(tr(
-                ui.ctx(),
-                "ui.includes-contact-between-mirrored-opposite-resizing-layers",
-            ));
+            .on_hover_text("Snap moving outer borders and use other layers’ borders as targets. Independent of masks. Also controls mirrored/opposite resize contact; center and direct resize-handle snapping remain available.");
             ui.checkbox(&mut self.snapping.mask_edges, tr(ui.ctx(), "ui.mask-edges"));
         });
         ui.weak(tr(
@@ -484,10 +481,18 @@ mod tests {
         click_label(&mut app, &ctx, "Snap movement & resizing");
         click_label(&mut app, &ctx, "Mask edges & centers");
         assert!(app.snapping.mask_edges);
+        click_label(&mut app, &ctx, "Layer borders");
+        assert!(!app.snapping.layer_edges);
+        assert!(app.snapping.mask_edges);
+        click_label(&mut app, &ctx, "Mask edges & centers");
+        assert!(!app.snapping.mask_edges);
+        assert!(!app.snapping.layer_edges);
+        click_label(&mut app, &ctx, "Mask edges & centers");
         assert_eq!(*app.layout.layers(), before);
         let (store, saved) = settings::Store::at(path);
         assert!(store.error.is_none());
         assert!(saved.snapping.mask_edges);
+        assert!(!saved.snapping.layer_edges);
         assert!(saved.snapping.enabled);
     }
 

@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "ดูดตำแหน่งเมื่อย้ายและปรับขนาด",
   "ui.pixel-edges": "ขอบพิกเซล",
   "ui.screen-edges-center-quarters": "ขอบ กึ่งกลาง และหนึ่งในสี่ของหน้าจอ",
-  "ui.visible-layer-edges": "ขอบเลเยอร์ที่มองเห็น",
+  "ui.visible-layer-edges": "ขอบเลเยอร์",
   "ui.outline-only-layers-this-project": "แสดงเฉพาะเส้นขอบเลเยอร์ (โครงการนี้)",
   "ui.show-toolbar-icon-names": "แสดงชื่อไอคอนแถบเครื่องมือ",
   "ui.show-source-patterns-on-other-layers-while-cropping": "แสดงลวดลายต้นทางบนเลเยอร์อื่นขณะครอบตัด",

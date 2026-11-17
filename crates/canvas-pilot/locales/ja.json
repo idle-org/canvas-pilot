@@ -78,7 +78,7 @@
   "ui.snap-movement-resizing": "移動とサイズ変更をスナップ",
   "ui.pixel-edges": "ピクセル境界",
   "ui.screen-edges-center-quarters": "画面の端、中央、四分点",
-  "ui.visible-layer-edges": "表示レイヤーの端",
+  "ui.visible-layer-edges": "レイヤーの境界",
   "ui.outline-only-layers-this-project": "レイヤーを輪郭のみ表示（このプロジェクト）",
   "ui.show-toolbar-icon-names": "ツールバーのアイコン名を表示",
   "ui.show-source-patterns-on-other-layers-while-cropping": "クロップ中に他レイヤーのソースパターンを表示",
