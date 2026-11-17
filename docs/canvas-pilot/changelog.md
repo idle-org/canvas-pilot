@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.35
+
+- Replaced expanding theme/language pack stacks with a searchable pack browser:
+  bounded collection list, one selected pack's details, in-use indicators, counts
+  and revisions. Search includes pack contents; narrow windows stack the panes.
+- Kept live theme switching, language confirmation, overwrite review and removal
+  safeguards. Pack browsing is session-only and changes no archive/settings schema.
+
 ## Release v0.9.34 — 2026-11-17
 
 ### v0.9.34

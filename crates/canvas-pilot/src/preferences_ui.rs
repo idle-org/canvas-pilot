@@ -189,10 +189,16 @@ impl Editor {
             Ok(pending) if pending.needs_confirmation() => {
                 self.language_pack_action = Some(PackAction::Install(pending))
             }
-            Ok(pending) => match crate::language_packs::commit(ctx, pending, false) {
-                Ok(()) => self.refresh_pack_language(ctx, &previous),
-                Err(error) => self.error = error,
-            },
+            Ok(pending) => {
+                let id = pending.id().to_owned();
+                match crate::language_packs::commit(ctx, pending, false) {
+                    Ok(()) => {
+                        super::pack_browser_ui::focus(ctx, "languages", &id);
+                        self.refresh_pack_language(ctx, &previous);
+                    }
+                    Err(error) => self.error = error,
+                }
+            }
             Err(error) => self.error = error,
         }
     }
@@ -207,29 +213,58 @@ impl Editor {
         {
             self.prepare_language_pack(&ctx, &path);
         }
-        ui.weak("Choose a ZIP to install or update. Newer revisions update immediately; equal or older revisions ask before replacing.");
         let packs = crate::language_packs::installed(&ctx);
-        if packs.is_empty() {
-            ui.label("No language packs installed.");
-        }
-        for pack in packs {
+        let rows = packs
+            .iter()
+            .map(|pack| super::pack_browser_ui::Row {
+                id: pack.id.clone(),
+                summary: format!("Languages: {} · r{}", pack.languages.len(), pack.revision),
+                search: pack
+                    .languages
+                    .iter()
+                    .map(|l| format!("{} {} {}", l.locale, l.name, l.native_name))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+                active: pack
+                    .languages
+                    .iter()
+                    .any(|l| self.language == localization::Language::Pack(l.locale.clone())),
+            })
+            .collect();
+        super::pack_browser_ui::show(ui, "languages", rows, |ui, id, height| {
+            let pack = packs.iter().find(|p| p.id == id).unwrap();
+            ui.label(egui::RichText::new(&pack.id).strong());
+            ui.weak(format!(
+                "Revision {} · Languages: {}",
+                pack.revision,
+                pack.languages.len()
+            ));
+            if ui.button(tr(&ctx, "language.remove-pack")).clicked() {
+                self.finish_language_preview(&ctx, false);
+                self.language_pack_action = Some(PackAction::Remove(pack.clone()));
+            }
             ui.separator();
-            egui::CollapsingHeader::new(
-                egui::RichText::new(format!("{} · revision {}", pack.id, pack.revision)).strong(),
-            )
-            .id_salt(("language-pack", &pack.id))
-            .default_open(true)
-            .show(ui, |ui| {
-                for language in &pack.languages {
-                    ui.label(format!("{} — {}", language.native_name, language.name));
-                }
-                ui.add_space(4.0);
-                if ui.button(tr(&ctx, "language.remove-pack")).clicked() {
-                    self.finish_language_preview(&ctx, false);
-                    self.language_pack_action = Some(PackAction::Remove(pack.clone()));
-                }
-            });
-        }
+            egui::ScrollArea::vertical()
+                .id_salt(("pack-languages", id))
+                .max_height((height - 90.0).max(80.0))
+                .show(ui, |ui| {
+                    for language in &pack.languages {
+                        let choice = localization::Language::Pack(language.locale.clone());
+                        let label = format!("{} — {}", language.native_name, language.name);
+                        if ui
+                            .add(
+                                egui::Button::new(&label)
+                                    .selected(self.language == choice)
+                                    .wrap(),
+                            )
+                            .clicked()
+                        {
+                            self.preview_language(&ctx, choice);
+                        }
+                        ui.weak(&language.locale);
+                    }
+                });
+        });
     }
 
     fn refresh_pack_theme(&mut self, ctx: &egui::Context, was_available: bool) {
@@ -263,8 +298,12 @@ impl Editor {
             }
             Ok(pending) => {
                 let was_available = theme::Theme::current(ctx).available(ctx);
+                let id = pending.id().to_owned();
                 match crate::theme_packs::commit(ctx, pending, false) {
-                    Ok(()) => self.refresh_pack_theme(ctx, was_available),
+                    Ok(()) => {
+                        super::pack_browser_ui::focus(ctx, "themes", &id);
+                        self.refresh_pack_theme(ctx, was_available);
+                    }
                     Err(error) => self.error = error,
                 }
             }
@@ -281,51 +320,78 @@ impl Editor {
         {
             self.prepare_theme_pack(&ctx, &path);
         }
-        ui.weak("Choose a ZIP to install or update. Newer revisions update immediately; equal or older revisions ask before replacing.");
         let packs = crate::theme_packs::installed(&ctx);
-        if packs.is_empty() {
-            ui.label("No theme packs installed.");
-        }
-        for pack in packs {
+        let current = theme::Theme::current(&ctx);
+        let rows = packs
+            .iter()
+            .map(|pack| super::pack_browser_ui::Row {
+                id: pack.id.clone(),
+                summary: format!("Themes: {} · r{}", pack.themes.len(), pack.revision),
+                search: pack
+                    .themes
+                    .iter()
+                    .map(|t| format!("{} {}", t.id, t.name))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+                active: pack
+                    .themes
+                    .iter()
+                    .any(|t| current == theme::Theme::Pack(format!("{}/{}", pack.id, t.id))),
+            })
+            .collect();
+        super::pack_browser_ui::show(ui, "themes", rows, |ui, id, height| {
+            let pack = packs.iter().find(|p| p.id == id).unwrap();
+            ui.label(egui::RichText::new(&pack.id).strong());
+            ui.weak(format!(
+                "Revision {} · Themes: {}",
+                pack.revision,
+                pack.themes.len()
+            ));
+            if ui.button(tr(&ctx, "language.remove-pack")).clicked() {
+                self.language_pack_action = Some(PackAction::RemoveTheme(pack.clone()));
+            }
             ui.separator();
-            egui::CollapsingHeader::new(
-                egui::RichText::new(format!("{} · revision {}", pack.id, pack.revision)).strong(),
-            )
-            .id_salt(("theme-pack", &pack.id))
-            .default_open(true)
-            .show(ui, |ui| {
-                for entry in &pack.themes {
-                    let choice = theme::Theme::Pack(format!("{}/{}", pack.id, entry.id));
-                    ui.horizontal(|ui| {
+            egui::ScrollArea::vertical()
+                .id_salt(("pack-themes", id))
+                .max_height((height - 90.0).max(80.0))
+                .show(ui, |ui| {
+                    for entry in &pack.themes {
+                        let choice = theme::Theme::Pack(format!("{}/{}", pack.id, entry.id));
                         let palette = choice.resolved_palette(&ctx);
-                        for color in [palette.bg, palette.layer, palette.cyan] {
-                            let (rect, _) =
-                                ui.allocate_exact_size(Vec2::splat(10.0), egui::Sense::hover());
-                            ui.painter().rect_filled(rect, 2.0, color);
-                        }
-                        if ui
-                            .stable_selectable_label(
-                                choice == theme::Theme::current(&ctx),
-                                &entry.name,
-                            )
-                            .clicked()
-                        {
-                            choice.select(&ctx);
-                        }
-                    });
-                }
-                if !pack.notices.is_empty() {
-                    egui::CollapsingHeader::new("Attribution and licenses")
-                        .id_salt(("theme-notices", &pack.id))
-                        .show(ui, |ui| {
-                            ui.label(&pack.notices);
+                        ui.horizontal(|ui| {
+                            for color in [palette.bg, palette.layer, palette.cyan] {
+                                let (rect, _) =
+                                    ui.allocate_exact_size(Vec2::splat(12.0), egui::Sense::hover());
+                                ui.painter().rect_filled(rect, 2.0, color);
+                            }
+                            if ui
+                                .add(
+                                    egui::Button::new(&entry.name)
+                                        .selected(choice == theme::Theme::current(&ctx))
+                                        .wrap(),
+                                )
+                                .clicked()
+                            {
+                                choice.select(&ctx);
+                            }
                         });
-                }
-                if ui.button(tr(&ctx, "language.remove-pack")).clicked() {
-                    self.language_pack_action = Some(PackAction::RemoveTheme(pack.clone()));
-                }
-            });
-        }
+                        ui.weak(if choice == theme::Theme::current(&ctx) {
+                            "In use"
+                        } else if entry.light {
+                            "Light"
+                        } else {
+                            "Dark"
+                        });
+                    }
+                    if !pack.notices.is_empty() {
+                        egui::CollapsingHeader::new("Attribution and licenses")
+                            .id_salt(("theme-notices", id))
+                            .show(ui, |ui| {
+                                ui.label(&pack.notices);
+                            });
+                    }
+                });
+        });
     }
 
     pub(super) fn language_pack_confirmation(&mut self, ctx: &egui::Context) {
@@ -373,12 +439,22 @@ impl Editor {
                 self.language_pack_action,
                 Some(PackAction::InstallTheme(_) | PackAction::RemoveTheme(_))
             );
+            let focus = match self.language_pack_action.as_ref() {
+                Some(PackAction::Install(pack)) => Some(("languages", pack.id().to_owned())),
+                Some(PackAction::InstallTheme(pack)) => Some(("themes", pack.id().to_owned())),
+                _ => None,
+            };
             let result = match self.language_pack_action.take().unwrap() {
                 PackAction::Install(pack) => crate::language_packs::commit(ctx, pack, true),
                 PackAction::Remove(pack) => crate::language_packs::remove(ctx, &pack),
                 PackAction::InstallTheme(pack) => crate::theme_packs::commit(ctx, pack, true),
                 PackAction::RemoveTheme(pack) => crate::theme_packs::remove(ctx, &pack),
             };
+            if result.is_ok()
+                && let Some((kind, id)) = focus
+            {
+                super::pack_browser_ui::focus(ctx, kind, &id);
+            }
             match result {
                 Ok(()) if theme_action => self.refresh_pack_theme(ctx, theme_was_available),
                 Ok(()) => self.refresh_pack_language(ctx, &previous),
@@ -681,7 +757,8 @@ mod tests {
         std::fs::write(&source, manager_pack(1, "test-manager")).unwrap();
         app.prepare_language_pack(&ctx, &source);
         assert!(app.language_pack_action.is_none());
-        app.preview_language(&ctx, localization::Language::Pack("test-manager".into()));
+        click_label(&mut app, &ctx, "Manager test — Manager test");
+        assert!(app.language_preview.is_some());
         app.finish_language_preview(&ctx, true);
         std::fs::write(&source, manager_pack(2, "test-manager")).unwrap();
         app.prepare_language_pack(&ctx, &source);

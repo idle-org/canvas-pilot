@@ -7,7 +7,7 @@ device transfers, imported pictures, fonts or interface size.
 ## Install and try the examples
 
 Download a ZIP, leave it zipped, then open **Settings → Theme packs → Install theme
-pack…**. Click a theme beneath its pack heading to try it immediately. It also
+pack…**. Select a pack, then click one of its themes to try it immediately. It also
 appears in **More themes…** and recent themes. The picker stays open while you
 try alternatives. Selecting **High Contrast** twice returns to your last theme,
 including an installed one.
@@ -27,9 +27,17 @@ they include no game artwork, fonts or code and are not endorsed by the games' o
 
 ## Manage packs
 
-Each pack has a bold, collapsible heading with its ID and revision. Expand it to
-see theme swatches, select a theme, read its attribution or choose **Remove pack…**.
-Packs start expanded. Theme changes save immediately and survive restart.
+The manager uses a compact, searchable pack list and shows the contents of only
+one selected pack. Search by pack ID or theme name; **Clear** restores the full
+list. Rows show the theme count and revision, with a dot marking packs currently
+in use. Large collections scroll within the list instead of stretching Settings.
+
+Select a pack to see its theme swatches, light/dark labels, attribution and
+**Remove pack…** action. The contents and license text scroll independently;
+removal stays above them. On narrower windows, details appear below the list.
+Newly installed or updated packs are selected automatically.
+Search and selection are remembered during the session, separately from language
+packs. Theme changes save immediately and survive restart.
 
 Install a newer revision of the same pack to update it immediately. Equal or older
 revisions ask before replacing the installed copy. Updating an active theme refreshes

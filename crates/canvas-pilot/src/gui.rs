@@ -11,6 +11,8 @@ mod input_ui;
 mod layers_ui;
 #[path = "menu_ui.rs"]
 mod menu_ui;
+#[path = "pack_browser_ui.rs"]
+mod pack_browser_ui;
 #[path = "preferences_ui.rs"]
 mod preferences_ui;
 #[path = "project_ui.rs"]
