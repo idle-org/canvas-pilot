@@ -32,7 +32,7 @@ def collection(sources):
         notices.append(manifest['id'] + '\n' + manifest.get('notices', ''))
     if not 1 <= len(themes) <= 16:
         raise ValueError('The collection must respect the v1 limit of 16 themes')
-    manifest = dict(version=1, id='extra-themes', revision=1,
+    manifest = dict(version=1, id='extra-themes', revision=2,
                     themes=themes, notices='\n\n'.join(notices))
     return (json.dumps(manifest, indent=2) + '\n').encode()
 

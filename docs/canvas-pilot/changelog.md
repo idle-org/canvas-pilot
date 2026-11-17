@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.40
+
+- Retuned Dispatch to vivid yellow and cyan accents on charcoal/olive surfaces,
+  with off-white text, following the supplied title-art reference. Updated both
+  Dispatch and the extra-themes collection to revision 2 for existing installs;
+  regenerated downloads and checked text contrast.
+
 ### v0.9.39
 
 - Removed the secondary Dark/Light/In use lines from theme choices and locale-code

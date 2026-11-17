@@ -1,30 +1,30 @@
 {
   "version": 1,
   "id": "dispatch",
-  "revision": 1,
+  "revision": 2,
   "themes": [
     {
       "id": "default",
       "name": "Dispatch",
       "light": false,
       "colors": {
-        "canvas": "#182535",
-        "banner": "#111b29",
-        "grid": "#596c80",
-        "layer": "#25384c",
+        "canvas": "#202c2b",
+        "banner": "#354238",
+        "grid": "#65736a",
+        "layer": "#244344",
         "pattern": [
-          "#25384c",
-          "#182535"
+          "#244344",
+          "#202c2b"
         ],
-        "bg": "#182535",
-        "panel": "#111b29",
-        "field": "#25384c",
-        "line": "#596c80",
-        "text": "#f7eedc",
-        "muted": "#bdcbd9",
-        "cyan": "#7ec8e3",
-        "amber": "#f18d72",
-        "purple": "#25384c"
+        "bg": "#181d1c",
+        "panel": "#232923",
+        "field": "#303930",
+        "line": "#65736a",
+        "text": "#f8f9ed",
+        "muted": "#bdc8bc",
+        "cyan": "#00e6cf",
+        "amber": "#ffed00",
+        "purple": "#505318"
       }
     }
   ],
