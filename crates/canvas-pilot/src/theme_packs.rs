@@ -465,6 +465,51 @@ mod tests {
         assert_eq!(Theme::current(&ctx), missing);
     }
     #[test]
+    fn complete_collection_imports_every_theme_and_survives_restart() {
+        let bytes = include_bytes!("../../../docs/theme-packs/extra-themes.zip");
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("extra-themes.zip");
+        let packs = dir.path().join("installed");
+        std::fs::write(&source, bytes).unwrap();
+        let ctx = egui::Context::default();
+        install(&ctx, &packs, &source).unwrap();
+        assert_eq!(installed(&ctx).len(), 1);
+        assert_eq!(choices(&ctx).len(), 16);
+        assert_eq!(
+            std::fs::read(packs.join("extra-themes.zip")).unwrap(),
+            bytes
+        );
+        let restarted = egui::Context::default();
+        assert!(load(&restarted, &packs).is_empty());
+        assert_eq!(choices(&ctx), choices(&restarted));
+        let luminance = |c: egui::Color32| {
+            let rgb = [c.r(), c.g(), c.b()].map(|v| {
+                let v = f64::from(v) / 255.0;
+                if v <= 0.04045 {
+                    v / 12.92
+                } else {
+                    ((v + 0.055) / 1.055).powf(2.4)
+                }
+            });
+            rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722
+        };
+        for theme in parse(bytes).unwrap().manifest.themes {
+            let choice = Theme::Pack(format!("extra-themes/{}", theme.id));
+            choice.select(&restarted);
+            assert_eq!(Theme::current(&restarted), choice);
+            assert_eq!(choice.display_name(&restarted), theme.name);
+            let p = choice.resolved_palette(&restarted);
+            for bg in [p.bg, p.panel, p.field, p.purple, p.pattern[0], p.pattern[1]] {
+                let (fg, bg) = (luminance(p.text), luminance(bg));
+                assert!(
+                    (fg.max(bg) + 0.05) / (fg.min(bg) + 0.05) >= 4.5,
+                    "{} contrast",
+                    theme.name
+                );
+            }
+        }
+    }
+    #[test]
     fn updates_require_review_and_detect_disk_changes_before_commit_or_remove() {
         let dir = tempfile::tempdir().unwrap();
         let packs = dir.path().join("packs");

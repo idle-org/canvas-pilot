@@ -95,3 +95,12 @@ The editable manifests and ZIPs contain identical bytes, checked by Rust tests
 and `python3 scripts/build-theme-packs.py --check`. Lifecycle tests cover startup,
 selection persistence, live updates, overwrite review/cancellation, changed-file
 protection, removal, limits, malformed colors/archives and context isolation.
+
+## Bundled collection
+
+`docs/theme-packs/extra-themes.zip` is a normal version-1 pack (`extra-themes`,
+revision 1), containing all 16 distributed themes. One import validates and installs
+all entries atomically; it does not unpack nested ZIPs. The build script combines
+individual manifests in sorted path order, prefixes theme IDs with their source
+pack ID and preserves all notices. Individual packs and the collection have distinct
+saved choices and can coexist. Updates and removal operate on the whole collection.

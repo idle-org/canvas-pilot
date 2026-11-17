@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "gruvbox-dark",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Gruvbox Dark",
+      "light": false,
+      "colors": {
+        "canvas": "#282828",
+        "banner": "#1d2021",
+        "grid": "#665c54",
+        "layer": "#32302f",
+        "pattern": [
+          "#32302f",
+          "#282828"
+        ],
+        "bg": "#282828",
+        "panel": "#1d2021",
+        "field": "#32302f",
+        "line": "#665c54",
+        "text": "#ebdbb2",
+        "muted": "#bdae93",
+        "cyan": "#8ec07c",
+        "amber": "#fabd2f",
+        "purple": "#32302f"
+      }
+    }
+  ],
+  "notices": "Palette adapted from https://github.com/ellisonleao/gruvbox.nvim. Canvas Pilot role mapping and contrast adjustments are original; this is not an official port.\n\nMIT License\n\nCopyright (c) 2021 NpX\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+}

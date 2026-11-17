@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "deep-rock-galactic",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Deep Rock Galactic",
+      "light": false,
+      "colors": {
+        "canvas": "#20251d",
+        "banner": "#141b15",
+        "grid": "#60744b",
+        "layer": "#303b28",
+        "pattern": [
+          "#303b28",
+          "#20251d"
+        ],
+        "bg": "#20251d",
+        "panel": "#141b15",
+        "field": "#303b28",
+        "line": "#60744b",
+        "text": "#f3edcf",
+        "muted": "#bfcaab",
+        "cyan": "#a6d85c",
+        "amber": "#f0b44d",
+        "purple": "#303b28"
+      }
+    }
+  ],
+  "notices": "Original, unofficial color interpretation inspired by Deep Rock Galactic. Reference: https://www.deeprockgalactic.com/\nNo game artwork, fonts, logos or code are included. Not affiliated with or endorsed by the game owners."
+}

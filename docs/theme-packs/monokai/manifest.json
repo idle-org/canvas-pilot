@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "monokai",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Monokai",
+      "light": false,
+      "colors": {
+        "canvas": "#272822",
+        "banner": "#1e1f1c",
+        "grid": "#75715e",
+        "layer": "#34352e",
+        "pattern": [
+          "#34352e",
+          "#272822"
+        ],
+        "bg": "#272822",
+        "panel": "#1e1f1c",
+        "field": "#34352e",
+        "line": "#75715e",
+        "text": "#f8f8f2",
+        "muted": "#c5c6bb",
+        "cyan": "#66d9ef",
+        "amber": "#e6db74",
+        "purple": "#34352e"
+      }
+    }
+  ],
+  "notices": "Palette adapted from https://github.com/microsoft/vscode. Canvas Pilot role mapping and contrast adjustments are original; this is not an official port.\n\nMIT License\n\nCopyright (c) 2015 - present Microsoft Corporation\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+}

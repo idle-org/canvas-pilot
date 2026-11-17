@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "helldivers",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Helldivers",
+      "light": false,
+      "colors": {
+        "canvas": "#191c1b",
+        "banner": "#101312",
+        "grid": "#666c58",
+        "layer": "#2c302b",
+        "pattern": [
+          "#2c302b",
+          "#191c1b"
+        ],
+        "bg": "#191c1b",
+        "panel": "#101312",
+        "field": "#2c302b",
+        "line": "#666c58",
+        "text": "#f5f2d8",
+        "muted": "#c2c6b2",
+        "cyan": "#ffe44c",
+        "amber": "#edac49",
+        "purple": "#2c302b"
+      }
+    }
+  ],
+  "notices": "Original, unofficial color interpretation inspired by Helldivers. Reference: https://www.playstation.com/en-us/games/helldivers-2/\nNo game artwork, fonts, logos or code are included. Not affiliated with or endorsed by the game owners."
+}

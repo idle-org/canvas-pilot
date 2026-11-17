@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "solarized-dark",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Solarized Dark",
+      "light": false,
+      "colors": {
+        "canvas": "#002b36",
+        "banner": "#00212b",
+        "grid": "#586e75",
+        "layer": "#073642",
+        "pattern": [
+          "#073642",
+          "#002b36"
+        ],
+        "bg": "#002b36",
+        "panel": "#00212b",
+        "field": "#073642",
+        "line": "#586e75",
+        "text": "#eee8d5",
+        "muted": "#93a1a1",
+        "cyan": "#2aa198",
+        "amber": "#b58900",
+        "purple": "#073642"
+      }
+    }
+  ],
+  "notices": "Palette adapted from https://github.com/altercation/solarized. Canvas Pilot role mapping and contrast adjustments are original; this is not an official port.\n\nCopyright (c) 2011 Ethan Schoonover\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n"
+}

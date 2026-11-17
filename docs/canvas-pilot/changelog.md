@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### v0.9.36
+
+- Added extra-themes.zip: one import installs all 16 themes, with individual ZIPs
+  still available. Added Dracula, Nord, Gruvbox Dark, Solarized Dark/Light, One Dark,
+  GitHub Dark/Light, Monokai and original Dispatch, Helldivers and Deep Rock Galactic
+  palettes. Included upstream notices, deterministic packaging and regression checks
+  for full-collection import, restart, selection and text contrast. Uses the existing
+  version-1 multi-theme format.
+
 ### v0.9.35
 
 - Replaced expanding theme/language pack stacks with a searchable pack browser:

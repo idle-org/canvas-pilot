@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "dispatch",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Dispatch",
+      "light": false,
+      "colors": {
+        "canvas": "#182535",
+        "banner": "#111b29",
+        "grid": "#596c80",
+        "layer": "#25384c",
+        "pattern": [
+          "#25384c",
+          "#182535"
+        ],
+        "bg": "#182535",
+        "panel": "#111b29",
+        "field": "#25384c",
+        "line": "#596c80",
+        "text": "#f7eedc",
+        "muted": "#bdcbd9",
+        "cyan": "#7ec8e3",
+        "amber": "#f18d72",
+        "purple": "#25384c"
+      }
+    }
+  ],
+  "notices": "Original, unofficial color interpretation inspired by Dispatch. Reference: https://adhocstudio.com/\nNo game artwork, fonts, logos or code are included. Not affiliated with or endorsed by the game owners."
+}

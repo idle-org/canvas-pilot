@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "dracula",
+  "revision": 1,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Dracula",
+      "light": false,
+      "colors": {
+        "canvas": "#282a36",
+        "banner": "#21222c",
+        "grid": "#44475a",
+        "layer": "#343746",
+        "pattern": [
+          "#343746",
+          "#282a36"
+        ],
+        "bg": "#282a36",
+        "panel": "#21222c",
+        "field": "#343746",
+        "line": "#44475a",
+        "text": "#f8f8f2",
+        "muted": "#bfc1d5",
+        "cyan": "#8be9fd",
+        "amber": "#f1fa8c",
+        "purple": "#343746"
+      }
+    }
+  ],
+  "notices": "Palette adapted from https://github.com/dracula/dracula-theme. Canvas Pilot role mapping and contrast adjustments are original; this is not an official port.\n\nThe MIT License (MIT)\n\nCopyright (c) 2023 Dracula Theme\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+}
