@@ -59,7 +59,12 @@ not unlock it. These are local session controls, separate from geometry undo/red
 
 Selected layers use gold outlines, labels, handles and position guides; unselected
 layers use muted outlines and labels. Gold in the layer list follows the same
-selection state, including when several layers are selected.
+selection state, including when several layers are selected. When a higher layer
+covers an editing box, covered edge portions are dashed and exposed portions stay
+solid. Resize, crop (cyan) and mask (magenta) corner and side handles remain visible
+above the artwork, so you can edit a selected layer underneath another. Hidden
+layers and blanked regions do not cover guides. This display does not change
+stacking, geometry or device output.
 
 ### Reference pictures
 

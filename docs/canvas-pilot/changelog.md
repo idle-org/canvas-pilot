@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.38
+
+- Keep resize, crop and mask handles visible above overlapping layers. Covered
+  guide edges are dashed; exposed portions remain solid, respecting hidden layers,
+  masks and fitted picture bounds. Rendering is clipped before generating dashes
+  to remain bounded at high zoom. No geometry, stacking or save-format changes.
+
 ### v0.9.37
 
 - Grouped size presets under one toolbar icon and separated tiling labels from

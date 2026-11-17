@@ -23,6 +23,8 @@ mod ratio_ui;
 mod recovery_ui;
 #[path = "reference_ui.rs"]
 mod reference_ui;
+#[path = "selection_outline.rs"]
+mod selection_outline;
 #[path = "size_presets_ui.rs"]
 mod size_presets_ui;
 #[path = "viewport_guides.rs"]
@@ -3793,6 +3795,11 @@ impl Editor {
                 Vec2::new(g.width as f32, g.height as f32) * scale,
             );
             let p = &screen.painter;
+            let border = if self.layout.selection_mask()[i] && !self.edit_content {
+                Stroke::NONE
+            } else {
+                Stroke::new(1.0, color)
+            };
             p.rect(
                 rect,
                 0.0,
@@ -3811,7 +3818,7 @@ impl Editor {
                 } else {
                     palette.layer
                 },
-                Stroke::new(1.0_f32, color),
+                border,
                 StrokeKind::Inside,
             );
             let show_guides = self.edit_content
@@ -3837,7 +3844,7 @@ impl Editor {
                         (texture, if show_guides { opacity } else { 0.0 })
                     }),
                 );
-                p.rect_stroke(rect, 0.0, Stroke::new(1.0_f32, color), StrokeKind::Inside);
+                p.rect_stroke(rect, 0.0, border, StrokeKind::Inside);
             }
             if rect.width() > 85.0 && rect.height() > 40.0 {
                 let clipped = p.with_clip_rect(area.intersect(rect.shrink(5.0)));
@@ -3863,7 +3870,19 @@ impl Editor {
                     );
                 }
             }
-            if self.layout.selection_mask()[i] && !self.edit_content {
+        }
+        viewport_guides::paint(&screen.painter, area, origin, scale, output);
+        if !self.edit_content {
+            for i in self.layout.selected_indices() {
+                let g = self.layout.layers()[i];
+                let rect = Rect::from_min_size(
+                    origin + Vec2::new(g.x as f32, g.y as f32) * scale,
+                    Vec2::new(g.width as f32, g.height as f32) * scale,
+                );
+                let p = &screen.painter;
+                let color = palette.amber;
+                let covers = selection_outline::covers(&self.layout, i, origin, scale);
+                selection_outline::paint(p, rect, &covers, Stroke::new(1.0, color));
                 for corner in [
                     rect.left_top(),
                     rect.right_top(),
@@ -3898,7 +3917,6 @@ impl Editor {
                 );
             }
         }
-        viewport_guides::paint(&screen.painter, area, origin, scale, output);
         if let Some(rect) = self.crop_bounds(origin, scale) {
             let p = &screen.painter;
             let helper_color = if self.mask_editing() {
@@ -3906,12 +3924,13 @@ impl Editor {
             } else {
                 palette.cyan
             };
-            p.rect_stroke(
-                rect,
-                0.0,
-                Stroke::new(1.5_f32, helper_color),
-                StrokeKind::Inside,
+            let covers = selection_outline::covers(
+                &self.layout,
+                self.layout.selected().unwrap(),
+                origin,
+                scale,
             );
+            selection_outline::paint(p, rect, &covers, Stroke::new(1.5, helper_color));
             for (_, corner) in crop_handle_positions(rect) {
                 p.rect(
                     Rect::from_center_size(corner, Vec2::splat(9.0)),
