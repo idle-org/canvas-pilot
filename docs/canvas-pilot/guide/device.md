@@ -70,7 +70,10 @@ are explained in the review. Imports are one undoable edit.
 
 Open **Export → Midra mapping & transfer…** even while offline, then use
 **Connection settings…** to connect. Mapping and transfer controls appear once
-device data is available. Choose editor layers,
+device data is available. When more rows or controls extend below the window,
+a solid scrollbar stays visible even while the pointer is elsewhere. Scroll to
+review all layers; the import list uses the same visible scrollbar behavior.
+Choose editor layers,
 map each to a Midra layer, select **Preview** or **Program**, and select a container
 strategy: **Output-sized** or **Source aspect**. Expand **Exact device changes** to
 review sizes, centers, crop values and aspect, then click **Send mapped layers**. The final row groups **Load linked layers**

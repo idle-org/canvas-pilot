@@ -808,8 +808,20 @@ impl Editor {
         egui::Window::new(title).id(window_id)
             .enabled(!self.format_draft.as_ref().is_some_and(|d| d.pending(&self.layout)))
             .open(&mut open).default_width(660.0).collapsible(false)
-            .max_height((ctx.content_rect().height() - 100.0).max(200.0)).vscroll(true)
+            .max_height((ctx.content_rect().height() - 100.0).max(200.0))
             .show(ctx, |ui| {
+                // Keep overflow discoverable even when the pointer is outside the window.
+                ui.spacing_mut().scroll = egui::style::ScrollStyle {
+                    bar_width: 12.0,
+                    handle_min_length: 24.0,
+                    foreground_color: true,
+                    ..egui::style::ScrollStyle::solid()
+                };
+                egui::ScrollArea::vertical()
+                    .id_salt("device-mapping-content")
+                    .max_height((ctx.content_rect().height() - 150.0).max(150.0))
+                    .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::VisibleWhenNeeded)
+                    .show(ui, |ui| {
                 if self.device.online() {
                     ui.horizontal(|ui| {
                         ui.label(tr(ui.ctx(), "ui.apply-to"));
@@ -932,6 +944,7 @@ impl Editor {
                 }
 
                 ui.separator();
+                    });
             });
         if !open
             && !self.device.prepare_send
@@ -1531,6 +1544,69 @@ mod tests {
         assert!(load_linked_layers(&mut layout, &snapshot, &[(id, link)]).is_err());
         assert_eq!(*layout.layers(), before);
     }
+    #[test]
+    fn overflowing_mapping_and_import_keep_solid_scrollbars_without_hover() {
+        for prepare_send in [false, true] {
+            let ctx = egui::Context::default();
+            ctx.global_style_mut(|style| style.animation_time = 0.0);
+            let original_scroll = ctx.style_of(egui::Theme::Dark).spacing.scroll;
+            let mut app = Editor::default();
+            for _ in 0..30 {
+                app.layout.add_layer().unwrap();
+            }
+            app.device.open = true;
+            app.device.prepare_send = prepare_send;
+            app.device.scope = TransferScope::All;
+            let mut snapshot = linked_test_snapshot();
+            let template = snapshot.screens[0].layers[0].clone();
+            snapshot.screens[0].layers = (1..=32)
+                .map(|i| {
+                    let mut layer = template.clone();
+                    layer.id = i.to_string();
+                    layer
+                })
+                .collect();
+            app.device.destinations = vec![Destination::Skip; 32];
+            app.device.snapshot = Some(snapshot);
+            let before = app.project();
+            let mut output = None;
+            for time in [0.0, 1.0, 10.0] {
+                output = Some(ctx.run_ui(
+                    egui::RawInput {
+                        screen_rect: Some(Rect::from_min_size(
+                            Pos2::ZERO,
+                            Vec2::new(1000.0, 720.0),
+                        )),
+                        time: Some(time),
+                        events: vec![egui::Event::PointerGone],
+                        ..Default::default()
+                    },
+                    |_| app.device_window(&ctx),
+                ));
+            }
+            let output = output.unwrap();
+            let solid_bars = output
+                .shapes
+                .iter()
+                .filter(|shape| {
+                    matches!(&shape.shape,
+                egui::Shape::Rect(rect) if (rect.rect.width() - 12.0).abs() < 0.01
+                    && rect.rect.height() >= 24.0 && rect.fill.a() == 255)
+                })
+                .count();
+            assert!(
+                solid_bars >= 2,
+                "track and thumb must remain opaque: {prepare_send}"
+            );
+            assert_eq!(app.project(), before);
+            assert_eq!(
+                ctx.style_of(egui::Theme::Dark).spacing.scroll,
+                original_scroll
+            );
+            assert!(app.device.pending.is_none());
+        }
+    }
+
     #[test]
     fn load_keeps_mapping_window_contents_visible() {
         let ctx = egui::Context::default();

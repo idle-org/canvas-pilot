@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.33
+
+- Device mapping/transfer and import now use wider solid scrollbars whenever their
+  content overflows. Bars remain visible with the pointer elsewhere so additional
+  layer rows and controls are discoverable, without changing mappings or transfers.
+
 ### v0.9.32
 
 - Made dragging layers out of folders easier: doubled the child-row gutter and
