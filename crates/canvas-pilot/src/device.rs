@@ -200,7 +200,7 @@ pub(crate) fn fetch_with_awj_port(
         &format!("http://{authority}/api/tpp/v1/system"),
         cancelled,
     )?;
-    let (profile, _) = Profile::detect(&identity)?;
+    let (profile, label) = Profile::detect(&identity)?;
     let state = match profile {
         Profile::Midra4k => read_json(
             &client,
@@ -211,7 +211,8 @@ pub(crate) fn fetch_with_awj_port(
             SocketAddr::new(authority.ip(), awj_port),
             &identity,
             cancelled,
-        )?,
+        )
+        .map_err(|error| format!("{label}: Aquilon compatibility/read check failed: {error}"))?,
     };
     Snapshot::parse(&identity, &state)
 }

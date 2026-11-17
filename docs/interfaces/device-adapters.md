@@ -20,10 +20,24 @@ adapters must explicitly implement or reject each mode.
 
 ## Aquilon profile and reads
 
-Supported profile: standalone **AQL Cmax, firmware 6.2.x**, exercised on the
-**6.2.79 emulator**. This is a first-class adapter; physical-output acceptance
-remains outstanding.
-Other firmware/models are rejected before reading geometry. `/api/tpp/v1/system`
+Recognized standalone models: **RS alpha, RS1–RS6, Cmini, C, C+ and Cmax**.
+The adapter accepts every numeric firmware version and attempts the bounded
+LivePremier 6.2 protocol reads. Outside **6.2.x**, connection and transfer review
+show: **backward compatibility is not guaranteed**. This is best-effort compatibility,
+not an implementation of every historical protocol: missing or incompatible fields
+fail explicitly before a send can be planned. In particular, firmware before 4.x
+uses a different screen/group schema and may not connect. No legacy path guessing
+or full-store fallback is performed. Linked systems and unknown models remain rejected.
+
+Model codes follow the manufacturer's AWJ V6.2 guide, section 2.1:
+`NLC_RSALPHA`, `NLC_RS1`–`NLC_RS6`, `NLC_CMINI`, `NLC_C`, `NLC_CPLUS`,
+`NLC_CMAX`. HTTP names use the `AQL ` prefix and model spelling above; RS alpha
+also accepts `RS Alpha`. The HTTP model must match the exact AWJ model, not just
+another member of the Aquilon family. Capacities still come from discovered state.
+Only **Cmax 6.2.79** has recorded emulator acceptance. Other models and firmware
+have synthetic regression coverage; physical-output acceptance remains outstanding.
+
+`/api/tpp/v1/system`
 on the configured HTTP port supplies identity. Aquilon geometry uses **AWJ TCP
 10606 on the same IP**, independently of the HTTP/WebSocket port. AWJ model and
 firmware are checked against the HTTP identity. A blocked/disabled AWJ port is an

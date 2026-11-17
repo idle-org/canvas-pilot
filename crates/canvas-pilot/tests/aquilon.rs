@@ -96,7 +96,7 @@ fn invalid_profiles_transitions_allocations_and_missing_fields_fail() {
     id["isLinked"] = json!(true);
     assert!(Snapshot::parse(&id, &raw()).is_err());
     id = identity();
-    id["version"]["major"] = json!(7);
+    id["version"]["major"] = json!("7");
     assert!(Snapshot::parse(&id, &raw()).is_err());
     let mut r = raw();
     r["device"]["screenAuxGroupList"]["items"]["S1"]["control"]["pp"]["presetUp"] = json!("A");
@@ -355,4 +355,59 @@ fn masked_editor_layers_are_rejected_before_aquilon_send() {
         .unwrap_err()
         .contains("masking")
     );
+}
+
+#[test]
+fn all_models_and_firmware_versions_use_checked_geometry_with_compatibility_warning() {
+    for model in [
+        "RS alpha", "RS Alpha", "RS1", "RS2", "RS3", "RS4", "RS5", "RS6", "Cmini", "C", "C+",
+        "Cmax",
+    ] {
+        for (major, minor) in [
+            (1, 0),
+            (2, 2),
+            (3, 0),
+            (4, 0),
+            (5, 0),
+            (6, 0),
+            (6, 2),
+            (7, 0),
+        ] {
+            let mut id = identity();
+            id["type"] = json!(format!("AQL {model}"));
+            id["version"]["major"] = json!(major);
+            id["version"]["minor"] = json!(minor);
+            let snapshot = Snapshot::parse(&id, &routed()).unwrap();
+            assert_eq!(
+                snapshot
+                    .identity
+                    .contains("backward compatibility is not guaranteed"),
+                (major, minor) != (6, 2)
+            );
+            let layout = Layout::default();
+            for target in [Target::Preview, Target::Program] {
+                let plan = Plan::prepare(
+                    &snapshot,
+                    &layout,
+                    0,
+                    &[(layout.layer_info(0).id, "1".into())],
+                    target,
+                    Sizing::OutputBox,
+                )
+                .unwrap();
+                assert_eq!(plan.profile, Profile::Aquilon6);
+                assert!(plan.changes.iter().all(|change| {
+                    !change
+                        .path
+                        .iter()
+                        .any(|part| part == "source" || part == "inputList")
+                }));
+            }
+        }
+    }
+    for model in ["AQL Unknown", "AQL Cmax extra", "AQL"] {
+        let mut id = identity();
+        id["type"] = json!(model);
+        assert!(Snapshot::parse(&id, &raw()).is_err());
+    }
 }

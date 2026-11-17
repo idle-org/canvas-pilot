@@ -11,3 +11,9 @@ for active auxiliaries, canvas changes, bank swaps and malformed fields.
 The full 118 MiB response remains a private temporary artifact. The targeted-read collector and parser exercise this fixture; test helpers
 add collection keys and identity fields for the mock AWJ endpoint; live write/restore diagnostics
 are separate examples, never CI tests.
+
+`aquilon-models.json` pairs HTTP names with the eleven model codes documented in
+Analog Way's AWJ V6.2 guide, section 2.1 (including the RS Alpha spelling alias).
+Tests substitute these identities and firmware versions into the Cmax fixture.
+These synthetic cases exercise identity matching and the common adapter; they
+are not captures or acceptance evidence for those models/firmware releases.

@@ -25,6 +25,25 @@ pub enum Profile {
     Midra4k,
     Aquilon6,
 }
+// Model identifiers documented by Analog Way's AWJ guide V6.2, section 2.1.
+// Keep exact matches: an unknown AQL product must not inherit this adapter.
+pub(super) fn aquilon_model(kind: &str) -> Option<&'static str> {
+    Some(match kind {
+        "AQL RS alpha" | "AQL RS Alpha" => "NLC_RSALPHA",
+        "AQL RS1" => "NLC_RS1",
+        "AQL RS2" => "NLC_RS2",
+        "AQL RS3" => "NLC_RS3",
+        "AQL RS4" => "NLC_RS4",
+        "AQL RS5" => "NLC_RS5",
+        "AQL RS6" => "NLC_RS6",
+        "AQL Cmini" => "NLC_CMINI",
+        "AQL C" => "NLC_C",
+        "AQL C+" => "NLC_CPLUS",
+        "AQL Cmax" => "NLC_CMAX",
+        _ => return None,
+    })
+}
+
 impl Profile {
     pub fn family(self) -> Family {
         match self {
@@ -48,23 +67,23 @@ impl Profile {
         ) {
             Self::Midra4k
         } else if kind.starts_with("AQL") {
-            if kind != "AQL Cmax"
-                || version[..2] != [6, 2]
+            if aquilon_model(&kind).is_none()
                 || identity.get("isLinked").and_then(Value::as_bool) != Some(false)
             {
-                return Err("Unsupported Aquilon profile. Currently verified: standalone AQL Cmax firmware 6.2.x; linked systems and other firmware/models require adapter validation.".into());
+                return Err("Unsupported Aquilon model or linked system. Select a standalone Aquilon RS alpha, RS1–RS6, Cmini, C, C+ or Cmax.".into());
             }
             Self::Aquilon6
         } else {
             return Err(format!("Unsupported device {kind}; no compatible adapter."));
         };
-        Ok((
-            profile,
-            format!(
-                "{kind} · firmware {}.{}.{}",
-                version[0], version[1], version[2]
-            ),
-        ))
+        let mut label = format!(
+            "{kind} · firmware {}.{}.{}",
+            version[0], version[1], version[2]
+        );
+        if profile == Self::Aquilon6 && version[..2] != [6, 2] {
+            label.push_str(" · Warning: firmware outside validated 6.2.x; backward compatibility is not guaranteed. Transfers require compatible protocol fields.");
+        }
+        Ok((profile, label))
     }
     pub(crate) fn screen_context_paths(self, screen: &str) -> [String; 2] {
         match self {

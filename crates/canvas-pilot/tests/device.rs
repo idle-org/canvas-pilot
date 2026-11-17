@@ -311,7 +311,7 @@ fn fractional_device_content_rounds_with_a_nonblocking_warning() {
 }
 
 #[test]
-fn unsupported_aquilon_profile_is_rejected_before_requesting_large_state() {
+fn linked_aquilon_is_rejected_before_requesting_state() {
     use std::io::{BufRead, BufReader, Write};
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let host = listener.local_addr().unwrap().to_string();
@@ -329,7 +329,7 @@ fn unsupported_aquilon_profile_is_rejected_before_requesting_large_state() {
             }
         }
         let body =
-            r#"{"type":"AQL Cmax","isLinked":false,"version":{"major":5,"minor":2,"patch":79}}"#;
+            r#"{"type":"AQL Cmax","isLinked":true,"version":{"major":5,"minor":2,"patch":79}}"#;
         write!(
             stream,
             "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -340,8 +340,10 @@ fn unsupported_aquilon_profile_is_rejected_before_requesting_large_state() {
     });
     let error = canvas_pilot::device::fetch(&host).unwrap_err();
     let listener = server.join().unwrap();
-    assert!(error.contains("Unsupported Aquilon profile"), "{error}");
-    assert!(error.contains("6.2.x"), "{error}");
+    assert!(
+        error.contains("Unsupported Aquilon model or linked system"),
+        "{error}"
+    );
     listener.set_nonblocking(true).unwrap();
     assert_eq!(
         listener.accept().unwrap_err().kind(),

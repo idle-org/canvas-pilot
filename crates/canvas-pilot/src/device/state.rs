@@ -232,7 +232,9 @@ fn collect(reader: &mut impl Reader, identity: &Value) -> Result<Value, String> 
         "{}.{}.{}",
         identity["version"]["major"], identity["version"]["minor"], identity["version"]["patch"]
     );
-    if text(&state.raw, "/device/system/deviceList/items/1/pp/dev")? != "NLC_CMAX"
+    let expected_model =
+        profile::aquilon_model(&text(identity, "/type")?).ok_or("Unsupported Aquilon model")?;
+    if text(&state.raw, "/device/system/deviceList/items/1/pp/dev")? != expected_model
         || text(
             &state.raw,
             "/device/system/deviceList/items/1/version/pp/updater",
@@ -502,6 +504,50 @@ mod tests {
                 .unwrap_err()
                 .contains("changed during")
         );
+    }
+    #[test]
+    fn every_model_checks_exact_awj_identity_and_firmware() {
+        let models: Vec<(String, String)> =
+            serde_json::from_str(include_str!("../../tests/fixtures/aquilon-models.json")).unwrap();
+        for (http, awj) in models {
+            for version in [(6, 2, 79), (4, 0, 1), (7, 1, 0)] {
+                let mut id = identity();
+                id["type"] = json!(http);
+                id["version"] = json!({"major":version.0,"minor":version.1,"patch":version.2});
+                let mut raw = fixture();
+                set(
+                    &mut raw,
+                    "/device/system/deviceList/items/1/pp/dev",
+                    json!(awj),
+                );
+                set(
+                    &mut raw,
+                    "/device/system/deviceList/items/1/version/pp/updater",
+                    json!(format!("{}.{}.{}", version.0, version.1, version.2)),
+                );
+                let collected = collect(&mut memory(raw.clone()), &id).unwrap();
+                assert_eq!(
+                    Snapshot::parse(&id, &collected).unwrap().screens[0]
+                        .layers
+                        .len(),
+                    7
+                );
+                set(
+                    &mut raw,
+                    "/device/system/deviceList/items/1/pp/dev",
+                    json!(if awj == "NLC_CMAX" {
+                        "NLC_C"
+                    } else {
+                        "NLC_CMAX"
+                    }),
+                );
+                assert!(
+                    collect(&mut memory(raw), &id)
+                        .unwrap_err()
+                        .contains("does not match")
+                );
+            }
+        }
     }
     #[test]
     fn malformed_topology_and_mismatched_endpoint_fail() {

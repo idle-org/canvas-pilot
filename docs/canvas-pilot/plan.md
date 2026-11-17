@@ -74,14 +74,15 @@ checks and stretch goals below remain open; the tag does not mark them complete.
 - [x] **Export/workflow cleanup.** Shared transfer scopes, mapping review and
   direct linked send/load are implemented. Manually reviewed and marked solved on 2026-11-15.
 
-- [x] **Aquilon / LivePremier: first-class supported (standalone AQL Cmax 6.2.x).** Device-neutral snapshots, family-aware v13 links, bounded targeted AWJ reads, geometry/crop import, mapped Preview/Program sends and pooled input previews. See [adapter contract](../interfaces/device-adapters.md) and [emulator acceptance](aquilon-compatibility.md). Linked units, other models/firmware, shared input corrections and non-centered/masked import remain explicitly unsupported.
+- [x] **Aquilon / LivePremier: standalone model range recognized; Cmax 6.2.x emulator verified.** Device-neutral snapshots, family-aware v13 links, bounded targeted AWJ reads, geometry/crop import, mapped Preview/Program sends and pooled input previews. See [adapter contract](../interfaces/device-adapters.md) and [emulator acceptance](aquilon-compatibility.md). All firmware versions are attempted with a compatibility warning outside 6.2.x; incompatible schemas fail explicitly. Linked units, shared input corrections and non-centered/masked import remain unsupported.
 
 ## To-do list
 
 - [ ] **Broaden coverage to every Aquilon and Midra model.** Requested 2026-11-17:
   inventory both product ranges and their firmware/link modes; validate identity,
   bounded reads, geometry/crop/mask conversion, input previews and reviewed writes
-  per model. Start with the AQL C+ simulator encountered during showcase recording.
+  per model. All Aquilon model identities now have synthetic coverage; actual
+  firmware/device acceptance remains pending, starting with AQL C+.
   Preserve explicit unsupported-mode errors until each adapter path is validated;
   emulator coverage and physical-output acceptance remain separate.
 

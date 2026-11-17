@@ -3,12 +3,23 @@
 [Canvas Pilot plan](plan.md) · [Device workflows](guide/device.md) · [Completed implementation](aquilon_support.task.md)
 
 Implemented and tested 2026-11-15. **Aquilon is a first-class supported adapter**
-for standalone AQL Cmax firmware 6.2.x; the tested emulator is **6.2.79** at the
+initially for standalone AQL Cmax firmware 6.2.x; the tested emulator is **6.2.79** at the
 configured custom port. See the [current adapter contract](../interfaces/device-adapters.md).
 
-The supported profile is complete for its documented scope. Physical-output
-acceptance remains outstanding; other models, linked units and unsupported
-framing modes require separate validation or implementation.
+Physical-output acceptance remains outstanding. The later model/firmware expansion
+below retains explicit validation and unsupported-framing errors.
+
+## Model and firmware expansion — 2026-11-17
+
+All eleven standalone models are now recognized using the model identifiers in
+Analog Way's AWJ V6.2 guide, section 2.1. Every numeric firmware version is allowed
+through identity detection, with a backward-compatibility warning outside 6.2.x.
+Connection and send still require the existing protocol fields and validation;
+legacy protocols are not implemented by relaxing the version gate. See the
+[current contract](../interfaces/device-adapters.md) for exact scope.
+Synthetic tests cover model identity agreement, cross-model rejection, firmware
+warnings and Preview/Program send planning. These do not establish actual older
+firmware compatibility or extend the Cmax emulator evidence below to other models.
 
 ## Current acceptance
 

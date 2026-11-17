@@ -1,0 +1,50 @@
+[
+  [
+    "AQL RS alpha",
+    "NLC_RSALPHA"
+  ],
+  [
+    "AQL RS Alpha",
+    "NLC_RSALPHA"
+  ],
+  [
+    "AQL RS1",
+    "NLC_RS1"
+  ],
+  [
+    "AQL RS2",
+    "NLC_RS2"
+  ],
+  [
+    "AQL RS3",
+    "NLC_RS3"
+  ],
+  [
+    "AQL RS4",
+    "NLC_RS4"
+  ],
+  [
+    "AQL RS5",
+    "NLC_RS5"
+  ],
+  [
+    "AQL RS6",
+    "NLC_RS6"
+  ],
+  [
+    "AQL Cmini",
+    "NLC_CMINI"
+  ],
+  [
+    "AQL C",
+    "NLC_C"
+  ],
+  [
+    "AQL C+",
+    "NLC_CPLUS"
+  ],
+  [
+    "AQL Cmax",
+    "NLC_CMAX"
+  ]
+]

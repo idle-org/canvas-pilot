@@ -4,6 +4,19 @@
 
 ## Unreleased
 
+### v0.9.18
+
+- Recognize all eleven standalone Aquilon models with exact HTTP/AWJ model checks
+  and dynamically discovered capacities. Accept all numeric firmware versions,
+  showing a backward-compatibility warning outside validated 6.2.x in connection
+  and transfer review. Incompatible protocol fields still stop transfers explicitly;
+  legacy protocol implementations and linked systems are outside this change.
+- Added synthetic model/firmware, mismatch and Preview/Program planning regressions.
+  Cmax 6.2.79 remains the only model/firmware with recorded emulator acceptance;
+  physical-output acceptance remains outstanding.
+- Default/restricted Rust suites, formatting, Clippy, rustdoc and pinned manual
+  build passed; whole-application line coverage is 91.70%.
+
 ### v0.9.17
 
 - Added isolated feature-recording recipes, a shot-by-shot capture guide and a

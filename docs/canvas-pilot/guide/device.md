@@ -161,8 +161,13 @@ undoable; they do not change physical input routing.
 
 ## Aquilon / LivePremier
 
-Aquilon is a first-class supported adapter for standalone AQL Cmax firmware 6.2.x,
-verified on the 6.2.79 emulator; physical-output acceptance remains outstanding.
+Aquilon recognizes all standalone models: RS alpha, RS1–RS6, Cmini, C, C+ and
+Cmax. All firmware versions may connect; versions outside 6.2.x display a warning
+that backward compatibility is not guaranteed. The adapter requires compatible
+protocol fields and stops with an explicit error when they differ. Older firmware,
+especially before 4.x, may therefore fail to connect. Linked systems remain unsupported.
+Cmax 6.2.79 is verified on the emulator; other models/firmware have synthetic test
+coverage, and physical-output acceptance remains outstanding.
 Connect using the same Device connection window.
 The device identifies its family automatically. Screens use `S1`, `S2`, …;
 auxiliaries use `A1`, `A2`, … and stay distinct in saved mappings. Only enabled
