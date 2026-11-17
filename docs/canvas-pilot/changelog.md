@@ -6,7 +6,9 @@
 
 ## v0.9.18 — 2026-11-17
 
-Release preparation: see the [release notes](../development/release-notes/v0.9.18.md).
+Published with four-platform portable bundles, cargo-binstall archives and raw
+binaries, plus the Ukrainian/Bhojpuri language pack and reproducibility files.
+See the [release notes](../development/release-notes/v0.9.18.md).
 
 ### v0.9.18
 

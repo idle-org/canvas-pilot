@@ -1,6 +1,39 @@
 # Release preparation
 
-## Published milestone: v0.8.0
+## Published release: v0.9.18
+
+[Download v0.9.18](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.9.18)
+was published on 2026-11-17 from annotated tag `v0.9.18`, source commit
+`f3761206a8b901eb934f4f8fcb5c655d851e0173`. Publication records after that commit do
+not move the tag. See the [release notes](release-notes/v0.9.18.md).
+
+The release contains 20 assets: four portable bundles, four canonical cargo-binstall
+archives, four raw binaries, the artifact manifest/checksums, and six extras:
+`language-pack.zip`, its accompanying extras checksums, effective configuration,
+compiler recipe, build instructions and the release-tool patch. The language pack
+is the unchanged format-2, revision-1 Ukrainian/Bhojpuri teaching pack; both
+translations are partial and unreviewed. All 20 assets were downloaded and
+SHA-256 checked before publication and again anonymously afterward. cargo-binstall
+retrieved all four targets; each installed binary matched its release artifact.
+
+All four builds and archive checks passed. The Linux binary passed an isolated GUI
+startup/render check with an empty log. Both macOS targets passed architecture,
+macOS 13.0 deployment minimum and system-library validation. Native Windows/macOS
+runtime acceptance remains outstanding. Source validation passed 464 default and
+458 tests in each restricted configuration, Clippy, rustdoc, formatting, all 26
+Python tests and the pinned manual build; whole-application coverage is 91.70%.
+
+Linux/Windows used Rust 1.102.0-nightly (`5df8c02af`, 2026-11-16); macOS used the
+existing compiler recipe with Rust 1.100.0. The installed rust_realease rc.2 omitted
+portable bundles, so rc.3 was built locally. Its bundle checker did not recognize
+Mach-O and its Apple validator rejected named bundles. The attached patch adds
+architecture/executable checks and applies the existing deployment/dependency
+validator to executable entries in verified Apple ZIPs. The temporary tool passed
+66 tests (3 pre-existing ignored tests). Application source/binaries were unchanged
+by the packaging fix. Rebuild instructions, patch and effective image digest are
+attached; no globally installed release tool was replaced.
+
+## Previous milestone: v0.8.0
 
 [Download v0.8.0](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.8.0).
 The annotated tag identifies source commit `eb82dc7cc91105793d2d31552da71763d2218df5`;
