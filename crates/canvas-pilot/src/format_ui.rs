@@ -532,7 +532,7 @@ impl Editor {
         }
         if d.closing {
             match pending_close(ctx, "formats-close", &d.error) {
-                Some(true) => {
+                Some(CloseChoice::Apply) => {
                     match d.apply(&mut self.layout, position_reference, self.keep_aspect_ratio) {
                         Ok(()) => {
                             self.sync();
@@ -545,7 +545,11 @@ impl Editor {
                         }
                     }
                 }
-                Some(false) => return,
+                Some(CloseChoice::Discard) => return,
+                Some(CloseChoice::Cancel) => {
+                    d.closing = false;
+                    open = true;
+                }
                 None => {}
             }
         }
@@ -1309,6 +1313,12 @@ mod tests {
         draft.size = [800.0, 450.0];
         draft.closing = true;
         app.format_draft = Some(draft);
+        click_text(&mut app, &ctx, "Cancel");
+        let draft = app.format_draft.as_mut().unwrap();
+        assert!(!draft.closing);
+        assert_eq!(draft.size, [800.0, 450.0]);
+        assert_eq!(*app.layout.layers(), before);
+        draft.closing = true;
         click_text(&mut app, &ctx, "Discard");
         assert!(app.format_draft.is_none());
         assert_eq!(*app.layout.layers(), before);

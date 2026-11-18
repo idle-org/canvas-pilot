@@ -227,3 +227,12 @@ Reference images and Output format at the bottom: these apply to the workspace
 rather than the selected layer. Right-clicking empty canvas keeps these options
 at the top level. Multiple selection retains its Resize together and alignment
 actions; crop/mask resets require one selected layer.
+
+
+### Cancel an accidental close
+
+When a draft window asks whether to **Apply** or **Discard** changes, choose
+**Cancel** to return to the window with your edits intact. Cancel neither applies
+nor discards them. This also works for clipboard and device-import reviews,
+layer properties, layer renaming and batch names/folders. If a layer-list action
+triggered the prompt, Cancel stops that action and keeps the draft open.

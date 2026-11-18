@@ -1382,17 +1382,20 @@ impl Editor {
         if self.device.import_closing {
             open = true;
             match pending_close(ctx, "device-import-close", &self.device.error) {
-                Some(true) => {
+                Some(CloseChoice::Apply) => {
                     self.device.import_closing = false;
                     match self.apply_device_import() {
                         Ok(()) => imported = true,
                         Err(e) => self.device.error = e,
                     }
                 }
-                Some(false) => {
+                Some(CloseChoice::Discard) => {
                     self.device.import_closing = false;
                     self.device.reset_mappings();
                     open = false;
+                }
+                Some(CloseChoice::Cancel) => {
+                    self.device.import_closing = false;
                 }
                 None => {}
             }
@@ -2065,6 +2068,13 @@ mod tests {
         app.device.snapshot = Some(linked_test_snapshot());
         app.device.destinations = vec![Destination::Existing(1), Destination::Skip];
         app.device.open = true;
+        app.device.import_closing = true;
+        super::super::tests::click_text(&mut app, &ctx, "Cancel");
+        assert!(app.device.open);
+        assert!(!app.device.import_closing);
+        assert!(app.device.destinations == vec![Destination::Existing(1), Destination::Skip]);
+        assert_eq!(*app.layout.layers(), before);
+        assert!(app.device.pending.is_none());
         app.device.import_closing = true;
         super::super::tests::click_text(&mut app, &ctx, "Apply");
         assert!(!app.device.open);

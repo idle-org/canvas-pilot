@@ -276,13 +276,17 @@ impl Editor {
         }
         if self.layer_ui.rename_closing {
             match pending_close(ctx, "rename-close", &self.error) {
-                Some(true) => {
+                Some(CloseChoice::Apply) => {
                     apply = true;
                     self.layer_ui.rename_closing = false;
                 }
-                Some(false) => {
+                Some(CloseChoice::Discard) => {
                     cancel = true;
                     self.layer_ui.rename_closing = false;
+                }
+                Some(CloseChoice::Cancel) => {
+                    self.layer_ui.rename_closing = false;
+                    open = true;
                 }
                 None => {}
             }
@@ -394,8 +398,11 @@ impl Editor {
             refresh = false;
             open = true;
             let choice = pending_close(ctx, "names-close", &self.layer_ui.error);
-            if let Some(apply) = choice {
-                let result = if apply {
+            if choice == Some(CloseChoice::Cancel) {
+                self.layer_ui.closing = false;
+                self.layer_ui.deferred = 0;
+            } else if let Some(choice) = choice {
+                let result = if choice == CloseChoice::Apply {
                     self.layout.rename_layers(&self.layer_ui.drafts)
                 } else {
                     Ok(())
@@ -1507,12 +1514,35 @@ mod tests {
         }
     }
     #[test]
+    fn cancelling_rename_close_keeps_the_name_draft() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let id = app.layout.layer_info(1).id;
+        app.layer_ui.rename = Some((id, "Camera".into()));
+        app.layer_ui.rename_closing = true;
+        super::super::tests::cancel_pending_close(&mut app, &ctx);
+        assert!(!app.layer_ui.rename_closing);
+        assert_eq!(app.layer_ui.rename, Some((id, "Camera".into())));
+        assert_eq!(app.layout.layer_info(1).name, "Presenter");
+    }
+
+    #[test]
     fn closing_batch_names_applies_or_discards_without_losing_identity() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
         app.manage_layers();
         let id = app.layout.layer_info(1).id;
         app.layer_ui.drafts[1].1 = "Camera".into();
+        app.layer_ui.closing = true;
+        app.layer_ui.deferred = 1;
+        let count = app.layout.layers().len();
+        super::super::tests::click_text(&mut app, &ctx, "Cancel");
+        assert!(app.layer_ui.open);
+        assert!(!app.layer_ui.closing);
+        assert_eq!(app.layer_ui.deferred, 0);
+        assert_eq!(app.layer_ui.drafts[1].1, "Camera");
+        assert_eq!(app.layout.layers().len(), count);
+        assert_eq!(app.layout.layer_info(1).name, "Presenter");
         app.layer_ui.closing = true;
         super::super::tests::click_text(&mut app, &ctx, "Apply");
         assert!(!app.layer_ui.open);

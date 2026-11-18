@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.73
+
+- Add Cancel to Apply/Discard close confirmations for layer properties, renaming,
+  batch names/folders, clipboard import and device import review. Cancel returns
+  to editing with the draft intact and cancels deferred layer-list actions.
+
 ### v0.9.72
 
 - Fix input-crop capture on Midra: its PNG contains only the retained crop, unlike

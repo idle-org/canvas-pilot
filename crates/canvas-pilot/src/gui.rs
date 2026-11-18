@@ -1561,7 +1561,7 @@ impl Editor {
         }
         if p.closing {
             match pending_close(ctx, "paste-close", &p.error) {
-                Some(true) => match p.apply(&mut self.layout) {
+                Some(CloseChoice::Apply) => match p.apply(&mut self.layout) {
                     Ok(()) => {
                         self.sync();
                         close = true;
@@ -1571,7 +1571,8 @@ impl Editor {
                         p.closing = false;
                     }
                 },
-                Some(false) => close = true,
+                Some(CloseChoice::Discard) => close = true,
+                Some(CloseChoice::Cancel) => p.closing = false,
                 None => {}
             }
         }
@@ -4542,7 +4543,13 @@ fn alignment_icon(
 }
 
 // Closing a draft is a separate decision from sending anything to a device.
-fn pending_close(ctx: &egui::Context, id: &str, error: &str) -> Option<bool> {
+#[derive(Clone, Copy, PartialEq)]
+enum CloseChoice {
+    Apply,
+    Discard,
+    Cancel,
+}
+fn pending_close(ctx: &egui::Context, id: &str, error: &str) -> Option<CloseChoice> {
     egui::Modal::new(egui::Id::new(id))
         .show(ctx, |ui| {
             ui.heading(tr(ui.ctx(), "ui.would-you-like-to-apply-changes"));
@@ -4551,9 +4558,11 @@ fn pending_close(ctx: &egui::Context, id: &str, error: &str) -> Option<bool> {
             }
             ui.horizontal(|ui| {
                 if apply_button(ui, &tr(ui.ctx(), "action.apply"), true).clicked() {
-                    Some(true)
+                    Some(CloseChoice::Apply)
                 } else if ui.button(tr(ui.ctx(), "ui.discard")).clicked() {
-                    Some(false)
+                    Some(CloseChoice::Discard)
+                } else if ui.button(tr(ui.ctx(), "ui.cancel")).clicked() {
+                    Some(CloseChoice::Cancel)
                 } else {
                     None
                 }
@@ -5177,6 +5186,28 @@ mod tests {
             repeat: false,
             modifiers: egui::Modifiers::NONE,
         }
+    }
+    pub(super) fn cancel_pending_close(app: &mut Editor, ctx: &egui::Context) {
+        frame(app, ctx, vec![]);
+        let output = frame(app, ctx, vec![]);
+        // The underlying editor can also have a Cancel button. Click the modal.
+        let pos = output
+            .shapes
+            .iter()
+            .rev()
+            .find_map(|s| match &s.shape {
+                egui::Shape::Text(t) if t.galley.text() == "Cancel" => {
+                    Some(t.pos + t.galley.size() / 2.)
+                }
+                _ => None,
+            })
+            .expect("Close-confirmation Cancel button");
+        frame(
+            app,
+            ctx,
+            vec![egui::Event::PointerMoved(pos), mouse(pos, true)],
+        );
+        frame(app, ctx, vec![mouse(pos, false)]);
     }
     pub(super) fn click_text(app: &mut Editor, ctx: &egui::Context, text: &str) {
         frame(app, ctx, vec![]);
@@ -8381,6 +8412,12 @@ mod tests {
         assert_eq!(p.shapes[0].geometry.width, 945.0);
         frame(&mut app, &ctx, vec![key(egui::Key::Escape)]);
         assert!(app.paste.as_ref().unwrap().closing);
+        assert_eq!(*app.layout.layers(), before);
+        cancel_pending_close(&mut app, &ctx);
+        let p = app.paste.as_ref().unwrap();
+        assert!(!p.closing);
+        assert_eq!(p.targets, vec![1]);
+        assert_eq!(p.shapes[0].geometry.width, 945.0);
         assert_eq!(*app.layout.layers(), before);
     }
     #[test]
