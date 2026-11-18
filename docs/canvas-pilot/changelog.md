@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.74
+
+- Reorganize Input settings around a larger crop workspace, with crop protection
+  and live capture next to the preview. Numeric crop values/presets are collapsible.
+- Keep input selection, Send changes and the pending-change count above the
+  scrolling editor. Advanced processing uses a category picker with aligned
+  fields; narrow windows stack the panels. Device write and draft rules are unchanged.
+
 ### v0.9.73
 
 - Add Cancel to Apply/Discard close confirmations for layer properties, renaming,

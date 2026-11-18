@@ -321,6 +321,13 @@ Program and layers outside the project. Nothing is sent while dragging, selectin
 an input, capturing an image or opening the window. Use **Send changes** above the editor to apply the edited fields directly, with fresh device
 validation and verified readback.
 
+The input selector, **Send changes**, pending-change count and undo/discard/reload
+controls stay above the scrolling editor. The larger **Input crop** workspace
+contains its own protection toggle and live-capture control. Expand **Crop values
+& presets** for exact edge values. Use the **Input processing** category picker
+for Aspect, Color, Processing, Keying or LUT; only available categories appear.
+Narrow windows stack processing below the crop workspace.
+
 - **Keep device values:** each category has this toggle. Check it to discard that
   category’s draft edits, disable its controls and leave it untouched when sending.
   Crop protection also disables the visual crop editor; the captured picture

@@ -46,6 +46,7 @@ fn capture_rectangles(
 pub(super) struct InputsWindow {
     pub open: bool,
     pub selected: u32,
+    category: String,
     host: String,
     drafts: BTreeMap<u32, InputDraft>,
     undo: BTreeMap<u32, Vec<Values>>,
@@ -116,9 +117,8 @@ impl Editor {
         let mut send = None;
         let mut refresh = false;
         egui::Window::new("Input settings").id(egui::Id::new("device-input-settings"))
-            .open(&mut open).default_size([1040.0,700.0]).vscroll(true).show(ctx,|ui|{
-            ui.label("Shared preprocessing · affects every layer using this device input, including Program.");
-            ui.small("Drafts stay in this session. Nothing is sent until you click Send changes.");
+            .open(&mut open).default_size([1100.0,760.0]).min_width(360.0).show(ctx,|ui|{
+            ui.small("Shared input settings · changes affect every layer using this input, including Program.");
             let Some(snapshot)=&self.device.snapshot else {
                 ui.label("Connect to a supported device to inspect its inputs.");
                 if ui.button("Device connection…").clicked(){self.device.connection_open=true;}
@@ -129,7 +129,8 @@ impl Editor {
             if self.inputs.pending.is_some() {ui.spinner();ui.label("Applying / verifying input settings… Capture will refresh after verification.");return;}
 
             if self.inputs.selected==0 {self.inputs.selected=inputs.first().map(|i|i.id).unwrap_or(0);}
-            ui.horizontal(|ui|{
+            ui.horizontal_wrapped(|ui|{
+                ui.label("Device input");
                 ui.add_enabled_ui(self.inputs.pending.is_none(),|ui|{
                     egui::ComboBox::from_id_salt("device-input-picker").selected_text(format!("Input {}",self.inputs.selected)).show_ui(ui,|ui|{
                         for input in &inputs {
@@ -139,7 +140,7 @@ impl Editor {
                         }
                     });
                 });
-                if ui.button("Refresh device…").clicked(){self.device.connection_open=true;}
+                if ui.button("Connection…").clicked(){self.device.connection_open=true;}
             });
             let id=self.inputs.selected;
             if snapshot.profile==canvas_pilot::device::Profile::Aquilon6 {
@@ -160,68 +161,69 @@ impl Editor {
             ui.label(format!("Input {} · plug {} · {}",id,draft.plug,draft.native.map(|n|format!("{} × {} source pixels",n[0],n[1])).unwrap_or("No valid signal dimensions".into())));
             let consumers: Vec<_> = snapshot.screens.iter().flat_map(|screen| screen.layers.iter().filter(move |layer|snapshot.profile.input_from_source(&layer.source)==Some(id)).map(move|layer|format!("Screen {} / {} · Layer {}",screen.id,screen.preview_bank,layer.id))).collect();
             ui.collapsing(format!("Known Preview consumers ({})",consumers.len()),|ui|{for consumer in consumers {ui.label(consumer);}ui.small("Program layers, other consumers, backgrounds and multiviewer may also use this input.");});
-            match draft.changes(snapshot) {
-                Ok(changes)=>{
-                    if ui.add_enabled(!changes.is_empty() && state.pending.is_none() && !self.device.busy(),egui::Button::new("Send changes")).clicked(){send=Some(draft.clone());}
-                }
-                Err(error)=>{ui.colored_label(theme::palette(ui.ctx()).amber,error);}
-            }
-            if state.pending.is_some(){ui.spinner();ui.label("Sending and verifying input settings…");}
-            if !state.message.is_empty(){ui.label(&state.message);}
             let before=draft.values.clone();
             let mut undoing=false;
-            ui.add_enabled_ui(state.pending.is_none() && !self.device.busy(),|ui|{
-                ui.horizontal(|ui|{
-                    if ui.button("Undo input edit").clicked() && let Some(previous)=state.undo.entry(id).or_default().pop(){draft.values=previous;draft.restore_kept_groups();undoing=true;state.edit_start=None;}
-                    if ui.button("Discard draft").clicked(){draft.reset();}
-                    if ui.button("Reload selected input").clicked(){refresh=true;}
-                    ui.add_enabled(inputs.iter().any(|i|i.id==id && i.enabled) || state.live_capture,egui::Checkbox::new(&mut state.live_capture,"Capture input (live)"));
-                });
-                ui.columns(2,|columns|{
-                    let ui=&mut columns[0];
-                    ui.heading("Input crop");
-                    if state.live_capture {
-                        if capture_pending || state.capture.is_none() {ui.label("Refreshing capture…");}
-                        else if state.capture_geometry.is_none() {ui.label("Capture geometry unavailable; showing the sizing grid.");}
-                        else {ui.small("Live capture · device crop, independent of draft edits");}
-                    }
-                    ui.add_enabled_ui(!draft.keeps_group("Crop"), |ui| { crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().filter(|_|state.live_capture).zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g))); });
-                    ui.small("Unknown pixels show the sizing grid. Capture uses the device crop, never the draft crop.");
-                    let ui=&mut columns[1];
-                    for group in ["Aspect","Crop","Color","Processing","Keying","LUT"] {
-                        if !draft.fields.iter().any(|f|f.group==group){continue;}
-                        egui::CollapsingHeader::new(group).default_open(matches!(group,"Aspect"|"Crop")).show(ui,|ui|{
-                            let mut keep = draft.keeps_group(group);
-                            if ui.checkbox(&mut keep,"Keep device values").on_hover_text("Leave this category untouched when sending. Checking discards its draft edits.").changed() {
-                                draft.keep_group(group,keep);
-
-                                if group=="Crop" {state.drag=None;}
-                            }
-                            ui.add_enabled_ui(!keep, |ui| {
-                            for field in &draft.fields {
-                                if field.group!=group{continue;}
-                                let value=draft.values.get_mut(&field.path).unwrap();
-                                ui.horizontal(|ui|{
-                                    ui.label(&field.label);
-                                    match &field.kind {
-                                        Kind::Number(min,max)=>{
-                                            if field.path.ends_with("/customRatio") {
-                                                let mut ratio=value.as_i64().unwrap() as f64/1000.;
-                                                if ui.add(egui::DragValue::new(&mut ratio).range(0.25..=10.).speed(0.001).suffix(":1")).changed(){*value=json!((ratio*1000.).round() as i64);}
-                                            } else {
-                                                let mut v=value.as_i64().unwrap();if ui.add(egui::DragValue::new(&mut v).range(*min..=*max)).changed(){*value=json!(v);}
-                                            }
-                                        }
-                                        Kind::Toggle=>{let mut v=value.as_bool().unwrap();if ui.checkbox(&mut v,"").changed(){*value=json!(v);}}
-                                        Kind::Choice(options)=>{let mut v=value.as_str().unwrap().to_owned();egui::ComboBox::from_id_salt(&field.path).selected_text(choice_label(&v)).show_ui(ui,|ui|{for option in options {ui.selectable_value(&mut v,option.clone(),choice_label(option));}});*value=json!(v);}
-                                    }
-                                });
-                            }
-                            });
+            let changes=draft.changes(snapshot);
+            ui.horizontal_wrapped(|ui| {
+                let count=changes.as_ref().map_or(0,Vec::len);
+                if ui.add_enabled(count>0 && !self.device.busy(),egui::Button::new("Send changes")).clicked(){send=Some(draft.clone());}
+                ui.label(if count==0 {"No pending changes".into()} else {format!("{count} pending changes")});
+                ui.separator();
+                if ui.add_enabled(state.undo.get(&id).is_some_and(|h|!h.is_empty()) && !self.device.busy(),egui::Button::new("Undo input edit")).clicked() && let Some(previous)=state.undo.entry(id).or_default().pop(){draft.values=previous;draft.restore_kept_groups();undoing=true;state.edit_start=None;}
+                if ui.add_enabled(draft.dirty() && !self.device.busy(),egui::Button::new("Discard draft")).clicked(){draft.reset();}
+                if ui.add_enabled(!self.device.busy(),egui::Button::new("Reload selected input")).on_hover_text("Replace this input’s draft with fresh device values.").clicked(){refresh=true;}
+            });
+            if let Err(error)=changes {ui.colored_label(theme::palette(ui.ctx()).amber,error);}
+            if !state.message.is_empty(){ui.label(&state.message);}
+            ui.separator();
+            // Only the editor body scrolls; the input selector and Send stay reachable.
+            egui::ScrollArea::vertical().id_salt("input-settings-body")
+                .max_height(ui.available_height().max(180.0)).show(ui,|ui| {
+            ui.add_enabled_ui(!self.device.busy(),|ui|{
+                let width=ui.available_width();
+                let wide=width>=760.0;
+                let gap=ui.spacing().item_spacing.x;
+                let crop_width=if wide {(width-gap)*0.62} else {width};
+                let settings_width=if wide {width-gap-crop_width} else {width};
+                let layout=if wide {egui::Layout::left_to_right(egui::Align::Min)} else {egui::Layout::top_down(egui::Align::Min)};
+                ui.with_layout(layout,|ui| {
+                    ui.vertical(|ui| {
+                        ui.set_width(crop_width);
+                        ui.heading("Input crop");
+                        if keep_category(ui,draft,"Crop") {state.drag=None;}
+                        ui.horizontal_wrapped(|ui| {
+                            ui.add_enabled(inputs.iter().any(|i|i.id==id && i.enabled) || state.live_capture,egui::Checkbox::new(&mut state.live_capture,"Capture input (live)"));
+                            if state.live_capture {
+                                if capture_pending || state.capture.is_none() {ui.spinner();ui.label("Refreshing capture…");}
+                                else if state.capture_geometry.is_none() {ui.label("Capture geometry unavailable; showing the sizing grid.");}
+                                else {ui.small("Live · applied device crop");}
+                            } else {ui.small("Sizing grid");}
                         });
-                    }
-                    ui.small("LUT controls require an allocated resource. Signal/HDCP and resource allocation remain in WebRCS.");
+                        ui.add_enabled_ui(!draft.keeps_group("Crop"), |ui| { crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().filter(|_|state.live_capture).zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g))); });
+                        ui.small("The picture follows the applied device crop. Unknown pixels show the sizing grid.");
+                        egui::CollapsingHeader::new("Crop values & presets").show(ui,|ui|{
+                            ui.add_enabled_ui(!draft.keeps_group("Crop"),|ui|{category_fields(ui,draft,"Crop");});
+                        });
+                    });
+                    ui.vertical(|ui| {
+                        ui.set_width(settings_width);
+                        ui.heading("Input processing");
+                        let groups:Vec<_>=["Aspect","Color","Processing","Keying","LUT"].into_iter().filter(|group|draft.fields.iter().any(|f|f.group==*group)).collect();
+                        if !groups.contains(&state.category.as_str()) {state.category=groups.first().copied().unwrap_or("").into();}
+                        if groups.is_empty(){ui.small("No additional settings available for this input.");return;}
+                        egui::ComboBox::from_id_salt("input-settings-category").selected_text(&state.category).show_ui(ui,|ui|{
+                            for group in groups {ui.selectable_value(&mut state.category,group.to_owned(),group);}
+                        });
+                        let group=state.category.as_str();
+                        keep_category(ui,draft,group);
+                        ui.add_space(6.0);
+                        ui.add_enabled_ui(!draft.keeps_group(group),|ui|{category_fields(ui,draft,group);});
+                        ui.add_space(8.0);
+                        ui.small("Only categories you unlock can be changed. Draft edits stay local until Send changes.");
+                        ui.collapsing("Device-only settings",|ui|{ui.small("Signal/HDCP and resource allocation remain in WebRCS. LUT controls require an allocated resource.");});
+                    });
                 });
+            });
             });
             if before!=draft.values && !undoing && state.edit_start.is_none(){state.edit_start=Some(before);}
             if !ui.input(|i|i.pointer.any_down()) && let Some(before)=state.edit_start.take(){let history=state.undo.entry(id).or_default();history.push(before);if history.len()>100{history.remove(0);}}
@@ -263,6 +265,83 @@ impl Editor {
         }
     }
 }
+fn keep_category(ui: &mut egui::Ui, draft: &mut InputDraft, group: &str) -> bool {
+    let mut keep = draft.keeps_group(group);
+    let changed = ui
+        .checkbox(&mut keep, "Keep device values")
+        .on_hover_text(
+            "Leave this category untouched when sending. Checking discards its draft edits.",
+        )
+        .changed();
+    if changed {
+        draft.keep_group(group, keep);
+    }
+    changed
+}
+fn category_fields(ui: &mut egui::Ui, draft: &mut InputDraft, group: &str) {
+    egui::Grid::new(("input-category-fields", group))
+        .num_columns(2)
+        .spacing([12.0, 8.0])
+        .show(ui, |ui| {
+            for field in &draft.fields {
+                if field.group != group {
+                    continue;
+                }
+                let value = draft.values.get_mut(&field.path).unwrap();
+                ui.label(&field.label);
+                match &field.kind {
+                    Kind::Number(min, max) => {
+                        if field.path.ends_with("/customRatio") {
+                            let mut ratio = value.as_i64().unwrap() as f64 / 1000.;
+                            if ui
+                                .add(
+                                    egui::DragValue::new(&mut ratio)
+                                        .range(0.25..=10.)
+                                        .speed(0.001)
+                                        .suffix(":1"),
+                                )
+                                .changed()
+                            {
+                                *value = json!((ratio * 1000.).round() as i64);
+                            }
+                        } else {
+                            let mut v = value.as_i64().unwrap();
+                            if ui
+                                .add(egui::DragValue::new(&mut v).range(*min..=*max))
+                                .changed()
+                            {
+                                *value = json!(v);
+                            }
+                        }
+                    }
+                    Kind::Toggle => {
+                        let mut v = value.as_bool().unwrap();
+                        if ui.checkbox(&mut v, "").changed() {
+                            *value = json!(v);
+                        }
+                    }
+                    Kind::Choice(options) => {
+                        let mut v = value.as_str().unwrap().to_owned();
+                        egui::ComboBox::from_id_salt(&field.path)
+                            .width(145.0)
+                            .selected_text(choice_label(&v))
+                            .show_ui(ui, |ui| {
+                                for option in options {
+                                    ui.selectable_value(
+                                        &mut v,
+                                        option.clone(),
+                                        choice_label(option),
+                                    );
+                                }
+                            });
+                        *value = json!(v);
+                    }
+                }
+                ui.end_row();
+            }
+        });
+}
+
 // Display labels only: the original enum strings remain in draft/device values.
 fn choice_label(value: &str) -> String {
     match value {
@@ -348,7 +427,7 @@ fn crop_editor(
         *view_zoom = 1.0;
         *pivot = [1, 1];
     }
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         ui.label("Crop zoom");
         let retained = draft.crop().remaining(native).unwrap();
         let current = 100.0 * (native[0] * native[1] / (retained[0] * retained[1])).sqrt();
@@ -386,7 +465,7 @@ fn crop_editor(
             let _ = draft.set_crop(Crop::default());
         }
     });
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         ui.label("Pivot");
         egui::Grid::new("input-crop-pivot")
             .spacing([2., 2.])
@@ -415,7 +494,10 @@ fn crop_editor(
     });
     ui.small("Drag edges/corners or the crop box. Wheel: view zoom; middle drag: pan. Escape cancels a crop drag.");
     let (rect, response) = ui.allocate_exact_size(
-        Vec2::new(ui.available_width().max(100.), 260.),
+        Vec2::new(
+            ui.available_width().max(100.),
+            (ui.available_width() * 0.55).clamp(230.0, 400.0),
+        ),
         egui::Sense::click_and_drag(),
     );
     let painter = ui.painter_at(rect);
@@ -605,6 +687,75 @@ mod tests {
                 .all(|v| (0.25..=0.75).contains(&v.uv.x) && (0.25..=0.75).contains(&v.uv.y))
         );
         assert_eq!(draft.crop().left, 24.);
+    }
+
+    fn processing_app() -> Editor {
+        let mut app = input_app();
+        let settings = &mut app.device.snapshot.as_mut().unwrap().raw["device"]["inputList"]["items"]
+            ["IN_1"]["plugList"]["items"]["1"]["settings"];
+        settings["aspect"] = json!({"pp":{"signal":"NATIVE","transformTo":"SIGNAL","customRatio":1778,"layerFill":"LAYER_SETTING"}});
+        settings["color"] = json!({"pp":{"brightness":128,"contrast":128}});
+        app
+    }
+    #[test]
+    fn input_categories_switch_without_editing_or_sending() {
+        let mut app = processing_app();
+        let ctx = egui::Context::default();
+        super::super::tests::frame(&mut app, &ctx, vec![]);
+        let before = app.inputs.drafts[&1].values.clone();
+        super::super::tests::click_text(&mut app, &ctx, "Aspect");
+        super::super::tests::click_text(&mut app, &ctx, "Color");
+        assert_eq!(app.inputs.category, "Color");
+        let output = super::super::tests::frame(&mut app, &ctx, vec![]);
+        assert!(
+            output
+                .shapes
+                .iter()
+                .any(|s| matches!(&s.shape,egui::Shape::Text(t) if t.galley.text()=="Brightness"))
+        );
+        assert_eq!(app.inputs.drafts[&1].values, before);
+        assert!(app.inputs.drafts[&1].keeps_group("Color"));
+        assert!(app.inputs.pending.is_none());
+        assert!(!app.device.input_sending);
+    }
+    #[test]
+    fn input_workspace_stacks_on_small_screens_and_keeps_actions_visible() {
+        for width in [640., 1440.] {
+            let mut app = processing_app();
+            let ctx = egui::Context::default();
+            let mut draw = || {
+                ctx.run_ui(
+                    egui::RawInput {
+                        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(width, 900.))),
+                        ..Default::default()
+                    },
+                    |_| app.inputs_window(&ctx),
+                )
+            };
+            draw();
+            draw();
+            let output = draw();
+            let position = |label: &str| {
+                output
+                    .shapes
+                    .iter()
+                    .find_map(|s| match &s.shape {
+                        egui::Shape::Text(t) if t.galley.text() == label => Some(t.pos),
+                        _ => None,
+                    })
+                    .unwrap_or_else(|| panic!("{label} missing at width {width}"))
+            };
+            let crop = position("Input crop");
+            let processing = position("Input processing");
+            let send = position("Send changes");
+            assert!(send.y < crop.y && send.x >= 0. && send.x < width);
+            if width < 760. {
+                assert!(processing.y > crop.y + 200.);
+            } else {
+                assert!(processing.x > crop.x + 300.);
+                assert!((processing.y - crop.y).abs() < 10.);
+            }
+        }
     }
 
     #[test]
