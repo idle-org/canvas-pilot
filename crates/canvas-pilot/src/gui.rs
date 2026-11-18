@@ -7,8 +7,6 @@ mod device_ui;
 mod document_reference_ui;
 #[path = "format_ui.rs"]
 mod format_ui;
-#[path = "input_ui.rs"]
-mod input_ui;
 #[path = "inputs_window.rs"]
 mod inputs_window;
 #[path = "layers_ui.rs"]
@@ -8612,7 +8610,7 @@ mod tests {
         app.layout.select(Some(0));
         app.format_draft = Some(FormatDraft::new(&app.layout, 0));
         app.property_tab = PropertyTab::Source;
-        app.device.input_edits.enabled = true;
+        app.device.local_source_editing = true;
         frame(&mut app, &ctx, vec![]);
         click_text(&mut app, &ctx, "Input 1");
         click_text(&mut app, &ctx, "Input 8");

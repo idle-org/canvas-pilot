@@ -370,7 +370,7 @@ Midra layer lists omit unassigned source slots (`NONE` or empty). Assigned input
 
 Destination choices in **Midra mapping & transfer…** now save immediately on the editor layer and support Undo. Save the project JSON to keep links across sessions. Links include screen and layer IDs and survive refreshes and selection changes. Choose the empty destination on the linked screen to unlink. The direct send button is available beside Midra mapping & transfer and in Export; in **All layers** scope it includes unselected, hidden and locked linked layers, grouped by screen. Its label changes to **Send selected links** or **Send folder links** in those scopes. Midra mapping & transfer… opens mapping configuration for the current scope. Preview/Program and sizing still use the current export options.
 
-Every explicit send now includes WebRCS’s preset apply pulse (`xUpdate` false → true). This applies staged geometry when automatic updates are disabled, including a repeat send where WebRCS already shows the desired values.
+Every explicit layer-layout send includes WebRCS’s preset apply pulse (`xUpdate` false → true). This applies staged geometry when automatic updates are disabled, including a repeat send where WebRCS already shows the desired values.
 
 **Send all linked layers** sends immediately using saved links and the current target and sizing settings, without opening the export window. The button shows progress and its tooltip reports completion. Invalid links or send failures open the export window with the error.
 
@@ -451,7 +451,7 @@ refresh reopens paused until you capture or resume it explicitly.
 Connection history, startup connection, theme and Program permission remain in
 application preferences. Unsaved drafts, undo history, open menus, active editing
 gestures and pending device operations are temporary. Transfer scope, target bank,
-sizing strategy and the permission to send advanced input edits remain session choices.
+sizing strategy and shared input-window drafts remain session choices.
 Explicitly saved input correction proposals persist, but always reopen inactive.
 See [saved input corrections](advanced-exchange.md#saved-input-corrections).
 See the [complete persistence audit](../../interfaces/canvas-pilot-persistence-audit.md)

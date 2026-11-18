@@ -504,7 +504,6 @@ mod tests {
             include_str!("capture_ui.rs"),
             include_str!("layers_ui.rs"),
             include_str!("format_ui.rs"),
-            include_str!("input_ui.rs"),
             include_str!("ratio_ui.rs"),
             include_str!("reference_ui.rs"),
             include_str!("recovery_ui.rs"),

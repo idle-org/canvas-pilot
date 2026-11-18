@@ -29,7 +29,7 @@ means a supported exchange format exported with extra parameters and reopened th
 | Editable blanking masks (Layer / Source) | ✅ | ❌ | ✅ |
 | Resize pivots and group resize settings | ✅ | ❌ | ✅ |
 | Saved device screen/layer links (not physical source routing) | ✅ | ❌ | ✅ |
-| Opt-in saved device input correction proposals, restored inactive | ✅ | ❌ | ✅ |
+| Previously saved input correction proposals, preserved inactive | ✅ | ❌ | ✅ |
 | Reference images and their individual settings | ✅ | ❌ | ❌ |
 | Capture assignments and saved preview stills | ✅ | ❌ | ❌ |
 | Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [2](#editing-notes) |
@@ -60,22 +60,14 @@ This is separate from plain geometry import and export snapshot restoration.
 
 ## Saved input corrections
 
-In the advanced input controls, explicitly choose **Save staged input edits as a
-project proposal** to retain the corrections you have staged. Projects save these
-proposals; Silver exports include them only when **Include extra Canvas Pilot
-parameters (experimental)** is enabled. Saving a proposal is optional and separate
-from staging or sending it.
+Previously saved input correction proposals remain preserved in projects and in
+Silver exports with **Include extra Canvas Pilot parameters (experimental)**.
+They remain inactive: the legacy controls for creating, staging and sending them
+have been removed. No saved proposal automatically changes an input.
 
-Proposals cover Content ratio, Transform to, custom ratio, layer fill, input crop
-preset and the four input crop edges. Local source dimensions/crops and shared
-source assignments already belong to the project and need no proposal.
-
-Opening a project or restoring a snapshot leaves corrections **inactive**. Connect,
-check the layer's device mapping and routed input/plug, enable advanced input edits,
-and choose **Stage saved input proposal**. Review before sending. A changed mapping,
-input/plug or missing device field prevents staging. Corrections affect shared
-inputs and can therefore affect other layers and Program. Removing a saved proposal
-does not undo device changes or discard separately staged edits.
+For new device edits, use [Input settings…](formats-and-crop.md#shared-device-input-settings).
+Its drafts are session-only and require their own explicit review and send. Local
+source dimensions/crops and shared source assignments still belong to the project.
 
 For practical examples across editors, see [what gets lost between formats](conversion-losses.md).
 

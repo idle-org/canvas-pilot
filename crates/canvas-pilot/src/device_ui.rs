@@ -102,7 +102,8 @@ enum Destination {
 
 #[derive(Default)]
 pub(super) struct DeviceUi {
-    pub(super) input_edits: input_ui::InputEdits,
+    pub(super) saved_input_proposals: Vec<canvas_pilot::input_proposal::InputProposal>,
+    pub(super) local_source_editing: bool,
     pub open: bool,
     pub(super) scope: TransferScope,
     import_closing: bool,
@@ -217,7 +218,7 @@ impl DeviceUi {
                     .iter()
                     .position(|s| s.id == screen)
                     .ok_or_else(|| format!("Linked screen {screen} is unavailable."))?;
-                let mut plan = Plan::prepare(
+                let plan = Plan::prepare(
                     snapshot,
                     layout,
                     index,
@@ -229,8 +230,6 @@ impl DeviceUi {
                     },
                     self.sizing,
                 )?;
-                self.input_edits
-                    .extend_plan(snapshot, &mappings, &mut plan)?;
                 Ok(plan)
             })
             .collect()
@@ -402,19 +401,6 @@ impl DeviceUi {
     }
 }
 impl Editor {
-    pub(super) fn advanced_input_controls(&mut self, ui: &mut egui::Ui, i: usize) {
-        self.device.input_edits.show(
-            ui,
-            self.device.snapshot.as_ref(),
-            self.layout
-                .layer_info(i)
-                .send_mapping
-                .current_links()
-                .next(),
-            self.layout.layer_info(i).id,
-        );
-    }
-
     pub(super) fn layer_mapping_controls(&mut self, ui: &mut egui::Ui, i: usize) {
         let original = self.layout.layer_info(i).load_mapping.clone();
         let mut link = original.clone();
@@ -769,7 +755,7 @@ impl Editor {
                 ui.label(tr(ui.ctx(), "ui.device-ip-port"));
                 if ui.add_enabled(self.device.pending.is_none(), egui::TextEdit::singleline(&mut self.device.host).hint_text("192.168.10.146:3000")).changed() {
                     self.device.snapshot = None;
-                    self.device.input_edits.clear();
+                    self.device.local_source_editing = false;
                     self.device.reset_mappings();
                     self.device.error.clear();
                     self.device.message.clear();
@@ -779,7 +765,7 @@ impl Editor {
                         for host in self.device.recent_hosts.clone() {
                             if ui.button(&host).on_hover_text(tr(ui.ctx(), "ui.connect-to-this-machine-read-only")).clicked() {
                                 self.device.host = host;
-                                self.device.input_edits.clear();
+                                self.device.local_source_editing = false;
                                 self.device.reset_mappings();
                                 self.device.fetch(ctx);
                                 ui.close();
@@ -792,7 +778,7 @@ impl Editor {
                     if ui.add_enabled(self.device.pending.is_none(), egui::Button::new(if self.device.online() { "Refresh connection" } else { "Connect" })).clicked() { self.device.fetch(ctx); }
                     if ui.add_enabled(self.device.online() && self.device.pending.is_none(), egui::Button::new(tr(ui.ctx(), "ui.disconnect"))).clicked() {
                         self.device.snapshot = None;
-                        self.device.input_edits.clear();
+                        self.device.local_source_editing = false;
                         self.device.reset_mappings();
                         self.device.message.clear();
                     }
@@ -916,7 +902,7 @@ impl Editor {
                         }).collect();
                         let previous = targets.clone();
                         let prepared_plan = send_review(ui, &self.layout, &scope_indices, snapshot, self.device.screen, &mut targets,
-                            &mut self.device.target, &mut self.device.sizing, self.device.pending.is_some(), self.device.allow_program, &self.device.input_edits);
+                            &mut self.device.target, &mut self.device.sizing, self.device.pending.is_some(), self.device.allow_program);
                         for (id, destination) in targets {
                             if previous.get(&id) != Some(&destination) {
                                 let i = (0..self.layout.layers().len()).find(|&i| self.layout.layer_info(i).id == id).unwrap();
@@ -1141,7 +1127,6 @@ fn send_review(
     sizing: &mut Sizing,
     busy: bool,
     allow_program: bool,
-    input_edits: &input_ui::InputEdits,
 ) -> Option<Plan> {
     let screen = &snapshot.screens[screen_index];
     if !allow_program {
@@ -1285,11 +1270,7 @@ fn send_review(
         &mappings,
         *target_mode,
         *sizing,
-    )
-    .and_then(|mut plan| {
-        input_edits.extend_plan(snapshot, &mappings, &mut plan)?;
-        Ok(plan)
-    }) {
+    ) {
         Ok(plan) => {
             ui.label(format!(
                 "{:?} · screen {} · physical bank {} · {} changed fields",
@@ -1407,6 +1388,12 @@ mod tests {
             .unwrap();
         let state = DeviceUi {
             snapshot: Some(snapshot.clone()),
+            saved_input_proposals: canvas_pilot::project::Project::from_json(include_str!(
+                "../../../docs/interfaces/canvas-pilot-v16.example.json"
+            ))
+            .unwrap()
+            .input_proposals,
+            local_source_editing: true,
             ..Default::default()
         };
         assert_eq!(
@@ -1418,6 +1405,12 @@ mod tests {
             vec![(layout.layer_info(0).id, link("2"))]
         );
         let plan = state.linked_plans(&layout).unwrap();
+        assert!(
+            plan.iter()
+                .flat_map(|p| &p.changes)
+                .all(|change| !change.path.iter().any(|part| part == "inputList"))
+        );
+
         assert!(
             plan[0]
                 .changes
@@ -1925,7 +1918,6 @@ mod tests {
                         &mut Sizing::OutputBox,
                         false,
                         allow,
-                        &input_ui::InputEdits::default(),
                     );
                 });
             });
@@ -2091,7 +2083,6 @@ mod tests {
                     &mut Sizing::OutputBox,
                     false,
                     false,
-                    &input_ui::InputEdits::default(),
                 )
             });
         });
@@ -2114,7 +2105,6 @@ mod tests {
                     &mut Sizing::OutputBox,
                     false,
                     false,
-                    &input_ui::InputEdits::default(),
                 )
             });
         });
@@ -2286,7 +2276,6 @@ mod tests {
                         &mut Sizing::OutputBox,
                         false,
                         false,
-                        &input_ui::InputEdits::default()
                     )
                     .is_none()
                 );
@@ -2451,7 +2440,6 @@ mod tests {
                     &mut Sizing::OutputBox,
                     false,
                     false,
-                    &input_ui::InputEdits::default(),
                 );
             });
         });

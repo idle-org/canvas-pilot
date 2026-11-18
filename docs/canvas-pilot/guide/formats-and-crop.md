@@ -123,29 +123,14 @@ Pending changes make Apply solid purple. This applies to position/size, output
 resolution drafts, source/input formats, names/folders, and mapped imports. Each
 section tracks its own values; reverting an edit clears its pending state.
 
-**Source is an advanced section**, disabled until **Edit advanced input settings
-and include my edits when sending** is checked. Its device controls mirror the
-linked Preview layer's current input and active plug in WebRCS Advanced Input:
-content ratio, transform ratio, custom ratio, layer fill, input crop preset and
-four pixel crop edges. Usually keep these settings on the Midra. Input crop
-runs before dynamic layer crop/zoom without resizing the layer bounding box;
-this is device processing, not an editor-only effect. Inputs are shared, so an
-input edit can also affect other layers and Program.
+**Source** links to the [shared Input settings window](#shared-device-input-settings)
+for native device preprocessing. These input-only edits require their own explicit
+review and send; a layer-layout send never includes them.
 
-Opening Source, checking the box, or changing a value does not send. Only fields
-actually edited are staged for the next explicit Send, and only when that send
-includes a destination routed to the same input/plug. Untouched aspect/crop
-settings stay as they are on the machine. Unchecking discards staged edits.
-The permission and staged device edits are session-only: disconnecting, changing the device
-address or loading a project clears them. Source routing is never changed.
-Refresh/load after sending to inspect the resulting device content dimensions.
-
-The separately labeled **Editor source model (local geometry)** retains the
-existing offline format/input-resolution calculations, also gated by the checkbox.
-Its native dimensions are metadata, not device timing commands. Its local input
-correction still folds into exported *layer* crop; it does not configure the
-shared hardware input. Apply source changes commits this local model, whereas
-the device controls above wait for Send.
+**Edit local source geometry** unlocks the separate offline source model. Its
+native dimensions are metadata, not device timing commands. Local input correction
+still folds into exported *layer* crop; it does not configure the shared hardware
+input. **Apply source changes** commits this local model only.
 
 Layer properties has five tabs: **Source** for native/input resolution and input
 crop, **Layer** for the final visible box, **Crop** for content zoom and offset,
@@ -318,8 +303,8 @@ layer cropping or masking. They can correct stretched content, but an arbitrary
 ratio can also introduce distortion. Leave Native / Signal Aspect Ratio unless
 correction is intentional.
 
-Canvas Pilot already exposes both device selectors under **Source → Edit
-advanced input settings**, with Custom ratio encoded in thousandths (0.250–10.000).
+Canvas Pilot exposes both device selectors in **Input settings…**, with Custom
+ratio displayed as 0.250–10.000:1 and encoded in thousandths.
 They are staged device controls, not persistent local image deformation. Merely
 opening the controls never writes. A local source resolution is a separate
 quantity and should not be changed just to pretend a ratio correction occurred.
@@ -363,6 +348,7 @@ input replaces its draft with device values. If another controller, signal or pl
 changes, refresh and review before sending. After changing input geometry, reload
 its affected layers before sending their layout.
 
-Existing local source geometry and saved inactive input proposals remain under
-**Legacy input proposals / layer-send compatibility**. Their previous save/export
-behavior is preserved. They are distinct from this window's native input edits.
+Local source geometry remains available through **Edit local source geometry**
+in the Source tab. Older saved input proposals are preserved as inactive data;
+the legacy proposal editing/staging controls have been removed. Neither is sent
+by the shared input window unless you explicitly enter and review device edits.

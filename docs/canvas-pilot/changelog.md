@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.56
+
+- Removed legacy input proposal controls and the input-setting additions to layer
+  sends. Native device edits now use the shared Input settings window exclusively.
+  Local source geometry has its own editor-only permission. Existing saved
+  proposals remain preserved and inactive without changing project/export schemas.
+
 ### v0.9.55
 
 - Added a shared **Input settings** window, independent of layer selection, with

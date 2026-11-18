@@ -85,8 +85,7 @@ impl Editor {
         let mut p = Project::from_layout(&self.layout);
         p.input_proposals = self
             .device
-            .input_edits
-            .saved
+            .saved_input_proposals
             .iter()
             .filter(|proposal| {
                 p.layers.iter().any(|l| {
@@ -162,8 +161,8 @@ impl Editor {
         } = prepared;
         let e = project.editor;
         self.device.reset_mappings();
-        self.device.input_edits.clear();
-        self.device.input_edits.saved = project.input_proposals;
+        self.device.local_source_editing = false;
+        self.device.saved_input_proposals = project.input_proposals;
         self.capture.clear_preview();
         let mut layer_ui = layers_ui::LayerUi::default();
         layer_ui.collapsed = project.workspace.collapsed_folders.into_iter().collect();
@@ -785,15 +784,15 @@ mod tests {
             "../../../docs/interfaces/canvas-pilot-v16.example.json"
         ))
         .unwrap();
-        app.device.input_edits.enabled = true;
+        app.device.local_source_editing = true;
         app.install_project(&ctx, project.clone()).unwrap();
-        assert!(!app.device.input_edits.enabled);
+        assert!(!app.device.local_source_editing);
         assert_eq!(app.project().input_proposals, project.input_proposals);
         app.layout.set_device_link(0, None).unwrap();
         assert!(app.project().input_proposals.is_empty());
         app.install_project(&ctx, Project::from_layout(&Layout::default()))
             .unwrap();
-        assert!(app.device.input_edits.saved.is_empty());
+        assert!(app.device.saved_input_proposals.is_empty());
     }
 
     #[test]

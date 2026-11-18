@@ -62,8 +62,7 @@ Neither observation establishes physical-device capture pipeline behavior.
 
 The current window uses session-only, per-input drafts. Existing project source
 geometry and inert input proposals remain compatible; they have not been migrated
-into a new persistent input schema. Legacy layer-send proposals remain behind a
-compatibility expander. New input-window edits never add local layer crop/zoom.
+into a new persistent input schema. Legacy layer-send proposal controls and staging were removed in v0.9.56. New input-window edits never add local layer crop/zoom.
 
 Aquilon definitions were checked against its served WebRCS app and native state:
 unsigned color values, KEEP_INPUT_RATIO, larger horizontal crop range, aspect
@@ -72,8 +71,9 @@ and targeted; ordinary layout fetches do not acquire these additional controls.
 
 ## Refactor boundaries
 
-- `input_ui.rs`: current drafts/proposals are reached through a layer's mapped
-  Preview input. Extract input/plug identity and controls from layer selection.
+- Completed: removed `input_ui.rs` and legacy layer-bound staging controls.
+  `device_inputs.rs` and `inputs_window.rs` own the shared input-editing path;
+  stored proposals remain inert compatibility data.
 - `device_send.rs`: local source input crop is currently added to layer crop.
   Do not simply remove that addition: existing projects depend on its geometry.
 - `formats.rs` and `Layout::configure`: shared local source edits reframe consumers;

@@ -182,7 +182,11 @@ linked sends and loads skip the layer. These edits are undoable and never issue
 device commands. Connected selectors use discovered screens/layers; offline
 editing accepts positive numeric IDs. Project schema and version are unchanged.
 
-## Opt-in advanced input edits (transient)
+## Historical opt-in advanced input edits (through v0.9.55)
+
+Removed in v0.9.56: these UI/staging controls and their layer-plan extension no
+longer exist. Existing saved proposals remain inert and round-trip as before.
+The independent shared-input editor below is the only device-input editing path.
 
 The Source tab's device controls map one-for-one to the installed WebRCS
 Advanced Input settings. They are separate from the editor's local source model
@@ -297,7 +301,7 @@ without changing editor sources, layer geometry, routing or preset selection.
 Only edited fields are sent after fresh signal/plug/settings checks; readback is
 verified. There is no automatic retry, rollback or preset-apply pulse. Partial
 failures are reported and require refresh. This does not migrate existing source
-geometry or saved layer-bound input proposals; that compatibility path remains.
+geometry or saved layer-bound input proposals; only their saved data and local geometry compatibility remain.
 
 Aquilon 6.2 uses `IN_N`, `KEEP_INPUT_RATIO` and unsigned 0–255 color controls
 (neutral 128), with hue 90–270 (neutral 180). Midra uses `INPUT_N`, `SIGNAL`, signed
@@ -328,3 +332,11 @@ Manual diagnostic: `cargo run -p canvas-pilot --example check_device_inputs -- H
 changes Input 1 crop and restores the original values. Run only against an expressly
 authorized test device. An optional second argument saves before/after PNGs in an
 existing temporary directory. It is never part of CI or physical-output acceptance.
+
+### Removal of legacy controls (v0.9.56)
+
+Layer send plans no longer accept staged input-setting extensions. Shared-input
+sends remain separate and explicit. The local source-model permission is now an
+independent editor-only checkbox. Existing serialized `input_proposals` are retained
+and filtered by the same layer/link identity rules, but cannot be activated by the
+removed UI. No project, recovery or exchange schema/version change is required.

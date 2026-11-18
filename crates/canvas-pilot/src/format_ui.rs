@@ -401,12 +401,12 @@ impl Editor {
                     self.inputs.selected = snapshot.profile.input_from_source(&layer.source).unwrap_or(0);
                 }
             }
-            ui.small("Device preprocessing is edited per input in the shared window. Local source geometry below is retained for existing projects.");
-            ui.collapsing("Legacy input proposals / layer-send compatibility", |ui| self.advanced_input_controls(ui, i));
+            ui.small("Device preprocessing is edited in the shared window. The local source model below only affects the editor layout.");
+            ui.checkbox(&mut self.device.local_source_editing, "Edit local source geometry");
             ui.separator();
             ui.label(tr(ui.ctx(), "ui.editor-source-model-local-geometry"));
             ui.small(tr(ui.ctx(), "ui.these-dimensions-describe-the-editor-source-not-a-device-timing-command-local-input-c"));
-            ui.add_enabled_ui(self.device.input_edits.enabled, |ui| {
+            ui.add_enabled_ui(self.device.local_source_editing, |ui| {
             ui.horizontal(|ui| {
                 ui.label(tr(ui.ctx(), "ui.editor-input"));
                 egui::ComboBox::from_id_salt("source-id").selected_text(format!("Input {}",d.source_id+1)).show_ui(ui,|ui| {
@@ -502,7 +502,7 @@ impl Editor {
                 _=>{}
             }
             let pending = d.pending(&self.layout);
-            if apply_button(ui,&tr(ui.ctx(), "action.apply-source"), pending && self.device.input_edits.enabled).clicked() {
+            if apply_button(ui,&tr(ui.ctx(), "action.apply-source"), pending && self.device.local_source_editing).clicked() {
                 match d.apply(&mut self.layout, position_reference, self.keep_aspect_ratio) { Ok(())=>{self.sync();d=FormatDraft::new(&self.layout,i);},Err(e)=>d.error=e }
             }
             ui.small(tr(ui.ctx(), "ui.source-changes-require-apply-switching-tabs-keeps-pending-source-edits"));
@@ -1248,7 +1248,7 @@ mod tests {
             property_tab: PropertyTab::Source,
             ..Default::default()
         };
-        app.device.input_edits.enabled = true;
+        app.device.local_source_editing = true;
         let crop = Crop {
             left: 20.0,
             right: 20.0,
@@ -1692,18 +1692,9 @@ mod tests {
         app.format_draft = Some(draft);
         click_text(&mut app, &ctx, "Apply source changes");
         assert_eq!(app.layout.formats(), &before);
-        assert!(!app.device.input_edits.enabled);
-        click_text(
-            &mut app,
-            &ctx,
-            "Legacy input proposals / layer-send compatibility",
-        );
-        click_text(
-            &mut app,
-            &ctx,
-            "Edit advanced input settings and include my edits when sending",
-        );
-        assert!(app.device.input_edits.enabled);
+        assert!(!app.device.local_source_editing);
+        click_text(&mut app, &ctx, "Edit local source geometry");
+        assert!(app.device.local_source_editing);
         click_text(&mut app, &ctx, "Apply source changes");
         assert_eq!(app.layout.formats().input(1).unwrap(), [1920.0, 1000.0]);
         assert!(!app.device.sending);
@@ -1716,7 +1707,7 @@ mod tests {
             keep_aspect_ratio: false,
             ..Default::default()
         };
-        app.device.input_edits.enabled = true;
+        app.device.local_source_editing = true;
         let ctx = egui::Context::default();
         let before = app.layout.layers().clone();
         let formats = app.layout.formats().clone();
