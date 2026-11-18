@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.10.0-rc.7
+
+- Stabilize input-preview GUI tests under CI load with a controlled capture clock.
+  Check cooldown boundaries without real-time delays; production capture intervals
+  and device behavior remain unchanged.
+
 ### v0.10.0-rc.6
 
 - Allow Crop & fit paste across different input dimensions. Crop edges transfer

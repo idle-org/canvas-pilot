@@ -99,6 +99,8 @@ pub(super) struct CaptureUi {
     preview: Option<super::super::reference::Reference>,
     error: String,
     last_request: Option<std::time::Instant>,
+    #[cfg(test)]
+    test_now: Option<std::time::Instant>,
     discard_result: bool,
 }
 impl CaptureUi {
@@ -184,9 +186,18 @@ impl CaptureUi {
         self.open = false;
         self.discard_result = true;
     }
+    fn now(&self) -> std::time::Instant {
+        #[cfg(test)]
+        if let Some(now) = self.test_now {
+            return now;
+        }
+        std::time::Instant::now()
+    }
+
     fn cooling_down(&self) -> bool {
-        self.last_request
-            .is_some_and(|t| t.elapsed() < std::time::Duration::from_secs(5))
+        self.last_request.is_some_and(|t| {
+            self.now().saturating_duration_since(t) < std::time::Duration::from_secs(5)
+        })
     }
 }
 impl Editor {
@@ -255,10 +266,10 @@ impl Editor {
             || self.device.busy()
             || !self.device.online()
             || self.capture.pending.is_some()
-            || self
-                .capture
-                .last_request
-                .is_some_and(|t| t.elapsed().as_secs() < self.capture.refresh.seconds.max(5))
+            || self.capture.last_request.is_some_and(|t| {
+                self.capture.now().saturating_duration_since(t).as_secs()
+                    < self.capture.refresh.seconds.max(5)
+            })
         {
             return None;
         }
@@ -297,7 +308,7 @@ impl Editor {
     fn start_input_capture(&mut self, ctx: &egui::Context, input: u32, automatic: bool) {
         self.capture.host = self.device.host.clone();
         self.capture.pending_layer = None;
-        self.capture.last_request = Some(std::time::Instant::now());
+        self.capture.last_request = Some(self.capture.now());
         self.capture.discard_result = false;
         self.capture.error.clear();
         self.capture.refresh.pending_input = automatic.then_some(input);
@@ -1055,6 +1066,7 @@ mod tests {
     fn local_reference_picture_survives_project_roundtrip_without_capture_or_geometry_changes() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         let before = app.layout.layers().clone();
         let formats = app.layout.formats().clone();
         let reference = tiny_reference(&ctx, "offline.png");
@@ -1104,6 +1116,7 @@ mod tests {
     fn input_reference_list_selects_its_layer() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.set_reference_picture(0, tiny_reference(&ctx, "offline.png"));
         app.layout.select(Some(1));
         let label = format!("{}: offline.png", app.layout.layer_info(0).name);
@@ -1117,6 +1130,7 @@ mod tests {
     fn local_reference_rejects_a_capture_already_in_flight() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         let id = app.layout.layer_info(0).id;
         let source = app.layout.formats().source_for[0];
         let (tx, rx) = std::sync::mpsc::channel();
@@ -1133,6 +1147,7 @@ mod tests {
     #[test]
     fn following_source_invalidates_old_capture_without_routing() {
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         let ctx = egui::Context::default();
         let _ = ctx.run_ui(Default::default(), |ui| app.crop_preview_controls(ui, 0));
         let id = app.layout.layer_info(0).id;
@@ -1160,6 +1175,7 @@ mod tests {
         let ctx = egui::Context::default();
         let reference = tiny_reference(&ctx, "Input 4 still");
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.host = "192.168.10.146:3000".into();
         let id = app.layout.layer_info(0).id;
         app.capture.layers.insert(
@@ -1228,6 +1244,7 @@ mod tests {
     #[test]
     fn saving_ignores_stale_capture_sources_and_unfinished_connection_text() {
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         let id = app.layout.layer_info(0).id;
         app.capture.layers.insert(
             id,
@@ -1255,6 +1272,7 @@ mod tests {
     #[test]
     fn linked_input_preselection_is_inert_and_preserves_operator_choices() {
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         let ctx = egui::Context::default();
         let geometry = app.layout.layers()[0];
         app.device.host = "127.0.0.1:3000".into();
@@ -1340,6 +1358,7 @@ mod tests {
     fn direct_preview_workflow_replaces_only_its_layer_and_auto_can_start_empty() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.host = "127.0.0.1".into();
         app.capture.host = app.device.host.clone();
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
@@ -1356,8 +1375,8 @@ mod tests {
         let source = app.layout.formats().source_for[i];
         app.format_draft = Some(FormatDraft::new(&app.layout, i));
         app.property_tab = PropertyTab::Preview;
-        // Hold the cooldown so UI tests never dispatch real network requests.
-        app.capture.last_request = Some(std::time::Instant::now());
+        // The frozen clock holds cooldown across arbitrarily slow GUI frames.
+        app.capture.last_request = Some(app.capture.now());
         frame(&mut app, &ctx, vec![]);
         assert!(!app.capture.layers[&id].enabled);
         click_text(&mut app, &ctx, "Enable input preview");
@@ -1368,8 +1387,7 @@ mod tests {
         assert!(app.capture.layers[&id].capture_on_selection);
         assert_eq!(app.next_selection_capture(), None); // five-second throttle
         app.capture.refresh.seconds = 300;
-        app.capture.last_request =
-            Some(std::time::Instant::now() - std::time::Duration::from_secs(6));
+        app.capture.last_request = Some(app.capture.now() - std::time::Duration::from_secs(6));
         // An in-flight request still blocks the selection capture, even after cooldown.
         let (_tx, rx) = std::sync::mpsc::channel();
         app.capture.pending = Some(rx);
@@ -1380,7 +1398,7 @@ mod tests {
             Some((3, Some((id, source, 3, app.device.host.clone()))))
         );
         assert_eq!(app.next_selection_capture(), None); // one still, not recurring
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         assert!(app.layer_preview(i).is_none());
         let output = frame(&mut app, &ctx, vec![]);
         let y = |label| {
@@ -1398,7 +1416,7 @@ mod tests {
         click_text(&mut app, &ctx, "Auto-refresh this preview");
         app.capture.last_request = None;
         assert_eq!(app.next_preview_refresh(), Some(3)); // no initial still required
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         click_text(&mut app, &ctx, "Auto-refresh this preview");
         assert_eq!(app.next_preview_refresh(), None);
         app.format_draft = None;
@@ -1432,6 +1450,7 @@ mod tests {
     fn selection_capture_coalesces_and_cancels_invalid_targets() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
             identity: "Test".into(),
@@ -1442,7 +1461,7 @@ mod tests {
             }}}}),
         });
         app.capture.host = app.device.host.clone();
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         app.capture.open = true;
         app.capture.input = 3;
         app.capture.capture_on_selection = true;
@@ -1482,6 +1501,7 @@ mod tests {
     #[test]
     fn live_input_refresh_stops_when_closed_disabled_or_sending() {
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
             identity: "test".into(),
@@ -1501,7 +1521,7 @@ mod tests {
         app.device.input_sending = true;
         assert_eq!(app.next_preview_refresh(), None);
         app.device.input_sending = false;
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         assert_eq!(app.next_preview_refresh(), None);
     }
 
@@ -1509,6 +1529,7 @@ mod tests {
     fn invalidated_capture_is_not_reused_after_send() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
             identity: "test".into(),
@@ -1521,7 +1542,7 @@ mod tests {
         // Sending clears the capture key; an already running capture must not reappear.
         app.inputs.capture_key = None;
         app.capture.host = app.device.host.clone();
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         app.capture.external_input = Some(3);
         let (tx, rx) = std::sync::mpsc::channel();
         app.capture.pending = Some(rx);
@@ -1533,6 +1554,7 @@ mod tests {
     fn captures_pool_waiters_by_input_for_direct_automatic_and_dialog_requests() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
             identity: "Test".into(),
@@ -1568,7 +1590,7 @@ mod tests {
                 preview.texture = None;
                 preview.bytes.clear();
             }
-            app.capture.last_request = Some(std::time::Instant::now());
+            app.capture.last_request = Some(app.capture.now());
             let (tx, rx) = std::sync::mpsc::channel();
             app.capture.pending = Some(rx);
             app.capture.pending_layer =
@@ -1628,7 +1650,7 @@ mod tests {
         p.texture = None;
         p.capture_on_selection = true;
         app.device.snapshot.as_mut().unwrap().raw["device"]["inputList"]["items"]["INPUT_7"] = serde_json::json!({"status":{"pp":{"isAvailable":true,"plug":"1"}},"snapshot":{"pp":{"enable":true}}});
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         let (tx, rx) = std::sync::mpsc::channel();
         app.capture.pending = Some(rx);
         app.capture.pending_layer = Some((id, source, 3, app.device.host.clone()));
@@ -1641,6 +1663,7 @@ mod tests {
     fn automatic_capture_updates_only_opted_in_layers_even_when_inputs_match() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
             identity: "Test".into(),
@@ -1689,6 +1712,7 @@ mod tests {
     fn snapshot_import_targets_any_layer_or_a_fixed_reference_without_selection() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.host = "127.0.0.1".into();
         app.capture.host = app.device.host.clone();
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
@@ -1700,7 +1724,7 @@ mod tests {
             }}}}),
         });
         app.layout.select(None);
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         for (i, automatic) in [(0, true), (1, false)] {
             app.open_snapshot_import();
             app.capture.preview = Some(tiny_reference(&ctx, "imported snapshot"));
@@ -1733,6 +1757,7 @@ mod tests {
     fn both_input_pickers_hide_empty_inputs_and_preserve_explicit_selection() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
             identity: "Test".into(),
@@ -1743,7 +1768,7 @@ mod tests {
             }}}}),
         });
         app.capture.host = app.device.host.clone();
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         let i = app.layout.selected().unwrap();
         let id = app.layout.layer_info(i).id;
         app.format_draft = Some(FormatDraft::new(&app.layout, i));
@@ -1800,6 +1825,7 @@ mod tests {
     fn capture_is_manual_throttled_and_only_adds_on_request() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.host = "127.0.0.1".into();
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
@@ -1824,7 +1850,7 @@ mod tests {
         .unwrap();
         let (tx, rx) = std::sync::mpsc::channel();
         app.capture.pending = Some(rx);
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         frame(&mut app, &ctx, vec![]);
         assert!(app.capture.cooling_down());
         assert!(app.references.is_empty());
@@ -1847,8 +1873,7 @@ mod tests {
             preview.automatic = true;
         }
         assert_eq!(app.next_preview_refresh(), None);
-        app.capture.last_request =
-            Some(std::time::Instant::now() - std::time::Duration::from_secs(11));
+        app.capture.last_request = Some(app.capture.now() - std::time::Duration::from_secs(11));
         assert_eq!(app.next_preview_refresh(), Some(3));
         app.capture.refresh.last_input = 3;
         assert_eq!(app.next_preview_refresh(), Some(3)); // round-robin wraps
@@ -1864,7 +1889,7 @@ mod tests {
         let (tx, rx) = std::sync::mpsc::channel();
         app.capture.pending = Some(rx);
         app.capture.refresh.pending_input = Some(3);
-        app.capture.last_request = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
         assert_eq!(app.next_preview_refresh(), None);
         tx.send(Err("temporary failure".into())).unwrap();
         frame(&mut app, &ctx, vec![]);
@@ -1907,14 +1932,14 @@ mod tests {
         assert_eq!(app.references.len(), 1);
         assert_eq!(app.project().references.len(), 1);
         assert!(!app.capture.open);
-        app.capture.last_request =
-            Some(std::time::Instant::now() - std::time::Duration::from_secs(6));
+        app.capture.last_request = Some(app.capture.now() - std::time::Duration::from_secs(6));
         assert!(!app.capture.cooling_down());
     }
     #[test]
     fn refresh_rotates_inputs_and_skips_changed_sources() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         app.device.snapshot = Some(canvas_pilot::device::Snapshot {
             profile: Default::default(),
             identity: "Test".into(),
@@ -1949,6 +1974,19 @@ mod tests {
                 },
             );
         }
+        let started = app.capture.now();
+        app.capture.last_request = Some(started);
+        for seconds in [5, 10, 300] {
+            app.capture.refresh.seconds = seconds;
+            let boundary = started + std::time::Duration::from_secs(seconds);
+            app.capture.test_now = Some(boundary - std::time::Duration::from_nanos(1));
+            assert_eq!(app.capture.cooling_down(), seconds == 5);
+            assert_eq!(app.next_preview_refresh(), None);
+            app.capture.test_now = Some(boundary);
+            assert!(!app.capture.cooling_down());
+            assert_eq!(app.next_preview_refresh(), Some(3));
+        }
+        app.capture.last_request = None;
         assert_eq!(app.next_preview_refresh(), Some(3));
         app.capture.refresh.last_input = 3;
         assert_eq!(app.next_preview_refresh(), Some(7));
@@ -1967,6 +2005,7 @@ mod tests {
     fn cancelling_keeps_request_in_flight_and_discards_its_result() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         let (tx, rx) = std::sync::mpsc::channel();
         app.capture.pending = Some(rx);
         app.capture.clear_preview();
@@ -1981,6 +2020,7 @@ mod tests {
     fn layer_preview_toggle_keeps_opacity_and_follows_stable_layer_id() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
         let i = app.layout.selected().unwrap();
         let id = app.layout.layer_info(i).id;
         let texture = ctx.load_texture(
