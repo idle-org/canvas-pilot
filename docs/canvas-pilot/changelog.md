@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.62
+
+- A rejected or failed layer send now refreshes device state read-only and keeps
+  the connection available when that refresh succeeds. The send error remains
+  visible and sending is never retried automatically. A failed refresh still
+  marks the device unavailable.
+
 ### v0.9.61
 
 - Removed Crop Finder from shared input settings and replaced the review step with

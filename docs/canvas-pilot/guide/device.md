@@ -82,8 +82,12 @@ device); the Load label follows the selected transfer scope.
 The button is disabled while a send is in progress. Matching stored values can still be sent to apply staged geometry to hardware.
 The source's native dimensions must match the destination's current content.
 
-The target bank is fixed when configured. Sending starts immediately without a stale-state check. Writes are sequential;
-partial failures require refreshing, not automatic retries or rollback. Success
+The target bank is fixed when configured. Sending checks for changed source,
+framing and destination state before writing. Writes are sequential. A rejected
+or failed send refreshes the device read-only: if it responds, the connection
+stays available with updated state and the send error remains visible. Check the
+updated layers before sending again. Failed refreshes mark the device unavailable;
+there is no automatic send retry or rollback after partial failures. Success
 means all changed fields matched device readback. There are no automatic sends
 from edits, imports or undo. Closing the connection window does not cancel a send
 already started; wait for its result before loading another project.

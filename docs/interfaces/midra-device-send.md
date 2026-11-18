@@ -344,3 +344,12 @@ sends remain separate and explicit. The local source-model permission is now an
 independent editor-only checkbox. Existing serialized `input_proposals` are retained
 and filtered by the same layer/link identity rules, but cannot be activated by the
 removed UI. No project, recovery or exchange schema/version change is required.
+
+### Send failure and connection state
+
+A failed layer-send job performs one read-only device refresh. A successful refresh
+replaces the stale snapshot and keeps the connection available, while preserving
+the send error and any completed-screen count. No send is retried automatically;
+check the refreshed state before explicitly sending again. If refreshing fails,
+the snapshot is cleared and both errors are reported. This also applies to partial
+send failures: refreshing does not imply rollback or successful completion.

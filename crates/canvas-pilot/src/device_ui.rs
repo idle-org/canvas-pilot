@@ -5,6 +5,39 @@ use canvas_pilot::{
 };
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 
+#[derive(Debug)]
+struct DeviceFailure {
+    message: String,
+    refreshed: Option<Box<device::Snapshot>>,
+}
+impl From<String> for DeviceFailure {
+    fn from(message: String) -> Self {
+        Self {
+            message,
+            refreshed: None,
+        }
+    }
+}
+impl From<&str> for DeviceFailure {
+    fn from(message: &str) -> Self {
+        message.to_owned().into()
+    }
+}
+impl DeviceFailure {
+    fn after_send(message: String, refresh: Result<device::Snapshot, String>) -> Self {
+        match refresh {
+            Ok(snapshot) => Self {
+                message,
+                refreshed: Some(Box::new(snapshot)),
+            },
+            Err(error) => Self {
+                message: format!("{message}\nCould not refresh device state: {error}"),
+                refreshed: None,
+            },
+        }
+    }
+}
+
 fn linked_layer_label(layout: &canvas_pilot::Layout, id: usize) -> String {
     (0..layout.layers().len())
         .find(|&i| layout.layer_info(i).id == id)
@@ -116,7 +149,7 @@ pub(super) struct DeviceUi {
     message: String,
     pub(super) host: String,
     pub(super) recent_hosts: Vec<String>,
-    pending: Option<Receiver<Result<device::Snapshot, String>>>,
+    pending: Option<Receiver<Result<device::Snapshot, DeviceFailure>>>,
     cancel_read: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     pub(super) snapshot: Option<device::Snapshot>,
     loading: Option<Vec<(usize, canvas_pilot::DeviceLink)>>,
@@ -298,7 +331,7 @@ impl DeviceUi {
         let host = self.host.clone();
         let ctx = ctx.clone();
         std::thread::spawn(move || {
-            let result = (|| {
+            let result: Result<device::Snapshot, String> = (|| {
                 let mut last = None;
                 for (i, plan) in plans.iter().enumerate() {
                     last = Some(device_send::send(&host, plan).map_err(|e| {
@@ -310,6 +343,10 @@ impl DeviceUi {
                 }
                 last.ok_or_else(|| "No linked layers to send.".into())
             })();
+            // A refused/failed write is not evidence that the connection was lost.
+            // Refresh read-only, never retry any screen send.
+            let result =
+                result.map_err(|error| DeviceFailure::after_send(error, device::fetch(&host)));
             let _ = tx.send(result);
             ctx.request_repaint();
         });
@@ -338,7 +375,7 @@ impl DeviceUi {
         let host = self.host.clone();
         let ctx = ctx.clone();
         std::thread::spawn(move || {
-            let result = device::fetch_cancellable(&host, &cancel);
+            let result = device::fetch_cancellable(&host, &cancel).map_err(DeviceFailure::from);
             let _ = tx.send(result);
             ctx.request_repaint();
         });
@@ -355,6 +392,22 @@ impl DeviceUi {
         self.pending = None;
         self.cancel_read = None;
         let was_sending = std::mem::take(&mut self.sending);
+        let send_failed = was_sending && result.is_err();
+        let result = match result {
+            Err(failure) if was_sending => {
+                self.prepare_send = true;
+                self.open = true;
+                self.error = failure.message.clone();
+                match failure.refreshed {
+                    Some(snapshot) => {
+                        self.message = "Device state refreshed. Check the updated layers before sending again; the send was not retried.".into();
+                        Ok(*snapshot)
+                    }
+                    None => Err(failure.message),
+                }
+            }
+            other => other.map_err(|failure| failure.message),
+        };
         match result {
             Ok(snapshot) => {
                 if let Ok(address) = device::address(&self.host) {
@@ -363,7 +416,7 @@ impl DeviceUi {
                     self.recent_hosts.insert(0, host);
                     self.recent_hosts.truncate(4);
                 }
-                if was_sending {
+                if was_sending && !send_failed {
                     self.message =
                         "Send complete. Preset update sent; geometry verified by device readback."
                             .into();
@@ -2101,6 +2154,55 @@ mod tests {
             });
         });
         assert!(targets.is_empty());
+    }
+    #[test]
+    fn rejected_send_keeps_connection_with_fresh_state_without_retry() {
+        let mut state = DeviceUi {
+            snapshot: Some(linked_test_snapshot()),
+            sending: true,
+            ..Default::default()
+        };
+        let mut fresh = linked_test_snapshot();
+        fresh.identity = "Refreshed device".into();
+        let (tx, rx) = mpsc::channel();
+        state.pending = Some(rx);
+        tx.send(Err(DeviceFailure::after_send(
+            "Source changed; no writes performed".into(),
+            Ok(fresh),
+        )))
+        .unwrap();
+        state.poll();
+        assert!(state.online());
+        assert_eq!(
+            state.snapshot.as_ref().unwrap().identity,
+            "Refreshed device"
+        );
+        assert!(state.error.contains("Source changed"));
+        assert!(state.message.contains("not retried"));
+        assert!(!state.message.contains("Send complete"));
+        assert!(state.open && state.prepare_send);
+        assert!(state.pending.is_none());
+        assert!(!state.sending);
+    }
+    #[test]
+    fn failed_send_and_failed_refresh_mark_connection_unavailable() {
+        let mut state = DeviceUi {
+            snapshot: Some(linked_test_snapshot()),
+            sending: true,
+            ..Default::default()
+        };
+        let (tx, rx) = mpsc::channel();
+        state.pending = Some(rx);
+        tx.send(Err(DeviceFailure::after_send(
+            "Send failed after one screen".into(),
+            Err("Connection refused".into()),
+        )))
+        .unwrap();
+        state.poll();
+        assert!(!state.online());
+        assert!(state.error.contains("after one screen"));
+        assert!(state.error.contains("Connection refused"));
+        assert!(state.pending.is_none());
     }
     #[test]
     fn successful_read_sets_online_and_failure_clears_it() {
