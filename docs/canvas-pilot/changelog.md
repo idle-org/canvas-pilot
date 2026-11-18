@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.63
+
+- Added a device-state conflict dialog with changed fields, Cancel send, Send my
+  layout anyway, and a warning-colored Discard local changes and reload action.
+  All screens are checked before the first write. Explicit overwrite rebuilds
+  plans against fresh state without bypassing validation; scoped Preview reload
+  is undoable and refuses ambiguous multi-destination layers.
+
 ### v0.9.62
 
 - A rejected or failed layer send now refreshes device state read-only and keeps

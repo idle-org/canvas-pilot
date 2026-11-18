@@ -206,3 +206,22 @@ linked units and other Aquilon models remain unverified. See the
 [adapter contract](../../interfaces/device-adapters.md) for tested scope and limits.
 
 Shared device input drafts are session-only; [projects omit them](advanced-exchange.md#saved-input-corrections). Opening a file never changes an input.
+
+### When device state changes before sending
+
+**Device state has changed** lists the changed fields before any screen is sent:
+
+- **Cancel send** keeps your local edits and sends nothing.
+- **Send my layout anyway** rebuilds the original mapped send against the refreshed
+  device state. It overwrites the mapped layout fields, not source routing. Range,
+  input compatibility and fresh-state checks still apply. A changed device family
+  or Preview/Program bank requires checking the mapping again instead.
+- **Discard local changes and reload** uses a warning color because it replaces
+  the mapped local layers’ geometry, crop, fit and masks with the device Preview
+  snapshot shown in the dialog. Other layers stay unchanged; Undo restores your
+  edits. This action is unavailable for Program or ambiguous multiple destinations
+  belonging to the same local layer.
+
+If the device changes again before an explicit overwrite, sending can be stopped
+again. Changes or failures occurring during a send remain reported as partial-send
+errors, with the completed-screen count; they never trigger an automatic retry.

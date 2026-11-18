@@ -458,7 +458,8 @@ pub(crate) fn send_with_awj_port(
     execute(plan, &mut connection)
 }
 
-fn validate_fresh(plan: &Plan, fresh: &Snapshot) -> Result<(), String> {
+/// Read-only stale-state validation; does not weaken execution-time checks.
+pub fn validate_fresh(plan: &Plan, fresh: &Snapshot) -> Result<(), String> {
     if fresh.profile != plan.profile {
         return Err("Device profile changed; reconnect and review mapping.".into());
     }

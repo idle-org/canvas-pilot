@@ -9,12 +9,14 @@ use std::sync::mpsc::{self, Receiver, TryRecvError};
 struct DeviceFailure {
     message: String,
     refreshed: Option<Box<device::Snapshot>>,
+    conflict: bool,
 }
 impl From<String> for DeviceFailure {
     fn from(message: String) -> Self {
         Self {
             message,
             refreshed: None,
+            conflict: false,
         }
     }
 }
@@ -29,13 +31,153 @@ impl DeviceFailure {
             Ok(snapshot) => Self {
                 message,
                 refreshed: Some(Box::new(snapshot)),
+                conflict: false,
             },
             Err(error) => Self {
                 message: format!("{message}\nCould not refresh device state: {error}"),
                 refreshed: None,
+                conflict: false,
             },
         }
     }
+}
+
+#[derive(Clone)]
+struct SendConflict {
+    host: String,
+    plans: Vec<Plan>,
+    links: Vec<(usize, canvas_pilot::DeviceLink)>,
+    sizing: Sizing,
+    details: Vec<String>,
+}
+impl SendConflict {
+    fn reload_links(&self) -> Result<Vec<(usize, canvas_pilot::DeviceLink)>, String> {
+        let mut links = std::collections::BTreeMap::new();
+        for (id, link) in &self.links {
+            if let Some(previous) = links.insert(*id, link.clone())
+                && previous != *link
+            {
+                return Err("A local layer has multiple device destinations. Cancel and choose which layer to load using the mapping controls.".into());
+            }
+        }
+        Ok(links.into_iter().collect())
+    }
+    fn reprepare(
+        &self,
+        snapshot: &device::Snapshot,
+        layout: &canvas_pilot::Layout,
+    ) -> Result<Vec<Plan>, String> {
+        self.plans
+            .iter()
+            .map(|old| {
+                if old.profile != snapshot.profile {
+                    return Err(
+                        "The device family changed. Reconnect and check the mapping.".into(),
+                    );
+                }
+                let index = snapshot
+                    .screens
+                    .iter()
+                    .position(|s| s.id == old.screen)
+                    .ok_or("A destination screen is no longer available.")?;
+                let screen = &snapshot.screens[index];
+                let bank = if old.target == Target::Preview {
+                    &screen.preview_bank
+                } else {
+                    &screen.program_bank
+                };
+                if bank != &old.bank {
+                    return Err(
+                        "Preview/Program roles changed. Cancel and select the destination again."
+                            .into(),
+                    );
+                }
+                let mappings: Vec<_> = self
+                    .links
+                    .iter()
+                    .filter(|(_, l)| l.screen == old.screen)
+                    .map(|(id, l)| (*id, l.layer.clone()))
+                    .collect();
+                if mappings.is_empty() {
+                    return Err("The original mapping is no longer available.".into());
+                }
+                Plan::prepare(snapshot, layout, index, &mappings, old.target, self.sizing)
+            })
+            .collect()
+    }
+}
+
+fn conflict_details(plans: &[Plan], fresh: &device::Snapshot) -> Vec<String> {
+    fn diff(
+        path: &str,
+        before: &serde_json::Value,
+        after: &serde_json::Value,
+        out: &mut std::collections::BTreeMap<String, String>,
+    ) {
+        if before == after {
+            return;
+        }
+        if let (Some(a), Some(b)) = (before.as_object(), after.as_object()) {
+            let keys: std::collections::BTreeSet<_> = a.keys().chain(b.keys()).collect();
+            for key in keys {
+                diff(
+                    &format!("{path}/{key}"),
+                    a.get(key).unwrap_or(&serde_json::Value::Null),
+                    b.get(key).unwrap_or(&serde_json::Value::Null),
+                    out,
+                );
+            }
+        } else {
+            let label = path
+                .split('/')
+                .filter(|p| !matches!(*p, "" | "device" | "items" | "pp" | "status" | "control"))
+                .map(|p| match p {
+                    "screenList" => "Screen",
+                    "liveLayerList" => "Layer",
+                    "presetList" => "Bank",
+                    "inputList" => "Input",
+                    "posH" => "Horizontal center",
+                    "posV" => "Vertical center",
+                    "sizeH" => "Width",
+                    "sizeV" => "Height",
+                    _ => p,
+                })
+                .collect::<Vec<_>>()
+                .join(" / ");
+            out.insert(path.into(), format!("{label}: {before} → {after}"));
+        }
+    }
+    let mut changes = std::collections::BTreeMap::new();
+    for plan in plans {
+        for (path, before) in &plan.observed {
+            diff(
+                path,
+                before,
+                fresh.raw.pointer(path).unwrap_or(&serde_json::Value::Null),
+                &mut changes,
+            );
+        }
+        for c in &plan.changes {
+            let path = format!("/{}", c.path.join("/"));
+            diff(
+                &path,
+                &c.before,
+                fresh.raw.pointer(&path).unwrap_or(&serde_json::Value::Null),
+                &mut changes,
+            );
+        }
+    }
+    let count = changes.len();
+    let mut details: Vec<_> = changes.into_values().take(100).collect();
+    if count > 100 {
+        details.push(format!("{} additional device fields changed.", count - 100));
+    }
+    if details.is_empty() {
+        details.push(
+            "Device family, destination availability or Preview/Program roles changed.".into(),
+        );
+    }
+    details
 }
 
 fn linked_layer_label(layout: &canvas_pilot::Layout, id: usize) -> String {
@@ -157,6 +299,8 @@ pub(super) struct DeviceUi {
     destinations: Vec<Destination>,
     mapping_scope: Option<(TransferScope, Vec<usize>, String)>,
     error: String,
+    send_attempt: Option<SendConflict>,
+    conflict: Option<SendConflict>,
 }
 impl DeviceUi {
     pub(super) fn try_startup_connection(&mut self, ctx: &egui::Context) {
@@ -318,7 +462,7 @@ impl DeviceUi {
     pub(super) fn online(&self) -> bool {
         self.snapshot.is_some()
     }
-    fn send(&mut self, ctx: &egui::Context, plans: Vec<Plan>) {
+    fn send(&mut self, ctx: &egui::Context, plans: Vec<Plan>, layout: &canvas_pilot::Layout) {
         if self.input_sending {
             self.error = "Wait for the input send to finish.".into();
             return;
@@ -326,11 +470,52 @@ impl DeviceUi {
         let (tx, rx) = mpsc::channel();
         self.pending = Some(rx);
         self.sending = true;
+        let links = self
+            .scoped_send_links(layout)
+            .into_iter()
+            .filter(|(_, link)| {
+                plans.iter().any(|p| {
+                    p.screen == link.screen
+                        && p.observed.iter().any(|(path, _)| {
+                            *path == p.profile.layer_path(&p.screen, &p.bank, &link.layer)
+                        })
+                })
+            })
+            .collect();
+        self.send_attempt = Some(SendConflict {
+            host: self.host.clone(),
+            plans: plans.clone(),
+            links,
+            sizing: self.sizing,
+            details: vec![],
+        });
+        self.conflict = None;
         self.error.clear();
         self.message.clear();
         let host = self.host.clone();
         let ctx = ctx.clone();
         std::thread::spawn(move || {
+            // Check every screen before the first write, so this dialog cannot conceal a partial send.
+            let fresh = match device::fetch(&host) {
+                Ok(snapshot) => snapshot,
+                Err(error) => {
+                    let _ = tx.send(Err(error.into()));
+                    ctx.request_repaint();
+                    return;
+                }
+            };
+            if let Some(error) = plans
+                .iter()
+                .find_map(|plan| device_send::validate_fresh(plan, &fresh).err())
+            {
+                let _ = tx.send(Err(DeviceFailure {
+                    message: error,
+                    refreshed: Some(Box::new(fresh)),
+                    conflict: true,
+                }));
+                ctx.request_repaint();
+                return;
+            }
             let result: Result<device::Snapshot, String> = (|| {
                 let mut last = None;
                 for (i, plan) in plans.iter().enumerate() {
@@ -400,6 +585,12 @@ impl DeviceUi {
                 self.error = failure.message.clone();
                 match failure.refreshed {
                     Some(snapshot) => {
+                        if failure.conflict
+                            && let Some(mut attempt) = self.send_attempt.take()
+                        {
+                            attempt.details = conflict_details(&attempt.plans, &snapshot);
+                            self.conflict = Some(attempt);
+                        }
                         self.message = "Device state refreshed. Check the updated layers before sending again; the send was not retried.".into();
                         Ok(*snapshot)
                     }
@@ -408,6 +599,7 @@ impl DeviceUi {
             }
             other => other.map_err(|failure| failure.message),
         };
+        self.send_attempt = None;
         match result {
             Ok(snapshot) => {
                 if let Ok(address) = device::address(&self.host) {
@@ -783,7 +975,7 @@ impl Editor {
         {
             match plans {
                 Ok(plans) => {
-                    self.device.send(ui.ctx(), plans);
+                    self.device.send(ui.ctx(), plans, &self.layout);
                 }
                 Err(error) => {
                     self.device.error = error;
@@ -850,6 +1042,76 @@ impl Editor {
             self.settings.save(&self.application_settings(ctx));
         }
     }
+    fn send_conflict_window(&mut self, ctx: &egui::Context) {
+        let Some(conflict) = self.device.conflict.clone() else {
+            return;
+        };
+        if conflict.host != self.device.host || !self.device.online() {
+            self.device.conflict = None;
+            return;
+        }
+        let prepared = conflict.reprepare(self.device.snapshot.as_ref().unwrap(), &self.layout);
+        let program = conflict.plans.iter().any(|p| p.target == Target::Program);
+        let force_allowed =
+            prepared.is_ok() && (!program || self.device.allow_program) && !self.device.busy();
+        let reload_links = conflict.reload_links();
+        let reload_allowed =
+            !program && !conflict.links.is_empty() && reload_links.is_ok() && !self.device.busy();
+        let mut action = 0;
+        let modal=egui::Modal::new(egui::Id::new("device-send-conflict")).show(ctx, |ui| {
+            ui.set_max_width(680.);
+            ui.heading("Device state has changed");
+            ui.label("The device no longer matches the state used to prepare this send. No layers were sent.");
+            egui::ScrollArea::vertical().max_height(260.).show(ui,|ui| {for detail in &conflict.details {ui.label(detail);}});
+            ui.separator();
+            ui.label("Send my layout anyway rebuilds the send against the current device state. Input routing is not changed, and all validation checks remain active.");
+            if let Err(error)=&prepared {ui.colored_label(ui.visuals().error_fg_color,error);}
+            ui.label("Discard local changes and reload replaces the mapped local layers’ geometry, crop, fit and masks with the device Preview values. Other layers remain unchanged. Undo is available.");
+            if program {ui.small("Reload is available for Preview destinations only.");}
+            if let Err(error)=&reload_links {ui.colored_label(ui.visuals().error_fg_color,error);}
+            if !self.device.error.is_empty() {ui.small(&self.device.error);}
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Cancel send").clicked() {action=1;}
+                if ui.add_enabled(force_allowed,egui::Button::new("Send my layout anyway")).clicked() {action=2;}
+                let destructive=egui::Button::new(egui::RichText::new("Discard local changes and reload").color(ui.visuals().error_fg_color));
+                if ui.add_enabled(reload_allowed,destructive).clicked() {action=3;}
+            });
+        });
+        if modal.should_close() {
+            action = 1;
+        }
+        match action {
+            1 => {
+                self.device.conflict = None;
+            }
+            2 => {
+                if let Ok(plans) = prepared {
+                    self.device.conflict = None;
+                    let mut attempt = conflict.clone();
+                    attempt.plans = plans.clone();
+                    self.device.send(ctx, plans, &self.layout);
+                    self.device.send_attempt = Some(attempt);
+                }
+            }
+            3 => {
+                match load_linked_layers(
+                    &mut self.layout,
+                    self.device.snapshot.as_ref().unwrap(),
+                    reload_links.as_ref().unwrap(),
+                ) {
+                    Ok(()) => {
+                        self.sync();
+                        self.device.conflict = None;
+                        self.device.error.clear();
+                        self.device.message="Mapped layers reloaded from the device. Undo restores the previous local layout.".into();
+                    }
+                    Err(error) => self.device.error = error,
+                }
+            }
+            _ => {}
+        }
+    }
+
     pub(super) fn device_window(&mut self, ctx: &egui::Context) {
         if !self.device.allow_program {
             self.device.target = Target::Preview;
@@ -857,6 +1119,7 @@ impl Editor {
         let was_pending = self.device.pending.is_some();
         let recent_before = self.device.recent_hosts.clone();
         self.device.poll();
+        self.send_conflict_window(ctx);
         if self.device.recent_hosts != recent_before {
             self.settings.save(&self.application_settings(ctx));
         }
@@ -1057,7 +1320,7 @@ impl Editor {
         }
         self.device.open = open;
         if let Some(plan) = send_plan {
-            self.device.send(ctx, vec![plan]);
+            self.device.send(ctx, vec![plan], &self.layout);
         }
         if imported {
             self.sync();
@@ -1420,6 +1683,113 @@ mod tests {
             &raw,
         )
         .unwrap()
+    }
+    fn conflict_fixture() -> (Editor, SendConflict) {
+        let mut app = Editor::default();
+        let old = linked_test_snapshot();
+        let link = canvas_pilot::DeviceLink {
+            family: device::Family::Midra4k,
+            screen: "1".into(),
+            layer: "1".into(),
+        };
+        app.layout.set_device_link(0, Some(link.clone())).unwrap();
+        app.device.snapshot = Some(old.clone());
+        let plans = app.device.linked_plans(&app.layout).unwrap();
+        let mut fresh = old;
+        fresh.raw["device"]["screenList"]["items"]["1"]["presetList"]["items"]["UP"]["liveLayerList"]
+            ["items"]["1"]["position"]["pp"]["posH"] = serde_json::json!(900);
+        fresh.screens[0].layers[0].geometry.x += 100.;
+        let details = conflict_details(&plans, &fresh);
+        let conflict = SendConflict {
+            host: app.device.host.clone(),
+            plans,
+            links: vec![(app.layout.layer_info(0).id, link)],
+            sizing: Sizing::default(),
+            details,
+        };
+        app.device.snapshot = Some(fresh);
+        (app, conflict)
+    }
+    #[test]
+    fn conflict_reprepare_preserves_intent_and_enforces_fresh_state() {
+        let (app, conflict) = conflict_fixture();
+        let fresh = app.device.snapshot.as_ref().unwrap();
+        assert!(
+            conflict
+                .details
+                .iter()
+                .any(|s| s.contains("Horizontal center: 500 → 900"))
+        );
+        assert!(device_send::validate_fresh(&conflict.plans[0], fresh).is_err());
+        let plans = conflict.reprepare(fresh, &app.layout).unwrap();
+        assert!(device_send::validate_fresh(&plans[0], fresh).is_ok());
+        let mut moved_again = fresh.clone();
+        moved_again.raw["device"]["screenList"]["items"]["1"]["presetList"]["items"]["UP"]["liveLayerList"]
+            ["items"]["1"]["position"]["pp"]["posH"] = serde_json::json!(901);
+        assert!(device_send::validate_fresh(&plans[0], &moved_again).is_err());
+        let mut swapped = fresh.clone();
+        swapped.screens[0].preview_bank = "DOWN".into();
+        assert!(
+            conflict
+                .reprepare(&swapped, &app.layout)
+                .unwrap_err()
+                .contains("roles changed")
+        );
+    }
+    #[test]
+    fn preflight_conflict_opens_choices_with_fresh_connected_state() {
+        let (mut app, conflict) = conflict_fixture();
+        let fresh = app.device.snapshot.take().unwrap();
+        let (tx, rx) = mpsc::channel();
+        app.device.pending = Some(rx);
+        app.device.sending = true;
+        app.device.send_attempt = Some(conflict);
+        tx.send(Err(DeviceFailure {
+            message: "Device state changed".into(),
+            refreshed: Some(Box::new(fresh)),
+            conflict: true,
+        }))
+        .unwrap();
+        app.device.poll();
+        assert!(app.device.online());
+        assert!(
+            app.device
+                .conflict
+                .as_ref()
+                .unwrap()
+                .details
+                .iter()
+                .any(|s| s.contains("500 → 900"))
+        );
+        assert!(app.device.pending.is_none());
+        assert!(!app.device.sending);
+    }
+    #[test]
+    fn conflict_reload_requires_unambiguous_destinations() {
+        let (_, mut conflict) = conflict_fixture();
+        let mut second = conflict.links[0].clone();
+        second.1.layer = "2".into();
+        conflict.links.push(second);
+        assert!(conflict.reload_links().is_err());
+    }
+    #[test]
+    fn conflict_cancel_and_reload_are_local_and_reload_is_undoable() {
+        let ctx = egui::Context::default();
+        let (mut app, conflict) = conflict_fixture();
+        let before = app.layout.layers().clone();
+        app.device.conflict = Some(conflict.clone());
+        super::super::tests::click_text(&mut app, &ctx, "Cancel send");
+        assert!(app.device.conflict.is_none());
+        assert_eq!(app.layout.layers(), &before);
+        assert!(app.device.pending.is_none());
+        app.device.conflict = Some(conflict);
+        super::super::tests::click_text(&mut app, &ctx, "Discard local changes and reload");
+        assert!(app.device.conflict.is_none());
+        assert_ne!(app.layout.layers()[0], before[0]);
+        assert_eq!(app.layout.layers()[1], before[1]);
+        assert!(app.device.pending.is_none());
+        app.layout.undo();
+        assert_eq!(app.layout.layers(), &before);
     }
     #[test]
     fn directional_routes_load_separately_and_send_one_source_to_multiple_layers() {

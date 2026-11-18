@@ -353,3 +353,17 @@ the send error and any completed-screen count. No send is retried automatically;
 check the refreshed state before explicitly sending again. If refreshing fails,
 the snapshot is cleared and both errors are reported. This also applies to partial
 send failures: refreshing does not imply rollback or successful completion.
+
+### Explicit stale-state conflict resolution
+
+Before a multi-screen send, a fresh read validates every plan before the first
+write. A preflight conflict returns the fresh snapshot and opens a local dialog
+with deduplicated changed fields (up to 100, with an additional-field count).
+Overwrite recomputes plans from the current editor layout using the original
+screen/layer mappings, sizing and target. It rejects changed physical bank roles
+or device family and retains all per-send validation; there is no bypass flag.
+The destructive reload imports only the mapped Preview layer geometry/framing,
+fit and masks, atomically and through normal undo. Program and ambiguous fan-out
+reloads are disabled. The dialog and attempted mapping are transient UI state;
+project and exchange schemas are unchanged. Partial-send errors do not offer this
+no-writes conflict dialog.
