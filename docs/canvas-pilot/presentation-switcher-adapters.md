@@ -1,6 +1,6 @@
 # Presentation switcher adapter candidates
 
-Research date: **2026-11-15**. This is a documentation and feasibility survey for
+Initial research: **2026-11-15**; ATEM/vMix follow-up: **2026-11-18**. This is a documentation and feasibility survey for
 Canvas Pilot's [stretch goals](plan.md#stretch-goals-distant-future), not a support
 announcement or purchasing guide. Analog Way comes first; other manufacturers
 follow in documentation tiers. Models sharing a control family are grouped.
@@ -73,17 +73,72 @@ not proof of arbitrary multi-layer editing.
 
 | Tier | Family | Documentation evidence | Feasibility |
 | --- | --- | --- | --- |
+| A | **Blackmagic Design ATEM SuperSource**, compatible models only | Detailed official [ATEM SDK manual](https://documents.blackmagicdesign.com/DeveloperManuals/ATEMSDKManual.pdf?_v=1768464010000): box geometry/crop getters, setters and callbacks. | **Promising bounded bidirectional adapter.** Windows/macOS SDK; Linux integration and SuperSource-capable test target remain unresolved. See the focused assessment below. |
+| A | **vMix input Layers** | Official [HTTP API](https://www.vmix.com/help29/DeveloperAPI.html) and [layer function reference](https://www.vmix.com/help29/ShortcutFunctionReference.html). | **Accessible send candidate; full readback unproven.** Pixel rectangles, pan/zoom and crop writes are documented. Verify complete layer geometry/crop reads before promising Load or verified Send. See below. |
 | A | **Roland V-600UHD** | Public [LAN/RS-232 reference](https://static.roland.com/assets/media/pdf/V-600UHD_reference_eng05_W.pdf). | **Potential PinP/ROI subset.** Audit geometry read/write parameters and convert native scaling units explicitly. |
 | A | **Ross Carbonite / Graphite / Acuity** | Public [RossTalk reference](https://documentation.rossvideo.com/files/Manuals/Protocol%20Documents/RossTalk-Commands%284802DR-403%29.pdf). | **Not yet a full geometry candidate.** Prove continuous DVE geometry and state feedback through an appropriate interface; macro/bus control alone is insufficient. |
 | A | **NovaStar COEX / MX / KU / CX controllers** | Public [COEX API manual](https://oss.novastar.tech/uploads/2023/02/COEX-Series-Interface-API-User-Manual.pdf). | **Low priority for this editor.** The inspected reference establishes controller/source/preset functions, not a general layer-composition contract. Do not reuse H-series API assumptions. |
-| B | **Blackmagic Design ATEM**, particularly models with SuperSource | Official [ATEM SDK downloads](https://www.blackmagicdesign.com/ca/developer/partial/atem/sdk-and-software). | **Promising restricted SuperSource/DVE adapter.** Audit SDK geometry/crop and callbacks, supported host platforms and Rust binding/deployment costs. Do not equate SDK availability with a published wire protocol or assume every ATEM has SuperSource. |
+
 | B | **Roland V-160HD / V-1200HD / V-800HD and other V-series** | [Official protocol index](https://support.roland.com/hc/en-us/articles/360025923832-Professional-A-V-LAN-and-RS-232-Control-Tips-and-Documentation); [V-160HD details](https://support.roland.com/hc/en-us/articles/7816887053083-V-160HD-LAN-and-RS-232-Control-Tips). | **Possible model-specific subsets.** Transport, command encoding and parameter coverage differ; V-160HD uses SysEx wrappers and some commands require additional documentation. |
 | B | **Panasonic AV-UHS500 / AV-HS6000 / AV-HS410** | [Official protocol document index](https://eww.pass.panasonic.co.jp/pro-av/support/content/guide/EN/top.html). | **Conditional, lower priority.** Audit exact external-control/plugin references for DVE state and geometry; bus, macro and tally access is not enough. |
 | B | **Datavideo SE-3200**; other SE models separately | [Official product downloads](https://datavideo.com/in/product/SE-3200) list its RS-232 control protocol. | **Possible PinP subset.** Inspect parameter readback and geometry coverage before considering an adapter. Do not assume DVIP and serial command parity. |
 
 Plain HDMI/SDI matrices, distribution devices and LED sending-only controllers
-are not initial geometry-adapter targets. Media servers and software mixers
-would deserve a separate survey if that scope becomes useful.
+are not initial geometry-adapter targets. vMix is included as a specific software
+composition candidate; other software mixers and media servers remain outside
+this survey.
+
+## ATEM SuperSource and vMix: focused feasibility assessment
+
+These are research targets, not announced support or implementation commitments.
+The assessments below come from documentation, not a tested SDK or running device.
+
+### Blackmagic ATEM SuperSource
+
+The official SDK documents position, size, crop edges, enabled state and change
+callbacks for SuperSource boxes. That makes both Load and Send plausible. Start
+with SuperSource on an explicitly supported model; DVE/keyer support would be a
+separate capability investigation, not implied support for every ATEM.
+
+The SDK documents Windows and macOS. Linux would require an assessed community
+protocol implementation or a bridge, with additional packaging and maintenance
+costs. An SDK reference is not a published cross-platform wire protocol.
+Translate box scaling/cropping into our geometry deliberately; independent crop
+and mask behavior must be proven rather than assumed equivalent to Midra.
+
+Testing is the current gate. A community [ATEM Mini network emulator](https://github.com/tin921/atem-mini-emulator)
+exists, but its documentation does not establish SuperSource coverage. Do not
+count it as satisfying our API-emulator prerequisite until the required commands,
+state reads and callbacks are verified. A visual preset simulator alone is not
+an API test target; physical output still needs separate acceptance.
+
+**Feedback:** worthwhile, moderate integration effort. Documentation is a strength;
+Linux deployment and a suitable SuperSource test target are the larger unknowns.
+
+### vMix input Layers
+
+The function reference documents layer rectangles in pixels, zoom, pan and crop.
+A proposed destination is **connection → composition input → layer slot**;
+use the API's input GUID rather than an input number or editable name. This is
+an adapter-model proposal, not a persistence or GUI change.
+
+The HTTP API exposes XML state, but the inspected reference does not establish
+complete current geometry/crop readback for every layer. Confirm that first.
+HTTP success is not geometry verification; never reconstruct purported current
+state solely from the last commands we sent. Crop/mask equivalence, native units,
+layer limits and live-update behavior also need actual testing.
+
+vMix itself can be the API test target on Windows, avoiding a separate hardware
+emulator. Its [60-day trial includes Pro features](https://www.vmix.com/knowledgebase/article.aspx/59/which-edition-is-the-trial);
+ongoing development needs continued access to an installation. The network API
+could be called by Canvas Pilot on other platforms; vMix remains the Windows host.
+This real software endpoint would serve the purpose of our emulator prerequisite.
+
+**Feedback:** likely the easiest initial send experiment of these two candidates.
+Full bidirectional support remains conditional on readback. Investigate vMix XML
+coverage first, then ATEM SuperSource emulator coverage and Linux integration.
+Any eventual send-only support must be explicitly scoped and approved, not
+silently presented as satisfying our existing adapter acceptance requirements.
 
 ## Suggested investigation order
 
@@ -97,8 +152,9 @@ ranking above:
 3. **tvONE CORIOmaster or Extron MGP**, whichever hardware is available: good
    public references and a useful test of the intermediate representation.
 4. **NovaStar H**, then **Christie Spyder X80** once complete readback is proven.
-5. **LiveCore / legacy Midra** when there is an actual equipment need; **ATEM
-   SuperSource / Roland PinP** if a constrained composition workflow is wanted.
+5. **vMix / ATEM SuperSource** for a composition-focused expansion: resolve vMix
+   readback and ATEM testing/platform gates first. **LiveCore / legacy Midra**
+   when there is an equipment need; **Roland PinP** for a constrained workflow.
 6. **PIXELHUE, RGBlink and Magnimage** after obtaining the missing protocol
    evidence. Documentation discovery can move them up; their current tier is
    not a statement about hardware capability.

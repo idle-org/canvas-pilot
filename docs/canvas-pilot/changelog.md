@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.54
+
+- Expanded the adapter candidate survey with vMix Layers and a focused ATEM
+  SuperSource assessment, including readback, Linux integration and test-target
+  gates. Research only; neither adapter is implemented or validated.
+
 ### v0.9.52
 
 - Closed localization for its accepted scope and Midra rendering precision for
