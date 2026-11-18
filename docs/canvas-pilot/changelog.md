@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### v0.9.49
+
+- Split load sources from send destination collections internally, keeping existing
+  controls synchronized with one destination and unchanged visuals. Send destinations
+  explicitly name the current connection scope; both adapters can prepare fan-out
+  to distinct layers while retaining collision checks. Project v19 migrates old
+  mappings into both directions; recovery and embedded snapshots retain the split.
+  Added routing, undo, migration and exchange round-trip regression checks.
+
 ### v0.9.48
 
 - Keep the four layer-header buttons inside the sidebar content area so their

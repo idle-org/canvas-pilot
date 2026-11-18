@@ -323,7 +323,7 @@ impl Editor {
         let inputs = device_capture::inputs(snapshot);
         for i in 0..self.layout.layers().len() {
             let info = self.layout.layer_info(i);
-            let Some(link) = &info.device_link else {
+            let Some(link) = &info.load_mapping else {
                 continue;
             };
             if link.family != snapshot.profile.family() {

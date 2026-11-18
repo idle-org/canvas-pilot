@@ -231,6 +231,18 @@ mod tests {
                 },
             )
             .unwrap();
+        let load = canvas_pilot::DeviceLink {
+            family: Default::default(),
+            screen: "1".into(),
+            layer: "1".into(),
+        };
+        let mut target = load.clone();
+        target.layer = "2".into();
+        let mut send = canvas_pilot::SendMapping::linked(Some(target.clone()));
+        target.screen = "2".into();
+        send.destinations
+            .extend(canvas_pilot::SendMapping::linked(Some(target)).destinations);
+        app.layout.set_device_mappings(0, Some(load), send).unwrap();
         app.layout.set_layer_pivots(&[(1, [0.2, 0.7])]).unwrap();
         app.corner = PositionPoint::BottomRight;
         app.position_layer_point = Some(PositionPoint::Center);

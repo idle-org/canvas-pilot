@@ -84,7 +84,7 @@ fn explicit_fit_survives_resize_undo_reordering_and_project_roundtrip() {
     layout.apply(0, box_geometry()).unwrap();
     assert_eq!(layout.formats().advanced[0], crop);
     let before = Project::from_layout(&layout);
-    assert_eq!(before.version, 18);
+    assert_eq!(before.version, 19);
     let loaded = Project::from_json(&before.to_json().unwrap()).unwrap();
     assert_eq!(loaded, before);
     assert_eq!(
@@ -107,7 +107,7 @@ fn explicit_fit_survives_resize_undo_reordering_and_project_roundtrip() {
 fn v13_migration_defaults_to_normal_crop_and_v14_requires_valid_fit() {
     let text = include_str!("../../../docs/interfaces/canvas-pilot-v13.example.json");
     let migrated = Project::from_json(text).unwrap();
-    assert_eq!(migrated.version, 18);
+    assert_eq!(migrated.version, 19);
     assert!(migrated.layers.iter().all(|l| l.layer_fit.is_none()));
     let mut json = serde_json::to_value(&migrated).unwrap();
     json["layers"][0]
@@ -125,7 +125,7 @@ fn current_documented_example_is_valid() {
         "../../../docs/interfaces/canvas-pilot-v14.example.json"
     ))
     .unwrap();
-    assert_eq!(p.version, 18);
+    assert_eq!(p.version, 19);
     p.layout().unwrap();
 }
 

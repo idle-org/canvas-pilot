@@ -26,7 +26,14 @@ fn shared_link_warning(
     link: &canvas_pilot::DeviceLink,
 ) -> Option<String> {
     let others: Vec<_> = (0..layout.layers().len())
-        .filter(|&i| i != index && layout.layer_info(i).device_link.as_ref() == Some(link))
+        .filter(|&i| {
+            i != index
+                && layout
+                    .layer_info(i)
+                    .send_mapping
+                    .current_links()
+                    .any(|target| target == link)
+        })
         .map(|i| linked_layer_label(layout, layout.layer_info(i).id))
         .collect();
     (!others.is_empty()).then(|| format!("Screen {} · Layer {} is also linked to: {}. Shared links are allowed; send a folder or selection without overlapping destinations.", link.screen, link.layer, others.join(", ")))
@@ -136,7 +143,7 @@ impl DeviceUi {
             ..Self::default()
         }
     }
-    fn scoped_links(
+    fn scoped_load_links(
         &self,
         layout: &canvas_pilot::Layout,
     ) -> Vec<(usize, canvas_pilot::DeviceLink)> {
@@ -145,7 +152,23 @@ impl DeviceUi {
             .into_iter()
             .filter_map(|i| {
                 let info = layout.layer_info(i);
-                info.device_link.clone().map(|link| (info.id, link))
+                info.load_mapping.clone().map(|link| (info.id, link))
+            })
+            .collect()
+    }
+    fn scoped_send_links(
+        &self,
+        layout: &canvas_pilot::Layout,
+    ) -> Vec<(usize, canvas_pilot::DeviceLink)> {
+        self.scope
+            .indices(layout)
+            .into_iter()
+            .flat_map(|i| {
+                let info = layout.layer_info(i);
+                info.send_mapping
+                    .current_links()
+                    .cloned()
+                    .map(move |link| (info.id, link))
             })
             .collect()
     }
@@ -165,7 +188,7 @@ impl DeviceUi {
     }
     fn linked_plans(&self, layout: &canvas_pilot::Layout) -> Result<Vec<Plan>, String> {
         let snapshot = self.snapshot.as_ref().ok_or("Connect to a device first.")?;
-        let links = self.scoped_links(layout);
+        let links = self.scoped_send_links(layout);
         if links.is_empty() {
             return Err(
                 "No linked layers in this scope. Choose a scope and map its device destinations."
@@ -243,7 +266,7 @@ impl DeviceUi {
                         && !layout.locked(i)
                         && layout
                             .layer_info(i)
-                            .device_link
+                            .load_mapping
                             .as_ref()
                             .is_some_and(|link| {
                                 link.family == snapshot.profile.family()
@@ -371,13 +394,17 @@ impl Editor {
         self.device.input_edits.show(
             ui,
             self.device.snapshot.as_ref(),
-            self.layout.layer_info(i).device_link.as_ref(),
+            self.layout
+                .layer_info(i)
+                .send_mapping
+                .current_links()
+                .next(),
             self.layout.layer_info(i).id,
         );
     }
 
     pub(super) fn layer_mapping_controls(&mut self, ui: &mut egui::Ui, i: usize) {
-        let original = self.layout.layer_info(i).device_link.clone();
+        let original = self.layout.layer_info(i).load_mapping.clone();
         let mut link = original.clone();
         ui.label(tr(ui.ctx(), "ui.device-screen-layer"));
         ui.small(tr(ui.ctx(), "ui.saved-with-this-layer-linked-sends-and-loads-use-this-screen-and-layer-editing-the-li"));
@@ -566,7 +593,7 @@ impl Editor {
         }
     }
     fn start_scoped_load(&mut self, ctx: &egui::Context) {
-        let links = self.device.scoped_links(&self.layout);
+        let links = self.device.scoped_load_links(&self.layout);
         if links.is_empty() {
             self.device.error =
                 "No linked layers in this scope. Map their destinations first.".into();
@@ -638,7 +665,12 @@ impl Editor {
                 .indices(&self.layout)
                 .iter()
                 .find_map(|&i| {
-                    let link = self.layout.layer_info(i).device_link.as_ref()?;
+                    let link = self
+                        .layout
+                        .layer_info(i)
+                        .send_mapping
+                        .current_links()
+                        .next()?;
                     snapshot
                         .screens
                         .iter()
@@ -665,7 +697,7 @@ impl Editor {
     }
     pub(super) fn device_send_button(&mut self, ui: &mut egui::Ui) {
         let plans = self.device.linked_plans(&self.layout);
-        let conflicts = link_conflicts(&self.layout, &self.device.scoped_links(&self.layout));
+        let conflicts = link_conflicts(&self.layout, &self.device.scoped_send_links(&self.layout));
         let enabled = self.device.online() && self.device.pending.is_none() && conflicts.is_none();
         let tooltip = if let Some(error) = conflicts {
             error
@@ -833,7 +865,7 @@ impl Editor {
                 }
                 let scope_indices = self.device.scope.indices(&self.layout);
                 if self.device.online() {
-                    ui.weak(format!("{} editor layers in scope · {} saved links. Unlinked layers are skipped by linked send/load.", scope_indices.len(), self.device.scoped_links(&self.layout).len()));
+                    ui.weak(format!("{} editor layers in scope · {} saved links. Unlinked layers are skipped by linked send/load.", scope_indices.len(), self.device.scoped_load_links(&self.layout).len()));
                 }
                 ui.horizontal(|ui| {
                     if ui.button(tr(ui.ctx(), "ui.connection-settings")).clicked() { self.device.connection_open = true; }
@@ -868,7 +900,7 @@ impl Editor {
                         let screen_id = screen.id.clone();
                         let mut targets: std::collections::BTreeMap<_, _> = scope_indices.iter().copied().map(|i| {
                             let info = self.layout.layer_info(i);
-                            (info.id, info.device_link.as_ref().filter(|link| link.family == snapshot.profile.family() && link.screen == screen_id).map(|link| link.layer.clone()).unwrap_or_default())
+                            (info.id, info.send_mapping.current_links().find(|link| link.family == snapshot.profile.family() && link.screen == screen_id).map(|link| link.layer.clone()).unwrap_or_default())
                         }).collect();
                         let previous = targets.clone();
                         let prepared_plan = send_review(ui, &self.layout, &scope_indices, snapshot, self.device.screen, &mut targets,
@@ -1131,7 +1163,7 @@ fn send_review(
     for &i in selected {
         let info = layout.layer_info(i);
         let id = info.id;
-        if let Some(link) = &info.device_link {
+        if let Some(link) = info.send_mapping.current_links().next() {
             ui.weak(format!(
                 "Saved link: screen {} · layer {}",
                 link.screen, link.layer
@@ -1346,6 +1378,70 @@ mod tests {
         .unwrap()
     }
     #[test]
+    fn directional_routes_load_separately_and_send_one_source_to_multiple_layers() {
+        let snapshot = linked_test_snapshot();
+        let mut layout = canvas_pilot::Layout::default();
+        let link = |layer: &str| canvas_pilot::DeviceLink {
+            family: device::Family::Midra4k,
+            screen: "1".into(),
+            layer: layer.into(),
+        };
+        layout
+            .set_device_mappings(
+                0,
+                Some(link("1")),
+                canvas_pilot::SendMapping::linked(Some(link("2"))),
+            )
+            .unwrap();
+        let state = DeviceUi {
+            snapshot: Some(snapshot.clone()),
+            ..Default::default()
+        };
+        assert_eq!(
+            state.scoped_load_links(&layout),
+            vec![(layout.layer_info(0).id, link("1"))]
+        );
+        assert_eq!(
+            state.scoped_send_links(&layout),
+            vec![(layout.layer_info(0).id, link("2"))]
+        );
+        let plan = state.linked_plans(&layout).unwrap();
+        assert!(
+            plan[0]
+                .changes
+                .iter()
+                .any(|change| change.path.join("/").contains("/liveLayerList/items/2/"))
+        );
+        assert!(
+            !plan[0]
+                .changes
+                .iter()
+                .any(|change| change.path.join("/").contains("/liveLayerList/items/1/"))
+        );
+        let before = layout.layer_info(0).clone();
+        let loads = state.scoped_load_links(&layout);
+        load_linked_layers(&mut layout, &snapshot, &loads).unwrap();
+        assert_eq!(layout.layer_info(0), &before);
+        let mut send = canvas_pilot::SendMapping::linked(Some(link("1")));
+        send.destinations
+            .extend(canvas_pilot::SendMapping::linked(Some(link("2"))).destinations);
+        layout
+            .set_device_mappings(0, Some(link("1")), send)
+            .unwrap();
+        let plans = state.linked_plans(&layout).unwrap();
+        for destination in ["1", "2"] {
+            assert!(plans[0].observed.iter().any(|(path, _)| path.ends_with(&format!("/liveLayerList/items/{destination}"))));
+        }
+        layout.set_device_link(1, Some(link("2"))).unwrap();
+        assert!(
+            state
+                .linked_plans(&layout)
+                .unwrap_err()
+                .contains("overlapping")
+        );
+    }
+
+    #[test]
     fn connection_history_tracks_successes_and_keeps_four_distinct_endpoints() {
         let mut device = DeviceUi::default();
         for port in 3000..3005 {
@@ -1406,7 +1502,7 @@ mod tests {
         assert_eq!(
             app.layout
                 .layer_info(i)
-                .device_link
+                .load_mapping
                 .as_ref()
                 .unwrap()
                 .screen,
@@ -1417,17 +1513,22 @@ mod tests {
         assert_eq!(
             app.layout
                 .layer_info(i)
-                .device_link
+                .load_mapping
                 .as_ref()
                 .unwrap()
                 .screen,
             "2"
         );
-        assert_eq!(app.device.scoped_links(&app.layout).len(), 1);
+        assert_eq!(app.device.scoped_load_links(&app.layout).len(), 1);
+        assert_eq!(
+            app.device.scoped_send_links(&app.layout),
+            app.device.scoped_load_links(&app.layout)
+        );
         let project = canvas_pilot::project::Project::from_layout(&app.layout);
         click_text(&mut app, &ctx, "Unmap");
-        assert!(app.layout.layer_info(i).device_link.is_none());
-        assert!(app.device.scoped_links(&app.layout).is_empty());
+        assert!(app.layout.layer_info(i).load_mapping.is_none());
+        assert!(app.device.scoped_load_links(&app.layout).is_empty());
+        assert!(app.device.scoped_send_links(&app.layout).is_empty());
         assert_eq!(*app.layout.layers(), before);
         assert!(!app.device.sending);
         assert!(app.device.pending.is_none());
@@ -1537,7 +1638,7 @@ mod tests {
         load_linked_layers(&mut layout, &snapshot, &[(id, link.clone())]).unwrap();
         assert_eq!(layout.layers()[0], snapshot.screens[0].layers[1].geometry);
         assert_eq!(layout.layers()[1], before[1]);
-        assert_eq!(layout.layer_info(0).device_link, Some(link.clone()));
+        assert_eq!(layout.layer_info(0).load_mapping, Some(link.clone()));
         layout.undo();
         assert_eq!(*layout.layers(), before);
         layout.set_locked(0, true);
@@ -2109,7 +2210,7 @@ mod tests {
         let mut app = linked_folders();
         assert_eq!(app.device.scope, TransferScope::All);
         app.layout.select(Some(1));
-        assert_eq!(app.device.scoped_links(&app.layout).len(), 2);
+        assert_eq!(app.device.scoped_load_links(&app.layout).len(), 2);
         assert_eq!(app.device.linked_plans(&app.layout).unwrap().len(), 1);
         app.device.seed_import_mapping(&app.layout);
         assert!(matches!(
@@ -2126,7 +2227,7 @@ mod tests {
         app.device.seed_import_mapping(&app.layout);
         assert!(matches!(app.device.destinations[0], Destination::Skip));
         app.device.scope = TransferScope::Selected;
-        assert!(app.device.scoped_links(&app.layout).is_empty());
+        assert!(app.device.scoped_load_links(&app.layout).is_empty());
         assert!(app.device.linked_plans(&app.layout).is_err());
         app.layout.select(Some(0));
         app.device.seed_import_mapping(&app.layout);
@@ -2140,7 +2241,7 @@ mod tests {
     #[test]
     fn shared_links_warn_by_name_and_only_overlapping_send_scopes_are_blocked() {
         let mut app = linked_folders();
-        let link = app.layout.layer_info(0).device_link.clone().unwrap();
+        let link = app.layout.layer_info(0).load_mapping.clone().unwrap();
         app.layout.set_device_link(1, Some(link.clone())).unwrap();
         let warning = shared_link_warning(&app.layout, 0, &link).unwrap();
         assert!(warning.contains(&app.layout.layer_label(1)));
@@ -2208,13 +2309,13 @@ mod tests {
             )
             .unwrap();
         assert!(shared_link_warning(&app.layout, 0, &link).is_none());
-        assert!(link_conflicts(&app.layout, &app.device.scoped_links(&app.layout)).is_none());
+        assert!(link_conflicts(&app.layout, &app.device.scoped_load_links(&app.layout)).is_none());
     }
 
     #[test]
     fn folder_memories_reuse_destinations_without_overwriting_other_links() {
         let mut app = linked_folders();
-        let link = app.layout.layer_info(0).device_link.clone();
+        let link = app.layout.layer_info(0).load_mapping.clone();
         app.layout.set_device_link(1, link).unwrap();
         let before = canvas_pilot::project::Project::from_layout(&app.layout);
         assert!(
@@ -2225,10 +2326,10 @@ mod tests {
         );
         app.device.scope = TransferScope::Folder("Intro".into());
         let first = app.device.linked_plans(&app.layout).unwrap();
-        assert_eq!(app.device.scoped_links(&app.layout)[0].0, 2);
+        assert_eq!(app.device.scoped_load_links(&app.layout)[0].0, 2);
         app.device.follow_folder("Talk");
         let second = app.device.linked_plans(&app.layout).unwrap();
-        assert_eq!(app.device.scoped_links(&app.layout)[0].0, 1);
+        assert_eq!(app.device.scoped_load_links(&app.layout)[0].0, 1);
         let values = |plan: &Plan| {
             plan.changes
                 .iter()
@@ -2241,7 +2342,7 @@ mod tests {
             before
         );
         app.device.follow_folder("Removed");
-        assert!(app.device.scoped_links(&app.layout).is_empty());
+        assert!(app.device.scoped_load_links(&app.layout).is_empty());
         assert!(app.device.linked_plans(&app.layout).is_err());
     }
 
@@ -2269,12 +2370,22 @@ mod tests {
         app.device.destinations = vec![Destination::Existing(1), Destination::New];
         app.apply_device_import().unwrap();
         assert_eq!(
-            app.layout.layer_info(1).device_link.as_ref().unwrap().layer,
+            app.layout
+                .layer_info(1)
+                .load_mapping
+                .as_ref()
+                .unwrap()
+                .layer,
             "1"
         );
         assert_eq!(app.layout.layer_info(2).folder, "Talk");
         assert_eq!(
-            app.layout.layer_info(2).device_link.as_ref().unwrap().layer,
+            app.layout
+                .layer_info(2)
+                .load_mapping
+                .as_ref()
+                .unwrap()
+                .layer,
             "2"
         );
         assert_eq!(
@@ -2292,7 +2403,7 @@ mod tests {
     fn changing_folder_during_read_keeps_the_original_load_destinations() {
         let mut app = linked_folders();
         app.device.scope = TransferScope::Folder("Intro".into());
-        let links = app.device.scoped_links(&app.layout);
+        let links = app.device.scoped_load_links(&app.layout);
         let before_other = app.layout.layers()[1];
         app.device.loading = Some(links);
         let (tx, rx) = mpsc::channel();
@@ -2386,7 +2497,7 @@ mod tests {
         let link = app
             .layout
             .layer_info(app.layout.layers().len() - 1)
-            .device_link
+            .load_mapping
             .clone()
             .unwrap();
         assert_eq!(link.family, device::Family::Aquilon);

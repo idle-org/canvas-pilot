@@ -74,7 +74,7 @@ it does not interrupt an in-process render already underway. External conversion
 has a 60-second process timeout and uses temporary files; LibreOffice gets a fresh
 isolated profile. Password-required PDFs report an error rather than prompting.
 
-The project schema remains version 18: the existing reference `image_base64`
+The project schema is version 19: the existing reference `image_base64`
 contains the generated PNG, and its name includes the source filename and chosen
 page label. No document bytes, source paths, converter settings or live links are
 persisted. Reopening a project only decodes that PNG. Source editability, resolution
@@ -490,7 +490,7 @@ Normal geometry import continues to use the artwork's current boxes, including a
 external edits. Third-party editors may strip metadata. DWG, FIG and Illustrator are not
 enabled until their current codec paths can preserve it reliably.
 
-Embedded project snapshots now contain project version 16 and family-aware `device_link` objects. Geometry representation versions are unchanged. Existing embedded versions 1–15 migrate using the [project contract](canvas-pilot.md); plain geometry continues to omit device destinations.
+Embedded project snapshots contain project version 19 with separate `load_mapping` and `send_mapping` fields. Geometry representation versions are unchanged. Existing embedded versions 1–18 migrate using the [project contract](canvas-pilot.md); plain geometry continues to omit device destinations.
 
 Project v14 additionally preserves `layer_fit` in embedded snapshots. Geometry
 alone describes the layer container when explicit fit is enabled and omits crop

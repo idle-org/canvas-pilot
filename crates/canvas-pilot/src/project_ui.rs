@@ -91,7 +91,9 @@ impl Editor {
             .filter(|proposal| {
                 p.layers.iter().any(|l| {
                     l.id == proposal.layer_id
-                        && l.device_link.as_ref() == Some(&proposal.device_link)
+                        && l.send_mapping
+                            .current_links()
+                            .any(|link| link == &proposal.device_link)
                 })
             })
             .cloned()

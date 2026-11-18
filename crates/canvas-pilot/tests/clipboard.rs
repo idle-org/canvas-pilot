@@ -84,7 +84,7 @@ fn every_fit_roundtrips_exact_crop_mask_and_offset_with_atomic_undo() {
             }
             assert_eq!(after.inputs, before.inputs);
             assert_eq!(after.layers[1].source_id, before.layers[1].source_id);
-            assert_eq!(after.layers[1].device_link, before.layers[1].device_link);
+            assert_eq!(after.layers[1].load_mapping, before.layers[1].load_mapping);
             assert_eq!(after.layers[1].name, before.layers[1].name);
             let second = clipboard::encode(&layout, &[1], "Second copy").unwrap();
             assert_eq!(parse_values(&second).unwrap().shapes[0].appearance, Some(a));

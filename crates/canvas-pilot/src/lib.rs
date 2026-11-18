@@ -1,4 +1,6 @@
 //! Layer geometry, reversible edits and bounded imports.
+mod device_mapping;
+pub use device_mapping::{ConnectionTarget, SendDestination, SendMapping};
 pub mod clipboard;
 pub mod device;
 pub mod device_capture;
@@ -473,7 +475,8 @@ impl DeviceLink {
 #[serde(deny_unknown_fields)]
 pub struct LayerInfo {
     pub pivot: [f64; 2],
-    pub device_link: Option<DeviceLink>,
+    pub load_mapping: Option<DeviceLink>,
+    pub send_mapping: SendMapping,
     pub id: usize,
     pub name: String,
     pub folder: String,
@@ -568,14 +571,16 @@ impl Default for Layout {
             info: vec![
                 LayerInfo {
                     pivot: [0.5; 2],
-                    device_link: None,
+                    load_mapping: None,
+                    send_mapping: Default::default(),
                     id: 2,
                     name: "Slides".into(),
                     folder: String::new(),
                 },
                 LayerInfo {
                     pivot: [0.5; 2],
-                    device_link: None,
+                    load_mapping: None,
+                    send_mapping: Default::default(),
                     id: 1,
                     name: "Presenter".into(),
                     folder: String::new(),
@@ -643,19 +648,33 @@ impl Layout {
         self.layers = s.layers;
         self.formats = s.formats;
     }
+    /// Current UI contract: change both directions together, with one send target.
     pub fn set_device_link(&mut self, i: usize, link: Option<DeviceLink>) -> Result<(), String> {
+        let send = SendMapping::linked(link.clone());
+        self.set_device_mappings(i, link, send)
+    }
+
+    /// Independent routing model; the current UI only uses `set_device_link`.
+    pub fn set_device_mappings(
+        &mut self,
+        i: usize,
+        load: Option<DeviceLink>,
+        send: SendMapping,
+    ) -> Result<(), String> {
         if i >= self.info.len() {
             return Err("Layer no longer exists.".into());
         }
-        if let Some(link) = &link {
+        if let Some(link) = &load {
             link.validate()?;
         }
-        if self.info[i].device_link == link {
+        send.validate()?;
+        if self.info[i].load_mapping == load && self.info[i].send_mapping == send {
             return Ok(());
         }
         self.finish_drag();
         let before = self.snapshot();
-        self.info[i].device_link = link;
+        self.info[i].load_mapping = load;
+        self.info[i].send_mapping = send;
         self.remember(before);
         Ok(())
     }
@@ -738,7 +757,8 @@ impl Layout {
         self.layers.push(g);
         self.info.push(LayerInfo {
             pivot: [0.5; 2],
-            device_link: None,
+            load_mapping: None,
+            send_mapping: Default::default(),
             id: self.next_id,
             name: format!("Layer {}", self.next_id),
             folder: String::new(),
@@ -1502,7 +1522,8 @@ impl Layout {
                 draft.info[i].folder = new_folder.trim().into();
                 i
             };
-            draft.info[i].device_link = Some(link.clone());
+            draft.info[i].load_mapping = Some(link.clone());
+            draft.info[i].send_mapping = SendMapping::linked(Some(link.clone()));
         }
         self.finish_drag();
         let before = self.snapshot();

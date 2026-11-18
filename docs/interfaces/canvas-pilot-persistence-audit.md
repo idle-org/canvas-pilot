@@ -12,7 +12,7 @@ not every control should become document data.
 | Input format, native dimensions, custom input crop, shared input slot | Project: `inputs` and layer `source_id`, already saved. |
 | Layer format, dynamic crop, zoom and offset, explicit fit modes and blanking masks | Project: final bounds and advanced crop, already saved. Zoom/offset/aspect are derived from these authoritative values. |
 | Names, stable IDs, next ID, folder membership, visibility, lock, pivot | Project, already saved. Folder visibility/locking acts on members, so there is no separate state to save. Explicit folder names are saved separately in project v12 and may have no members. |
-| Device screen/layer mapping | Project, already saved per layer. Physical source routing is separate and is not silently changed by a geometry send. |
+| Device screen/layer mapping | Project v19 stores `load_mapping` and the `send_mapping` destination collection separately. Existing controls edit both together; older projects migrate to synchronized mappings. Physical source routing is separate and is not silently changed by a geometry send. |
 | Reference images, order, visibility, opacity, fit/native sizing, offset | Project, already embedded. Focused reference row is temporary. |
 | Selected layers, viewport zoom/pan, positioning origins | Project, already saved. Selection is validated against visible/unlocked IDs. |
 | Backdrop title, source guide pattern, outline mode, aspect-ratio lock, icon captions | Project, already saved. Pattern/ratio lock/captions also have application defaults. |

@@ -7,7 +7,7 @@ framing, optional explicit crop-first fit, and unsupported-mode explanations. It
 The small profile registry selects family implementations; UI, scopes, history,
 transport and editor geometry do not contain native path substitutions.
 
-Persistent destinations use [project version 15](canvas-pilot.md): family +
+Persistent destinations use [project version 19](canvas-pilot.md): family +
 screen + layer. Midra links migrate explicitly from versions 1–12. Neither bank
 roles nor credentials nor raw device state are persisted. Current standalone
 profiles do not support linked-unit identity; linked Aquilon devices are refused.
@@ -184,3 +184,14 @@ rollback. The explicitly invoked diagnostic backs up its baseline to a temporary
 JSON file before writes, exercises both banks, origins, sizing strategies and
 mask/reset cases, then restores routing, geometry, crop and masks and verifies
 all targeted screen/auxiliary state. It is never a CI/hardware test.
+
+## Directional routing model
+
+Load sources and send destinations are separate in the layout model. Send targets
+use `SendMapping` / `SendDestination` with an explicit `ConnectionTarget::Current`
+and a family/screen/layer link. Future named connections belong at this routing
+boundary; protocol paths remain inside adapters. Both adapter planners accept a
+local layer more than once for distinct destinations and reject duplicate device
+destinations. No new network connections or automatic writes are introduced.
+Current mapping controls still synchronize one load source and one send target.
+See the [project contract](canvas-pilot.md#directional-device-mapping-version-19).

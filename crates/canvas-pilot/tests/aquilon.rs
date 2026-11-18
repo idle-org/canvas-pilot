@@ -240,12 +240,12 @@ fn family_links_save_migrate_recover_and_validate() {
     let mut old: Value = serde_json::from_str(old).unwrap();
     old["layers"][0]["midra_link"] = json!({"screen":"001","layer":"02"});
     let p = Project::from_json(&old.to_string()).unwrap();
-    assert_eq!(p.version, 18);
+    assert_eq!(p.version, 19);
     assert_eq!(
-        p.layers[0].device_link.as_ref().unwrap().family,
+        p.layers[0].load_mapping.as_ref().unwrap().family,
         Family::Midra4k
     );
-    assert_eq!(p.layers[0].device_link.as_ref().unwrap().screen, "1");
+    assert_eq!(p.layers[0].load_mapping.as_ref().unwrap().screen, "1");
     let mut layout = p.layout().unwrap();
     let link = DeviceLink {
         family: Family::Aquilon,
@@ -255,15 +255,15 @@ fn family_links_save_migrate_recover_and_validate() {
     layout.set_device_link(0, Some(link.clone())).unwrap();
     let p = Project::from_layout(&layout);
     let text = p.to_json().unwrap();
-    assert!(text.contains("device_link"));
+    assert!(text.contains("load_mapping"));
     assert!(!text.contains("midra_link"));
     assert_eq!(
-        Project::from_json(&text).unwrap().layers[0].device_link,
+        Project::from_json(&text).unwrap().layers[0].load_mapping,
         Some(link)
     );
     layout.undo();
     assert_eq!(
-        layout.layer_info(0).device_link.as_ref().unwrap().family,
+        layout.layer_info(0).load_mapping.as_ref().unwrap().family,
         Family::Midra4k
     );
     for (family, screen) in [
@@ -300,8 +300,8 @@ fn documented_v13_example_contains_native_aquilon_link() {
         "../../../docs/interfaces/canvas-pilot-v13.example.json"
     ))
     .unwrap();
-    assert_eq!(p.version, 18);
-    let link = p.layers[0].device_link.as_ref().unwrap();
+    assert_eq!(p.version, 19);
+    let link = p.layers[0].load_mapping.as_ref().unwrap();
     assert_eq!(link.family, Family::Aquilon);
     assert_eq!(link.screen, "S1");
     assert_eq!(Project::from_json(&p.to_json().unwrap()).unwrap(), p);
@@ -634,4 +634,38 @@ fn captured_rs1_mask_import_preserves_visible_geometry_and_reveal_bounds() {
     }
     assert_eq!(layer.source, "LIVE_1");
     assert_eq!(layer.mask.origin, canvas_pilot::formats::MaskOrigin::Layer);
+}
+
+#[test]
+fn one_editor_layer_can_prepare_multiple_distinct_aquilon_destinations() {
+    let snapshot = Snapshot::parse(&identity(), &routed()).unwrap();
+    let layout = Layout::default();
+    let mappings = vec![(1, "1".into()), (1, "2".into())];
+    let plan = Plan::prepare(
+        &snapshot,
+        &layout,
+        0,
+        &mappings,
+        Target::Preview,
+        Sizing::OutputBox,
+    )
+    .unwrap();
+    for layer in ["1", "2"] {
+        assert!(
+            plan.observed
+                .iter()
+                .any(|(path, _)| path.ends_with(&format!("/layerList/items/{layer}")))
+        );
+    }
+    assert!(
+        Plan::prepare(
+            &snapshot,
+            &layout,
+            0,
+            &[(1, "1".into()), (2, "1".into())],
+            Target::Preview,
+            Sizing::OutputBox
+        )
+        .is_err()
+    );
 }

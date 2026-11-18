@@ -276,3 +276,15 @@ change routing, input settings or crop values. The device stores blanking only, 
 a later device load returns a layer-relative mask; retain the project to preserve
 source-relative editing intent. Aquilon uses the same editor reveal bounds with
 its own container-relative conversion.
+
+## Separate load and send mappings
+
+The underlying layout stores `load_mapping` separately from `send_mapping`.
+Linked sends flatten the scoped send destinations, check destination collisions,
+and group by screen for adapter preparation. Loading uses only the load source.
+One local layer can be planned for several distinct device layers; both Midra and
+Aquilon still reject overlapping destination writes. This is an internal capability:
+current controls keep both directions synchronized with one destination, and the
+current connection is the only accepted connection scope. No UI or transfer defaults
+change. Persistence and migrations are specified in the
+[project contract](canvas-pilot.md#directional-device-mapping-version-19).

@@ -272,11 +272,10 @@ pub(super) fn prepare(
         target,
         changes: vec![],
     };
-    let mut locals = BTreeSet::new();
     let mut destinations = BTreeSet::new();
     for (id, destination) in mappings {
-        if !locals.insert(id) || !destinations.insert(destination) {
-            return Err("Map each editor layer to a different device layer.".into());
+        if !destinations.insert(destination) {
+            return Err("Map each device destination only once.".into());
         }
         if !screen.layers.iter().any(|l| &l.id == destination) {
             return Err("Destination is not allocated.".into());

@@ -37,7 +37,8 @@ pub struct Input {
 pub struct Layer {
     pub pivot: [f64; 2],
     #[serde(deserialize_with = "deserialize_link")]
-    pub device_link: Option<crate::DeviceLink>,
+    pub load_mapping: Option<crate::DeviceLink>,
+    pub send_mapping: crate::SendMapping,
     pub name: String,
     pub folder: String,
     pub id: usize,
@@ -181,7 +182,7 @@ impl Project {
             folders: layout.folders.clone(),
             workspace: Workspace::default(),
             format: FORMAT.into(),
-            version: 18,
+            version: 19,
             input_proposals: Vec::new(),
             next_layer_id: layout.next_id,
             output_resolution: layout.formats.output.into(),
@@ -199,7 +200,8 @@ impl Project {
             layers: (0..layout.layers.len())
                 .map(|i| Layer {
                     pivot: layout.info[i].pivot,
-                    device_link: layout.info[i].device_link.clone(),
+                    load_mapping: layout.info[i].load_mapping.clone(),
+                    send_mapping: layout.info[i].send_mapping.clone(),
                     name: layout.info[i].name.clone(),
                     folder: layout.info[i].folder.clone(),
                     id: layout.info[i].id,
@@ -233,9 +235,9 @@ impl Project {
     }
     /// Build a fresh document only after validating the entire file. No history is restored.
     pub fn layout(&self) -> Result<Layout, String> {
-        if self.format != FORMAT || self.version != 18 {
+        if self.format != FORMAT || self.version != 19 {
             return Err(
-                "Unsupported project format/version; expected beffroi.midra-layout version 18."
+                "Unsupported project format/version; expected beffroi.midra-layout version 19."
                     .into(),
             );
         }
@@ -248,7 +250,9 @@ impl Project {
             if !proposal_layers.insert(proposal.layer_id)
                 || !self.layers.iter().any(|l| {
                     l.id == proposal.layer_id
-                        && l.device_link.as_ref() == Some(&proposal.device_link)
+                        && l.send_mapping
+                            .current_links()
+                            .any(|link| link == &proposal.device_link)
                 })
             {
                 return Err(
@@ -337,13 +341,15 @@ impl Project {
             {
                 return Err("Invalid layer identity, name, folder or source ID.".into());
             }
-            if let Some(link) = &layer.device_link {
+            layer.send_mapping.validate()?;
+            if let Some(link) = &layer.load_mapping {
                 link.validate()?;
             }
             crate::validate_pivot(layer.pivot)?;
             layout.info.push(crate::LayerInfo {
                 pivot: layer.pivot,
-                device_link: layer.device_link.clone(),
+                load_mapping: layer.load_mapping.clone(),
+                send_mapping: layer.send_mapping.clone(),
                 id: layer.id,
                 name: layer.name.clone(),
                 folder: layer.folder.clone(),
@@ -447,8 +453,8 @@ impl Project {
         }
         let header: Header =
             serde_json::from_str(text).map_err(|e| format!("Invalid project JSON: {e}"))?;
-        if !(1..=18).contains(&header.version) {
-            return Err("Unsupported project version; expected versions 1–18.".into());
+        if !(1..=19).contains(&header.version) {
+            return Err("Unsupported project version; expected versions 1–19.".into());
         }
         let mut migrated: serde_json::Value = if header.version == 1 || header.version == 2 {
             let mut value: serde_json::Value =
@@ -698,6 +704,26 @@ impl Project {
             }
             snapping.insert("mask_edges".into(), false.into());
             migrated["version"] = 18.into();
+        }
+        if header.version <= 18 {
+            for layer in migrated["layers"].as_array_mut().ok_or("Missing layers")? {
+                let layer = layer.as_object_mut().ok_or("Invalid project layer")?;
+                if layer.contains_key("load_mapping") || layer.contains_key("send_mapping") {
+                    return Err("Unexpected directional mapping in legacy project.".into());
+                }
+                let link = layer.remove("device_link").ok_or("Missing device_link")?;
+                let destinations = if link.is_null() {
+                    serde_json::json!([])
+                } else {
+                    serde_json::json!([{ "connection": "current", "layer": link.clone() }])
+                };
+                layer.insert("load_mapping".into(), link);
+                layer.insert(
+                    "send_mapping".into(),
+                    serde_json::json!({ "destinations": destinations }),
+                );
+            }
+            migrated["version"] = 19.into();
         }
         let p: Self =
             serde_json::from_value(migrated).map_err(|e| format!("Invalid project JSON: {e}"))?;

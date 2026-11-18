@@ -20,11 +20,12 @@ fn fixture() -> Project {
     let mut p = Project::from_layout(&layout);
     p.layers[0].name = "<Speaker> & \"guest\"".into();
     p.layers[0].folder = "Memory A".into();
-    p.layers[0].device_link = Some(canvas_pilot::DeviceLink {
+    p.layers[0].load_mapping = Some(canvas_pilot::DeviceLink {
         family: Default::default(),
         screen: "2".into(),
         layer: "1".into(),
     });
+    p.layers[0].send_mapping = canvas_pilot::SendMapping::linked(p.layers[0].load_mapping.clone());
     p.workspace.collapsed_folders = vec!["Memory A".into()];
     p
 }
@@ -397,11 +398,13 @@ fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_proposa
             p.layers[0].folder = "Scene".into();
             p.folders = vec!["Scene".into(), "Unused".into()];
             p.layers[0].pivot = [0.25, 0.75];
-            p.layers[0].device_link = Some(canvas_pilot::DeviceLink {
+            p.layers[0].load_mapping = Some(canvas_pilot::DeviceLink {
                 family: Default::default(),
                 screen: "1".into(),
                 layer: "3".into(),
             });
+            p.layers[0].send_mapping =
+                canvas_pilot::SendMapping::linked(p.layers[0].load_mapping.clone());
             p.layers[1].source_id = p.layers[0].source_id;
             let native = &p.inputs[0].native_resolution;
             let input = p.inputs[0]
@@ -440,7 +443,7 @@ fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_proposa
 
             p.input_proposals.push(InputProposal {
                 layer_id: p.layers[0].id,
-                device_link: p.layers[0].device_link.clone().unwrap(),
+                device_link: p.layers[0].load_mapping.clone().unwrap(),
                 input: "INPUT_4".into(),
                 plug: "2".into(),
                 settings: serde_json::from_value(serde_json::json!({
