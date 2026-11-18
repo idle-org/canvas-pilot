@@ -92,11 +92,13 @@ impl Editor {
     pub(super) fn crop_preset_buttons(&mut self, ui: &mut egui::Ui) -> bool {
         let mut changed = false;
         ui.label("Crop borders to ratio");
+        ui.checkbox(&mut self.crop_preset_keep_existing, "Crop within existing crop")
+            .on_hover_text("Off: restore uncropped layer bounds before applying the ratio. On: trim the current crop further.");
         ui.horizontal(|ui| {
             for aspect in [canvas_pilot::formats::Aspect::FourThree, canvas_pilot::formats::Aspect::SixteenNine, canvas_pilot::formats::Aspect::SixteenTen] {
                 if ui.add_enabled(self.size_presets_enabled(), egui::Button::new(aspect.label()))
-                    .on_hover_text("Trim centered borders and shrink the layer; keep its center. Matching ratios do nothing.").clicked() {
-                    match self.layout.apply_crop_preset(aspect) {
+                    .on_hover_text("Trim centered borders and keep the layer center. By default each ratio replaces the previous crop.").clicked() {
+                    match self.layout.apply_crop_preset_with_existing(aspect, self.crop_preset_keep_existing) {
                         Ok(()) => {
                             if self.format_draft.is_some() {
                                 self.format_draft = self.layout.selected().map(|i| FormatDraft::new(&self.layout, i));

@@ -239,7 +239,9 @@ fn crop_presets_trim_current_picture_without_scaling_and_round_trip() {
             layout.apply_size_preset(SizePreset::Fullscreen).unwrap();
             layout.set_layer_fit(0, fit, Default::default()).unwrap();
             let before = Project::from_layout(&layout);
-            layout.apply_crop_preset(aspect).unwrap();
+            layout
+                .apply_crop_preset_with_existing(aspect, true)
+                .unwrap();
             let g = layout.layers()[0];
             close(g.x, edge);
             close(g.y, 0.0);
@@ -255,7 +257,9 @@ fn crop_presets_trim_current_picture_without_scaling_and_round_trip() {
                 Project::from_json(&after.to_json().unwrap()).unwrap(),
                 after
             );
-            layout.apply_crop_preset(aspect).unwrap();
+            layout
+                .apply_crop_preset_with_existing(aspect, true)
+                .unwrap();
             assert_eq!(Project::from_layout(&layout), after);
             layout.undo();
             assert_eq!(Project::from_layout(&layout), before);
@@ -278,7 +282,9 @@ fn crop_presets_trim_current_picture_without_scaling_and_round_trip() {
     let old = layout.layers()[0];
     let crop = layout.formats().advanced[0];
     let scale = layout.formats().mapping(0, old).unwrap().scale;
-    layout.apply_crop_preset(Aspect::FourThree).unwrap();
+    layout
+        .apply_crop_preset_with_existing(Aspect::FourThree, true)
+        .unwrap();
     let new = layout.layers()[0];
     close(layout.formats().mapping(0, new).unwrap().scale, scale);
     close(
@@ -314,7 +320,9 @@ fn crop_presets_letterbox_multi_selection_matching_ratio_and_errors() {
         .mapping(0, layout.layers()[0])
         .unwrap()
         .scale;
-    layout.apply_crop_preset(Aspect::SixteenNine).unwrap();
+    layout
+        .apply_crop_preset_with_existing(Aspect::SixteenNine, true)
+        .unwrap();
     assert_eq!(
         layout.layers()[0],
         Geometry {
@@ -332,10 +340,18 @@ fn crop_presets_letterbox_multi_selection_matching_ratio_and_errors() {
     assert_eq!(layout.formats().advanced[1], same_crop);
     layout.undo();
     assert_eq!(Project::from_layout(&layout), before);
-    assert!(layout.apply_crop_preset(Aspect::Custom).is_err());
+    assert!(
+        layout
+            .apply_crop_preset_with_existing(Aspect::Custom, true)
+            .is_err()
+    );
     assert_eq!(Project::from_layout(&layout), before);
     layout.select(None);
-    assert!(layout.apply_crop_preset(Aspect::FourThree).is_err());
+    assert!(
+        layout
+            .apply_crop_preset_with_existing(Aspect::FourThree, true)
+            .is_err()
+    );
 }
 
 #[test]
@@ -445,4 +461,30 @@ fn proportional_quarters_center_in_all_nine_regions_and_orientation_stays_explic
         [layout.layers()[0].width, layout.layers()[0].height],
         [1080.0, 1920.0]
     );
+}
+
+#[test]
+fn replacing_crop_ratio_restores_bounds_while_opt_in_keeps_trimming() {
+    use canvas_pilot::formats::Aspect;
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    layout.apply_size_preset(SizePreset::Fullscreen).unwrap();
+    let original = Project::from_layout(&layout);
+    layout.apply_crop_preset(Aspect::FourThree).unwrap();
+    let cropped = Project::from_layout(&layout);
+    layout.apply_crop_preset(Aspect::SixteenTen).unwrap();
+    close(layout.layers()[0].width, 1728.0);
+    close(layout.layers()[0].height, 1080.0);
+    layout.undo();
+    assert_eq!(Project::from_layout(&layout), cropped);
+    layout.apply_crop_preset(Aspect::SixteenNine).unwrap();
+    assert_eq!(Project::from_layout(&layout), original);
+    layout.apply_crop_preset(Aspect::FourThree).unwrap();
+    layout
+        .apply_crop_preset_with_existing(Aspect::SixteenNine, true)
+        .unwrap();
+    close(layout.layers()[0].width, 1440.0);
+    close(layout.layers()[0].height, 810.0);
+    layout.apply_crop_preset(Aspect::SixteenNine).unwrap();
+    assert_eq!(Project::from_layout(&layout), original);
 }

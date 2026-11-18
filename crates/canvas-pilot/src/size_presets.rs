@@ -127,9 +127,17 @@ impl Layout {
 }
 
 impl Layout {
-    /// Trim symmetric borders from the current picture and shrink its box around
-    /// its center. Matching ratios are exact no-ops, including existing crops.
+    /// Replace layer cropping with a centered ratio crop from uncropped bounds.
     pub fn apply_crop_preset(&mut self, aspect: crate::formats::Aspect) -> Result<(), String> {
+        self.apply_crop_preset_with_existing(aspect, false)
+    }
+
+    /// Optionally trim inside the existing crop instead of restoring its bounds.
+    pub fn apply_crop_preset_with_existing(
+        &mut self,
+        aspect: crate::formats::Aspect,
+        keep_existing: bool,
+    ) -> Result<(), String> {
         use crate::formats::Aspect;
         let ratio = match aspect {
             Aspect::FourThree | Aspect::SixteenNine | Aspect::SixteenTen => aspect.ratio().unwrap(),
@@ -145,7 +153,22 @@ impl Layout {
             if !self.selectable(i) {
                 return Err("Unlock and show selected layers before cropping them.".into());
             }
-            let old = layers[i];
+            let mut old = layers[i];
+            if !keep_existing && formats.advanced[i] != Default::default() {
+                let input = formats.input(i)?;
+                let retained = formats.advanced[i].remaining(input)?;
+                let width = old.width * input[0] / retained[0];
+                let height = old.height * input[1] / retained[1];
+                old = Geometry {
+                    x: old.x + (old.width - width) / 2.0,
+                    y: old.y + (old.height - height) / 2.0,
+                    width,
+                    height,
+                }
+                .validate()?;
+                formats.advanced[i] = Default::default();
+                layers[i] = old;
+            }
             if (old.width / old.height - ratio).abs() <= ratio * 1e-10 {
                 continue;
             }

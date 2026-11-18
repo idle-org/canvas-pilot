@@ -85,18 +85,19 @@ In **Layer properties → Crop**, use the **Crop borders to ratio** box: **4:3**
 such as a 4:3 PowerPoint slide sent inside a 16:9 video resolution. They shrink
 the visible layer around its center to the requested ratio and crop its picture
 at the same time, rather than stretching the slide. The largest rectangle of
-the chosen ratio that fits inside the current layer is retained.
+the chosen ratio that fits inside the uncropped layer bounds is retained. Each
+click restores those bounds first, so switching ratios replaces the previous crop.
 
 For example, 4:3 on a full 1920×1080 layer removes 240 pixels from each side and
 leaves 1440×1080. Conversely, 16:9 on an 800×600 layer removes 75 pixels from the
-top and bottom and leaves 800×450. Already matching layers are unchanged,
-including existing crop, and repeated clicks do not crop again.
+top and bottom and leaves 800×450. Repeated clicks on the same ratio do not progressively crop the picture.
 
 Right-click selected layers in the viewport or layer list and choose **Crop
 presets** to apply the same correction to several layers in one Undo step.
-Existing crop is trimmed further; the presets do not detect black pixels or
-restore previously removed content. Use Undo to compare a different preset, and
-manual crop controls for asymmetric borders. Explicit layer-fit modes are retained
+Enable **Crop within existing crop** to keep the old behavior and trim the
+current crop further. This session-only toggle is off by default and is shared
+between the properties and context menus. Presets do not detect black pixels.
+Use manual crop controls for asymmetric borders. Explicit layer-fit modes are retained
 and fit the cropped picture into the new box. Shared input settings, source routing
 and masks are unchanged. No device command is sent. Finish pending numeric or
 property edits before applying a preset.

@@ -10,6 +10,12 @@
   SuperSource assessment, including readback, Linux integration and test-target
   gates. Research only; neither adapter is implemented or validated.
 
+### v0.9.53
+
+- Crop borders to ratio now restores uncropped bounds before each preset. Added
+  an optional “Crop within existing crop” toggle for cumulative trimming, with
+  regression coverage for switching ratios, restoration and Undo.
+
 ### v0.9.52
 
 - Closed localization for its accepted scope and Midra rendering precision for
