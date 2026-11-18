@@ -256,7 +256,7 @@
   "ui.review-pasted-values": "貼り付けた値を確認",
   "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged": "下の各項目の宛先を選んでください。他のレイヤーは変更されません。",
   "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged": "提供されたソース名を使用します。名前のない項目と宛先フォルダーは変更されません。",
-  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "クロップの端、オフセット、fit モードを正確にコピーします。入力クロップ後のソース寸法は一致する必要があります。ソースの割り当ては変わりません。",
+  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "クロップの各辺を宛先入力の寸法に比例して調整します。このレイヤーの Advanced fit を維持し、既定は Centered (fit) です。ソースの割り当ては変更しません。",
   "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer": "レイヤーのサイズを変えず、マスクの四辺の比率をコピーします。",
   "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro": "未選択の値は宛先の設定を保持します。フォーマットを変更すると既存クロップが調整される場合があります。",
   "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled": "輪郭調整にはフォーマットが必要です。位置を有効にするとソースの左上を使用します。",

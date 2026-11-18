@@ -256,7 +256,7 @@
   "ui.review-pasted-values": "Kontroli algluitajn valorojn",
   "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged": "Elektu celon por ĉiu suba ero. Aliaj tavoloj restas senŝanĝaj.",
   "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged": "Uzu liveritajn fontajn nomojn. Sennomaj eroj kaj celaj dosierujoj restas senŝanĝaj.",
-  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Kopiu precizajn tondajn randojn, deŝovojn kaj adaptan reĝimon. Fontaj dimensioj post enira tondo devas kongrui; fontaj atribuoj restas senŝanĝaj.",
+  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Scale crop edges proportionally to the destination input. Keep this layer’s Advanced fit; default to Centered (fit). Source assignments stay unchanged.",
   "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer": "Kopiu la kvar proporciajn maskajn randojn sen regrandigi la tavolon.",
   "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro": "Nemarkitaj valoroj konservas la celajn agordojn. Formataj ŝanĝoj povas adapti ekzistantajn tondojn.",
   "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled": "Kontura adapto bezonas Formaton. Pozicio uzas la supran maldekstran fontan angulon kiam ŝaltita.",

@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.0-rc.6
+
+- Allow Crop & fit paste across different input dimensions. Crop edges transfer
+  proportionally without changing source assignments or input preprocessing.
+  The destination’s Advanced fit is preserved; normal crops that no longer match the box
+  use Centered (fit), retaining ratio rather than stretching or refusing paste.
+
 ### v0.10.0-rc.5
 
 - Adapt a layer to the selected input resolution instead of requiring a manual

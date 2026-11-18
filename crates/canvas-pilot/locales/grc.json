@@ -256,7 +256,7 @@
   "ui.review-pasted-values": "Σκέψαι τὰς ἐπικολληθείσας τιμάς",
   "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged": "Ἕλου προορισμὸν ἑκάστῳ τῶν κάτω. Τὰ ἄλλα στρώματα μένει.",
   "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged": "Χρῶ τοῖς δοθεῖσιν ὀνόμασι πηγῆς. Ἀνώνυμα καὶ φάκελοι προορισμοῦ μένουσιν.",
-  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Ἀντίγραψον ἀκριβῆ ὅρια, μετατοπίσεις καὶ τρόπον προσαρμογῆς. Αἱ διαστάσεις μετὰ τὴν ἀποτομὴν εἰσόδου δεῖ συμφωνεῖν· αἱ ἀναθέσεις πηγῶν μένουσιν.",
+  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Τὰ ὅρια τῆς ἀποτομῆς κατὰ λόγον τῆς εἰσόδου προσαρμόζεται. Ὁ τρόπος Advanced fit τοῦ στρώματος μένει· ὁ συνήθης Centered (fit). Αἱ ἀναθέσεις πηγῶν μένουσιν.",
   "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer": "Ἀντίγραψον τὰ τέσσαρα ἀνάλογα ὅρια καλύμματος ἄνευ μεταβολῆς μεγέθους στρώματος.",
   "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro": "Αἱ μὴ ἐκλελεγμέναι τιμαὶ τηροῦσι τὰ τοῦ προορισμοῦ. Μεταβολαὶ μορφῆς δύνανται προσαρμόζειν ὑπαρχούσας ἀποτομάς.",
   "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled": "Ἡ διόρθωσις περιγράμματος δεῖται Μορφῆς. Ἡ Θέσις τῇ ἄνω ἀριστερᾷ γωνίᾳ τῆς πηγῆς χρῆται ἐνεργοῦσα.",

@@ -1477,7 +1477,7 @@ impl Editor {
                 }
                 egui::CollapsingHeader::new(tr(ui.ctx(), "ui.import-details")).id_salt("Import details").show(ui, |ui| {
                     ui.label(&p.note);
-                    ui.small(if p.appearance_available() { "Source assignments, device links and input proposals are not imported. Crop & fit requires matching source dimensions." } else { "Source format, crop offsets, colors and outline appearance are not imported." });
+                    ui.small(if p.appearance_available() { "Source assignments, device links and input settings stay unchanged. Crop edges adapt proportionally using the destination’s Advanced fit; the default is Centered (fit)." } else { "Source format, crop offsets, colors and outline appearance are not imported." });
                 });
                 if !p.include_size {ui.small(tr(ui.ctx(), "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled"));}
                 ui.separator();
@@ -7801,6 +7801,9 @@ mod tests {
                     egui::OutputCommand::CopyText(text) => Some(text.clone()),
                     _ => None,
                 })
+                .unwrap();
+            app.layout
+                .set_layer_fit(1, fit, Default::default())
                 .unwrap();
             app.layout.select(Some(1));
             app.open_paste(text.clone());

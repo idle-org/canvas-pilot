@@ -256,7 +256,7 @@
   "ui.review-pasted-values": "Revisar valores pegados",
   "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged": "Elija un destino para cada elemento. Las otras capas no cambian.",
   "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged": "Usa los nombres de origen proporcionados. Los elementos sin nombre y las carpetas de destino no cambian.",
-  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Copia bordes, desplazamientos y modo de ajuste exactos. Las dimensiones tras el recorte de entrada deben coincidir; las asignaciones de fuentes no cambian.",
+  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Adaptar los bordes de recorte proporcionalmente a la entrada de destino. Mantener Advanced fit de esta capa; por defecto, Centered (fit). Las asignaciones de fuentes no cambian.",
   "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer": "Copia los cuatro bordes proporcionales de máscara sin redimensionar la capa.",
   "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro": "Los valores desmarcados conservan el destino. Cambiar el formato puede ajustar los recortes existentes.",
   "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled": "El ajuste de contorno requiere Formato. Posición usa la esquina superior izquierda de origen cuando está activada.",

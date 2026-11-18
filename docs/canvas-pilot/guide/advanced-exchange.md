@@ -52,7 +52,9 @@ For a complete editable backup, **Save project** remains the recommended choice.
 
 Canvas Pilot’s **Copy layer values** also preserves exact geometry, crop edges,
 offsets, fit and blanking through the clipboard. Its mapping review offers an
-optional **Appearance** group; source assignments and device links remain unchanged.
+optional **Appearance** group. Pasted crop edges adapt proportionally to the
+destination input and use its selected **Advanced fit**; the copied fit does not
+replace that choice. Source assignments and device links remain unchanged.
 The separate **Rename destination layers** option applies supplied source names.
 See [clipboard preservation and limits](files.md#canvas-pilot-layer-clipboard).
 This is separate from plain geometry import and export snapshot restoration.

@@ -256,7 +256,7 @@
   "ui.review-pasted-values": "टाँसिएका मानहरू समीक्षा गर्नुहोस्",
   "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged": "तलका हरेक वस्तुको गन्तव्य छान्नुहोस्। अरू तह उही रहन्छन्।",
   "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged": "Use supplied source names. Unnamed items and destination folders stay unchanged.",
-  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Copy exact crop edges, offsets and fit mode. Source dimensions after input crop must match; source assignments remain unchanged.",
+  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Scale crop edges proportionally to the destination input. Keep this layer’s Advanced fit; default to Centered (fit). Source assignments stay unchanged.",
   "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer": "Copy the four proportional mask edges without resizing the layer.",
   "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro": "Unchecked values keep the destination settings. Format changes may adjust existing crops to fit.",
   "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled": "Outline adjustment requires Format. Position uses the source top-left when enabled.",

@@ -256,7 +256,7 @@
   "ui.review-pasted-values": "检查粘贴数值",
   "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged": "为以下各项选择目标。其他图层保持不变。",
   "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged": "使用提供的源名称。无名称项目和目标文件夹保持不变。",
-  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "精确复制裁剪边缘、偏移和适配模式。输入裁剪后的源尺寸必须匹配；源分配保持不变。",
+  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "按目标输入尺寸等比例调整各轴的裁剪边缘。保留此图层的 Advanced fit，默认使用 Centered (fit)。不改变源分配。",
   "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer": "复制遮罩四边比例，不改变图层尺寸。",
   "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro": "未勾选的值保留目标设置。格式更改可能调整现有裁剪。",
   "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled": "轮廓调整需要启用格式。启用位置时使用源左上角。",

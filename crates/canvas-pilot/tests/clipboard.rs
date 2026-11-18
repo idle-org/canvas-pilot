@@ -65,6 +65,7 @@ fn every_fit_roundtrips_exact_crop_mask_and_offset_with_atomic_undo() {
             layout.set_mask(0, mask).unwrap();
             let text = clipboard::encode(&layout, &[0], "Readable values").unwrap();
             let shape = parse_values(&text).unwrap().shapes.remove(0);
+            layout.set_layer_fit(1, fit, Crop::default()).unwrap();
             let before = Project::from_layout(&layout);
             let a = shape.appearance.unwrap();
             assert_eq!(a.fit, fit);
@@ -96,8 +97,11 @@ fn every_fit_roundtrips_exact_crop_mask_and_offset_with_atomic_undo() {
     }
 }
 #[test]
-fn appearance_can_be_applied_independently_and_source_mismatch_is_atomic() {
+fn appearance_adapts_source_sizes_independently_and_invalid_batches_are_atomic() {
     let (mut layout, text) = copied(Some(LayerFit::Fullscreen));
+    layout
+        .set_layer_fit(1, Some(LayerFit::Fullscreen), Crop::default())
+        .unwrap();
     let a = parse_values(&text).unwrap().shapes[0].appearance.unwrap();
     let before = Project::from_layout(&layout);
     let g = layout.layers()[1];
@@ -105,12 +109,15 @@ fn appearance_can_be_applied_independently_and_source_mismatch_is_atomic() {
         input_size: [1000., 500.],
         ..a
     };
-    assert!(
-        layout
-            .apply_mapped_clipboard(&[(1, g)], &[], &[(1, incompatible)], true, true)
-            .unwrap_err()
-            .contains("matching source dimensions")
-    );
+    let input = layout.formats().input(1).unwrap();
+    layout
+        .apply_mapped_clipboard(&[(1, g)], &[], &[(1, incompatible)], true, true)
+        .unwrap();
+    assert_eq!(layout.formats().input(1).unwrap(), input);
+    assert!((layout.formats().advanced[1].left - a.crop.left * input[0] / 1000.).abs() < 1e-9);
+    assert!((layout.formats().advanced[1].top - a.crop.top * input[1] / 500.).abs() < 1e-9);
+    assert_eq!(layout.formats().layer_fit[1], a.fit);
+    layout.undo();
     assert_eq!(Project::from_layout(&layout), before);
     layout
         .apply_mapped_clipboard(&[(1, g)], &[], &[(1, incompatible)], false, true)
@@ -156,20 +163,64 @@ fn appearance_can_be_applied_independently_and_source_mismatch_is_atomic() {
     );
 }
 #[test]
-fn normal_crop_requires_matching_aspect_and_does_not_silently_reframe() {
+fn normal_crop_falls_back_to_centered_fit_for_a_different_box() {
     let (mut layout, text) = copied(None);
     let a = parse_values(&text).unwrap().shapes[0].appearance.unwrap();
     let before = Project::from_layout(&layout);
     let mut g = layout.layers()[1];
     g.width = g.height;
-    assert!(
-        layout
-            .apply_mapped_clipboard(&[(1, g)], &[], &[(1, a)], true, true)
-            .unwrap_err()
-            .contains("Include Format")
-    );
+    layout
+        .apply_mapped_clipboard(&[(1, g)], &[], &[(1, a)], true, true)
+        .unwrap();
+    assert_eq!(layout.formats().layer_fit[1], Some(LayerFit::Centered));
+    assert_eq!(layout.formats().advanced[1], a.crop);
+    let retained = a.crop.remaining(a.input_size).unwrap();
+    let fitted = LayerFit::Centered.image(retained, g).unwrap();
+    assert!((fitted.width / fitted.height - retained[0] / retained[1]).abs() < 1e-9);
+    layout.undo();
     assert_eq!(Project::from_layout(&layout), before);
 }
+
+#[test]
+fn all_explicit_modes_paste_across_input_ratios_without_changing_sources() {
+    for fit in LayerFit::ALL {
+        let (mut layout, text) = copied(Some(if fit == LayerFit::Fullscreen {
+            LayerFit::Centered
+        } else {
+            LayerFit::Fullscreen
+        }));
+        layout.set_layer_fit(1, Some(fit), Crop::default()).unwrap();
+        let a = parse_values(&text).unwrap().shapes[0].appearance.unwrap();
+        layout.set_layer_source_resolution(1, [942, 1029]).unwrap();
+        let before = Project::from_layout(&layout);
+        let sources = layout.formats().sources.clone();
+        let g = layout.layers()[1];
+        layout
+            .apply_mapped_clipboard(&[(1, g)], &[], &[(1, a)], true, true)
+            .unwrap();
+        assert_eq!(layout.formats().sources, sources);
+        assert_eq!(layout.formats().layer_fit[1], Some(fit));
+        let crop = layout.formats().advanced[1];
+        for (actual, expected) in [
+            (crop.left / 942., a.crop.left / a.input_size[0]),
+            (crop.right / 942., a.crop.right / a.input_size[0]),
+            (crop.top / 1029., a.crop.top / a.input_size[1]),
+            (crop.bottom / 1029., a.crop.bottom / a.input_size[1]),
+        ] {
+            assert!((actual - expected).abs() < 1e-9);
+        }
+        assert_eq!(layout.formats().masks[1], a.mask);
+        let copied_again = clipboard::encode(&layout, &[1], "").unwrap();
+        let restored = parse_values(&copied_again).unwrap().shapes[0]
+            .appearance
+            .unwrap();
+        assert_eq!(restored.crop, crop);
+        assert_eq!(restored.fit, Some(fit));
+        layout.undo();
+        assert_eq!(Project::from_layout(&layout), before);
+    }
+}
+
 #[test]
 fn clipboard_schema_is_bounded_versioned_and_never_falls_back_on_invalid_payload() {
     let (layout, text) = copied(None);

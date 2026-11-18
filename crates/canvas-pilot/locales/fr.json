@@ -256,7 +256,7 @@
   "ui.review-pasted-values": "Vérifier les valeurs collées",
   "ui.choose-a-destination-for-each-item-below-other-layers-stay-unchanged": "Choisissez une destination pour chaque élément. Les autres calques restent inchangés.",
   "ui.use-supplied-source-names-unnamed-items-and-destination-folders-stay-unchanged": "Utiliser les noms fournis. Les éléments sans nom et les dossiers de destination restent inchangés.",
-  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Copier les bords de recadrage, décalages et mode d’ajustement exacts. Les dimensions après recadrage d’entrée doivent correspondre ; les affectations de sources restent inchangées.",
+  "ui.copy-exact-crop-edges-offsets-and-fit-mode-source-dimensions-after-input-crop-must-ma": "Adapter les bords de recadrage proportionnellement à l’entrée de destination. Conserver le mode Advanced fit de ce calque ; par défaut, Centered (fit). Les affectations de sources restent inchangées.",
   "ui.copy-the-four-proportional-mask-edges-without-resizing-the-layer": "Copier les quatre bords proportionnels du masque sans redimensionner le calque.",
   "ui.unchecked-values-keep-the-destination-settings-format-changes-may-adjust-existing-cro": "Les valeurs décochées conservent les réglages de destination. Les changements de format peuvent adapter les recadrages existants.",
   "ui.outline-adjustment-requires-format-position-uses-the-source-top-left-when-enabled": "L’ajustement des contours nécessite Format. Position utilise le coin supérieur gauche de la source quand cette option est active.",

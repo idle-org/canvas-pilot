@@ -59,11 +59,14 @@ off by default, copies v2/v3 names only, and leaves folders/IDs unchanged. Exter
 formats have no such payload; older normal-crop summaries offer their legacy zoom
 control instead. Ignored items do not affect availability or mapped values.
 
-Crop & fit requires the destination's effective source dimensions to match the
-recorded dimensions within 1e-8 pixels per axis. It copies exact crop and mode;
-it does not adapt different inputs silently. Normal-crop aspect must also match
-the resulting box. Mismatches block the batch with guidance to include Format,
-match the local source dimensions, or disable Crop & fit. Blanking can be applied
+Crop & fit scales each crop edge by the destination/source input dimension on
+its axis, preserving proportions independently of input preprocessing. It leaves
+destination source dimensions and assignments unchanged. The destination layer’s selected Advanced fit remains authoritative; the copied
+fit mode does not replace it. A normal crop retains normal mode when its ratio matches the resulting
+box; otherwise it becomes Centered (fit), preserving ratio inside that box.
+Matching input dimensions retain exact crop values. The payload schema is unchanged;
+input_size provides the reference units for this conversion.
+Blanking can be applied
 independently across different input sizes as proportions of the selected layer/source reference; source mode follows the
 destination’s source and crop/fit, rather than copying source pixel distances.
 Unchecked appearance fields remain unchanged, except that a selected Format change
@@ -92,8 +95,8 @@ versions do not support the appended payload; remove the payload only when
 intentionally exchanging the legacy normal-crop geometry/zoom subset.
 
 Regression tests cover every mode, crop offsets, fractional values, masks,
-independent appearance controls, legacy summaries, invalid schemas, source/aspect
-mismatches, locked destinations, whole-batch rollback and undo/redo.
+independent appearance controls, legacy summaries, invalid schemas, proportional source-size
+adaptation and centered aspect fallback, locked destinations, whole-batch rollback and undo/redo.
 
 ## External text detection and fallback
 

@@ -167,7 +167,7 @@ impl Layout {
             }
         }
         let mut seen = std::collections::BTreeSet::new();
-        for &(i, a) in appearances {
+        for &(i, _) in appearances {
             if i >= self.layers.len() || !self.selectable(i) {
                 return Err("Clipboard destination must be an editable layer.".into());
             }
@@ -177,28 +177,39 @@ impl Layout {
             if zooms.iter().any(|(target, _)| *target == i) {
                 return Err("Choose full crop and fit or legacy zoom, not both.".into());
             }
-            if crop_fit {
-                let input = self.formats.input(i)?;
-                if input
-                    .iter()
-                    .zip(a.input_size)
-                    .any(|(v, expected)| (v - expected).abs() > 1e-8)
-                {
-                    return Err("Crop & fit requires matching source dimensions after input crop. Match the destination source or uncheck Crop & fit.".into());
-                }
-            }
         }
         let mut draft = self.clone();
         draft.apply_mapped_import_with_zoom(values, zooms)?;
         for &(i, appearance) in appearances {
             if crop_fit {
-                appearance.validate(draft.layers[i]).map_err(|error| {
-                    format!(
-                        "Cannot paste Crop & fit: {error} Include Format or uncheck Crop & fit."
-                    )
-                })?;
-                draft.formats.advanced[i] = appearance.crop;
-                draft.formats.layer_fit[i] = appearance.fit;
+                formats::validate_size(appearance.input_size)?;
+                appearance.crop.remaining(appearance.input_size)?;
+                let input = draft.formats.input(i)?;
+                let scale = [
+                    input[0] / appearance.input_size[0],
+                    input[1] / appearance.input_size[1],
+                ];
+                let crop = Crop {
+                    left: appearance.crop.left * scale[0],
+                    right: appearance.crop.right * scale[0],
+                    top: appearance.crop.top * scale[1],
+                    bottom: appearance.crop.bottom * scale[1],
+                };
+                let g = draft.layers[i];
+                let fit = draft.formats.layer_fit[i].or_else(|| {
+                    formats::mapping(input, [g.width, g.height], crop)
+                        .is_err()
+                        .then_some(LayerFit::Centered)
+                });
+                let adapted = Appearance {
+                    input_size: input,
+                    crop,
+                    fit,
+                    mask: appearance.mask,
+                };
+                adapted.validate(g)?;
+                draft.formats.advanced[i] = crop;
+                draft.formats.layer_fit[i] = fit;
             }
             if masks {
                 draft.formats.masks[i] = appearance.mask.validate()?;

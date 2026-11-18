@@ -168,10 +168,12 @@ does not change what Canvas Pilot pastes.
 
 To copy only appearance, uncheck Position and Format. Expand **Appearance** to
 choose Crop & fit, Blanking, or both. Source assignments, device mappings and
-input settings stay unchanged. Crop & fit requires matching source dimensions
-after device preprocessing; normal crop also needs compatible box proportions. The
-review explains mismatches before allowing import. Match the source dimensions,
-include Format, or uncheck Crop & fit as appropriate. Blanking works independently
+input settings stay unchanged. Crop edges adapt proportionally to the destination
+input dimensions. The destination layer’s **Advanced fit** stays selected; the
+copied fit mode does not replace it. A normal crop that does not
+match the destination box uses **Centered (fit)**, preserving ratio without
+stretching. You do not need to match source dimensions or include Format.
+Blanking works independently
 of source dimensions. A failed batch changes nothing; a successful paste undoes
 in one step.
 
