@@ -111,6 +111,7 @@ impl Plan {
             &screen.program_bank
         };
         let mut projected = snapshot.clone();
+        let mut projected_layout = layout.clone();
         let mut routes = Vec::new();
         for (id, destination) in mappings {
             let Some(input) = inputs.get(id) else {
@@ -167,6 +168,10 @@ impl Plan {
                     }
                 }
             }
+            let index = (0..layout.layers().len())
+                .find(|&i| layout.layer_info(i).id == *id)
+                .ok_or("An editor layer was removed.")?;
+            projected_layout.set_layer_source_resolution(index, native)?;
             let layer_path = snapshot.profile.layer_path(&screen.id, bank, destination);
             let path = format!("{layer_path}{}", snapshot.profile.source_field());
             let before = field(&snapshot.raw, &path)?.clone();
@@ -203,7 +208,14 @@ impl Plan {
                 });
             }
         }
-        let mut plan = Self::prepare(&projected, layout, screen_index, mappings, target, sizing)?;
+        let mut plan = Self::prepare(
+            &projected,
+            &projected_layout,
+            screen_index,
+            mappings,
+            target,
+            sizing,
+        )?;
         // Conversion uses the selected input; preflight still compares the actual device state.
         for (path, before) in &mut plan.observed {
             *before = field(&snapshot.raw, path)?.clone();
@@ -712,6 +724,50 @@ mod tests {
     }
 
     #[test]
+    fn replacing_input_reframes_only_its_layer_and_is_undoable() {
+        use crate::formats::{Crop, LayerFit};
+        for mode in std::iter::once(None).chain(LayerFit::ALL.into_iter().map(Some)) {
+            let mut editor = layout();
+            editor.formats.source_for[1] = editor.formats.source_for[0];
+            if mode.is_some() {
+                editor
+                    .set_layer_fit(
+                        0,
+                        mode,
+                        Crop {
+                            left: 200.,
+                            right: 100.,
+                            top: 50.,
+                            bottom: 20.,
+                        },
+                    )
+                    .unwrap();
+            }
+            let original = editor.formats().clone();
+            let boxes = editor.layers().clone();
+            editor.set_layer_source_resolution(0, [942, 1029]).unwrap();
+            assert_eq!(editor.layers(), &boxes);
+            assert_eq!(editor.formats().input(0).unwrap(), [942., 1029.]);
+            assert_eq!(editor.formats().input(1).unwrap(), [1920., 1080.]);
+            assert_eq!(editor.formats().advanced[1], original.advanced[1]);
+            assert_eq!(editor.formats().masks, original.masks);
+            editor.formats().mapping(0, boxes[0]).unwrap();
+            if mode.is_none() {
+                let a = original.mapping(0, boxes[0]).unwrap();
+                let b = editor.formats().mapping(0, boxes[0]).unwrap();
+                assert!((a.framing.zoom - b.framing.zoom).abs() < 1e-8);
+            } else {
+                assert!(
+                    (editor.formats().advanced[0].left / 942. - original.advanced[0].left / 1920.)
+                        .abs()
+                        < 1e-8
+                );
+            }
+            editor.undo();
+            assert_eq!(editor.formats(), &original);
+        }
+    }
+    #[test]
     fn selected_input_requires_opt_in_and_preserves_fresh_state_guards() {
         let mut state = snapshot();
         state.raw["device"]["inputList"] = json!({"items":{"INPUT_5":{
@@ -753,6 +809,29 @@ mod tests {
         assert_eq!(plan.changes[0].after, json!("INPUT_5"));
         assert_eq!(plan.changes[0].before, json!("INPUT_4"));
         assert!(validate_fresh(&plan, &state).is_ok());
+        // A selected replacement signal need not match the editor's previous
+        // source. Reframe a planning copy and keep the original project intact.
+        let mut different = editor.clone();
+        let i = (0..different.layers().len())
+            .find(|&i| different.layer_info(i).id == 2)
+            .unwrap();
+        different
+            .set_layer_source_resolution(i, [942, 1029])
+            .unwrap();
+        let before = different.formats().clone();
+        let switched = Plan::prepare_with_inputs(
+            &state,
+            &different,
+            0,
+            &mappings,
+            Target::Preview,
+            Sizing::OutputBox,
+            &[(2, 5)].into(),
+        )
+        .unwrap();
+        assert_eq!(switched.changes[0].after, json!("INPUT_5"));
+        assert_eq!(different.formats(), &before);
+        assert!(validate_fresh(&switched, &state).is_ok());
         let mut changed = state.clone();
         changed.raw["device"]["inputList"]["items"]["INPUT_5"]["status"]["pp"]["plug"] =
             json!("OTHER");

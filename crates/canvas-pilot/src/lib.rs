@@ -836,6 +836,55 @@ impl Layout {
     pub fn formats(&self) -> &Formats {
         &self.formats
     }
+    /// Reframe only this layer for a replacement signal, preserving its output box.
+    pub fn set_layer_source_resolution(
+        &mut self,
+        i: usize,
+        native: [u32; 2],
+    ) -> Result<(), String> {
+        formats::validate_resolution(native)?;
+        let g = *self.layers.get(i).ok_or("Layer unavailable")?;
+        let old = self.formats.input(i)?;
+        if old == native.map(f64::from) {
+            return Ok(());
+        }
+        let input = native.map(f64::from);
+        let crop = self.formats.advanced[i];
+        let next_crop = if self.formats.layer_fit[i].is_some() {
+            formats::Crop {
+                left: crop.left * input[0] / old[0],
+                right: crop.right * input[0] / old[0],
+                top: crop.top * input[1] / old[1],
+                bottom: crop.bottom * input[1] / old[1],
+            }
+        } else {
+            formats::reframed(old, [g.width, g.height], crop, input, [g.width, g.height])?.0
+        };
+        next_crop.remaining(input)?;
+        self.finish_drag();
+        let before = self.snapshot();
+        let source = self.formats.source_for[i];
+        let replacement = Source {
+            native,
+            aspect: formats::Aspect::Custom,
+        };
+        if self
+            .formats
+            .source_for
+            .iter()
+            .filter(|&&id| id == source)
+            .count()
+            > 1
+        {
+            self.formats.source_for[i] = self.formats.sources.len();
+            self.formats.sources.push(replacement);
+        } else {
+            self.formats.sources[source] = replacement;
+        }
+        self.formats.advanced[i] = next_crop;
+        self.remember(before);
+        Ok(())
+    }
     pub fn set_output(&mut self, output: [u32; 2]) -> Result<(), String> {
         formats::validate_resolution(output)?;
         self.finish_drag();

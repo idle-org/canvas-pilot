@@ -694,6 +694,48 @@ impl Editor {
             })
             .unwrap_or(0)
     }
+    pub(super) fn adapt_layer_to_input(&mut self, i: usize, input: u32) {
+        let result = (|| {
+            let snapshot = self
+                .device
+                .snapshot
+                .as_ref()
+                .ok_or("Refresh the connection to read input dimensions.")?;
+            let raw = snapshot
+                .raw
+                .pointer(&format!(
+                    "/device/inputList/items/{}",
+                    snapshot.profile.input_key(input)
+                ))
+                .ok_or("Input unavailable")?;
+            let plug = raw
+                .pointer("/status/pp/plug")
+                .and_then(serde_json::Value::as_str)
+                .ok_or("Input plug unavailable")?;
+            let signal = raw
+                .pointer(&format!("/plugList/items/{plug}/status/signal/pp"))
+                .ok_or("Input signal unavailable")?;
+            if signal.get("isValid").and_then(serde_json::Value::as_bool) != Some(true) {
+                return Err("Input has no valid signal".into());
+            }
+            let native = canvas_pilot::formats::resolution_from_values(
+                ["imageWidth", "imageHeight"].map(|key| {
+                    signal
+                        .get(key)
+                        .and_then(serde_json::Value::as_f64)
+                        .unwrap_or(0.)
+                }),
+            )?;
+            self.layout.set_layer_source_resolution(i, native)
+        })();
+        match result {
+            Ok(()) => {
+                self.rebind_input_preview_source(i);
+                self.sync();
+            }
+            Err(error) => self.capture_input_error(error),
+        }
+    }
     pub(super) fn source_input_controls(&mut self, ui: &mut egui::Ui, i: usize) {
         let input = self.selected_physical_input(i);
         let available = self
@@ -710,6 +752,7 @@ impl Editor {
                 input,
                 ..Default::default()
             });
+        let previous = (choice.input, choice.change);
         ui.horizontal(|ui| {
             ui.label(tr(ui.ctx(), "ui.device-input"));
             egui::ComboBox::from_id_salt(("source-input",i)).selected_text(if choice.input==0 {"Choose input…".into()} else {format!("Input {}",choice.input)}).show_ui(ui,|ui| {
@@ -718,6 +761,10 @@ impl Editor {
             });
             ui.checkbox(&mut choice.change,tr(ui.ctx(), "ui.change-input")).on_hover_text("Switch this layer's mapped device destinations to the selected input on the next Send. Nothing changes immediately.");
         });
+        let selected = choice.input;
+        if selected != previous.0 || (choice.change && !previous.1) {
+            self.adapt_layer_to_input(i, selected);
+        }
         ui.small("Input changes are staged for this session only. Nothing is routed until Send.");
     }
     pub(super) fn layer_mapping_controls(&mut self, ui: &mut egui::Ui, i: usize) {

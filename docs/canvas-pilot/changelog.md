@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.10.0-rc.5
+
+- Adapt a layer to the selected input resolution instead of requiring a manual
+  source-size match. Preserve its outer box and normal zoom/focus; advanced fit
+  retains proportional crop edges. Shared editor sources are detached per layer.
+- Preview input selection uses the same undoable adaptation. Explicit input-switch
+  plans adapt a temporary layout too, retaining device freshness validation.
+
 ### v0.10.0-rc.4
 
 - Fix Midra layer input switching reading the wrong input crop path. Validate

@@ -383,3 +383,16 @@ are not stretched back to the uncropped signal size. The layer’s crop, zoom, f
 and mask then apply normally. **Centered (fit)** preserves proportions;
 **Fullscreen (stretch)** still deliberately stretches. This preview does not
 change source dimensions or device input settings.
+
+### Switching to a different input size
+
+Selecting a physical input in Source properties or a different capture input in
+Preview adapts that layer’s source dimensions to the valid signal. Its position
+and outer size stay fixed. Normal crop mode retains zoom and normalized focus
+(clamped at the new image edges); advanced fit retains proportional crop edges.
+Other layers keep their source dimensions, even if they previously shared the
+same editor source. Undo restores the previous framing. Input routing remains
+opt-in through **Change input**, applied only on Send.
+
+Explicit input-switch sends also adapt framing when a saved source size differs.
+Existing restrictions on shared device input crop/aspect correction still apply.

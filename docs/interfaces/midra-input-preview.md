@@ -196,3 +196,10 @@ The input-settings editor separately places captures at their applied crop posit
 This affects rendering only. Stored image bytes, source dimensions, project schema
 and device transfers are unchanged. Input-settings/global fit inheritance is not
 inferred from a PNG; this does not add support for those device modes.
+
+Explicit physical input selection now adapts that layer's editor source dimensions
+using signal imageWidth/imageHeight (not thumbnail dimensions). Layer geometry
+stays fixed; ordinary framing is recalculated with the existing zoom and normalized
+focus, while explicit fit keeps crop fractions. A shared source is copied before
+replacement so other layers are unaffected. This is an undoable editor change,
+persisted through the existing source/crop fields without a schema change.

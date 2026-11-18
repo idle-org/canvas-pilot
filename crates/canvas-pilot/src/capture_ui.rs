@@ -671,10 +671,12 @@ impl Editor {
             preview.paused = false;
         }
         let mut capture = false;
+        let mut changed_input = None;
         ui.add_enabled_ui(preview.enabled, |ui| {
             let before = preview.input;
             ui.add_enabled_ui(!following, |ui| {input_picker(ui, ("layer-preview-input", id), &mut preview.input, &inputs, &mut self.capture.show_empty_inputs);});
             if before != preview.input {
+                changed_input = Some(preview.input);
                 preview.host = self.device.host.clone();
                 preview.paused = false;
                 preview.texture = None;
@@ -711,6 +713,9 @@ impl Editor {
             if !idle { ui.spinner(); ui.small(tr(ui.ctx(), "ui.fetching-an-input-snapshot")); }
             else if cooling { ui.small(tr(ui.ctx(), "ui.capture-available-again-shortly")); ui.ctx().request_repaint_after(std::time::Duration::from_secs(1)); }
         });
+        if let Some(input) = changed_input {
+            self.adapt_layer_to_input(i, input);
+        }
         if !self.capture.error.is_empty() {
             ui.colored_label(ui.visuals().error_fg_color, &self.capture.error);
         }
@@ -725,7 +730,20 @@ impl Editor {
                 .capture_on_selection = false;
             let input = self.capture.layers[&id].input;
             self.start_input_capture(ui.ctx(), input, false);
-            self.capture.pending_layer = Some((id, source, input, self.device.host.clone()));
+            self.capture.pending_layer = Some((
+                id,
+                self.layout.formats().source_for[i],
+                input,
+                self.device.host.clone(),
+            ));
+        }
+    }
+    pub(super) fn capture_input_error(&mut self, error: String) {
+        self.capture.error = error;
+    }
+    pub(super) fn rebind_input_preview_source(&mut self, i: usize) {
+        if let Some(preview) = self.capture.layers.get_mut(&self.layout.layer_info(i).id) {
+            preview.source = self.layout.formats().source_for[i];
         }
     }
     fn sync_followed_inputs(&mut self) {

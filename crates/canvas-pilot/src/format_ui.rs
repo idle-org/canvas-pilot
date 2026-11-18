@@ -527,6 +527,19 @@ impl Editor {
                 }
             });
         });
+        // Input selection can reframe the live layer while this window owns its
+        // draft. Refresh only source-dependent fields, preserving pending size edits.
+        let source_id = self.layout.formats().source_for[i];
+        let source = self.layout.formats().sources[source_id];
+        if d.baseline.0 != source_id || d.baseline.1 != source {
+            d.source_id = source_id;
+            d.source = source;
+            d.input_size = source.input().unwrap();
+            d.baseline.0 = source_id;
+            d.baseline.1 = source;
+            d.baseline.2 = d.input_size;
+            d.refresh_fit(&self.layout);
+        }
         if !open && d.pending(&self.layout) {
             d.closing = true;
         }
