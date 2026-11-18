@@ -134,7 +134,8 @@ impl Editor {
                 ui.add_enabled_ui(self.inputs.pending.is_none(),|ui|{
                     egui::ComboBox::from_id_salt("device-input-picker").selected_text(format!("Input {}",self.inputs.selected)).show_ui(ui,|ui|{
                         for input in &inputs {
-                            if ui.selectable_value(&mut self.inputs.selected,input.id,format!("Input {}{}{}",input.id,if input.signal{""}else{" · no signal"},if self.inputs.drafts.get(&input.id).is_some_and(InputDraft::dirty){" · edited"}else{""})).changed(){
+                            ui.visuals_mut().widgets.hovered.bg_stroke.color = egui::Color32::TRANSPARENT;
+                            if ui.stable_selectable_value(&mut self.inputs.selected,input.id,format!("Input {}{}{}",input.id,if input.signal{""}else{" · no signal"},if self.inputs.drafts.get(&input.id).is_some_and(InputDraft::dirty){" · edited"}else{""})).changed(){
                                 self.inputs.capture=None;self.inputs.capture_key=None;self.inputs.drag=None;self.inputs.edit_start=None;
                             }
                         }

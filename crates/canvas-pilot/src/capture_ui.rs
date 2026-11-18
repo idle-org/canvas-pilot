@@ -26,6 +26,7 @@ fn input_picker(
         .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
         .selected_text(input_label(inputs, *selected))
         .show_ui(ui, |ui| {
+            ui.visuals_mut().widgets.hovered.bg_stroke.color = egui::Color32::TRANSPARENT;
             ui.checkbox(show_empty, "Show inputs without signal")
                 .on_hover_text(tr(
                     ui.ctx(),

@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.0-rc.3
+
+- Use stable selectable rows and a subtle background hover in device input
+  pickers, avoiding border-driven shifts when moving between inputs.
+
 ### v0.10.0-rc.2
 
 - Tighten input reference picture rows from 44 to 32 pixels apart while retaining

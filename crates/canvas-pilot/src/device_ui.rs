@@ -713,7 +713,8 @@ impl Editor {
         ui.horizontal(|ui| {
             ui.label(tr(ui.ctx(), "ui.device-input"));
             egui::ComboBox::from_id_salt(("source-input",i)).selected_text(if choice.input==0 {"Choose input…".into()} else {format!("Input {}",choice.input)}).show_ui(ui,|ui| {
-                for input in &available {ui.selectable_value(&mut choice.input,input.id,format!("Input {}{}",input.id,if input.signal {""} else {" · No signal"}));}
+                ui.visuals_mut().widgets.hovered.bg_stroke.color = egui::Color32::TRANSPARENT;
+                for input in &available {ui.stable_selectable_value(&mut choice.input,input.id,format!("Input {}{}",input.id,if input.signal {""} else {" · No signal"}));}
             });
             ui.checkbox(&mut choice.change,tr(ui.ctx(), "ui.change-input")).on_hover_text("Switch this layer's mapped device destinations to the selected input on the next Send. Nothing changes immediately.");
         });
