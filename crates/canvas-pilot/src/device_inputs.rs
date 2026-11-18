@@ -5,7 +5,7 @@ use crate::{
     formats::Crop,
 };
 use serde_json::{Value, json};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug)]
 pub enum Kind {
@@ -30,6 +30,7 @@ pub struct InputDraft {
     pub values: BTreeMap<String, Value>,
     original: BTreeMap<String, Value>,
     observed: Vec<(String, Value)>,
+    kept_groups: BTreeSet<String>,
 }
 impl InputDraft {
     pub fn read(snapshot: &Snapshot, input: u32) -> Result<Self, String> {
@@ -331,10 +332,33 @@ impl InputDraft {
             values: original.clone(),
             original,
             observed,
+            kept_groups: BTreeSet::new(),
         })
     }
     pub fn dirty(&self) -> bool {
-        self.values != self.original
+        self.fields.iter().any(|f| {
+            !self.keeps_group(f.group) && self.values.get(&f.path) != self.original.get(&f.path)
+        })
+    }
+    pub fn keeps_group(&self, group: &str) -> bool {
+        self.kept_groups.contains(group)
+    }
+    /// Keep means no writes, never restoring stale device values.
+    pub fn keep_group(&mut self, group: &str, keep: bool) {
+        if keep {
+            self.kept_groups.insert(group.to_owned());
+        } else {
+            self.kept_groups.remove(group);
+        }
+        self.restore_kept_groups();
+    }
+    pub fn restore_kept_groups(&mut self) {
+        for field in &self.fields {
+            if self.keeps_group(field.group) {
+                self.values
+                    .insert(field.path.clone(), self.original[&field.path].clone());
+            }
+        }
     }
     pub fn reset(&mut self) {
         self.values = self.original.clone();
@@ -460,6 +484,9 @@ impl InputDraft {
                 .iter()
                 .find(|f| &f.path == path)
                 .ok_or("Unknown input setting")?;
+            if self.keeps_group(field.group) {
+                continue;
+            }
             let valid = match &field.kind {
                 Kind::Number(min, max) => {
                     after.as_i64().is_some_and(|v| (*min..=*max).contains(&v))
@@ -525,6 +552,47 @@ mod tests {
                 }}}
             }}}}}),
         }
+    }
+    #[test]
+    fn kept_categories_never_send_and_discard_their_edits() {
+        let s = snapshot();
+        let mut d = InputDraft::read(&s, 1).unwrap();
+        let brightness = d
+            .fields
+            .iter()
+            .find(|f| f.label == "Brightness")
+            .unwrap()
+            .path
+            .clone();
+        d.values.insert(brightness.clone(), json!(10));
+        d.keep_group("Color", true);
+        assert_eq!(d.values[&brightness], json!(0));
+        assert!(!d.dirty());
+        // Even a stale undo value cannot bypass the send boundary.
+        d.values.insert(brightness.clone(), json!(20));
+        assert!(d.changes(&s).unwrap().is_empty());
+        assert!(!d.dirty());
+        d.zoom_crop(2., [0.5, 0.5]).unwrap();
+        assert!(
+            d.changes(&s)
+                .unwrap()
+                .iter()
+                .all(|c| !c.path.iter().any(|p| p == "color"))
+        );
+        d.restore_kept_groups();
+        d.keep_group("Color", false);
+        d.values.insert(brightness, json!(15));
+        assert!(
+            d.changes(&s)
+                .unwrap()
+                .iter()
+                .any(|c| c.path.iter().any(|p| p == "color"))
+        );
+        d.keep_group("Crop", true);
+        assert_eq!(d.crop(), Crop::default());
+        d.reset();
+        assert!(!d.dirty());
+        assert!(d.keeps_group("Crop"));
     }
     #[test]
     fn aquilon_uses_aspect_bounds_and_unsigned_color_ranges() {

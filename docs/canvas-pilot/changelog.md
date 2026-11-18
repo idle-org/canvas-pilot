@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.59
+
+- Added “Keep device values” per input-settings category. Protected categories
+  discard draft edits, disable editing and never contribute device writes, including
+  after Undo. Crop protection also disables the visual crop editor.
+
 ### v0.9.58
 
 - Made shared input crop handles easier to grab, with larger targets, resize

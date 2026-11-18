@@ -320,6 +320,11 @@ Program and layers outside the project. Nothing is sent while dragging, selectin
 an input, capturing an image or opening the window. Use **Review input changes**,
 then **Send input settings** to apply the edited fields and verify them.
 
+- **Keep device values:** each category has this toggle. Check it to discard that
+  category’s draft edits, disable its controls and leave it untouched when sending.
+  Crop protection also disables the visual crop editor. Uncheck to edit again.
+  Categories start editable; unchanged fields are never sent. Protection is retained
+  when discarding edits, and cleared when reloading the input.
 - **Input crop:** drag edges/corners or move the retained box. Crop zoom reduces
   or expands the retained region around the selected pivot using the **− slider +**
   percentage control; it does not add a

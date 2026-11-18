@@ -161,7 +161,7 @@ impl Editor {
             let mut undoing=false;
             ui.add_enabled_ui(state.pending.is_none() && !self.device.busy(),|ui|{
                 ui.horizontal(|ui|{
-                    if ui.button("Undo input edit").clicked() && let Some(previous)=state.undo.entry(id).or_default().pop(){draft.values=previous;undoing=true;state.edit_start=None;}
+                    if ui.button("Undo input edit").clicked() && let Some(previous)=state.undo.entry(id).or_default().pop(){draft.values=previous;draft.restore_kept_groups();undoing=true;state.edit_start=None;}
                     if ui.button("Discard draft").clicked(){draft.reset();}
                     if ui.button("Reload selected input").clicked(){refresh=true;}
                     capture=ui.add_enabled(capture_idle && inputs.iter().any(|i|i.id==id && i.enabled),egui::Button::new("Capture input")).clicked();
@@ -169,7 +169,7 @@ impl Editor {
                 ui.columns(2,|columns|{
                     let ui=&mut columns[0];
                     ui.heading("Input crop");
-                    crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g)));
+                    ui.add_enabled_ui(!draft.keeps_group("Crop"), |ui| { crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g))); });
                     ui.separator();
                     ui.label("Device capture · processed preview");
                     ui.small("Unavailable pixels use the sizing pattern. Aquilon captures fill only the known region; the unchanged capture is shown below. No raw pixels are reconstructed.");
@@ -178,6 +178,13 @@ impl Editor {
                     for group in ["Aspect","Crop","Color","Processing","Keying","LUT"] {
                         if !draft.fields.iter().any(|f|f.group==group){continue;}
                         egui::CollapsingHeader::new(group).default_open(matches!(group,"Aspect"|"Crop")).show(ui,|ui|{
+                            let mut keep = draft.keeps_group(group);
+                            if ui.checkbox(&mut keep,"Keep device values").on_hover_text("Leave this category untouched when sending. Checking discards its draft edits.").changed() {
+                                draft.keep_group(group,keep);
+                                state.review=false;
+                                if group=="Crop" {state.drag=None;}
+                            }
+                            ui.add_enabled_ui(!keep, |ui| {
                             for field in &draft.fields {
                                 if field.group!=group{continue;}
                                 let value=draft.values.get_mut(&field.path).unwrap();
@@ -197,6 +204,7 @@ impl Editor {
                                     }
                                 });
                             }
+                            });
                         });
                     }
                     ui.small("LUT controls require an allocated resource. Signal/HDCP and resource allocation remain in WebRCS.");
@@ -642,6 +650,25 @@ mod tests {
         });
         app.inputs.open = true;
         app
+    }
+    #[test]
+    fn keep_crop_disables_editor_and_survives_undo() {
+        let mut app = input_app();
+        let ctx = egui::Context::default();
+        super::super::tests::click_text(&mut app, &ctx, "Reset crop");
+        super::super::tests::click_text(&mut app, &ctx, "Keep device values");
+        assert!(app.inputs.drafts[&1].keeps_group("Crop"));
+        assert_eq!(app.inputs.drafts[&1].crop().left, 24.);
+        super::super::tests::click_text(&mut app, &ctx, "Reset crop");
+        assert_eq!(app.inputs.drafts[&1].crop().left, 24.);
+        super::super::tests::click_text(&mut app, &ctx, "Undo input edit");
+        assert_eq!(app.inputs.drafts[&1].crop().left, 24.);
+        assert!(!app.inputs.drafts[&1].dirty());
+        super::super::tests::click_text(&mut app, &ctx, "Keep device values");
+        super::super::tests::click_text(&mut app, &ctx, "Reset crop");
+        assert_eq!(app.inputs.drafts[&1].crop(), Crop::default());
+        assert!(!app.device.input_sending);
+        assert!(app.inputs.pending.is_none());
     }
     #[test]
     fn shared_input_reset_and_undo_do_not_modify_layers_or_send() {
