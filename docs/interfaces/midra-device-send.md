@@ -318,13 +318,17 @@ values and active plug before publishing the draft. Normal layout reads remain
 unchanged. Unsupported or absent fields are not invented.
 
 Input-window capture uses the existing bounded snapshot reader and shared throttle.
-It never updates layer preview images or changes input crop to obtain a raw image.
+Live capture runs only while enabled and the input window is open. It joins the
+existing automatic input scheduler, sharing its interval and a single capture with
+opted-in layer/dialog consumers for the same input. It never changes input crop
+to obtain a raw image. Sends clear the preview/key and suspend capture scheduling
+until apply/readback completes; late results from invalidated requests are ignored.
 The input crop editor uses the existing sizing pattern behind available pixels.
 For Aquilon, fresh reads bracket capture; stable crop/aspect/plug state and a matching
 thumbnail frame ratio are required for compositing. The image is clipped to the
 captured status-crop region using corresponding full-frame UV coordinates; it is
 never stretched to a newly edited crop. Unknown pixels retain the pattern. Other
-capture geometries remain separate previews. No raw-capture contract is claimed. Aquilon Cmax 6.2.79 emulator testing showed
+capture geometries show only the grid (no unverified compositing). No raw-capture contract is claimed. Aquilon Cmax 6.2.79 emulator testing showed
 blanked cropped edges; Pulse 4K 3.3.7 served an unchanged thumbnail. Input drafts
 and captures are not serialized, and existing project/exchange versions are unchanged.
 

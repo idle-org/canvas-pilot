@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.60
+
+- Input capture is now a live toggle while Input settings is open, sharing the
+  existing refresh interval and pooled requests with layer previews.
+- Show captures directly in their verified device-crop region, with the sizing grid
+  elsewhere. Sending invalidates the image until a new verified capture arrives;
+  local crop edits never stretch the preview.
+
 ### v0.9.59
 
 - Added “Keep device values” per input-settings category. Protected categories

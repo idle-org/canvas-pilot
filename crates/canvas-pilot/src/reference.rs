@@ -3,6 +3,7 @@ use std::io::{Cursor, Read};
 // Keep large concurrent imports from multiplying decoder peak memory.
 static DECODE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
+#[derive(Clone)]
 pub(super) struct Reference {
     pub texture: egui::TextureHandle,
     pub name: String,

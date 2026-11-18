@@ -334,9 +334,18 @@ then **Send input settings** to apply the edited fields and verify them.
 - **Aspect**, **Color** and **Processing** expose adapter-specific settings.
   Keying and LUT controls appear only when supported/available. Resource allocation,
   signal negotiation and HDCP remain in WebRCS.
-- **Capture input:** displays the device thumbnail unchanged. Aquilon's emulator
-  blanks cropped edges in this image. No raw/pre-crop endpoint is confirmed, so it
-  is displayed separately from the crop grid, without applying crop a second time.
+- **Capture input (live):** refreshes while enabled and this window is open, using
+  the same interval as automatic layer previews (10 seconds by default, at least
+  5 seconds). Matching input requests share a capture. Closing the window or
+  switching the toggle off stops its refresh requests.
+  Captured pixels appear directly inside the **device's captured crop region**;
+  unknown pixels retain the sizing grid. Moving the draft crop never moves or
+  stretches those pixels. After Send, the old capture is cleared while settings
+  are applied and verified; **Refreshing capture…** remains until a new capture
+  arrives. Unverified capture geometry shows the grid rather than a distorted image.
+  Aquilon captures are supported for the verified full-frame thumbnail geometry;
+  no raw/pre-crop endpoint is confirmed.
+
 
 Drafts are session-only and are not included in projects or exports. Switching
 inputs retains their drafts; changing connection discards them. Reload selected

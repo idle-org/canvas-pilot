@@ -49,6 +49,7 @@ pub(super) struct InputsWindow {
     pivot: [usize; 2],
     view_zoom: f32,
     view_pan: Vec2,
+    pub live_capture: bool,
     pub capture: Option<super::super::reference::Reference>,
     pub capture_geometry: Option<CaptureGeometry>,
     pub capture_key: Option<(String, u32, String)>,
@@ -107,9 +108,8 @@ impl Editor {
         if !self.inputs.open {
             return;
         }
-        let capture_idle = self.capture_idle();
+        let capture_pending = self.input_capture_pending();
         let mut open = true;
-        let mut capture = false;
         let mut send = None;
         let mut refresh = false;
         egui::Window::new("Input settings").id(egui::Id::new("device-input-settings"))
@@ -123,7 +123,7 @@ impl Editor {
             };
 
             let inputs=canvas_pilot::device_capture::inputs(snapshot);
-            if self.inputs.pending.is_some() {ui.spinner();ui.label("Reading / verifying input settings…");return;}
+            if self.inputs.pending.is_some() {ui.spinner();ui.label("Applying / verifying input settings… Capture will refresh after verification.");return;}
 
             if self.inputs.selected==0 {self.inputs.selected=inputs.first().map(|i|i.id).unwrap_or(0);}
             ui.horizontal(|ui|{
@@ -164,16 +164,18 @@ impl Editor {
                     if ui.button("Undo input edit").clicked() && let Some(previous)=state.undo.entry(id).or_default().pop(){draft.values=previous;draft.restore_kept_groups();undoing=true;state.edit_start=None;}
                     if ui.button("Discard draft").clicked(){draft.reset();}
                     if ui.button("Reload selected input").clicked(){refresh=true;}
-                    capture=ui.add_enabled(capture_idle && inputs.iter().any(|i|i.id==id && i.enabled),egui::Button::new("Capture input")).clicked();
+                    ui.add_enabled(inputs.iter().any(|i|i.id==id && i.enabled) || state.live_capture,egui::Checkbox::new(&mut state.live_capture,"Capture input (live)"));
                 });
                 ui.columns(2,|columns|{
                     let ui=&mut columns[0];
                     ui.heading("Input crop");
-                    ui.add_enabled_ui(!draft.keeps_group("Crop"), |ui| { crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g))); });
-                    ui.separator();
-                    ui.label("Device capture · processed preview");
-                    ui.small("Unavailable pixels use the sizing pattern. Aquilon captures fill only the known region; the unchanged capture is shown below. No raw pixels are reconstructed.");
-                    if let Some(image)=&state.capture {ui.add(egui::Image::new(&image.texture).max_size(Vec2::new(440.,250.)));}
+                    if state.live_capture {
+                        if capture_pending || state.capture.is_none() {ui.label("Refreshing capture…");}
+                        else if state.capture_geometry.is_none() {ui.label("Capture geometry unavailable; showing the sizing grid.");}
+                        else {ui.small("Live capture · device crop, independent of draft edits");}
+                    }
+                    ui.add_enabled_ui(!draft.keeps_group("Crop"), |ui| { crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().filter(|_|state.live_capture).zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g))); });
+                    ui.small("Unknown pixels show the sizing grid. Capture uses the device crop, never the draft crop.");
                     let ui=&mut columns[1];
                     for group in ["Aspect","Crop","Color","Processing","Keying","LUT"] {
                         if !draft.fields.iter().any(|f|f.group==group){continue;}
@@ -244,10 +246,10 @@ impl Editor {
                 ctx.request_repaint();
             });
         }
-        if capture {
-            self.capture_for_inputs_window(ctx);
-        }
         if let Some(draft) = send {
+            self.inputs.capture = None;
+            self.inputs.capture_geometry = None;
+            self.inputs.capture_key = None;
             self.inputs.reading = false;
             let (tx, rx) = std::sync::mpsc::channel();
             self.inputs.pending = Some(rx);
