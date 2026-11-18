@@ -57,7 +57,6 @@ pub(super) struct InputsWindow {
     sending_input: u32,
     reading: bool,
     sending_host: String,
-    review: bool,
     pub message: String,
 }
 impl Editor {
@@ -69,7 +68,6 @@ impl Editor {
             self.inputs.capture = None;
             self.inputs.capture_key = None;
             self.inputs.host = self.device.host.clone();
-            self.inputs.review = false;
         }
         if let Some(rx) = &self.inputs.pending {
             match rx.try_recv() {
@@ -115,7 +113,7 @@ impl Editor {
         egui::Window::new("Input settings").id(egui::Id::new("device-input-settings"))
             .open(&mut open).default_size([1040.0,700.0]).vscroll(true).show(ctx,|ui|{
             ui.label("Shared preprocessing · affects every layer using this device input, including Program.");
-            ui.small("Drafts stay in this session. Nothing is sent until Review and Send input settings.");
+            ui.small("Drafts stay in this session. Nothing is sent until you click Send changes.");
             let Some(snapshot)=&self.device.snapshot else {
                 ui.label("Connect to a supported device to inspect its inputs.");
                 if ui.button("Device connection…").clicked(){self.device.connection_open=true;}
@@ -131,7 +129,7 @@ impl Editor {
                     egui::ComboBox::from_id_salt("device-input-picker").selected_text(format!("Input {}",self.inputs.selected)).show_ui(ui,|ui|{
                         for input in &inputs {
                             if ui.selectable_value(&mut self.inputs.selected,input.id,format!("Input {}{}{}",input.id,if input.signal{""}else{" · no signal"},if self.inputs.drafts.get(&input.id).is_some_and(InputDraft::dirty){" · edited"}else{""})).changed(){
-                                self.inputs.capture=None;self.inputs.capture_key=None;self.inputs.review=false;self.inputs.drag=None;self.inputs.edit_start=None;
+                                self.inputs.capture=None;self.inputs.capture_key=None;self.inputs.drag=None;self.inputs.edit_start=None;
                             }
                         }
                     });
@@ -183,7 +181,7 @@ impl Editor {
                             let mut keep = draft.keeps_group(group);
                             if ui.checkbox(&mut keep,"Keep device values").on_hover_text("Leave this category untouched when sending. Checking discards its draft edits.").changed() {
                                 draft.keep_group(group,keep);
-                                state.review=false;
+
                                 if group=="Crop" {state.drag=None;}
                             }
                             ui.add_enabled_ui(!keep, |ui| {
@@ -212,17 +210,12 @@ impl Editor {
                     ui.small("LUT controls require an allocated resource. Signal/HDCP and resource allocation remain in WebRCS.");
                 });
             });
-            if before!=draft.values {state.review=false;if !undoing && state.edit_start.is_none(){state.edit_start=Some(before);}}
+            if before!=draft.values && !undoing && state.edit_start.is_none(){state.edit_start=Some(before);}
             if !ui.input(|i|i.pointer.any_down()) && let Some(before)=state.edit_start.take(){let history=state.undo.entry(id).or_default();history.push(before);if history.len()>100{history.remove(0);}}
             ui.separator();
             match draft.changes(snapshot) {
                 Ok(changes)=>{
-                    if ui.add_enabled(!changes.is_empty() && state.pending.is_none() && !self.device.busy(),egui::Button::new("Review input changes")).clicked(){state.review=true;}
-                    if state.review {
-                        ui.label("These are shared input changes, not a Preview-only layer edit.");
-                        for change in &changes {ui.small(format!("{}: {} → {}",change.path.iter().skip(8).cloned().collect::<Vec<_>>().join("/"),change.before,change.after));}
-                        if ui.button("Send input settings").clicked(){send=Some(draft.clone());state.review=false;}
-                    }
+                    if ui.add_enabled(!changes.is_empty() && state.pending.is_none() && !self.device.busy(),egui::Button::new("Send changes")).clicked(){send=Some(draft.clone());}
                 }
                 Err(error)=>{ui.colored_label(theme::palette(ui.ctx()).amber,error);}
             }
@@ -231,7 +224,6 @@ impl Editor {
         });
         self.inputs.open = open;
         if refresh && !self.device.busy() {
-            self.inputs.review = false;
             self.inputs.reading = true;
             let (tx, rx) = std::sync::mpsc::channel();
             self.inputs.pending = Some(rx);

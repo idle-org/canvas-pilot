@@ -298,8 +298,8 @@ change. Persistence and migrations are specified in the
 `device_inputs::InputDraft` is a transient adapter-specific input/active-plug draft,
 not a persistent project field. The common window edits native input preprocessing
 without changing editor sources, layer geometry, routing or preset selection.
-Only edited fields are sent after fresh signal/plug/settings checks; readback is
-verified. There is no automatic retry, rollback or preset-apply pulse. Partial
+**Send changes** sends edited fields directly after fresh signal/plug/settings
+checks; readback is verified. The input editor does not expose or write Crop Finder. There is no automatic retry, rollback or preset-apply pulse. Partial
 failures are reported and require refresh. This does not migrate existing source
 geometry or saved layer-bound input proposals; only their saved data and local geometry compatibility remain.
 

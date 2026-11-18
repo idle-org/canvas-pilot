@@ -174,12 +174,6 @@ impl InputDraft {
                 ),
             );
         }
-        add(
-            "control/pp/enableCropFinder",
-            "Finder (visible on device outputs)",
-            "Crop",
-            Kind::Toggle,
-        );
         for (key, label) in [
             ("brightness", "Brightness"),
             ("contrast", "Contrast"),

@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.61
+
+- Removed Crop Finder from shared input settings and replaced the review step with
+  a direct **Send changes** button. Fresh device validation, category protection
+  and verified readback remain in place.
+
 ### v0.9.60
 
 - Input capture is now a live toggle while Input settings is open, sharing the

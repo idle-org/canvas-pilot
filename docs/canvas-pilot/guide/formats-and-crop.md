@@ -317,8 +317,8 @@ additional controls without downloading the complete device store.
 
 This edits preprocessing shared by every consumer of that input, including
 Program and layers outside the project. Nothing is sent while dragging, selecting
-an input, capturing an image or opening the window. Use **Review input changes**,
-then **Send input settings** to apply the edited fields and verify them.
+an input, capturing an image or opening the window. Use **Send changes** to apply the edited fields directly, with fresh device
+validation and verified readback.
 
 - **Keep device values:** each category has this toggle. Check it to discard that
   category’s draft edits, disable its controls and leave it untouched when sending.

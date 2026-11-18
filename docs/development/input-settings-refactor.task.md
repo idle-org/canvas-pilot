@@ -16,9 +16,9 @@ Layer properties link to the relevant input; layer crop, fit, position and masks
 remain layer-owned. A local editor source ID is never interpreted as a physical
 input number. Inputs on different connections require different identities.
 
-Edits remain local drafts until an explicit reviewed Send input settings action.
+Edits remain local drafts until an explicit **Send changes** action.
 Changing a selection, opening a project or capturing an image sends no settings.
-The review explains that an input change affects every device consumer, including
+The window explains that an input change affects every device consumer, including
 ones outside this project and potentially Program. No routing or TAKE is implied.
 
 Reuse the canvas interaction conventions for crop edges, whole-window movement,
