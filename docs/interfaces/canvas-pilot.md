@@ -328,9 +328,10 @@ loader as references, on the project-loading worker. Malformed images abort the
 entire open, preserving current work. A capture shared by several layers is
 embedded in each preview entry; the same combined size limit applies.
 
-Restoring a project never starts a connection or a capture. Saved stills appear
-offline; saved automatic capture choices are **paused** until Capture still,
-Resume auto-refresh, changing the input, or explicitly toggling auto-refresh.
+Restoring a project never starts a connection. Saved stills appear offline; saved
+automatic capture choices resume through the normal capture scheduler when the
+matching device is online and input snapshots are available. Disabled previews
+and still-only previews do not request refreshes.
 Pending jobs, throttles and queued selection captures are not restored. Device
 host matching still applies to automatic requests. These settings/stills are not
 part of geometry export formats; fixed references retain their existing optional

@@ -459,7 +459,7 @@ folders, visibility/locking, pivots, Midra links, reference images, selection,
 viewport and positioning settings. It also saves snapping/grid settings, group
 resize mode, collapsed folders, capture input assignments, the last captured
 stills, guide opacity and refresh settings. Saved stills work offline; automatic
-refresh reopens paused until you capture or resume it explicitly.
+refresh resumes when the matching device is connected and snapshots are available.
 
 Connection history, startup connection, theme and Program permission remain in
 application preferences. Unsaved drafts, undo history, open menus, active editing

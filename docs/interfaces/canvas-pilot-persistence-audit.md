@@ -21,7 +21,7 @@ not every control should become document data.
 | Collapsed folder rows | **Added to project**. Keeps larger memory collections manageable; stale folder names are filtered out. |
 | Preview input, device-address binding, editor-source binding, enable flag | **Added to project** per stable layer ID. Preselected-but-not-yet-captured inputs are saved too. |
 | Last captured still, guide opacity | **Added to project**. Original image bytes are embedded for offline reuse, subject to the shared 64 MiB image budget. |
-| Auto-refresh choice, refresh interval, show no-signal inputs | **Added to project**. Auto-refresh restores paused; no fetch or connection is initiated by loading. Resume/capture is explicit. |
+| Auto-refresh choice, refresh interval, show no-signal inputs | **Added to project**. Auto-refresh resumes through the scheduler on the matching online connection; loading never initiates a connection. Offline stills remain available. |
 | Theme/recent themes, connection address/history, startup connection, allow Program | Application settings only. These belong to the workstation/operator; opening a document must not switch connections or global permissions. Capture host strings are bindings, not connection instructions. |
 | All/selected/folder transfer scope, target bank, export sizing strategy | Session choices. Links and folders are persistent; the current transfer action and destination bank are not document content. Existing behavior is retained. |
 | Advanced shared-device input edit checkbox and staged edits | Session-only by design. These are pending changes to external shared input settings; only explicit edits are sent. Layer geometry and processed source dimensions are saved separately. |

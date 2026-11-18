@@ -133,8 +133,9 @@ input's image. Disabling the preview hides it and pauses its refreshes.
 **Crop guide opacity** defaults to 35% with an image; without an enabled image,
 guides remain fully opaque and the slider is disabled. Selection handles stay
 fully visible. Layer previews, captured stills and timer settings are saved in the project.
-Saved auto-refresh reopens paused: use **Resume auto-refresh** or **Capture still**
-to resume. Opening a project does not fetch images. The timer
+Saved auto-refresh resumes when the matching device is connected and input snapshots
+are available. Opening a project does not start a connection; saved images remain
+visible offline. The timer
 pauses offline and while the separate capture/import dialog is open. Reduced
 snapshot resolution and freshness are controlled by the device. If snapshots
 are disabled for an input, enable them in WebRCS and refresh the connection.

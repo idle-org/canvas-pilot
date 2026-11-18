@@ -164,7 +164,7 @@ impl CaptureUi {
                     source: p.source_id - 1,
                     texture,
                     bytes,
-                    paused: true,
+                    paused: false,
                     automatic: p.automatic,
                     capture_on_selection: false,
                     name: p.name.clone(),
@@ -922,7 +922,7 @@ mod tests {
         assert_eq!(app.capture.layers[&id].input, 5);
     }
     #[test]
-    fn project_restores_capture_stills_and_settings_without_network_work() {
+    fn project_restores_stills_and_resumes_auto_refresh_only_on_matching_connection() {
         use canvas_pilot::project::Project;
         let ctx = egui::Context::default();
         let reference = tiny_reference(&ctx, "Input 4 still");
@@ -956,7 +956,7 @@ mod tests {
         assert_eq!(restored.project(), saved);
         assert_eq!(restored.capture.layers[&id].bytes, reference.bytes);
         assert!(restored.layer_preview(0).is_some());
-        assert!(restored.capture.layers[&id].paused);
+        assert!(!restored.capture.layers[&id].paused);
         assert!(restored.capture.pending.is_none());
         assert!(restored.capture.last_request.is_none());
         restored.device.host = app.device.host;
@@ -969,8 +969,17 @@ mod tests {
             }}}}),
         });
         assert!(restored.next_selection_capture().is_none());
+        assert_eq!(restored.next_preview_refresh(), Some(4));
+        let host = restored.device.host.clone();
+        restored.device.host = "other-device:3000".into();
         assert!(restored.next_preview_refresh().is_none());
-        restored.capture.layers.get_mut(&id).unwrap().paused = false;
+        restored.device.host = host;
+        restored.capture.layers.get_mut(&id).unwrap().enabled = false;
+        assert!(restored.next_preview_refresh().is_none());
+        restored.capture.layers.get_mut(&id).unwrap().enabled = true;
+        restored.capture.layers.get_mut(&id).unwrap().automatic = false;
+        assert!(restored.next_preview_refresh().is_none());
+        restored.capture.layers.get_mut(&id).unwrap().automatic = true;
         assert_eq!(restored.next_preview_refresh(), Some(4));
         let mut invalid = saved.clone();
         invalid.workspace.previews[0].image_base64 = "bm90IGFuIGltYWdl".into();

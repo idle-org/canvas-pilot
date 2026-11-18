@@ -103,7 +103,7 @@ Layer-preview assignments, original image bytes, visibility toggles and guide op
 are saved in project version 11, but omitted from geometry exports. Add as reference remains the fixed-reference path;
 generic artwork exports include those references only through the existing
 background option. Reloading a project makes no capture requests.
-**Auto-refresh this preview** is opt-in per layer and restored paused, with a shared request interval
+**Auto-refresh this preview** is opt-in per layer and restored ready to resume on the matching connection, with a shared request interval
 of 5–300 seconds (default 10). Assignments also retain the device address and
 physical input number in the project. Visible layers with enabled automatic previews, unchanged
 local inputs and the current device address are eligible; unavailable or
@@ -132,7 +132,7 @@ dialog is open. Errors retain the last good image and wait for the next interval
 there are no immediate retries. Turning off refresh prevents applying an in-flight
 automatic result. Project replacement restores saved assignments and discards stale results.
 Automatic refresh never changes fixed references or device settings. Timer settings
-are persisted in project version 11. Saved automatic previews stay paused until an explicit capture or resume; opening a project makes no device requests.
+are persisted in project version 11. Saved automatic previews resume through the normal scheduler on the matching online connection; opening a project does not initiate a connection.
 Live feeds and separate image-file saving are not implemented.
 
 After successful connection/linked load or device-layer import, untouched layer

@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.66
+
+- Reopening a project now resumes saved preview auto-refresh when its matching
+  device is connected and snapshots are available. Offline stills remain visible;
+  loading does not connect to a saved address. Disabled and still-only previews
+  remain idle. Project format is unchanged.
+
+
 ### v0.9.65
 
 - Added per-destination **Send options** to the mapping window mockup: Position,
