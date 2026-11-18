@@ -267,3 +267,16 @@ replaced; they are not saved in projects or exchange files. Input switching requ
 a valid signal with native dimensions matching the editor source format and no
 input crop/aspect correction. Unsupported combinations stop preparation with an
 error. Sending to Program can visibly change the live source.
+
+
+### Live picture in the input crop editor
+
+In **Input settings**, **Capture input (live)** places the captured picture inside
+its **applied device crop**. Unknown areas keep the sizing grid. Midra returns an
+already-cropped picture; Aquilon retains the full frame with blanked edges. Canvas
+Pilot handles these separately so the crop is not applied twice.
+
+Moving the draft crop does not move the captured picture. After **Send changes**,
+the preview refreshes against device readback. A missing signal or inconsistent
+capture geometry keeps the grid until a matching capture arrives. Disable
+**Crop Finder** in WebRCS when using this preview.

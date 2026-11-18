@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.72
+
+- Fix input-crop capture on Midra: its PNG contains only the retained crop, unlike
+  Aquilon’s full-frame snapshot. Place it in the applied crop rectangle without
+  cropping twice, leaving unknown pixels as the sizing grid.
+- Validate capture dimensions and before/after device state; read-only checks on
+  Eikos 4K 3.3.10 covered uncropped, portrait-cropped and asymmetrically cropped input.
+
 ### v0.9.71
 
 - Load a local reference picture into a layer’s input preview for offline crop,

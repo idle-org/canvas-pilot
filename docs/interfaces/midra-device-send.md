@@ -324,13 +324,18 @@ opted-in layer/dialog consumers for the same input. It never changes input crop
 to obtain a raw image. Sends clear the preview/key and suspend capture scheduling
 until apply/readback completes; late results from invalidated requests are ignored.
 The input crop editor uses the existing sizing pattern behind available pixels.
-For Aquilon, fresh reads bracket capture; stable crop/aspect/plug state and a matching
-thumbnail frame ratio are required for compositing. The image is clipped to the
-captured status-crop region using corresponding full-frame UV coordinates; it is
-never stretched to a newly edited crop. Unknown pixels retain the pattern. Other
-capture geometries show only the grid (no unverified compositing). No raw-capture contract is claimed. Aquilon Cmax 6.2.79 emulator testing showed
-blanked cropped edges; Pulse 4K 3.3.7 served an unchanged thumbnail. Input drafts
-and captures are not serialized, and existing project/exchange versions are unchanged.
+Fresh reads bracket capture for both adapters; stable crop/aspect/plug state and
+matching image dimensions are required for compositing. Aquilon uses the applied
+status-crop region with corresponding full-frame UV coordinates. Midra uses crop
+controls verified against applied image dimensions and places the entire cropped
+PNG within that region. Neither is stretched to a newly edited draft crop.
+Unknown pixels retain the pattern. See the [capture framing contract and Eikos
+4K read-only checks](midra-input-preview.md#input-settings-crop-capture-framing).
+No raw-capture contract is claimed. Aquilon Cmax 6.2.79 emulator testing showed
+blanked cropped edges; an earlier Pulse 4K 3.3.7 emulator served an unchanged
+thumbnail, which must not pass validation if its dimensions conflict with crop
+readback. Input drafts and captures are not serialized, and existing
+project/exchange versions are unchanged.
 
 Manual diagnostic: `cargo run -p canvas-pilot --example check_device_inputs -- HOST`
 changes Input 1 crop and restores the original values. Run only against an expressly

@@ -359,17 +359,14 @@ impl Editor {
                     }
                     let after = canvas_pilot::device::fetch_input(&host, input)?;
                     draft.changes(&after)?;
-                    let geometry = if profile == canvas_pilot::device::Profile::Aquilon6 {
-                        draft.native.filter(|n|((reference.size[0] as f64/reference.size[1] as f64)/(n[0]/n[1])-1.).abs()<0.01).and_then(|native| {
-                            let base=format!("/device/inputList/items/IN_{input}/plugList/items/{}/settings/cropping/status/pp",draft.plug);
-                            let edge=|key|before.raw.pointer(&format!("{base}/{key}")).and_then(serde_json::Value::as_f64);
-                            let crop=canvas_pilot::formats::Crop {left:edge("left")?,right:edge("right")?,top:edge("top")?,bottom:edge("bottom")?};
-                            crop.remaining(native).ok()?;
-                            Some(super::inputs_window::CaptureGeometry {native,crop})
-                        })
-                    } else {
-                        None
-                    };
+                    let geometry = device_capture::capture_geometry(&before, input, reference.size)
+                        .ok()
+                        .filter(|geometry| {
+                            device_capture::capture_geometry(&after, input, reference.size)
+                                .ok()
+                                .as_ref()
+                                == Some(geometry)
+                        });
                     let _ = geometry_tx.send(geometry);
                 }
                 Ok(reference)
@@ -1564,6 +1561,7 @@ mod tests {
                 let (geometry_tx, geometry_rx) = std::sync::mpsc::channel();
                 geometry_tx
                     .send(Some(super::super::inputs_window::CaptureGeometry {
+                        framing: device_capture::CaptureFraming::FullFrame,
                         native: [1920., 1080.],
                         crop: canvas_pilot::formats::Crop::default(),
                     }))

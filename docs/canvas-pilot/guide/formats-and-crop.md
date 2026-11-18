@@ -347,8 +347,8 @@ validation and verified readback.
   stretches those pixels. After Send, the old capture is cleared while settings
   are applied and verified; **Refreshing capture…** remains until a new capture
   arrives. Unverified capture geometry shows the grid rather than a distorted image.
-  Aquilon captures are supported for the verified full-frame thumbnail geometry;
-  no raw/pre-crop endpoint is confirmed.
+  Midra’s already-cropped PNG and Aquilon’s full-frame thumbnail are handled
+  separately, avoiding a second crop. No raw/pre-crop endpoint is confirmed.
 
 
 Drafts are session-only and are not included in projects or exports. Switching

@@ -154,3 +154,30 @@ disables automatic capture and Follow input, and rejects late capture results.
 The project preview representation retains the original image bytes (see the
 [project contract](canvas-pilot.md)). The layer inspector lists these
 and captured previews under **Input reference pictures**, below fixed references.
+
+
+## Input-settings crop capture framing
+
+The input-settings editor reads input state before and after capture, rejecting
+changed signal, plug or preprocessing. Capture geometry is resolved in
+`device_capture::capture_geometry`, separately from the editable draft:
+
+- **Midra:** source dimensions are `status/signal/pp/aspectWidth` and
+  `aspectHeight`; crop edges come from `settings/cropping/control/pp`. The applied
+  `imageWidth`/`imageHeight` must match the retained rectangle. The PNG contains
+  only that rectangle, so its full texture is placed at the applied crop position.
+- **Aquilon:** source dimensions and `settings/cropping/status/pp` describe a
+  full-source PNG with blanked crop edges. Both placement and texture coordinates
+  use the retained rectangle; pending control edits are not applied to the image.
+
+Allow one pixel of thumbnail rounding. Invalid signal, unavailable crop values,
+unsettled dimensions, Crop Finder or a mismatched image keep the sizing grid.
+Draft edits do not move or recrop captured pixels. These are transient rendering
+values, not project fields or device writes.
+
+Read-only Eikos 4K 3.3.10 checks on 2026-11-18 observed a 1920×1080 source with
+an uncropped 512×288 PNG; a left crop of 1157 produced a 763×1080 retained region
+and 361×512 PNG; left 279/bottom 338 produced 1641×742 and 512×231 respectively.
+Only numeric framing observations are recorded; source images are not fixtures.
+Run `cargo run --example read_input_capture -- DEVICE_IP INPUT_NUMBER` for an
+explicit read-only before/capture/after check.

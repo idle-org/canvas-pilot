@@ -10,33 +10,38 @@ use std::collections::BTreeMap;
 type Values = BTreeMap<String, Value>;
 type CropDrag = (Crop, Pos2, [i8; 2], Values);
 type SendJob = std::sync::mpsc::Receiver<Result<canvas_pilot::device::Snapshot, String>>;
-#[derive(Clone, Copy, Debug)]
-pub(super) struct CaptureGeometry {
-    pub native: [f64; 2],
-    pub crop: Crop,
-}
-impl CaptureGeometry {
-    pub fn rectangles(self, full: Rect, native: [f64; 2]) -> Option<(Rect, Rect)> {
-        if self.native != native || self.crop.remaining(native).is_err() {
-            return None;
-        }
-        let uv = Rect::from_min_max(
-            Pos2::new(
-                (self.crop.left / native[0]) as f32,
-                (self.crop.top / native[1]) as f32,
-            ),
-            Pos2::new(
-                (1. - self.crop.right / native[0]) as f32,
-                (1. - self.crop.bottom / native[1]) as f32,
-            ),
-        );
-        let rect = Rect::from_min_max(
-            full.min + uv.min.to_vec2() * full.size(),
-            full.min + uv.max.to_vec2() * full.size(),
-        );
-        Some((rect, uv))
+pub(super) use canvas_pilot::device_capture::CaptureGeometry;
+fn capture_rectangles(
+    geometry: CaptureGeometry,
+    full: Rect,
+    native: [f64; 2],
+) -> Option<(Rect, Rect)> {
+    if geometry.native != native || geometry.crop.remaining(native).is_err() {
+        return None;
     }
+    let region = Rect::from_min_max(
+        Pos2::new(
+            (geometry.crop.left / native[0]) as f32,
+            (geometry.crop.top / native[1]) as f32,
+        ),
+        Pos2::new(
+            (1. - geometry.crop.right / native[0]) as f32,
+            (1. - geometry.crop.bottom / native[1]) as f32,
+        ),
+    );
+    let rect = Rect::from_min_max(
+        full.min + region.min.to_vec2() * full.size(),
+        full.min + region.max.to_vec2() * full.size(),
+    );
+    let uv = match geometry.framing {
+        canvas_pilot::device_capture::CaptureFraming::FullFrame => region,
+        canvas_pilot::device_capture::CaptureFraming::Cropped => {
+            Rect::from_min_max(Pos2::ZERO, Pos2::new(1., 1.))
+        }
+    };
+    Some((rect, uv))
 }
+
 #[derive(Default)]
 pub(super) struct InputsWindow {
     pub open: bool,
@@ -440,7 +445,7 @@ fn crop_editor(
     content_painter.set_opacity(1.0);
     super::format_ui::paint_pattern_clipped(&content_painter, full, source, Crop::default(), full);
     if let Some((texture, geometry)) = preview
-        && let Some((known, uv)) = geometry.rectangles(full, native)
+        && let Some((known, uv)) = capture_rectangles(geometry, full, native)
     {
         content_painter.image(texture, known, uv, Color32::WHITE);
     }
@@ -558,6 +563,7 @@ mod tests {
             Default::default(),
         );
         let geometry = CaptureGeometry {
+            framing: canvas_pilot::device_capture::CaptureFraming::FullFrame,
             native: [1920., 1080.],
             crop: Crop {
                 left: 480.,
@@ -725,6 +731,7 @@ mod tests {
     #[test]
     fn captured_pixels_stay_in_original_source_region_when_crop_expands() {
         let geometry = CaptureGeometry {
+            framing: canvas_pilot::device_capture::CaptureFraming::FullFrame,
             native: [1920., 1080.],
             crop: Crop {
                 left: 480.,
@@ -734,7 +741,7 @@ mod tests {
             },
         };
         let full = Rect::from_min_size(Pos2::new(10., 20.), Vec2::new(192., 108.));
-        let (known, uv) = geometry.rectangles(full, [1920., 1080.]).unwrap();
+        let (known, uv) = capture_rectangles(geometry, full, [1920., 1080.]).unwrap();
         assert_eq!(
             known,
             Rect::from_min_size(Pos2::new(58., 47.), Vec2::new(96., 54.))
@@ -743,9 +750,24 @@ mod tests {
             uv,
             Rect::from_min_max(Pos2::new(0.25, 0.25), Pos2::new(0.75, 0.75))
         );
-        assert!(geometry.rectangles(full, [1280., 720.]).is_none());
+        let cropped = CaptureGeometry {
+            framing: canvas_pilot::device_capture::CaptureFraming::Cropped,
+            ..geometry
+        };
+        let (cropped_rect, cropped_uv) = capture_rectangles(cropped, full, [1920., 1080.]).unwrap();
+        assert_eq!(cropped_rect, known);
+        assert_eq!(
+            cropped_uv,
+            Rect::from_min_max(Pos2::ZERO, Pos2::new(1., 1.))
+        );
+        assert!(capture_rectangles(geometry, full, [1280., 720.]).is_none());
         // Mapping is fixed at capture time, independent of the editable crop box.
-        assert_eq!(geometry.rectangles(full, [1920., 1080.]).unwrap().0, known);
+        assert_eq!(
+            capture_rectangles(geometry, full, [1920., 1080.])
+                .unwrap()
+                .0,
+            known
+        );
     }
     fn input_app() -> Editor {
         let mut app = Editor::default();
