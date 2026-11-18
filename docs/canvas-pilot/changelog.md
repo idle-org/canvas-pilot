@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.58
+
+- Made shared input crop handles easier to grab, with larger targets, resize
+  cursors and drag tracking from the original press position.
+- Added a percentage crop-zoom slider between − and +, using the selected pivot.
+- Input option labels now show readable names and ratios (for example `16:9`
+  and `Keep input ratio`); device enum values remain unchanged.
+
 ### v0.9.57
 
 - Removed the legacy local source/pre-crop editor and inactive input proposals.

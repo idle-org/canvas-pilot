@@ -193,7 +193,7 @@ impl Editor {
                                             }
                                         }
                                         Kind::Toggle=>{let mut v=value.as_bool().unwrap();if ui.checkbox(&mut v,"").changed(){*value=json!(v);}}
-                                        Kind::Choice(options)=>{let mut v=value.as_str().unwrap().to_owned();egui::ComboBox::from_id_salt(&field.path).selected_text(&v).show_ui(ui,|ui|{for option in options {ui.selectable_value(&mut v,option.clone(),option);}});*value=json!(v);}
+                                        Kind::Choice(options)=>{let mut v=value.as_str().unwrap().to_owned();egui::ComboBox::from_id_salt(&field.path).selected_text(choice_label(&v)).show_ui(ui,|ui|{for option in options {ui.selectable_value(&mut v,option.clone(),choice_label(option));}});*value=json!(v);}
                                     }
                                 });
                             }
@@ -255,6 +255,56 @@ impl Editor {
         }
     }
 }
+// Display labels only: the original enum strings remain in draft/device values.
+fn choice_label(value: &str) -> String {
+    match value {
+        "LUT" | "RGB" | "YUV" | "HDR" | "SDR" => return value.into(),
+        "KEEP_INPUT_RATIO" => return "Keep input ratio".into(),
+        "SIGNAL" => return "Signal aspect ratio".into(),
+        _ => {}
+    }
+    for (prefix, label) in [("LETTERBOX_", "Letterbox"), ("PILLARBOX_", "Pillarbox")] {
+        if let Some(ratio) = value.strip_prefix(prefix) {
+            return format!("{label} {}:1", ratio.replace('_', "."));
+        }
+    }
+    if let Some((a, b)) = value.split_once('_')
+        && !a.is_empty()
+        && !b.is_empty()
+        && a.bytes().chain(b.bytes()).all(|c| c.is_ascii_digit())
+    {
+        return format!("{a}:{b}");
+    }
+    let text = value.replace('_', " ").to_lowercase();
+    let mut chars = text.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+        None => text,
+    }
+}
+
+fn crop_hit(rect: Rect, pos: Pos2) -> Option<[i8; 2]> {
+    const GRAB: f32 = 14.0;
+    if !rect.expand(GRAB).contains(pos) {
+        return None;
+    }
+    let edge = |v: f32, low: f32, high: f32| {
+        let a = (v - low).abs();
+        let b = (v - high).abs();
+        if a.min(b) > GRAB {
+            0
+        } else if a <= b {
+            -1
+        } else {
+            1
+        }
+    };
+    Some([
+        edge(pos.x, rect.left(), rect.right()),
+        edge(pos.y, rect.top(), rect.bottom()),
+    ])
+}
+
 fn crop_editor(
     ui: &mut egui::Ui,
     draft: &mut InputDraft,
@@ -279,13 +329,35 @@ fn crop_editor(
     }
     ui.horizontal(|ui| {
         ui.label("Crop zoom");
-        for (label, factor) in [("−", 1.0 / 1.1), ("+", 1.1)] {
-            if ui.button(label).clicked()
-                && let Err(e) =
-                    draft.zoom_crop(factor, [pivot[0] as f64 / 2.0, pivot[1] as f64 / 2.0])
-            {
-                *message = e;
-            }
+        let retained = draft.crop().remaining(native).unwrap();
+        let current = 100.0 * (native[0] * native[1] / (retained[0] * retained[1])).sqrt();
+        let maximum = 100.0 * (native[0] * native[1]).sqrt();
+        let mut zoom = current;
+        let mut changed = ui.button("−").clicked();
+        if changed {
+            zoom /= 1.1;
+        }
+        changed |= ui
+            .add(
+                egui::Slider::new(&mut zoom, 100.0..=maximum)
+                    .logarithmic(true)
+                    .suffix("%")
+                    .max_decimals(1),
+            )
+            .changed();
+        if ui.button("+").clicked() {
+            changed = true;
+            zoom *= 1.1;
+        }
+        zoom = zoom.clamp(100.0, maximum);
+        if changed
+            && (zoom - current).abs() > 0.0001
+            && let Err(error) = draft.zoom_crop(
+                zoom / current,
+                [pivot[0] as f64 / 2.0, pivot[1] as f64 / 2.0],
+            )
+        {
+            *message = error;
         }
         if ui.button("Reset crop").clicked() {
             let _ = draft.set_crop(Crop::default());
@@ -331,7 +403,7 @@ fn crop_editor(
     if response.dragged_by(egui::PointerButton::Middle) {
         *pan += ui.input(|i| i.pointer.delta());
     }
-    if response.hovered() {
+    if response.hovered() && drag.is_none() && !ui.input(|i| i.pointer.primary_down()) {
         let scroll = ui.input(|i| i.smooth_scroll_delta.y);
         if scroll != 0.0 {
             *view_zoom = (*view_zoom * (scroll * 0.002).exp()).clamp(0.25, 8.0);
@@ -374,7 +446,7 @@ fn crop_editor(
         retained.right_bottom(),
     ] {
         painter.rect_filled(
-            Rect::from_center_size(point, Vec2::splat(6.)),
+            Rect::from_center_size(point, Vec2::splat(8.)),
             0.,
             palette.cyan,
         );
@@ -384,29 +456,28 @@ fn crop_editor(
         4.,
         palette.amber,
     );
-    if response.drag_started_by(egui::PointerButton::Primary)
-        && let Some(pos) = response.interact_pointer_pos()
-    {
-        let edge = |v: f32, a: f32, b: f32| {
-            if (v - a).abs() < 10. {
-                -1
-            } else if (v - b).abs() < 10. {
-                1
-            } else {
-                0
+    let hover_edges = response.hover_pos().and_then(|pos| crop_hit(retained, pos));
+    if let Some(edges) = drag.as_ref().map(|d| d.2).or(hover_edges) {
+        let cursor = match edges {
+            [0, 0] => {
+                if drag.is_some() {
+                    egui::CursorIcon::Grabbing
+                } else {
+                    egui::CursorIcon::Grab
+                }
             }
+            [0, _] => egui::CursorIcon::ResizeVertical,
+            [_, 0] => egui::CursorIcon::ResizeHorizontal,
+            [x, y] if x == y => egui::CursorIcon::ResizeNwSe,
+            _ => egui::CursorIcon::ResizeNeSw,
         };
-        if retained.expand(10.).contains(pos) {
-            *drag = Some((
-                crop,
-                pos,
-                [
-                    edge(pos.x, retained.left(), retained.right()),
-                    edge(pos.y, retained.top(), retained.bottom()),
-                ],
-                draft.values.clone(),
-            ));
-        }
+        ui.ctx().set_cursor_icon(cursor);
+    }
+    if response.drag_started_by(egui::PointerButton::Primary)
+        && let Some(pos) = ui.input(|i| i.pointer.press_origin())
+        && let Some(edges) = crop_hit(retained, pos)
+    {
+        *drag = Some((crop, pos, edges, draft.values.clone()));
     }
     if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
         if let Some((_, _, _, before)) = drag.take() {
@@ -456,6 +527,79 @@ fn crop_editor(
 mod tests {
     use super::*;
     #[test]
+    fn enum_labels_are_readable_without_changing_wire_values() {
+        for (wire, display) in [
+            ("16_9", "16:9"),
+            ("1_1", "1:1"),
+            ("NATIVE", "Native"),
+            ("LUT", "LUT"),
+            ("KEEP_INPUT_RATIO", "Keep input ratio"),
+            ("LETTERBOX_1_85", "Letterbox 1.85:1"),
+            ("LAYER_SETTING", "Layer setting"),
+        ] {
+            assert_eq!(choice_label(wire), display);
+        }
+        let rect = Rect::from_min_max(Pos2::ZERO, Pos2::new(20., 100.));
+        assert_eq!(crop_hit(rect, Pos2::new(19., 50.)), Some([1, 0]));
+        assert_eq!(crop_hit(rect, Pos2::new(-12., 50.)), Some([-1, 0]));
+        assert_eq!(crop_hit(rect, Pos2::new(-30., 50.)), None);
+    }
+
+    #[test]
+    fn edge_drag_uses_press_position_even_after_pointer_leaves_grab_area() {
+        let app = input_app();
+        let mut draft = InputDraft::read(app.device.snapshot.as_ref().unwrap(), 1).unwrap();
+        draft.set_crop(Crop::default()).unwrap();
+        let ctx = egui::Context::default();
+        let mut pivot = [1, 1];
+        let mut zoom = 1.;
+        let mut pan = Vec2::ZERO;
+        let mut drag = None;
+        let mut message = String::new();
+        let mut frame = |events| {
+            ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(700., 600.))),
+                    events,
+                    ..Default::default()
+                },
+                |ui| {
+                    crop_editor(
+                        ui,
+                        &mut draft,
+                        &mut pivot,
+                        (&mut zoom, &mut pan),
+                        &mut drag,
+                        &mut message,
+                        None,
+                    );
+                },
+            )
+        };
+        let output = frame(vec![]);
+        let rect = output
+            .shapes
+            .iter()
+            .find_map(|s| match &s.shape {
+                egui::Shape::Rect(r) if r.stroke.width == 2.0 => Some(r.rect),
+                _ => None,
+            })
+            .unwrap();
+        let start = rect.right_center();
+        frame(vec![
+            egui::Event::PointerMoved(start),
+            super::super::tests::mouse(start, true),
+        ]);
+        let end = start - Vec2::new(40., 0.);
+        frame(vec![egui::Event::PointerMoved(end)]);
+        frame(vec![super::super::tests::mouse(end, false)]);
+        assert_eq!(draft.crop().left, 0.);
+        assert!(draft.crop().right > 100.);
+        assert_eq!(draft.crop().top, 0.);
+        assert!(message.is_empty());
+    }
+
+    #[test]
     fn captured_pixels_stay_in_original_source_region_when_crop_expands() {
         let geometry = CaptureGeometry {
             native: [1920., 1080.],
@@ -480,8 +624,7 @@ mod tests {
         // Mapping is fixed at capture time, independent of the editable crop box.
         assert_eq!(geometry.rectangles(full, [1920., 1080.]).unwrap().0, known);
     }
-    #[test]
-    fn shared_input_reset_and_undo_do_not_modify_layers_or_send() {
+    fn input_app() -> Editor {
         let mut app = Editor::default();
         let raw = json!({"device":{"inputList":{"items":{"IN_1":{
             "status":{"pp":{"isAvailable":true,"plug":"1"}},
@@ -498,6 +641,11 @@ mod tests {
             raw,
         });
         app.inputs.open = true;
+        app
+    }
+    #[test]
+    fn shared_input_reset_and_undo_do_not_modify_layers_or_send() {
+        let mut app = input_app();
         let layers = app.layout.layers().clone();
         let ctx = egui::Context::default();
         super::super::tests::click_text(&mut app, &ctx, "Reset crop");

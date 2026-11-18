@@ -321,7 +321,8 @@ an input, capturing an image or opening the window. Use **Review input changes**
 then **Send input settings** to apply the edited fields and verify them.
 
 - **Input crop:** drag edges/corners or move the retained box. Crop zoom reduces
-  or expands the retained region around the selected pivot; it does not add a
+  or expands the retained region around the selected pivot using the **− slider +**
+  percentage control; it does not add a
   second zoom stage. Numeric edges use native device crop coordinates.
 - **View zoom:** changes only the editor view; wheel zooms and middle drag pans.
   Reset crop, Undo input edit and Escape during a drag help recover an edit.
