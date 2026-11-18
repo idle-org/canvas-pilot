@@ -346,6 +346,7 @@ impl Editor {
             }
             if self.property_tab == PropertyTab::Source {
             self.source_input_controls(ui,i);
+            self.preview_warning(ui,i);
             ui.separator();
             ui.heading(tr(ui.ctx(), "ui.advanced-source-input-settings"));
             if ui.button("Open shared input settings…").clicked() {

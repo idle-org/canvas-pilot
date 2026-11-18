@@ -263,7 +263,8 @@ picture before requesting a new capture.
 
 
 An independently selected preview with a different processed resolution shows an
-amber notice. A different aspect ratio shows a stronger warning and a **Preview
+amber notice in both **Source** (input selection) and **Preview** properties.
+A different aspect ratio shows a stronger warning and a **Preview
 ratio mismatch** overlay on the canvas and Preview tab. Enable **Follow input**
 to match the selected source. These notices do not alter crop, fit or device
 routing. Reduced-resolution capture thumbnails do not trigger size warnings;

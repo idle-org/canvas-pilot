@@ -453,6 +453,28 @@ impl Editor {
         };
         PreviewMismatch::compare(expected, picture)
     }
+    pub(super) fn preview_warning(&self, ui: &mut egui::Ui, i: usize) {
+        if let Some(mismatch) = self.preview_mismatch(i) {
+            let color = if mismatch.ratio {
+                ui.visuals().error_fg_color
+            } else {
+                theme::palette(ui.ctx()).amber
+            };
+            let key = if mismatch.ratio {
+                "ui.preview-ratio-warning"
+            } else {
+                "ui.preview-size-warning"
+            };
+            ui.colored_label(color, tr(ui.ctx(), key));
+            ui.small(format!(
+                "{} × {} → {} × {} px",
+                mismatch.picture[0],
+                mismatch.picture[1],
+                mismatch.expected[0],
+                mismatch.expected[1]
+            ));
+        }
+    }
     pub(super) fn paint_preview_warning(&self, painter: &egui::Painter, rect: Rect, i: usize) {
         if self.layer_preview(i).is_none() || !self.preview_mismatch(i).is_some_and(|m| m.ratio) {
             return;
@@ -801,26 +823,7 @@ impl Editor {
         if let Some(input) = changed_input {
             self.adapt_layer_to_input(i, input);
         }
-        if let Some(mismatch) = self.preview_mismatch(i) {
-            let color = if mismatch.ratio {
-                ui.visuals().error_fg_color
-            } else {
-                theme::palette(ui.ctx()).amber
-            };
-            let key = if mismatch.ratio {
-                "ui.preview-ratio-warning"
-            } else {
-                "ui.preview-size-warning"
-            };
-            ui.colored_label(color, tr(ui.ctx(), key));
-            ui.small(format!(
-                "{} × {} → {} × {} px",
-                mismatch.picture[0],
-                mismatch.picture[1],
-                mismatch.expected[0],
-                mismatch.expected[1]
-            ));
-        }
+        self.preview_warning(ui, i);
         if !self.capture.error.is_empty() {
             ui.colored_label(ui.visuals().error_fg_color, &self.capture.error);
         }
