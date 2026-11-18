@@ -1,4 +1,7 @@
 {
+  "ui.preview-ratio-mismatch": "पूर्वावलोकनको अनुपात फरक छ",
+  "ui.preview-ratio-warning": "पूर्वावलोकनको पक्ष अनुपात फरक छ। फ्रेमिङ भ्रामक हुन सक्छ; इनपुट पछ्याउनुहोस् सक्षम गर्नुहोस्।",
+  "ui.preview-size-warning": "पूर्वावलोकनको रिजोलुसन फरक छ। चयन गरिएको स्रोत प्रयोग गर्न इनपुट पछ्याउनुहोस् सक्षम गर्नुहोस्।",
   "ui.change-input": "Change input",
   "ui.follow-input": "Follow input",
   "ui.device-input": "Device input",

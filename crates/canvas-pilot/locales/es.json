@@ -1,4 +1,7 @@
 {
+  "ui.preview-ratio-mismatch": "Relación de vista previa distinta",
+  "ui.preview-ratio-warning": "La vista previa tiene otra relación de aspecto. El encuadre puede ser engañoso; active Seguir entrada.",
+  "ui.preview-size-warning": "La vista previa tiene otra resolución. Active Seguir entrada para usar la fuente seleccionada.",
   "ui.change-input": "Change input",
   "ui.follow-input": "Follow input",
   "ui.device-input": "Device input",

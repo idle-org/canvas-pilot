@@ -517,6 +517,7 @@ impl Editor {
             let (_,rect)=ui.allocate_space(Vec2::new(ui.available_width(),170.0));
             let preview_rect=fit_rect(rect,[current.width,current.height]);
             paint_layer_source(ui.painter(),preview_rect,&self.layout,i,self.layer_preview(i));
+            self.paint_preview_warning(ui.painter(), preview_rect, i);
             ui.label(tr(ui.ctx(), "ui.captured-stills-follow-this-layer-s-input-and-dynamic-crops-guides-are-drawn-above-th"));
             }
             if !d.error.is_empty() {ui.colored_label(theme::palette(ui.ctx()).amber,&d.error);}

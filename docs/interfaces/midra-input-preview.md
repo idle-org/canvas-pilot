@@ -211,3 +211,14 @@ checks nonnegative finite crop edges and, for active crop, verifies
 blocks the operation. Send conversion uses processed dimensions directly and
 observes the input state for preflight; no input crop writes are generated.
 Aquilon cropping and aspect-corrected input switching are not enabled by this rule.
+
+
+New session source choices default to Follow input; Change input remains opt-in.
+Loading a local reference picture still disables following. Existing preview
+bindings are not rewritten merely by reopening a project. Mismatch notices compare
+processed device input dimensions on the current connection (or actual local
+picture dimensions) with the selected source, falling back to editor source size.
+They never compare a device thumbnail's resolution with the full signal size.
+A relative ratio difference above 0.5% receives a stronger notice and viewer overlay;
+smaller differences receive only a resolution notice. No schema or image-transform
+change is involved.

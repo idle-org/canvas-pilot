@@ -42,11 +42,20 @@ impl DeviceFailure {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub(super) struct SourceChoice {
     pub input: u32,
     pub change: bool,
     pub follow: bool,
+}
+impl Default for SourceChoice {
+    fn default() -> Self {
+        Self {
+            input: 0,
+            change: false,
+            follow: true,
+        }
+    }
 }
 #[derive(Clone)]
 struct SendConflict {
@@ -714,6 +723,7 @@ impl Editor {
     }
     pub(super) fn source_input_controls(&mut self, ui: &mut egui::Ui, i: usize) {
         let input = self.selected_physical_input(i);
+        let follow = self.default_preview_follow(i, input);
         let available = self
             .device
             .snapshot
@@ -726,6 +736,7 @@ impl Editor {
             .entry(self.layout.layer_info(i).id)
             .or_insert(SourceChoice {
                 input,
+                follow,
                 ..Default::default()
             });
         let previous = (choice.input, choice.change);

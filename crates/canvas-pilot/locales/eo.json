@@ -1,4 +1,7 @@
 {
+  "ui.preview-ratio-mismatch": "Malsama bildformato de antaŭvido",
+  "ui.preview-ratio-warning": "La antaŭvido havas alian bildformaton. La enkadrigo povas misgvidi; ŝaltu Sekvi enigon.",
+  "ui.preview-size-warning": "La antaŭvido havas alian distingivon. Ŝaltu Sekvi enigon por uzi la elektitan fonton.",
   "ui.change-input": "Change input",
   "ui.follow-input": "Follow input",
   "ui.device-input": "Device input",

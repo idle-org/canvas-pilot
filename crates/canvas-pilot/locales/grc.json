@@ -1,4 +1,7 @@
 {
+  "ui.preview-ratio-mismatch": "Ἀνόμοιος λόγος προθεωρίας",
+  "ui.preview-ratio-warning": "Ἡ προθεωρία ἕτερον λόγον ἔχει· τὸ σχῆμα πλανᾶν δύναται. Τῇ εἰσόδῳ ἀκολούθει.",
+  "ui.preview-size-warning": "Ἡ προθεωρία ἕτερον μέγεθος ἔχει. Τῇ εἰσόδῳ ἀκολούθει, ἵνα τῇ ᾑρημένῃ πηγῇ χρῇ.",
   "ui.change-input": "Change input",
   "ui.follow-input": "Follow input",
   "ui.device-input": "Device input",

@@ -256,17 +256,26 @@ to route the mapped destination layer to that input on the next explicit **Send*
 Selecting an input alone does not change the device. Leave the checkbox off to
 send geometry without changing its source.
 
-In **Preview**, enable **Follow input** to capture the input selected in Source.
+In **Preview**, **Follow input** is enabled by default for new controls and captures the input selected in Source.
 Enable input preview as usual; automatic refresh remains a separate option.
 Following an input does not route it, and changing the selection clears the old
 picture before requesting a new capture.
 
+
+An independently selected preview with a different processed resolution shows an
+amber notice. A different aspect ratio shows a stronger warning and a **Preview
+ratio mismatch** overlay on the canvas and Preview tab. Enable **Follow input**
+to match the selected source. These notices do not alter crop, fit or device
+routing. Reduced-resolution capture thumbnails do not trigger size warnings;
+intentional differences between the layer box and its source are not mismatches.
+
+
 Discarding local changes in the send conflict dialog also clears these choices for the reloaded layers.
 These selections are session-only and reset when a project or connection is
 replaced; they are not saved in projects or exchange files. Input switching requires
-a valid signal with native dimensions matching the editor source format and no
-input crop/aspect correction. Unsupported combinations stop preparation with an
-error. Sending to Program can visibly change the live source.
+a valid signal. Midra inputs with applied crop are supported; framing adapts to
+the processed input dimensions using the layer’s fit settings. Input aspect
+correction and Aquilon shared input crop remain unsupported. Sending to Program can visibly change the live source.
 
 
 ### Live picture in the input crop editor

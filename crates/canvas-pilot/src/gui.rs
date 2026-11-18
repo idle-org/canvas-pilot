@@ -3894,6 +3894,7 @@ impl Editor {
                         (texture, if show_guides { opacity } else { 0.0 })
                     }),
                 );
+                self.paint_preview_warning(p, rect, i);
                 p.rect_stroke(rect, 0.0, border, StrokeKind::Inside);
             }
             if rect.width() > 85.0 && rect.height() > 40.0 {

@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.0-rc.9
+
+- New preview controls default to Follow input. Independent preview inputs show
+  resolution warnings and stronger ratio warnings, including a canvas/preview
+  overlay. Compare processed signal dimensions, not reduced capture thumbnails;
+  existing image framing and explicit reference-picture choices are preserved.
+
 ### v0.10.0-rc.8
 
 - Support switching to cropped Midra inputs using their processed image dimensions,

@@ -1,5 +1,5 @@
 use super::*;
-use canvas_pilot::device_capture;
+use canvas_pilot::{device, device_capture};
 pub(super) const INPUT_REFERENCE_ROW_HEIGHT: f32 = 32.0;
 type CaptureTarget = (usize, usize, u32, String);
 type CaptureJob = std::sync::mpsc::Receiver<Result<super::super::reference::Reference, String>>;
@@ -51,6 +51,28 @@ fn input_picker(
                 });
             }
         });
+}
+
+#[derive(Debug, PartialEq)]
+struct PreviewMismatch {
+    expected: [u32; 2],
+    picture: [u32; 2],
+    ratio: bool,
+}
+impl PreviewMismatch {
+    fn compare(expected: [u32; 2], picture: [u32; 2]) -> Option<Self> {
+        if expected.contains(&0) || picture.contains(&0) || expected == picture {
+            return None;
+        }
+        let a = expected[0] as f64 / expected[1] as f64;
+        let b = picture[0] as f64 / picture[1] as f64;
+        // Ignore tiny ratio differences caused by integer pixel rounding.
+        Some(Self {
+            expected,
+            picture,
+            ratio: (a / b - 1.).abs() > 0.005,
+        })
+    }
 }
 
 struct LayerPreview {
@@ -389,12 +411,62 @@ impl Editor {
         });
     }
 
+    pub(super) fn default_preview_follow(&self, i: usize, input: u32) -> bool {
+        self.capture
+            .layers
+            .get(&self.layout.layer_info(i).id)
+            .is_none_or(|p| {
+                (p.input != 0 || p.bytes.is_empty()) && (p.input == 0 || p.input == input)
+            })
+    }
     pub(super) fn layer_preview(&self, i: usize) -> Option<(egui::TextureId, f32)> {
         self.capture
             .layers
             .get(&self.layout.layer_info(i).id)
             .filter(|p| p.enabled && p.source == self.layout.formats().source_for[i])
             .and_then(|p| p.texture.as_ref().map(|t| (t.id(), p.guides)))
+    }
+    fn preview_mismatch(&self, i: usize) -> Option<PreviewMismatch> {
+        let preview = self.capture.layers.get(&self.layout.layer_info(i).id)?;
+        if !preview.enabled || preview.source != self.layout.formats().source_for[i] {
+            return None;
+        }
+        let snapshot = self.device.snapshot.as_ref();
+        let expected = snapshot
+            .and_then(|s| device::input_content_resolution(s, self.selected_physical_input(i)).ok())
+            .or_else(|| {
+                self.layout
+                    .formats()
+                    .input(i)
+                    .ok()
+                    .map(|size| size.map(|v| v.round() as u32))
+            })?;
+        let picture = if preview.input == 0 {
+            preview.texture.as_ref()?.size().map(|v| v as u32)
+        } else {
+            // Never mistake thumbnail resolution for the signal's dimensions,
+            // or compare a saved capture from another connection with this one.
+            if preview.host != self.device.host {
+                return None;
+            }
+            device::input_content_resolution(snapshot?, preview.input).ok()?
+        };
+        PreviewMismatch::compare(expected, picture)
+    }
+    pub(super) fn paint_preview_warning(&self, painter: &egui::Painter, rect: Rect, i: usize) {
+        if self.layer_preview(i).is_none() || !self.preview_mismatch(i).is_some_and(|m| m.ratio) {
+            return;
+        }
+        let painter = painter.with_clip_rect(painter.clip_rect().intersect(rect));
+        let label = tr(painter.ctx(), "ui.preview-ratio-mismatch");
+        let galley = painter.layout_no_wrap(label, FontId::proportional(12.), Color32::WHITE);
+        let pos = rect.left_top() + Vec2::new(8., 34.);
+        painter.rect_filled(
+            Rect::from_min_size(pos - Vec2::splat(3.), galley.size() + Vec2::splat(6.)),
+            3.,
+            Color32::from_rgb(130, 35, 35),
+        );
+        painter.galley(pos, galley, Color32::WHITE);
     }
     pub(super) fn preselect_linked_capture_inputs(&mut self) {
         let Some(snapshot) = self.device.snapshot.as_ref() else {
@@ -633,12 +705,14 @@ impl Editor {
         let idle = self.capture.pending.is_none();
         let cooling = self.capture.cooling_down();
         let chosen = self.selected_physical_input(i);
+        let follow = self.default_preview_follow(i, chosen);
         let choice =
             self.device
                 .source_choices
                 .entry(id)
                 .or_insert(super::device_ui::SourceChoice {
                     input: chosen,
+                    follow,
                     ..Default::default()
                 });
         ui.checkbox(&mut choice.follow,tr(ui.ctx(), "ui.follow-input")).on_hover_text("Use the input selected in Source properties for this preview. This does not route the device layer.");
@@ -726,6 +800,26 @@ impl Editor {
         });
         if let Some(input) = changed_input {
             self.adapt_layer_to_input(i, input);
+        }
+        if let Some(mismatch) = self.preview_mismatch(i) {
+            let color = if mismatch.ratio {
+                ui.visuals().error_fg_color
+            } else {
+                theme::palette(ui.ctx()).amber
+            };
+            let key = if mismatch.ratio {
+                "ui.preview-ratio-warning"
+            } else {
+                "ui.preview-size-warning"
+            };
+            ui.colored_label(color, tr(ui.ctx(), key));
+            ui.small(format!(
+                "{} × {} → {} × {} px",
+                mismatch.picture[0],
+                mismatch.picture[1],
+                mismatch.expected[0],
+                mismatch.expected[1]
+            ));
         }
         if !self.capture.error.is_empty() {
             ui.colored_label(ui.visuals().error_fg_color, &self.capture.error);
@@ -1145,6 +1239,76 @@ mod tests {
     }
 
     #[test]
+    fn preview_mismatch_distinguishes_size_ratio_and_rounding() {
+        assert!(PreviewMismatch::compare([1920, 1080], [1920, 1080]).is_none());
+        assert!(
+            !PreviewMismatch::compare([1920, 1080], [1280, 720])
+                .unwrap()
+                .ratio
+        );
+        assert!(
+            !PreviewMismatch::compare([942, 1029], [468, 512])
+                .unwrap()
+                .ratio
+        );
+        assert!(
+            PreviewMismatch::compare([942, 1029], [1920, 1080])
+                .unwrap()
+                .ratio
+        );
+        assert!(PreviewMismatch::compare([0, 1080], [1920, 1080]).is_none());
+    }
+    #[test]
+    fn mismatch_uses_signal_sizes_not_capture_thumbnail_and_never_changes_layout() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.set_reference_picture(0, tiny_reference(&ctx, "thumbnail"));
+        let id = app.layout.layer_info(0).id;
+        app.device.source_choices.entry(id).or_default().input = 1;
+        let plug = |w, h| {
+            serde_json::json!({
+                "status":{"pp":{"plug":"HDMI"}},
+                "plugList":{"items":{"HDMI":{
+                    "status":{"signal":{"pp":{"isValid":true,"imageWidth":w,"imageHeight":h}}},
+                    "settings":{"cropping":{"control":{"pp":{"left":0,"right":0,"top":0,"bottom":0}}}}
+                }}}
+            })
+        };
+        app.device.snapshot = Some(device::Snapshot {
+            identity: "test".into(),
+            profile: device::Profile::Midra4k,
+            screens: vec![],
+            raw: serde_json::json!({"device":{"inputList":{"items":{"INPUT_1":plug(1920,1080),"INPUT_2":plug(1280,720)}}}}),
+        });
+        let preview = app.capture.layers.get_mut(&id).unwrap();
+        preview.input = 2;
+        preview.host = app.device.host.clone();
+        let before = app.layout.formats().clone();
+        assert!(!app.preview_mismatch(0).unwrap().ratio);
+        app.device.snapshot.as_mut().unwrap().raw["device"]["inputList"]["items"]["INPUT_2"] =
+            plug(942, 1029);
+        assert!(app.preview_mismatch(0).unwrap().ratio);
+        let _ = ctx.run_ui(Default::default(), |ui| {
+            app.paint_preview_warning(
+                ui.painter(),
+                Rect::from_min_size(Pos2::ZERO, Vec2::new(300., 300.)),
+                0,
+            );
+        });
+        assert_eq!(app.layout.formats(), &before);
+        app.capture.layers.get_mut(&id).unwrap().input = 1;
+        assert!(
+            app.preview_mismatch(0).is_none(),
+            "matching signals ignore thumbnail dimensions"
+        );
+        app.capture.layers.get_mut(&id).unwrap().input = 2;
+        app.capture.layers.get_mut(&id).unwrap().host = "other-device".into();
+        assert!(app.preview_mismatch(0).is_none());
+        app.capture.layers.get_mut(&id).unwrap().host = app.device.host.clone();
+        app.capture.layers.get_mut(&id).unwrap().enabled = false;
+        assert!(app.preview_mismatch(0).is_none());
+    }
+    #[test]
     fn following_source_invalidates_old_capture_without_routing() {
         let mut app = Editor::default();
         app.capture.test_now = Some(std::time::Instant::now());
@@ -1157,7 +1321,7 @@ mod tests {
         preview.bytes = vec![1, 2, 3];
         let choice = app.device.source_choices.get_mut(&id).unwrap();
         choice.input = 5;
-        choice.follow = true;
+        assert!(choice.follow, "new previews follow the source by default");
         app.sync_followed_inputs();
         let preview = &app.capture.layers[&id];
         assert_eq!(preview.input, 5);
@@ -1380,6 +1544,8 @@ mod tests {
         frame(&mut app, &ctx, vec![]);
         assert!(!app.capture.layers[&id].enabled);
         click_text(&mut app, &ctx, "Enable input preview");
+        assert!(app.device.source_choices[&id].follow);
+        click_text(&mut app, &ctx, "Follow input");
         click_text(&mut app, &ctx, "Choose input…");
         click_text(&mut app, &ctx, "Input 3");
         assert!(app.capture.layers[&id].enabled);
@@ -1780,6 +1946,8 @@ mod tests {
                 .any(|s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == label))
         };
         click_text(&mut app, &ctx, "Enable input preview");
+        assert!(app.device.source_choices[&id].follow);
+        click_text(&mut app, &ctx, "Follow input");
         click_text(&mut app, &ctx, "Choose input…");
         let output = frame(&mut app, &ctx, vec![]);
         assert!(contains(&output, "Input 3"));

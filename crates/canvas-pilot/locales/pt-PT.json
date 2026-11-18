@@ -1,4 +1,7 @@
 {
+  "ui.preview-ratio-mismatch": "Proporção da pré-visualização diferente",
+  "ui.preview-ratio-warning": "A pré-visualização tem outra proporção. O enquadramento pode ser enganador; ative Seguir entrada.",
+  "ui.preview-size-warning": "A pré-visualização tem outra resolução. Ative Seguir entrada para usar a fonte selecionada.",
   "ui.change-input": "Change input",
   "ui.follow-input": "Follow input",
   "ui.device-input": "Device input",
