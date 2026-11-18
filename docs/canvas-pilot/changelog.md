@@ -6,6 +6,9 @@
 
 ### v0.10.0-rc.9
 
+- Avoid a transient mismatch warning in Follow input mode: hide the previous
+  capture while its input binding catches up with a changed source selection.
+
 - New preview controls default to Follow input. Independent preview inputs show
   resolution warnings and stronger ratio warnings in both Source and Preview
   properties, including a canvas/preview

@@ -419,7 +419,21 @@ impl Editor {
                 (p.input != 0 || p.bytes.is_empty()) && (p.input == 0 || p.input == input)
             })
     }
+    fn followed_preview_pending_sync(&self, i: usize) -> bool {
+        let id = self.layout.layer_info(i).id;
+        self.device.source_choices.get(&id).is_some_and(|choice| {
+            choice.follow
+                && self.capture.layers.get(&id).is_some_and(|preview| {
+                    preview.input != choice.input || preview.host != self.device.host
+                })
+        })
+    }
     pub(super) fn layer_preview(&self, i: usize) -> Option<(egui::TextureId, f32)> {
+        // Source controls can change after capture synchronization in this frame.
+        // Do not paint or diagnose the previous capture during that handoff.
+        if self.followed_preview_pending_sync(i) {
+            return None;
+        }
         self.capture
             .layers
             .get(&self.layout.layer_info(i).id)
@@ -427,6 +441,9 @@ impl Editor {
             .and_then(|p| p.texture.as_ref().map(|t| (t.id(), p.guides)))
     }
     fn preview_mismatch(&self, i: usize) -> Option<PreviewMismatch> {
+        if self.followed_preview_pending_sync(i) {
+            return None;
+        }
         let preview = self.capture.layers.get(&self.layout.layer_info(i).id)?;
         if !preview.enabled || preview.source != self.layout.formats().source_for[i] {
             return None;
@@ -476,6 +493,9 @@ impl Editor {
         }
     }
     fn preview_is_other_input(&self, i: usize) -> bool {
+        if self.followed_preview_pending_sync(i) {
+            return false;
+        }
         let selected = self.selected_physical_input(i);
         selected != 0
             && self
@@ -1311,6 +1331,7 @@ mod tests {
         app.set_reference_picture(0, tiny_reference(&ctx, "thumbnail"));
         let id = app.layout.layer_info(0).id;
         app.device.source_choices.entry(id).or_default().input = 1;
+        app.device.source_choices.get_mut(&id).unwrap().follow = false;
         let plug = |w, h| {
             serde_json::json!({
                 "status":{"pp":{"plug":"HDMI"}},
@@ -1367,9 +1388,19 @@ mod tests {
         preview.enabled = true;
         preview.input = 1;
         preview.bytes = vec![1, 2, 3];
+        preview.texture = Some(tiny_reference(&ctx, "previous input").texture);
         let choice = app.device.source_choices.get_mut(&id).unwrap();
         choice.input = 5;
         assert!(choice.follow, "new previews follow the source by default");
+        assert!(app.followed_preview_pending_sync(0));
+        assert!(app.layer_preview(0).is_none());
+        assert!(app.preview_mismatch(0).is_none());
+        assert!(!app.preview_is_other_input(0));
+        // Independent previews still warn immediately, with no timed debounce.
+        app.device.source_choices.get_mut(&id).unwrap().follow = false;
+        assert!(app.layer_preview(0).is_some());
+        assert!(app.preview_is_other_input(0));
+        app.device.source_choices.get_mut(&id).unwrap().follow = true;
         app.sync_followed_inputs();
         let preview = &app.capture.layers[&id];
         assert_eq!(preview.input, 5);
