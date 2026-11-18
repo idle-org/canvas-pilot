@@ -106,7 +106,7 @@ checks and stretch goals below remain open; the tag does not mark them complete.
 
 Issue tracking: the adapter goal is already tracked in
 [Gitea #1](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/issues/1).
-The other four have [ready-to-publish issue drafts](../development/stretch-goal-issues.md).
+Earlier goals have [ready-to-publish issue drafts](../development/stretch-goal-issues.md).
 Publication is pending an issue-enabled token; the current token lacks
 `read:issue` and `write:issue`. Preparing an issue does not complete its goal.
 
@@ -146,6 +146,22 @@ Publication is pending an issue-enabled token; the current token lacks
   supports output validation. Investigate Analog Way Alta 4K first, then selected
   non-AW candidates; the list is a research backlog, not a commitment to support
   every product.
+
+- [ ] **Independent load/send mapping controls and multiple send destinations.**
+  Expose the existing [directional mapping model](../interfaces/canvas-pilot.md#directional-device-mapping-version-19)
+  in the GUI, keeping the current synchronized, single-destination workflow as
+  the simple default. Allow an explicit choice to separate the load source from
+  send targets, then add/remove destinations by screen and layer. Later extend
+  this to named connections and multiple machines; only the current connection
+  exists today. Keep this distinct from multiple editor screens below.
+  Prototype a compact interface before adding functional controls. Make transfer
+  scope and destination summaries clear, detect overlapping destinations, and
+  define reconnect, unavailable-target and partial-failure handling before enabling
+  multi-machine sends. Mapping edits must not trigger device writes. Verify
+  synchronized/separate edits, undo/redo, save/reopen, recovery and embedded-export
+  round trips, plus per-destination preflight and readback. The internal split and
+  fan-out planning shipped in v0.9.49; GUI controls and named connections remain
+  future work with no committed release date.
 
 - [ ] **Multiple editor screens in one project.** Use a dropdown to select the
   active screen, displaying and editing one screen at a time. Preserve each

@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.50
+
+- Added a stretch goal for independent load/send mapping controls, multiple send
+  destinations and eventual named connections, retaining the synchronized workflow
+  as the default. Implementation remains deferred.
+
 ### v0.9.49
 
 - Split load sources from send destination collections internally, keeping existing
