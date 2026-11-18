@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.55
+
+- Recorded the requested input-settings refactor, official Midra preprocessing
+  controls, capture uncertainties and migration/test requirements. Created the
+  annotated `pre-input-settings-refactor` checkpoint before behavioral changes.
+  Implementation remains pending device inspection; the emulator was unreachable.
+
 ### v0.9.54
 
 - Expanded the adapter candidate survey with vMix Layers and a focused ATEM

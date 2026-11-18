@@ -12,6 +12,7 @@ The Python device probe lives in `tools/`; Python tests and build helpers live i
 | Edit or publish the book | [Manual generation](../manuals/building.md) |
 | Tasks, acceptance tests and stretch goals | [Project plan](../canvas-pilot/plan.md) |
 | Stretch-goal Gitea issues | [Existing issue and publication-ready drafts](stretch-goal-issues.md) |
+| Shared input settings refactor | [Scope, evidence and acceptance](input-settings-refactor.task.md) |
 | Mapping window visual study | [Mockup and design questions](design/mapping-window.md) |
 | Multiple project screens | [Design, prototype and testing task](multiple-project-screens.task.md) |
 | Localization: book, then application | [Task list and acceptance criteria](localization.md) |

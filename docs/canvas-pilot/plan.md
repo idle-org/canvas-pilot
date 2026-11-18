@@ -18,6 +18,13 @@ See its [release notes](../development/release-notes/v0.8.0.md) and
 [build/publication procedure](../development/releases.md). Remaining acceptance
 checks and stretch goals below remain open; the tag does not mark them complete.
 
+## Active work
+
+- [ ] **Shared input settings editor and faithful Midra preprocessing.**
+  Requested implementation; [investigation, checkpoint and acceptance](../development/input-settings-refactor.task.md).
+  Device inspection and capture-stage verification await the emulator being reachable.
+  The dedicated window and behavioral refactor are not implemented yet.
+
 ## Completed implementation
 
 - [x] Rust/egui workspace app; canonical pixel geometry, stable layer/input IDs,
