@@ -71,17 +71,14 @@ and targeted; ordinary layout fetches do not acquire these additional controls.
 
 ## Refactor boundaries
 
-- Completed: removed `input_ui.rs` and legacy layer-bound staging controls.
-  `device_inputs.rs` and `inputs_window.rs` own the shared input-editing path;
-  stored proposals remain inert compatibility data.
-- `device_send.rs`: local source input crop is currently added to layer crop.
-  Do not simply remove that addition: existing projects depend on its geometry.
-- `formats.rs` and `Layout::configure`: shared local source edits reframe consumers;
-  device imports detach shared sources when necessary. Preserve these semantics
-  until an explicit migration replaces them.
-- `InputProposal` is currently layer/link-bound. Input-owned persistence needs a
-  documented version migration, explicit connection identity and inactive-on-load
-  behavior; it must survive project/recovery and supported embedded exports.
+- Completed in v0.9.57: removed the legacy local source/pre-crop UI and model,
+  the combined input-plus-layer send conversion, and `InputProposal` persistence.
+  The approved schema break is version 20. Shared input drafts remain session-only.
+- Native Open project uses reported best-effort recovery and opens repaired data
+  as an unsaved copy. Strict exchange imports do not silently repair snapshots.
+- Processed source dimensions and sharing remain necessary for layer geometry;
+  device imports detach sources where necessary. Physical input edits never become
+  an additional local crop.
 - Device input Send must operate without sending unrelated layer geometry or
   pulsing preset apply. Validate active plug, relevant signal/settings and edited
   values against fresh reads; pulse input crop apply only when needed and verify
@@ -91,6 +88,10 @@ and targeted; ordinary layout fetches do not acquire these additional controls.
 - Distinguish raw signal, preprocessed content and layer coordinates. Legacy local
   crop needs an explicit compatibility path; never silently reinterpret it as a
   physical input write or double-apply real input preprocessing.
+
+Aquilon `source_info` still refuses active shared input crop/aspect correction
+for framing transfer. The shared input editor and schema cleanup do not establish
+that conversion; keep it pending until processed dimensions/coordinates are verified.
 
 ## Capture decision and acceptance
 

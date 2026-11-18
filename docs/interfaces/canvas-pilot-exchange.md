@@ -132,8 +132,7 @@ they do not modify the project/settings schema:
   1920 pixels on the longest side; the exported shape still has the exact screen
   dimensions. CSV and DXF carry only the background rectangle.
 - **Include placeholder pictures** uses embedded PNG source-grid patterns instead
-  of flat layer fills. The pattern reflects native input cropping and advanced
-  cropping, fitted into each visible box. Each raster is capped at 512 pixels on
+  of flat layer fills. The pattern reflects layer cropping and fit, fitted into each visible box. Each raster is capped at 512 pixels on
   its longest side. No live source image is available/captured by this exporter.
   The images contain no external URLs and need no network access. Imported picture
   layers are still geometry-only. Without this option, the layers are rectangles.
@@ -221,7 +220,7 @@ Geometry, page/frame selection, reserved background names and artwork follow the
 FIG contract above. Export rounds positions and sizes to whole screen pixels;
 import retains fractional coordinates. One output-sized frame contains the named
 layer rectangles. Background and placeholder pictures are optional. Source, crop, fit, mask,
-mapping, inactive input proposals and workspace settings can be stored in the
+mapping and workspace settings can be stored in the
 optional [extra-parameter snapshot](midra-extra-parameters.md). Plain geometry import
 does not restore these settings. FigCraft history, branches and library data are not imported into
 Midra or recreated on export. Reader repair warnings appear in the import review.

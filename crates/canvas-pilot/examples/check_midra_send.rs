@@ -39,9 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             height: 251.0,
         },
     )?;
-    let mut source = layout.formats().sources[0];
-    source.input_crop.top = 40.0;
-    source.input_crop.bottom = 40.0;
+    let source = layout.formats().sources[0];
     layout.configure(0, 0, source, layout.layers()[0], true)?;
     layout.set_framing(
         0,

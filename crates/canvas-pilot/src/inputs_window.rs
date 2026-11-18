@@ -344,7 +344,6 @@ fn crop_editor(
     let source = canvas_pilot::formats::Source {
         native: native.map(|n| n as u32),
         aspect: canvas_pilot::formats::Aspect::Custom,
-        input_crop: Crop::default(),
     };
     super::format_ui::paint_pattern_clipped(&painter, full, source, Crop::default(), full);
     if let Some((texture, geometry)) = preview

@@ -23,13 +23,12 @@ means a supported exchange format exported with extra parameters and reopened th
 | Stacking order | ✅ | ❌ | ✅ |
 | Folders, collapsed folders, visibility and locks | ✅ | ❌ | ✅ [2](#editing-notes) |
 | Source formats, assignments and shared input relationships | ✅ | ❌ | ✅ [2](#editing-notes) |
-| Input crop edges | ✅ | ❌ | ✅ |
 | Normal layer crop zoom and offsets | ✅ | ❌ | ✅ |
 | Advanced fit modes and their crop edges | ✅ | ❌ | ✅ |
 | Editable blanking masks (Layer / Source) | ✅ | ❌ | ✅ |
 | Resize pivots and group resize settings | ✅ | ❌ | ✅ |
 | Saved device screen/layer links (not physical source routing) | ✅ | ❌ | ✅ |
-| Previously saved input correction proposals, preserved inactive | ✅ | ❌ | ✅ |
+| Shared device input settings drafts (session-only) | ❌ | ❌ | ❌ |
 | Reference images and their individual settings | ✅ | ❌ | ❌ |
 | Capture assignments and saved preview stills | ✅ | ❌ | ❌ |
 | Selection, camera, guides, snapping and workspace settings | ✅ | ❌ | ✅ [2](#editing-notes) |
@@ -60,14 +59,11 @@ This is separate from plain geometry import and export snapshot restoration.
 
 ## Saved input corrections
 
-Previously saved input correction proposals remain preserved in projects and in
-Silver exports with **Include extra Canvas Pilot parameters (experimental)**.
-They remain inactive: the legacy controls for creating, staging and sending them
-have been removed. No saved proposal automatically changes an input.
-
-For new device edits, use [Input settings…](formats-and-crop.md#shared-device-input-settings).
-Its drafts are session-only and require their own explicit review and send. Local
-source dimensions/crops and shared source assignments still belong to the project.
+Device input corrections live in the [shared Input settings window](formats-and-crop.md#shared-device-input-settings).
+Drafts are session-only and require explicit review and send. Projects and exchange
+snapshots save processed source dimensions and layer settings, but no input crop or
+inactive device-input proposal. Opening an older native project reports discarded
+legacy settings; inspect the recovered layout before saving.
 
 For practical examples across editors, see [what gets lost between formats](conversion-losses.md).
 
@@ -85,7 +81,7 @@ also does not restore embedded snapshots. Use **Restore parameters from export**
 for Silver; use ordinary geometry import for the artwork's latest positions.
 
 Automated round trips cover all fit modes, fractional crops, both mask references, shared
-inputs, mappings, saved proposals and workspace state through every Silver codec.
+inputs, mappings and workspace state through every Silver codec.
 FigCraft metadata is also tested through its native load/save cycle. External
 application resaves can strip metadata; this is not a promise of lossless round
 trips through every editor. See the [carrier contract](../../interfaces/midra-extra-parameters.md)

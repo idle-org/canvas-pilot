@@ -252,14 +252,12 @@ impl Mask {
 pub struct Source {
     pub aspect: Aspect,
     pub native: [u32; 2],
-    pub input_crop: Crop,
 }
 impl Default for Source {
     fn default() -> Self {
         Self {
             aspect: Aspect::SixteenNine,
             native: [1920, 1080],
-            input_crop: Crop::default(),
         }
     }
 }
@@ -271,7 +269,7 @@ impl Source {
         {
             return Err("Native dimensions do not match Source format. Choose Custom or correct the native dimensions.".into());
         }
-        self.input_crop.remaining(self.native.map(f64::from))
+        Ok(self.native.map(f64::from))
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq)]

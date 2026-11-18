@@ -37,8 +37,8 @@ dimensions for crop conversion and do not block sending. Reported dimensions
 describe the incoming content used for this layer, not an instruction to change
 input hardware configuration.
 
-Combine each local input crop edge with its advanced layer crop edge, in native
-source pixels. Quantize each combined edge to `round(edge / native_axis * 65535)`.
+Use each advanced layer crop edge in processed source pixels; there is no local
+input crop to add. Quantize each edge to `round(edge / native_axis * 65535)`.
 Reject exhausted retained regions, invalid geometry and
 source-resolution mismatch. Input correction is folded into the layer crop,
 so it affects only the mapped destination.
@@ -57,7 +57,7 @@ review values use one decimal and transmitted geometry uses whole pixels.
 
 For advanced explicit fit, the editor rectangle is the device container. Both
 sizing strategies use its rounded dimensions and center. Crop still uses the
-combined normalized conversion above. Apply crop first; scale retained content by
+normalized conversion above. Apply crop first; scale retained content by
 1 (1:1), the minimum axis ratio (Centered), the maximum ratio (Cropped), or both
 independent ratios (Fullscreen); center and clip to the container. Empty margins
 are transparent. No visible-size reconstruction check is applied to explicit
@@ -71,7 +71,7 @@ rules remain unverified; see the [engineering follow-up](../canvas-pilot/midra-f
 
 All four explicit modes with valid content dimensions import
 container geometry, explicit fit, raw crop and normalized masking. Imported sources are independent
-local sources with device content dimensions, zero input correction, and combined
+sources with device content dimensions and layer
 cropping stored as layer crop. Original input/layer crop separation cannot be
 recovered. Imports are atomic and undoable, including new layers/sources. This
 also means Centered device loads open the advanced-fit checkbox automatically.
@@ -185,7 +185,7 @@ editing accepts positive numeric IDs. Project schema and version are unchanged.
 ## Historical opt-in advanced input edits (through v0.9.55)
 
 Removed in v0.9.56: these UI/staging controls and their layer-plan extension no
-longer exist. Existing saved proposals remain inert and round-trip as before.
+longer exist. Version 20 also removes saved proposals and the local pre-crop model.
 The independent shared-input editor below is the only device-input editing path.
 
 The Source tab's device controls map one-for-one to the installed WebRCS
@@ -274,7 +274,7 @@ to establish it. Aquilon rectangular masking is described separately in the
 ### Source-relative editor masks
 
 Both mask references convert to output-space reveal bounds before device-container
-quantization. Source bounds follow usable input after local input cropping and before
+quantization. Source bounds follow processed input after device preprocessing and before
 layer crop/fit; reveal bounds are clipped to the device container. Masking does not
 change routing, input settings or crop values. The device stores blanking only, so
 a later device load returns a layer-relative mask; retain the project to preserve

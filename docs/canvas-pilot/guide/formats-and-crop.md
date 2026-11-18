@@ -19,24 +19,20 @@ The same window offers numeric camera zoom relative to fit-to-screen and a
 
 Select one layer and click its **Layer resolution** card to open **Layer properties**:
 
-1. Enable advanced editing in **Source**, choose a local **Editor input**, then its original **Source format** and native
-   dimensions. Editor inputs are planning identities, not device routing commands.
-2. Set **Input resolution** to the usable size. Typing a custom size centers the
-   input crop; edit L/R/T/B for asymmetric placement. Crop edges stop at zero
-   when dragging; negative or non-finite typed/pasted values are not accepted. Native-size changes reset
-   the draft crop to the full source before review. A custom input retains the
-   original Source format, e.g. 16:9 native 1920 × 1080 cropped to 1920 × 1000.
-3. Set **Layer resolution** to the final visible box. Use the aspect toggle to
+1. Use **Source → Open shared input settings…** for physical input preprocessing.
+   Review and send input changes separately, then reload affected layers. The
+   former local Editor input/pre-crop controls have been removed.
+2. Set **Layer resolution** to the final visible box. Use the aspect toggle to
    enter an independent custom width and height. Layer changes apply immediately;
-   the selected measurement anchor stays fixed. Source/input changes require Apply.
-4. Use **Layer crop / zoom & position** for zoom (100–10000%) and X/Y offsets in output pixels.
+   the selected measurement anchor stays fixed. Device input changes require their own review and send.
+3. Use **Layer crop / zoom & position** for zoom (100–10000%) and X/Y offsets in output pixels.
    Zoom is bounded to 100–10000%; negative or non-finite entries are rejected.
    X/Y offsets remain signed for left/up positioning; they are not crop amounts.
    These controls operate on the applied formats and update immediately as edited.
    A continuous zoom/offset drag is one Undo step;
    **Recenter** preserves zoom; **Reset crop** returns to the minimum centered
    cover crop. Invalid typed offsets show the permitted range and do not apply.
-5. Click **Adjust layer crop** in the selected layer’s parameters, below its format
+4. Click **Adjust layer crop** in the selected layer’s parameters, below its format
    summary, or **double-click a layer on the canvas**, to drag or arrow-nudge
    content inside the fixed box. The button
    highlights while active; press **Enter**, double-click again or click **Done adjusting crop** to leave the mode.
@@ -49,13 +45,12 @@ Select one layer and click its **Layer resolution** card to open **Layer propert
    Grab the faded area to reframe content too; other visible layers covering it
    take precedence. Empty space beyond the usable input is not draggable content.
 
-Sources shared by both layers share the input crop. The dialog names affected
-layers; each keeps its independent layer crop. Shared changes undo atomically,
-and edits affecting a locked layer require it to be unlocked first.
+Layers keep independent crops and masks. Physical input preprocessing is shared
+by every layer consuming that signal, including layers outside this project.
 
 Moving/alignment preserves crops. Resizing keeps content zoom and the retained
 center where possible, automatically shifting the crop when needed to fit the
-new size. Source/input changes do the same when applied in Layer properties.
+new size. Reloading from the device refreshes processed source dimensions.
 No recentering or extra acceptance is needed. Undo restores both size and crop.
 **Layer properties → Crop** activates visual crop editing while the tab is open.
 Switching to Source/Layer or closing the window turns it off; no extra button is needed.
@@ -65,8 +60,8 @@ The standalone inspector and context-menu crop controls remain available.
 visible box fixed; **Reset crop** returns to the minimum centered crop.
 
 
-**Calculated crops / provisional WebRCS mapping** shows input crops in native
-pixels, advanced crops in usable-input pixels, combined retained native bounds,
+**Calculated crops / provisional WebRCS mapping** shows layer crops in processed-source
+pixels, retained bounds,
 visible size/center, and projected full-input geometry. These values are not a
 verified device recipe: Centered-mode container behavior, crop units/limits and
 quantization still require offline firmware verification. No hardware commands
@@ -120,27 +115,22 @@ to both kinds of resize handles.
 
 Apply buttons are muted and disabled when their values already match the layout.
 Pending changes make Apply solid purple. This applies to position/size, output
-resolution drafts, source/input formats, names/folders, and mapped imports. Each
+resolution drafts, names/folders, and mapped imports. Each
 section tracks its own values; reverting an edit clears its pending state.
 
 **Source** links to the [shared Input settings window](#shared-device-input-settings)
 for native device preprocessing. These input-only edits require their own explicit
 review and send; a layer-layout send never includes them.
 
-**Edit local source geometry** unlocks the separate offline source model. Its
-native dimensions are metadata, not device timing commands. Local input correction
-still folds into exported *layer* crop; it does not configure the shared hardware
-input. **Apply source changes** commits this local model only.
-
-Layer properties has five tabs: **Source** for native/input resolution and input
-crop, **Layer** for the final visible box, **Crop** for content zoom and offset,
-**Mapping** for the saved Midra screen/layer link, and **Preview** for capture, timed refresh, preview visibility, guide opacity and the cropped image preview. Editor input identity belongs to the opt-in **Source** tab.
+Layer properties has six tabs: **Source** links to shared input settings,
+**Layer** edits the visible box, **Crop** edits content framing, **Mask** edits
+blanking, **Mapping** edits device destinations, and **Preview** controls capture,
+refresh, preview visibility and guide opacity.
 The right-click properties entries open their matching tab directly.
 Mapping offers device screen/layer selectors when connected, or numeric IDs offline.
 Link edits apply locally immediately and support Undo. **Unmap** removes the link,
 excluding the layer from linked sends and loads; it does not change the device.
-Editor input identity remains a separate source setting requiring Apply.
-Switching tabs retains pending Source edits, which require Apply. Layer size and
+Layer size and
 Crop changes apply immediately; normal zoom/offset drags are one Undo step.
 
 Position/size edits commit on Enter or focus loss, output resolution changes
@@ -219,8 +209,8 @@ Projects/recovery preserve the mode. Pixel rounding is approximate pending the
 
 - **Layer** (default): edges are measured from the layer boundary and stay
   proportional to the layer when resized.
-- **Source**: edges are measured from the usable source picture, after local input
-  cropping but before layer crop/zoom and fit. The magenta guide can extend outside
+- **Source**: edges are measured from the usable source picture, after device input
+  preprocessing but before layer crop/zoom and fit. The magenta guide can extend outside
   the layer and follows the picture when panning or zooming. A faded source preview
   helps position it. Only the intersection with the visible layer is rendered.
 
@@ -316,7 +306,7 @@ proportions and avoid applying a correction twice when loading device-reported
 content dimensions. These details need evidence before claiming an exact device
 round trip.
 
-Saved device input corrections are optional [inactive proposals](advanced-exchange.md#saved-input-corrections); opening a file never enables or sends them.
+Device input drafts are session-only; [project snapshots omit them](advanced-exchange.md#saved-input-corrections). Opening a file never changes an input.
 
 ## Shared device input settings
 
@@ -348,7 +338,11 @@ input replaces its draft with device values. If another controller, signal or pl
 changes, refresh and review before sending. After changing input geometry, reload
 its affected layers before sending their layout.
 
-Local source geometry remains available through **Edit local source geometry**
-in the Source tab. Older saved input proposals are preserved as inactive data;
-the legacy proposal editing/staging controls have been removed. Neither is sent
-by the shared input window unless you explicitly enter and review device edits.
+**Current Aquilon limitation:** framing transfers still reject inputs with active
+shared crop or aspect correction. The input editor can edit those settings, but
+reloading does not bypass that restriction. Correct conversion of those processed
+inputs remains pending; the removal of local pre-crop does not claim that support.
+
+The old local source pre-crop model and saved input proposals have been removed.
+Projects retain processed source dimensions and independent layer framing; legacy
+native projects can be opened with a reported best-effort recovery.

@@ -4,6 +4,19 @@
 
 ## Unreleased
 
+### v0.9.57
+
+- Removed the legacy local source/pre-crop editor and inactive input proposals.
+  Shared Input settings owns device preprocessing; layer rendering/sends use the
+  processed source dimensions without adding another input crop. Aquilon’s existing
+  refusal of framing transfers with active shared crop/aspect correction remains.
+- Project schema 20 no longer stores either retired setting. Open project recovers
+  usable content from supported JSON, reports skipped/reset data, and opens repaired
+  documents as unsaved copies. Invalid JSON, unknown versions and documents with
+  no usable layers remain errors. Source files are never rewritten during loading.
+- Updated snapshots/clipboard round-trip coverage and added partial-load tests for
+  damaged geometry, optional settings, images and original-file protection.
+
 ### v0.9.56
 
 - Removed legacy input proposal controls and the input-setting additions to layer

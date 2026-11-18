@@ -9,7 +9,7 @@ not every control should become document data.
 | --- | --- |
 | Output resolution / aspect | Project: exact width/height. The output aspect preset is derived from them, not stored twice. |
 | Layer position, dimensions, stacking order | Project: full-precision bounds and array order; display/export rounding never changes the saved values. |
-| Input format, native dimensions, custom input crop, shared input slot | Project: `inputs` and layer `source_id`, already saved. |
+| Input format, processed dimensions, shared source identity | Project: `inputs` and layer `source_id`, already saved. |
 | Layer format, dynamic crop, zoom and offset, explicit fit modes and blanking masks | Project: final bounds and advanced crop, already saved. Zoom/offset/aspect are derived from these authoritative values. |
 | Names, stable IDs, next ID, folder membership, visibility, lock, pivot | Project, already saved. Folder visibility/locking acts on members, so there is no separate state to save. Explicit folder names are saved separately in project v12 and may have no members. |
 | Device screen/layer mapping | Project v19 stores `load_mapping` and the `send_mapping` destination collection separately. Existing controls edit both together; older projects migrate to synchronized mappings. Physical source routing is separate and is not silently changed by a geometry send. |
@@ -24,7 +24,7 @@ not every control should become document data.
 | Auto-refresh choice, refresh interval, show no-signal inputs | **Added to project**. Auto-refresh restores paused; no fetch or connection is initiated by loading. Resume/capture is explicit. |
 | Theme/recent themes, connection address/history, startup connection, allow Program | Application settings only. These belong to the workstation/operator; opening a document must not switch connections or global permissions. Capture host strings are bindings, not connection instructions. |
 | All/selected/folder transfer scope, target bank, export sizing strategy | Session choices. Links and folders are persistent; the current transfer action and destination bank are not document content. Existing behavior is retained. |
-| Advanced shared-device input edit checkbox and staged edits | Session-only by design. These are pending changes to external shared input settings; only explicit edits are sent. Local source/crop geometry is saved separately. |
+| Advanced shared-device input edit checkbox and staged edits | Session-only by design. These are pending changes to external shared input settings; only explicit edits are sent. Layer geometry and processed source dimensions are saved separately. |
 | Import mapping, size/position/zoom toggles, ignored items/pages | Temporary import review. Applied results are saved; unfinished operations and their external payloads are not. |
 | Geometry export codec, selection scope, background/placeholders options | Temporary export choices. No destination files are reopened or overwritten by project loading. |
 | Alignment reference, prepared numeric ratio, active navigation/pivot/grid gesture, crop-edit mode, open tab/menu/dialog | Temporary editing context. No partial interaction is replayed; the resize mode and grid spacing themselves are saved as above. |
@@ -43,13 +43,10 @@ atomic failure on malformed images, cleared stale previews, restore-without-fetc
 manual resumption eligibility and saved resize setup. The guide and example JSON
 are updated with the schema.
 
-## Version 16 addition: saved input proposals
+## Version 20: shared input preprocessing
 
-Explicitly saved advanced input corrections now belong to the project as inert
-`input_proposals`, maintained by `InputEdits.saved` and project save/restore.
-The enable flag and staged device writes remain session-only. Opening/recovery
-clears those flags and pending writes before installing saved proposals. Export
-snapshots filter proposals to included, correctly mapped layers. The
-[project contract](canvas-pilot.md#inactive-input-correction-proposals) defines
-validation and the [advanced matrix](../canvas-pilot/guide/advanced-exchange.md)
-distinguishes these proposals from source geometry and actual device routing.
+Retired local pre-crops and inactive input proposals are no longer stored. Shared
+Input settings drafts remain session-only. Layer crop, fit, masks, mappings and
+processed source dimensions still round-trip. See the [project contract](canvas-pilot.md#best-effort-open-project)
+for reported recovery of old or damaged native projects; recovered copies have no
+implicit overwrite target.

@@ -37,7 +37,7 @@ No URLs, file paths, commands, images or arbitrary application state are evaluat
 | `layers` | Ordered array of copied layers; selection order follows document order |
 | `layers[].name` | In v2/v3, the actual layer name without an ID prefix; nonblank, at most 256 characters to read, 1–128 to apply. In v1, a review label only |
 | `layers[].bounds` | `x`, `y`, `width`, `height`: full-precision screen pixels; top-left coordinates, finite within ±1,000,000 and positive dimensions up to 1,000,000 |
-| `layers[].appearance.input_size` | Two positive finite effective source dimensions in pixels, after local input crop; validated by the existing source-size limits |
+| `layers[].appearance.input_size` | Two positive finite effective source dimensions in pixels, after device preprocessing; validated by the existing source-size limits |
 | `layers[].appearance.crop` | `left`, `right`, `top`, `bottom`: nonnegative finite effective-source pixel crop edges, leaving positive width/height |
 | `layers[].appearance.fit` | `null` for normal crop/zoom, or `one_to_one`, `centered`, `fullscreen`, `cropped` |
 | `layers[].appearance.mask` | Required `origin`: `layer` or `source`; `left`, `right`, `top`, `bottom`: finite fractions of that reference, each 0–1; opposite sums must be at most 1, with fully blank axes allowed |
@@ -77,7 +77,7 @@ writes are never part of paste. Copying and opening the review are read-only.
 ## Omissions and compatibility
 
 Folders, identity, visibility, locks, pivots, source formats,
-input crop, shared source relationships, device links, input proposals, captures,
+device input preprocessing, shared source relationships, device links, captures,
 references and workspace settings are not copied by this representation. Only the
 recorded source dimensions accompany crop for compatibility validation. Use a
 project or embedded export snapshot for the wider state.

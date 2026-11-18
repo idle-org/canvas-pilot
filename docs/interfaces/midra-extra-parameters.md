@@ -43,7 +43,7 @@ extension version and explicit migration or rejection.
 
 The snapshot includes only exported layer IDs, in document stack order, with
 full-precision bounds, names, folders, visibility, locks, pivots, family-aware device links,
-source/input crop, normal/advanced layer crop, all fit modes and blanking masks. Explicitly saved inactive input proposals are filtered to included layers; they never grant permission to stage or send. Only referenced input slots are included;
+processed source dimensions, layer crop, all fit modes and blanking masks. Version 20 snapshots omit retired local input crops and input proposals; shared input drafts are session-only. Older snapshots containing those retired settings are rejected by strict restoration: recover a native project instead. Only referenced input slots are included;
 source IDs are remapped consecutively, preserving shared source relationships.
 Selection, explicit folders and collapsed folders are filtered to retained layers; unrelated empty folders are omitted. Output resolution,
 positioning, camera, guide and workspace settings remain available. Pixel-rounded

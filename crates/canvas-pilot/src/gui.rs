@@ -8604,25 +8604,16 @@ mod tests {
         }
     }
     #[test]
-    fn advanced_source_offers_eight_editor_inputs_without_extra_layers() {
+    fn source_tab_opens_shared_input_settings_without_local_precrop_controls() {
         let ctx = egui::Context::default();
         let mut app = Editor::default();
         app.layout.select(Some(0));
         app.format_draft = Some(FormatDraft::new(&app.layout, 0));
         app.property_tab = PropertyTab::Source;
-        app.device.local_source_editing = true;
-        frame(&mut app, &ctx, vec![]);
-        click_text(&mut app, &ctx, "Input 1");
-        click_text(&mut app, &ctx, "Input 8");
-        assert_eq!(app.layout.formats().sources.len(), 2);
-        click_text(&mut app, &ctx, "Apply source changes");
-        assert_eq!(app.layout.formats().source_for[0], 7);
-        assert_eq!(app.layout.layers().len(), 2);
-        click_text(&mut app, &ctx, "Input 8");
-        click_text(&mut app, &ctx, "New editor input");
-        click_text(&mut app, &ctx, "Apply source changes");
-        assert_eq!(app.layout.formats().source_for[0], 8);
-        assert_eq!(app.layout.formats().sources.len(), 9);
+        let before = app.project();
+        click_text(&mut app, &ctx, "Open shared input settings…");
+        assert!(app.inputs.open);
+        assert_eq!(app.project(), before);
     }
     #[test]
     fn snapped_move_and_resize_stay_snapped_on_release_and_undo_as_one_edit() {

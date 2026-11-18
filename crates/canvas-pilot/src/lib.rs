@@ -13,9 +13,9 @@ mod folders;
 pub mod formats;
 mod geometry_formats;
 pub mod import;
-pub mod input_proposal;
 pub mod interchange;
 pub mod project;
+pub mod project_recovery;
 pub mod reference_document;
 pub mod size_presets;
 pub mod snapping;
@@ -1104,7 +1104,6 @@ impl Layout {
         let input = source.input()?;
         let m = f.mapping(i, g)?;
         let a = f.advanced[i];
-        let c = source.input_crop;
         let projected = Geometry {
             x: g.x - m.scale * a.left,
             y: g.y - m.scale * a.top,
@@ -1112,15 +1111,11 @@ impl Layout {
             height: m.scale * input[1],
         };
         Ok(format!(
-            "PROVISIONAL GEOMETRY — not a verified device recipe\nSource {} / {} / {} x {}\nInput crop L/R/T/B (native px): {} / {} / {} / {}\nInput resolution: {} x {}\nLayer resolution: {} x {}; visible center: {}, {}\nAdvanced crop L/R/T/B (usable-input px): {} / {} / {} / {}\nCombined native retained region: x {}, y {}, w {}, h {}\nContent zoom: {}%; offsets (output px): {}, {}\nProjected full usable input: {} x {}; center {}, {}\nIntended aspect mode: Centered. Device container, crop units and quantization remain unverified.",
+            "PROVISIONAL GEOMETRY — not a verified device recipe\nSource {} / {} / {} x {}\nInput resolution: {} x {}\nLayer resolution: {} x {}; visible center: {}, {}\nAdvanced crop L/R/T/B (usable-input px): {} / {} / {} / {}\nRetained source region: x {}, y {}, w {}, h {}\nContent zoom: {}%; offsets (output px): {}, {}\nProjected full usable input: {} x {}; center {}, {}\nIntended aspect mode: Centered. Device container, crop units and quantization remain unverified.",
             f.source_for[i] + 1,
             source.aspect.label(),
             source.native[0],
             source.native[1],
-            p(c.left),
-            p(c.right),
-            p(c.top),
-            p(c.bottom),
             p(input[0]),
             p(input[1]),
             p(g.width),
@@ -1131,8 +1126,8 @@ impl Layout {
             p(a.right),
             p(a.top),
             p(a.bottom),
-            p(c.left + a.left),
-            p(c.top + a.top),
+            p(a.left),
+            p(a.top),
             p(m.retained[0]),
             p(m.retained[1]),
             view_pixels(m.framing.zoom * 100.0),

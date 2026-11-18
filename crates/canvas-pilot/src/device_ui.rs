@@ -102,8 +102,6 @@ enum Destination {
 
 #[derive(Default)]
 pub(super) struct DeviceUi {
-    pub(super) saved_input_proposals: Vec<canvas_pilot::input_proposal::InputProposal>,
-    pub(super) local_source_editing: bool,
     pub open: bool,
     pub(super) scope: TransferScope,
     import_closing: bool,
@@ -755,7 +753,7 @@ impl Editor {
                 ui.label(tr(ui.ctx(), "ui.device-ip-port"));
                 if ui.add_enabled(self.device.pending.is_none(), egui::TextEdit::singleline(&mut self.device.host).hint_text("192.168.10.146:3000")).changed() {
                     self.device.snapshot = None;
-                    self.device.local_source_editing = false;
+
                     self.device.reset_mappings();
                     self.device.error.clear();
                     self.device.message.clear();
@@ -765,7 +763,7 @@ impl Editor {
                         for host in self.device.recent_hosts.clone() {
                             if ui.button(&host).on_hover_text(tr(ui.ctx(), "ui.connect-to-this-machine-read-only")).clicked() {
                                 self.device.host = host;
-                                self.device.local_source_editing = false;
+
                                 self.device.reset_mappings();
                                 self.device.fetch(ctx);
                                 ui.close();
@@ -778,7 +776,7 @@ impl Editor {
                     if ui.add_enabled(self.device.pending.is_none(), egui::Button::new(if self.device.online() { "Refresh connection" } else { "Connect" })).clicked() { self.device.fetch(ctx); }
                     if ui.add_enabled(self.device.online() && self.device.pending.is_none(), egui::Button::new(tr(ui.ctx(), "ui.disconnect"))).clicked() {
                         self.device.snapshot = None;
-                        self.device.local_source_editing = false;
+
                         self.device.reset_mappings();
                         self.device.message.clear();
                     }
@@ -1388,12 +1386,6 @@ mod tests {
             .unwrap();
         let state = DeviceUi {
             snapshot: Some(snapshot.clone()),
-            saved_input_proposals: canvas_pilot::project::Project::from_json(include_str!(
-                "../../../docs/interfaces/canvas-pilot-v16.example.json"
-            ))
-            .unwrap()
-            .input_proposals,
-            local_source_editing: true,
             ..Default::default()
         };
         assert_eq!(

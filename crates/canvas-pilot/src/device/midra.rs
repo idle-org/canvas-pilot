@@ -106,7 +106,6 @@ pub(super) fn parse(identity: String, raw: &Value) -> Result<Snapshot, String> {
                     let source = crate::formats::Source {
                         aspect: crate::formats::Aspect::Custom,
                         native,
-                        input_crop: Default::default(),
                     };
                     mode.image(crop.remaining(source.input()?)?, container)?;
                     Ok((source, crop))

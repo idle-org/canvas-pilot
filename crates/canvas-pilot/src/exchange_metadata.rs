@@ -16,7 +16,6 @@ pub fn snapshot(project: &Project, ids: &[usize]) -> Result<Project, String> {
     project.layout()?;
     let mut p = project.clone();
     p.layers.retain(|l| ids.contains(&l.id));
-    p.input_proposals.retain(|p| ids.contains(&p.layer_id));
     p.editor.selected_layer_ids.retain(|id| ids.contains(id));
     p.folders
         .retain(|f| p.layers.iter().any(|l| &l.folder == f));

@@ -346,11 +346,8 @@ fn figcraft_native_resave_preserves_snapshot_after_artwork_edits() {
 }
 
 #[test]
-fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_proposals() {
-    use canvas_pilot::{
-        formats::{Crop, LayerFit, Mask},
-        input_proposal::InputProposal,
-    };
+fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_workspace() {
+    use canvas_pilot::formats::{Crop, LayerFit, Mask};
     for origin in [
         canvas_pilot::formats::MaskOrigin::Layer,
         canvas_pilot::formats::MaskOrigin::Source,
@@ -388,12 +385,6 @@ fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_proposa
                 )
                 .unwrap();
             let mut p = Project::from_layout(&layout);
-            p.inputs[0].input_crop = Crop {
-                left: 10.25,
-                right: 20.5,
-                top: 5.25,
-                bottom: 10.75,
-            };
             p.layers[0].name = "Speaker — é".into();
             p.layers[0].folder = "Scene".into();
             p.folders = vec!["Scene".into(), "Unused".into()];
@@ -407,10 +398,7 @@ fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_proposa
                 canvas_pilot::SendMapping::linked(p.layers[0].load_mapping.clone());
             p.layers[1].source_id = p.layers[0].source_id;
             let native = &p.inputs[0].native_resolution;
-            let input = p.inputs[0]
-                .input_crop
-                .remaining([native.width as f64, native.height as f64])
-                .unwrap();
+            let input = [native.width as f64, native.height as f64];
             for layer in &mut p.layers {
                 if layer.layer_fit.is_none() {
                     layer.advanced_crop = canvas_pilot::formats::crop_from_framing(
@@ -441,34 +429,13 @@ fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_proposa
             p.workspace.snapping.grid = true;
             p.workspace.snapping.grid_divisions = [7, 5];
 
-            p.input_proposals.push(InputProposal {
-                layer_id: p.layers[0].id,
-                device_link: p.layers[0].load_mapping.clone().unwrap(),
-                input: "INPUT_4".into(),
-                plug: "2".into(),
-                settings: serde_json::from_value(serde_json::json!({
-                    "aspect/pp/signal":"16_9", "aspect/pp/transformTo":"CUSTOM",
-                    "aspect/pp/customRatio":1778, "aspect/pp/layerFill":"CENTERED",
-                    "cropping/control/pp/predefined":"NONE", "cropping/control/pp/left":41,
-                    "cropping/control/pp/right":17, "cropping/control/pp/top":3,
-                    "cropping/control/pp/bottom":9
-                }))
-                .unwrap(),
-            });
             let ids: Vec<_> = p.layers.iter().map(|l| l.id).collect();
             assert_eq!(Project::from_json(&p.to_json().unwrap()).unwrap(), p);
             let expected = metadata::snapshot(&p, &ids).unwrap();
             assert_eq!(expected.layers, p.layers);
             assert_eq!(expected.inputs.len(), 1);
-            assert_eq!(expected.input_proposals, p.input_proposals);
             assert_eq!(expected.layers[0].mask, p.layers[0].mask);
             assert_eq!(expected.layers[0].layer_fit, fit);
-            assert!(
-                metadata::snapshot(&p, &[p.layers[1].id])
-                    .unwrap()
-                    .input_proposals
-                    .is_empty()
-            );
             for codec in Codec::available()
                 .into_iter()
                 .filter(|&c| metadata::supported(c))

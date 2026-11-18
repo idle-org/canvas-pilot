@@ -10,6 +10,19 @@ of a box) icons. They open the same import/export menus available from Menu;
 opening a menu does not read or write device values. Hover for the label, or
 turn on toolbar icon names in Options.
 
+## Recovering a partly readable project
+
+**Open project** attempts to recover usable layers and valid settings from recognized
+Canvas Pilot JSON. A report lists skipped or reset content. Repaired documents open
+as **unsaved copies**: inspect them and use Save as to choose a new filename. The
+original is unchanged. Invalid JSON, unsupported future versions or files without
+usable layers cannot be recovered this way; your current work remains open.
+
+Older local input pre-crops and inactive device-input proposals are no longer
+supported. Recovery discards them with a warning, so appearance may change. Use
+shared **Input settings…** for device preprocessing, then reload affected layers.
+Layer crop, fit and masks remain project settings.
+
 ## PDF pages and documents as reference pictures
 
 Choose **Add reference images** from the reference list or Import menu, then
@@ -156,7 +169,7 @@ does not change what Canvas Pilot pastes.
 To copy only appearance, uncheck Position and Format. Expand **Appearance** to
 choose Crop & fit, Blanking, or both. Source assignments, device mappings and
 input settings stay unchanged. Crop & fit requires matching source dimensions
-after local input crop; normal crop also needs compatible box proportions. The
+after device preprocessing; normal crop also needs compatible box proportions. The
 review explains mismatches before allowing import. Match the source dimensions,
 include Format, or uncheck Crop & fit as appropriate. Blanking works independently
 of source dimensions. A failed batch changes nothing; a successful paste undoes
@@ -303,7 +316,7 @@ and [project save contract](../../interfaces/canvas-pilot.md).
 
 Visual crop mode also provides **Reset crop** beside **Done adjusting crop** in
 layer properties. It restores 100% content zoom and centered offsets, keeps the
-visible box and source/input crop unchanged, and leaves visual editing active.
+visible box and processed source dimensions unchanged, and leaves visual editing active.
 The reset is undoable.
 
 The toolbar’s **Viewport options** cog contains **Keep aspect ratio when resizing**
@@ -441,7 +454,7 @@ mode only (except outline-only layers).
 
 ## What the project saves
 
-Project JSON includes source formats, both crop stages, geometry, layer ordering,
+Project JSON includes processed source formats, layer crops, geometry, layer ordering,
 folders, visibility/locking, pivots, Midra links, reference images, selection,
 viewport and positioning settings. It also saves snapping/grid settings, group
 resize mode, collapsed folders, capture input assignments, the last captured
@@ -452,7 +465,7 @@ Connection history, startup connection, theme and Program permission remain in
 application preferences. Unsaved drafts, undo history, open menus, active editing
 gestures and pending device operations are temporary. Transfer scope, target bank,
 sizing strategy and shared input-window drafts remain session choices.
-Explicitly saved input correction proposals persist, but always reopen inactive.
+Legacy input proposals and local pre-crops are no longer saved.
 See [saved input corrections](advanced-exchange.md#saved-input-corrections).
 See the [complete persistence audit](../../interfaces/canvas-pilot-persistence-audit.md)
 and [versioned project contract](../../interfaces/canvas-pilot.md).
@@ -464,7 +477,7 @@ for a comparison of project saves, plain geometry import and snapshot restoratio
 
 In **Export layers**, expand **Canvas Pilot settings** and enable
 **Include extra Canvas Pilot parameters (experimental)** to
-store the exported layers' source/crop settings, fit modes, masks, saved input proposals, names, folders, links and workspace
+store the exported layers' source/crop settings, fit modes, masks, names, folders, links and workspace
 setup alongside the geometry. It is available for SVG, draw.io, JSON, CSV, DXF,
 HTML, PPTX and FigCraft. Images/capture assignments are excluded from this snapshot; the
 background and placeholder options remain separate. DWG, FIG and Illustrator show why the

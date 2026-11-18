@@ -39,7 +39,6 @@ fn source_info(raw: &Value, source: &str) -> Result<Option<(Source, String)>, St
         Source {
             native,
             aspect: Aspect::Custom,
-            input_crop: Crop::default(),
         },
         text(plug, "/settings/aspect/pp/layerFill")?,
     )))
@@ -302,14 +301,8 @@ pub(super) fn prepare(
                 native.native[0], native.native[1]
             ));
         }
-        let input = source.input_crop;
         let advanced = layout.formats().advanced[i];
-        let crop = [
-            input.left + advanced.left,
-            input.right + advanced.right,
-            input.top + advanced.top,
-            input.bottom + advanced.bottom,
-        ];
+        let crop = [advanced.left, advanced.right, advanced.top, advanced.bottom];
         let native = source.native.map(f64::from);
         let units = crop
             .iter()

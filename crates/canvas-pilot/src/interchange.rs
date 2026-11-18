@@ -251,3 +251,36 @@ pub fn read_project_or_parameters(path: &std::path::Path) -> Result<(Project, bo
     }
     read_embedded_project(path).map(|p| (p, false))
 }
+
+/// User-requested native-project opening is recoverable; embedded artwork remains strict.
+pub fn read_project_for_open(
+    path: &std::path::Path,
+) -> Result<(crate::project_recovery::LoadedProject, bool), String> {
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)
+        .map_err(|e| e.to_string())?
+        .take(crate::project::MAX_PROJECT_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| e.to_string())?;
+    if bytes.len() as u64 > crate::project::MAX_PROJECT_BYTES {
+        return Err("Project exceeds 96 MiB.".into());
+    }
+    if let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes)
+        && value["format"] == crate::project::FORMAT
+    {
+        return crate::project_recovery::from_json(
+            std::str::from_utf8(&bytes).map_err(|e| e.to_string())?,
+        )
+        .map(|p| (p, true));
+    }
+    read_embedded_project(path).map(|project| {
+        (
+            crate::project_recovery::LoadedProject {
+                project,
+                warnings: Vec::new(),
+            },
+            false,
+        )
+    })
+}

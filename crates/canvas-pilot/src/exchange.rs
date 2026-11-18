@@ -97,7 +97,7 @@ fn placeholder(project: &Project, layer: &Layer) -> Result<String, String> {
         source.native_resolution.width as f64,
         source.native_resolution.height as f64,
     ];
-    let input = source.input_crop.remaining(native)?;
+    let input = native;
     let remaining = layer.advanced_crop.remaining(input)?;
     let fitted = if let Some(mode) = layer.layer_fit {
         mode.image(remaining, layer.bounds)?
@@ -126,12 +126,8 @@ fn placeholder(project: &Project, layer: &Layer) -> Result<String, String> {
             return Rgba([0, 0, 0, 0]);
         }
 
-        let sx = source.input_crop.left
-            + layer.advanced_crop.left
-            + (ox - fitted.x) / fitted.width * remaining[0];
-        let sy = source.input_crop.top
-            + layer.advanced_crop.top
-            + (oy - fitted.y) / fitted.height * remaining[1];
+        let sx = layer.advanced_crop.left + (ox - fitted.x) / fitted.width * remaining[0];
+        let sy = layer.advanced_crop.top + (oy - fitted.y) / fitted.height * remaining[1];
         let gx = sx / native[0] * 10.0;
         let gy = sy / native[1] * 6.0;
         if gx.fract() < 0.025 || gy.fract() < 0.025 {

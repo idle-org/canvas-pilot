@@ -1,13 +1,13 @@
 # Canvas Pilot file interfaces
 
-Canvas Pilot was formerly named Midra Layout. The rename preserves existing wire-format identifiers, `.midra.json` projects, settings/recovery locations and `MIDRA_VECTORCRAFT_CLI` configuration. The branding rename alone did not change schemas. New exports use Canvas Pilot in human-readable titles; legacy files remain readable.
+Canvas Pilot was formerly named Midra Layout. The rename preserves existing wire-format identifiers, `.midra.json` projects, settings/recovery locations and `MIDRA_VECTORCRAFT_CLI` configuration. The branding rename alone did not change schemas. New exports use Canvas Pilot in human-readable titles; legacy identifiers remain recognized; schema compatibility is described below.
 
 These are offline editor formats, not Analog Way REST payloads. Implementation:
 [`project.rs`](../../crates/canvas-pilot/src/project.rs). Regression tests:
 [`project.rs`](../../crates/canvas-pilot/tests/project.rs). Update this contract,
 examples and tests in the same change as any save/export schema change.
 
-## Project JSON, version 19
+## Project JSON, version 20
 
 Suggested filename: `layout.pilot.json`. **Open project** accepts any `.json`
 filename, including legacy `.midra.json` projects, and validates the project
@@ -18,7 +18,7 @@ existing files are not renamed automatically. This filename change requires no s
 
 Encoding: UTF-8, pretty-printed JSON,
 with a trailing newline. A project preserves applied document values at their
-stored floating-point precision. No display rounding is applied. The loader
+stored floating-point precision. No display rounding is applied. The strict parser (used for writes and embedded exchange metadata)
 requires every field below, rejects unknown fields, and rejects unsupported
 versions. Version 1 files first gain
 `editor.show_toolbar_icon_names: false`. Versions 1 and 2 then migrate to version 3
@@ -27,10 +27,35 @@ and `next_layer_id: 3`; other values are preserved.
 The [version 1 example](canvas-pilot-v1.example.json) remains a migration fixture.
 Version 4 adds `editor.outline_layers: false`, and reference `native_size: false`
 and `offset: [0, 0]` when migrating versions 1–3. Old fitting behavior is preserved.
-Version 5 adds required `midra_link` to every layer. Versions 1–4 migrate with null links; links cannot be supplied under an older version. Version 6 renames `editor.position_corner` to `editor.position_point` and adds `center`. Versions 1–5 retain their original corner; center and the new field are rejected in those older schemas. Version 7 adds `editor.backdrop_title`; versions 1–6 gain `"Example Conference Name"` and cannot supply this field under the old schema. Version 8 adds required `editor.position_layer_point`: null keeps matched points; a point enables independent measurement. Versions 1–7 migrate to null and cannot supply this field. Version 9 adds required `layers[].pivot`; versions 1–8 migrate to `[0.5, 0.5]` and cannot supply this field. Version 10 replaces `reference` with the required ordered `references` array. Versions 1–9 migrate null to `[]` and a single image to a one-element array, preserving all image settings. Version 11 adds required `workspace` settings and embedded layer previews. Versions 1–10 gain the documented workspace defaults, with no captures or collapsed folders; supplying `workspace` in an older schema is rejected. Version 12 adds required `folders`, the explicit folder names that survive without members. Versions 1–11 gain `folders: []`, preserving their existing implicit layer grouping; supplying this field under an older version is rejected. Version 13 replaces `midra_link` with required `device_link`, adding the explicit device family. Versions 1–12 migrate numeric links to `family: "midra4k"`; null remains null, and legacy decimal IDs with leading zeros are canonicalized. Unknown legacy fields are rejected. Version 14 adds required `layers[].layer_fit`: versions 1–13 migrate to null, preserving normal crop/zoom behavior; supplying this field under an older schema is rejected. Version 15 adds required `layers[].mask`; versions 1–14 migrate with four zero edges and reject masks supplied under an older version. Version 16 adds required root `input_proposals`; versions 1–15 migrate to an empty array and reject this field if supplied under an older version. Version 17 adds required `mask.origin` (`layer` or `source`). Versions 1–16 migrate to `layer`; older versions containing `origin` are rejected. See the [version 17 example](canvas-pilot-v17.example.json); v16 remains a migration fixture. Version 18 adds required `workspace.snapping.mask_edges` (default false). Versions 1–17 migrate with this option disabled; supplying it under an older schema is rejected. See the [version 18 example](canvas-pilot-v18.example.json). Version 19 replaces each layer’s `device_link` with required `load_mapping` and `send_mapping`. Versions 1–18 migrate the old link to the load source and a single send destination on the current connection (or null and an empty destination list when unlinked). Older schemas containing the new fields are rejected. Saving always writes version 19; older applications reject it.
-Incompatible files are never partially applied.
+Version 5 adds required `midra_link` to every layer. Versions 1–4 migrate with null links; links cannot be supplied under an older version. Version 6 renames `editor.position_corner` to `editor.position_point` and adds `center`. Versions 1–5 retain their original corner; center and the new field are rejected in those older schemas. Version 7 adds `editor.backdrop_title`; versions 1–6 gain `"Example Conference Name"` and cannot supply this field under the old schema. Version 8 adds required `editor.position_layer_point`: null keeps matched points; a point enables independent measurement. Versions 1–7 migrate to null and cannot supply this field. Version 9 adds required `layers[].pivot`; versions 1–8 migrate to `[0.5, 0.5]` and cannot supply this field. Version 10 replaces `reference` with the required ordered `references` array. Versions 1–9 migrate null to `[]` and a single image to a one-element array, preserving all image settings. Version 11 adds required `workspace` settings and embedded layer previews. Versions 1–10 gain the documented workspace defaults, with no captures or collapsed folders; supplying `workspace` in an older schema is rejected. Version 12 adds required `folders`, the explicit folder names that survive without members. Versions 1–11 gain `folders: []`, preserving their existing implicit layer grouping; supplying this field under an older version is rejected. Version 13 replaces `midra_link` with required `device_link`, adding the explicit device family. Versions 1–12 migrate numeric links to `family: "midra4k"`; null remains null, and legacy decimal IDs with leading zeros are canonicalized. Unknown legacy fields are rejected. Version 14 adds required `layers[].layer_fit`: versions 1–13 migrate to null, preserving normal crop/zoom behavior; supplying this field under an older schema is rejected. Version 15 adds required `layers[].mask`; versions 1–14 migrate with four zero edges and reject masks supplied under an older version. Version 16 adds required root `input_proposals`; versions 1–15 migrate to an empty array and reject this field if supplied under an older version. Version 17 adds required `mask.origin` (`layer` or `source`). Versions 1–16 migrate to `layer`; older versions containing `origin` are rejected. See the [version 17 example](canvas-pilot-v17.example.json); v16 remains a migration fixture. Version 18 adds required `workspace.snapping.mask_edges` (default false). Versions 1–17 migrate with this option disabled; supplying it under an older schema is rejected. See the [version 18 example](canvas-pilot-v18.example.json). Version 19 replaces each layer’s `device_link` with required `load_mapping` and `send_mapping`. Versions 1–18 migrate the old link to the load source and a single send destination on the current connection (or null and an empty destination list when unlinked). Older schemas containing the new fields are rejected. Saving now writes version 20; older applications reject it.
+Version 20 removes root `input_proposals` and `inputs[].input_crop`. Source dimensions
+now describe the processed image used by layers. No second local pre-crop is stored,
+rendered or added to device layer crops. Shared device Input settings drafts remain
+session-only and are not project data. Strict migration accepts older projects only
+when the retired proposal list is empty and all retired input crop edges are zero;
+otherwise it directs the caller to explicit best-effort Open project.
 
-[Complete example](canvas-pilot-v19.example.json) is a valid project with an empty `Memory A` folder, a Midra link and an inactive input correction proposal,
+### Best-effort Open project
+
+The native-project opening path uses `project_recovery::from_json`. It first tries
+known migrations and strict validation, then recovers supported fields independently.
+Only valid UTF-8 JSON with the Canvas Pilot format and a known version (1–20) is
+accepted, within the 96 MiB limit. Invalid JSON and unknown future versions are errors.
+Retired proposals and local input crops are discarded with a report; old appearance
+is not guaranteed. Reload affected layers from the device after input preprocessing.
+
+Layers require valid identity, source and bounds. Invalid/duplicate layers and
+unusable sources are skipped; valid source IDs are remapped consecutively. Optional
+crop, fit, mask, mapping, camera and workspace values are retained when valid, or
+reset/skipped with a report. References and previews are recovered independently;
+image decode failures are also reported at GUI preparation. Existing count and
+combined image limits remain enforced. If no usable layers remain, opening fails.
+A complete validated replacement is prepared before replacing current work. Repaired
+projects open as unsaved copies, with no automatic overwrite target. Loading never
+writes to the source or sends device commands. Strict exchange imports and automatic
+recovery envelopes retain their separate validation rules.
+
+[Complete example](canvas-pilot-v20.example.json) is a valid project with an empty `Memory A` folder and a Midra link,
 with an unlinked Fullscreen example layer and no reference image. New projects label the lower layer `02 / Slides` and
 the upper layer `01 / Presenter`; existing projects retain their saved IDs/names.
 It is loaded by the regression tests.
@@ -38,8 +63,7 @@ It is loaded by the regression tests.
 | Root field | Representation / meaning |
 | --- | --- |
 | `format` | Exactly `"beffroi.midra-layout"` |
-| `version` | Integer `19` |
-| `input_proposals` | Required array, 0–256 inactive correction proposals; at most one per existing layer, with a `device_link` matching one of its send destinations. See below. |
+| `version` | Integer `20` |
 | `folders` | Required array of 0–256 unique explicit folder names, each trimmed and 1–128 characters. Explicit folders remain even with no members; layer folder labels also form implicit groups. |
 | `next_layer_id` | Positive integer strictly greater than every layer ID; not rewound by undo |
 | `output_resolution` | `{ "width": integer, "height": integer }`, screen pixels |
@@ -49,44 +73,16 @@ It is loaded by the regression tests.
 | `editor` | Selection, positioning and viewport preferences |
 | `workspace` | Required working setup and layer previews, described below |
 
-### Inactive input correction proposals
-
-Each object has exactly `layer_id` (stable layer ID), `device_link` (one of the layer's
-Midra send destinations), `input` (`INPUT_` plus a canonical positive decimal ID), `plug`
-(canonical positive decimal ID) and `settings` (1–9 whitelisted suffix/value pairs).
-IDs have at most 16 digits; only the Midra adapter currently supports proposals.
-Unknown fields, paths, values, duplicates or mismatched links are rejected.
-
-| Setting suffix | Value / units |
-| --- | --- |
-| `aspect/pp/signal` | `NATIVE`, `5_4`, `4_3`, `16_10`, `15_9`, `16_9`, `21_9`, `256_135`, `64_27` |
-| `aspect/pp/transformTo` | `SIGNAL`, `5_4`, `4_3`, `16_10`, `15_9`, `16_9`, `21_9`, `CUSTOM` |
-| `aspect/pp/customRatio` | Integer 250–10000, thousandths of width/height ratio; 1778 means 1.778:1 |
-| `aspect/pp/layerFill` | `LAYER_SETTING`, `1_1`, `CENTERED`, `FULLSCREEN`, `CROPPED` |
-| `cropping/control/pp/predefined` | `NONE`, `LETTERBOX_1_78`, `LETTERBOX_1_85`, `LETTERBOX_2_35`, `PILLARBOX_1_33` |
-| `cropping/control/pp/left`, `right`, `top`, `bottom` | Integer 0–8191, input pixels; each edge uses the full prefix |
-
-Proposals are explicitly saved, never inferred from connected-device defaults.
-Opening, recovery and snapshot restoration do not enable or stage them. Staging
-requires explicit permission, a matching mapped Preview input/plug and every
-referenced field in the current snapshot; Send remains separate and preflighted.
-They contain no host, authentication, source-routing command or update pulse.
-A proposal is a reviewable suggestion, not proof of the connected unit's identity.
-Deleting/remapping a layer filters its proposal from subsequent saves. Exports keep
-only proposals for included layers. Values retain integer precision.
-
-Input objects:
+### Input objects
 
 | Field | Representation / meaning |
 | --- | --- |
 | `id` | Consecutive input slot ID; not an external device identifier |
 | `source_format` | `"four_three"`, `"sixteen_nine"`, `"sixteen_ten"`, `"square"`, or `"custom"` |
-| `native_resolution` | `{ "width": integer, "height": integer }`, native input pixels |
-| `input_crop` | `{ "left": number, "right": number, "top": number, "bottom": number }`, pixels removed from the native input |
+| `native_resolution` | `{ "width": integer, "height": integer }`, processed source pixels (field name retained) |
 
-The user-facing input resolution is derived by subtracting opposite input crop
-edges from native dimensions. The source format remains explicit even with
-custom input cropping. Non-custom source formats must match the native resolution
+The stored resolution describes the processed source picture. Non-custom source
+formats must match that resolution
 within the existing half-pixel rounding tolerance.
 
 Layer objects:
@@ -103,7 +99,7 @@ Layer objects:
 | `source_id` | Existing input slot ID; multiple layers may share an input |
 | `bounds` | `{ "x": number, "y": number, "width": number, "height": number }`, visible box for normal crop/zoom, container for explicit `layer_fit`, in screen pixels; x/y are its top-left position |
 | `mask` | Required `{ "origin": "layer" or "source", "left": number, "right": number, "top": number, "bottom": number }`: finite fractions of the selected reference width/height, each 0–1 and opposite sums ≤1. Zero means no blanking; meeting edges blank the entire layer. Layer-relative masks are independent of crop/fit. Source-relative masks follow the usable source before layer crop/fit. Values remain proportional on resize and retain full floating-point precision. |
-| `advanced_crop` | Four nonnegative edges in usable input pixels, after input cropping |
+| `advanced_crop` | Four nonnegative edges in usable input pixels, after device preprocessing |
 | `visible` | Boolean editor visibility |
 | `locked` | Boolean editor selection/movement protection |
 
@@ -111,7 +107,7 @@ The visible box is the user's layer resolution. Its content zoom and offset are
 **derived** from `advanced_crop`, usable input size and visible box size; they are
 not duplicated in the save file. Retained source pixels must have the same ratio
 as the box. Crop zoom must be 1–100 (100–10000%). Shared input assignments and
-both crop stages survive round trips without rewriting the crop values.
+layer crops survive round trips without rewriting the crop values.
 
 Each reference object:
 
@@ -264,7 +260,7 @@ and `viewBox="0 0 W H"` equal to the output screen. The root carries
 
 ## Compatibility changes
 
-Project version 19 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
+Project version 20 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
 `version` and either implement a tested migration or clearly reject older/newer
 files. Changing rectangle/marker semantics requires a corresponding documented
 exchange-interface revision and importer tests. Update this document and its example
@@ -282,7 +278,7 @@ retarget existing links; choosing a destination there explicitly replaces that
 layer's saved link. Direct send/load actions use each layer's saved screen,
 independently of the screen currently displayed in the configuration window.
 
-Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 19.
+Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 20.
 
 ## Folder-scoped Midra transfers
 
@@ -296,18 +292,13 @@ Version 19 stores these directions separately. See
 [device transfer scopes](midra-device-send.md#shared-transfer-scopes-and-folder-layouts).
 
 
-### Editor input creation
+### Editor source identities
 
-The opt-in Advanced Source section offers Inputs 1–8 independently of editor/device
-layer counts. Mapping only edits Midra screen/layer links, not input identities.
-**New editor input** extends this local list up to the existing 1024-slot limit.
-Selecting an unused identity is staged; **Apply source changes** creates any
-missing consecutive slots with the default 1920 × 1080, 16:9 source and zero input
-crop, then assigns the selected layer. Creation and assignment form one undoable
-edit. Multiple layers may share the new identity. Existing smaller projects remain
-unchanged until Apply; saving writes the materialized slots in `inputs` and the
-one-based assignment in `layers[].source_id`. Version 10 and older-version
-migration rules are unchanged. These IDs do not select or route physical inputs.
+The project retains consecutive source identities and processed dimensions, shared
+by layers where appropriate. These are not routing commands. The former local
+Editor input/source pre-crop controls are removed; physical input corrections are
+edited only in the shared Input settings window. Load affected layers after changing
+device preprocessing to refresh the source dimensions used for layer geometry.
 
 ## Workspace settings (version 11)
 
@@ -348,7 +339,7 @@ background export behavior.
 For the complete persistence audit and the reasons for keeping other controls
 out of project files, see [Project persistence audit](canvas-pilot-persistence-audit.md).
 
-Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 19 and use the same migration on import.
+Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 20 and use the same migration on import.
 
 ### Explicit layer fit (v14)
 
@@ -368,7 +359,7 @@ separate adapter implementation. See [device conversion](midra-device-send.md).
 ### Layer and source masks (v17)
 
 The reference is the layer rectangle for `layer`, or the full usable source mapped
-into output coordinates for `source` (local input crop happens first). Source
+into output coordinates for `source` (device input preprocessing happens first). Source
 reference bounds can extend outside the layer. The reveal rectangle is `(x + left*w, y + top*h, (1-left-right)*w,
 (1-top-bottom)*h)` in output pixels. Intersect this rectangle with the rendered
 image after crop and fit. Outside pixels are transparent; no image translation,

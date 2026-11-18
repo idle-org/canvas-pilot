@@ -128,7 +128,7 @@ choices. Canvas Pilot copies also offer an **Appearance** group with **Crop & fi
 and **Blanking**. Crop edges preserve normal zoom/offsets and all explicit fit
 modes; masks retain their Layer/Source reference and proportions. Enable **Rename destination layers** to apply supplied names; it starts unchecked.
 
-Crop & fit requires matching source dimensions after input crop; it never changes
+Crop & fit requires matching processed source dimensions; it never changes
 source assignments or device mappings. If dimensions differ, match the local source
 or uncheck Crop & fit. Blanking can be pasted independently. Older clipboard text
 still offers **Crop zoom** when present, without full crop offsets or fit/masks.

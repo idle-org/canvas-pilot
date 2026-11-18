@@ -134,13 +134,7 @@ impl Plan {
             source.input()?;
             layout.formats().mapping(i, g)?;
             let advanced = layout.formats().advanced[i];
-            let input = source.input_crop;
-            let crop = [
-                input.left + advanced.left,
-                input.right + advanced.right,
-                input.top + advanced.top,
-                input.bottom + advanced.bottom,
-            ];
+            let crop = [advanced.left, advanced.right, advanced.top, advanced.bottom];
             let native = source.native.map(f64::from);
             let layer = format!("{base}/presetList/items/{bank}/liveLayerList/items/{destination}");
             let device_layer = field(&snapshot.raw, &layer)?;
@@ -958,12 +952,10 @@ mod tests {
         assert!(right < left);
     }
     #[test]
-    fn custom_input_combines_crop_once_clears_mask_and_rejects_source_mismatch() {
+    fn layer_crop_is_sent_once_clears_mask_and_rejects_source_mismatch() {
         let mut state = snapshot();
         let mut l = layout();
-        let mut source = l.formats().sources[0];
-        source.input_crop.top = 40.0;
-        source.input_crop.bottom = 40.0;
+        let source = l.formats().sources[0];
         l.configure(0, 0, source, l.layers()[0], true).unwrap();
         l.set_framing(
             0,
@@ -990,7 +982,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             top.after,
-            json!(((40.0 + crop.top) / 1080.0 * 65535.0).round() as i64)
+            json!((crop.top / 1080.0 * 65535.0).round() as i64)
         );
         let path = "/device/screenList/items/1/presetList/items/UP/liveLayerList/items/1";
         *state

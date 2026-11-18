@@ -236,53 +236,7 @@ fn dimensions(ui: &mut egui::Ui, size: &mut [f64; 2], prefix: &str) {
         }
     });
 }
-fn resolution(ui: &mut egui::Ui, size: &mut [u32; 2], prefix: &str, ratio: Option<f64>) {
-    ui.horizontal_wrapped(|ui| {
-        ui.label(prefix);
-        if ui
-            .add(
-                egui::DragValue::new(&mut size[0])
-                    .speed(1)
-                    .prefix(tr(ui.ctx(), "ui.w")),
-            )
-            .changed()
-            && let Some(r) = ratio
-        {
-            size[1] = (size[0] as f64 / r).round() as u32;
-        }
-        if ui
-            .add(
-                egui::DragValue::new(&mut size[1])
-                    .speed(1)
-                    .prefix(tr(ui.ctx(), "ui.h")),
-            )
-            .changed()
-            && let Some(r) = ratio
-        {
-            size[0] = (size[1] as f64 * r).round() as u32;
-        }
-        if size[0] > 0 && size[1] > 0 {
-            ui.label(format!(
-                "Ratio {}",
-                ratio_ui::label(size[0] as f64 / size[1] as f64)
-            ));
-        }
-    });
-}
-fn presets(ui: &mut egui::Ui, size: &mut [u32; 2], aspect: &mut Aspect) {
-    ui.horizontal_wrapped(|ui| {
-        for (name, value) in [
-            ("HD", [1280, 720]),
-            ("Full HD", [1920, 1080]),
-            ("UHD 4K", [3840, 2160]),
-        ] {
-            if ui.button(name).clicked() {
-                *size = value;
-                *aspect = Aspect::SixteenNine;
-            }
-        }
-    });
-}
+
 impl Editor {
     pub(super) fn output_window(&mut self, ctx: &egui::Context) {
         let Some(mut d) = self.output_draft.take() else {
@@ -401,59 +355,7 @@ impl Editor {
                     self.inputs.selected = snapshot.profile.input_from_source(&layer.source).unwrap_or(0);
                 }
             }
-            ui.small("Device preprocessing is edited in the shared window. The local source model below only affects the editor layout.");
-            ui.checkbox(&mut self.device.local_source_editing, "Edit local source geometry");
-            ui.separator();
-            ui.label(tr(ui.ctx(), "ui.editor-source-model-local-geometry"));
-            ui.small(tr(ui.ctx(), "ui.these-dimensions-describe-the-editor-source-not-a-device-timing-command-local-input-c"));
-            ui.add_enabled_ui(self.device.local_source_editing, |ui| {
-            ui.horizontal(|ui| {
-                ui.label(tr(ui.ctx(), "ui.editor-input"));
-                egui::ComboBox::from_id_salt("source-id").selected_text(format!("Input {}",d.source_id+1)).show_ui(ui,|ui| {
-                    let count = self.layout.formats().sources.len().max(8).max(d.source_id + 1);
-                    for id in 0..count { if ui.stable_selectable_value(&mut d.source_id,id,format!("Input {}",id+1)).changed() { d.source=self.layout.formats().sources.get(id).copied().unwrap_or_default();d.input_size=d.source.input().unwrap(); } }
-                    ui.separator();
-                    if ui.add_enabled(count < 1024, egui::Button::new(tr(ui.ctx(), "ui.new-editor-input"))).clicked() {
-                        d.source_id = count;
-                        d.source = Default::default();
-                        d.input_size = d.source.input().unwrap();
-                        ui.close();
-                    }
-                });
-            });
-                ui.small(tr(ui.ctx(), "ui.editor-inputs-share-source-format-and-input-crop-between-editor-layers-inputs-1-8-are"));
-
-            let affected:Vec<_>=(0..self.layout.layers().len()).filter(|j| *j==i || self.layout.formats().source_for[*j]==d.source_id).map(|j|self.layout.layer_label(j)).collect();
-            ui.label(format!("Input edits affect: {}",affected.join(", ")));
-            let old_native=d.source.native;
-            ui.horizontal(|ui| {
-                ui.label(tr(ui.ctx(), "ui.source-format"));
-                if aspect_combo(ui,"source-aspect",&mut d.source.aspect) && let Some(r)=d.source.aspect.ratio() { d.source.native[1]=(d.source.native[0] as f64/r).round() as u32; }
-            });
-            presets(ui,&mut d.source.native,&mut d.source.aspect);
-            resolution(ui,&mut d.source.native,"Native pixels",d.source.aspect.ratio());
-            if old_native!=d.source.native { d.source.input_crop=Crop::default();d.input_size=d.source.native.map(f64::from); }
-            ui.label(tr(ui.ctx(), "ui.custom-input-resolution-retains-the-source-format-above"));
-            let old_input_size=d.input_size;
-            dimensions(ui,&mut d.input_size,"Input resolution");
-            if old_input_size!=d.input_size {
-                match Crop::centered(d.source.native.map(f64::from),d.input_size) {
-                    Ok(c)=>{d.source.input_crop=c;d.error.clear();},Err(e)=>d.error=e
-                }
-            }
-            ui.horizontal(|ui| {
-                if ui.button(tr(ui.ctx(), "ui.center-input-crop-to-this-size")).clicked() {
-                    match Crop::centered(d.source.native.map(f64::from),d.input_size) { Ok(c)=>{d.source.input_crop=c;d.error.clear();},Err(e)=>d.error=e }
-                }
-                if ui.button(tr(ui.ctx(), "ui.use-full-input")).clicked() { d.source.input_crop=Crop::default();d.input_size=d.source.native.map(f64::from); }
-            });
-            let old_crop=d.source.input_crop;
-            ui.horizontal_wrapped(|ui| {
-                for (title,value) in [("L ",&mut d.source.input_crop.left),("R ",&mut d.source.input_crop.right),("T ",&mut d.source.input_crop.top),("B ",&mut d.source.input_crop.bottom)] { ui.add(egui::DragValue::new(value).range(0.0..=f64::MAX).custom_parser(nonnegative_number).speed(1.0).custom_formatter(|v,_|number(v)).prefix(title)); }
-            });
-            if old_crop!=d.source.input_crop && let Ok(size)=d.source.input() { d.input_size=size; }
-            ui.label(tr(ui.ctx(), "ui.input-crop-edges-native-source-pixels-native-size-changes-reset-the-draft-input-crop"));
-            });
+            ui.small("Shared input settings apply to every layer using that physical input. Load the layout again after changing device preprocessing.");
             }
             if self.property_tab == PropertyTab::Layer {
             let before_size = d.size;
@@ -489,24 +391,6 @@ impl Editor {
             ui.small(tr(ui.ctx(), "ui.layer-size-changes-apply-as-you-edit-undo-restores-earlier-values"));
             }
             if !ui.input(|input| input.pointer.primary_down()) { d.layer_before = None; }
-            if self.property_tab == PropertyTab::Source {
-            let g=self.layout.layers()[i];
-            let [x,y]=self.position_reference().offsets_on(g,self.layout.formats().output);
-            let geometry=self.position_reference().geometry_on(x,y,d.size[0],d.size[1],self.layout.formats().output);
-            let mut preview=self.layout.clone();
-            let input_matches=d.source.input().is_ok_and(|size| (size[0]-d.input_size[0]).abs()<1e-7 && (size[1]-d.input_size[1]).abs()<1e-7);
-            let reviewed=if input_matches {geometry.and_then(|geometry|preview.configure(i,d.source_id,d.source,geometry,true))} else {Err("Input resolution is invalid or does not match the crop edges.".into())};
-            match &reviewed {
-                Ok(message) if !message.is_empty()=>{ ui.label(message); },
-                Err(e)=>{ ui.colored_label(theme::palette(ui.ctx()).amber,e); },
-                _=>{}
-            }
-            let pending = d.pending(&self.layout);
-            if apply_button(ui,&tr(ui.ctx(), "action.apply-source"), pending && self.device.local_source_editing).clicked() {
-                match d.apply(&mut self.layout, position_reference, self.keep_aspect_ratio) { Ok(())=>{self.sync();d=FormatDraft::new(&self.layout,i);},Err(e)=>d.error=e }
-            }
-            ui.small(tr(ui.ctx(), "ui.source-changes-require-apply-switching-tabs-keeps-pending-source-edits"));
-            }
             if self.property_tab == PropertyTab::Mask {
                 ui.heading(tr(ui.ctx(), "ui.layer-mask-blanking"));
                 ui.label(tr(ui.ctx(), "ui.the-magenta-box-reveals-pixels-everything-outside-it-is-blanked-image-scale-crop-and"));
@@ -893,11 +777,7 @@ fn paint_source_clipped(
         let k = rect.width() as f64 / retained[0];
         let ky = rect.height() as f64 / retained[1];
         let native = Rect::from_min_size(
-            rect.min
-                - Vec2::new(
-                    ((source.input_crop.left + crop.left) * k) as f32,
-                    ((source.input_crop.top + crop.top) * ky) as f32,
-                ),
+            rect.min - Vec2::new(((crop.left) * k) as f32, ((crop.top) * ky) as f32),
             Vec2::new(
                 (source.native[0] as f64 * k) as f32,
                 (source.native[1] as f64 * ky) as f32,
@@ -937,11 +817,7 @@ pub(super) fn paint_pattern_clipped(
     let ky = rect.height() as f64 / retained[1];
     let p = painter.with_clip_rect(painter.clip_rect().intersect(clip));
     let point = |x: f64, y: f64| {
-        rect.min
-            + Vec2::new(
-                ((x - source.input_crop.left - crop.left) * k) as f32,
-                ((y - source.input_crop.top - crop.top) * ky) as f32,
-            )
+        rect.min + Vec2::new(((x - crop.left) * k) as f32, ((y - crop.top) * ky) as f32)
     };
     for row in 0..6 {
         for col in 0..10 {
@@ -1239,75 +1115,6 @@ mod tests {
                 .is_err()
         );
         assert_eq!(layout.layers(), &before);
-    }
-
-    #[test]
-    fn input_crop_controls_reject_negative_paste_and_keep_fractional_values() {
-        let ctx = egui::Context::default();
-        let mut app = Editor {
-            property_tab: PropertyTab::Source,
-            ..Default::default()
-        };
-        app.device.local_source_editing = true;
-        let crop = Crop {
-            left: 20.0,
-            right: 20.0,
-            top: 20.0,
-            bottom: 20.0,
-        };
-        let source = Source {
-            input_crop: crop,
-            ..Source::default()
-        };
-        app.layout
-            .configure(1, 1, source, app.layout.layers()[1], true)
-            .unwrap();
-        app.sync();
-        app.format_draft = Some(FormatDraft::new(&app.layout, 1));
-        for label in ["L 20.0", "R 20.0", "T 20.0", "B 20.0"] {
-            enter_value(&mut app, &ctx, label, "-12.5");
-            assert_eq!(app.format_draft.as_ref().unwrap().source.input_crop, crop);
-        }
-        enter_value(&mut app, &ctx, "L 20.0", "NaN");
-        assert_eq!(app.format_draft.as_ref().unwrap().source.input_crop, crop);
-        enter_value(&mut app, &ctx, "L 20.0", "12.5");
-        assert_eq!(
-            app.format_draft.as_ref().unwrap().source.input_crop.left,
-            12.5
-        );
-        enter_value(&mut app, &ctx, "L 12.5", "0");
-        assert_eq!(
-            app.format_draft.as_ref().unwrap().source.input_crop.left,
-            0.0
-        );
-        let output = frame(&mut app, &ctx, vec![]);
-        let texts: Vec<_> = output
-            .shapes
-            .iter()
-            .filter_map(|shape| match &shape.shape {
-                egui::Shape::Text(t) => Some(t),
-                _ => None,
-            })
-            .collect();
-        let start = texts
-            .windows(2)
-            .find_map(|pair| {
-                (pair[0].galley.text() == "R " && pair[1].galley.text() == "20.0")
-                    .then(|| pair[1].pos + pair[1].galley.size() / 2.0)
-            })
-            .unwrap();
-        let end = start - Vec2::new(100.0, 0.0);
-        frame(
-            &mut app,
-            &ctx,
-            vec![egui::Event::PointerMoved(start), mouse(start, true)],
-        );
-        frame(&mut app, &ctx, vec![egui::Event::PointerMoved(end)]);
-        frame(&mut app, &ctx, vec![mouse(end, false)]);
-        assert_eq!(
-            app.format_draft.as_ref().unwrap().source.input_crop.right,
-            0.0
-        );
     }
 
     #[test]
@@ -1678,54 +1485,6 @@ mod tests {
         app.layout.undo();
         assert_eq!(app.layout.formats().output, [1920, 1080]);
     }
-    #[test]
-    fn advanced_source_edits_require_explicit_checkbox() {
-        let mut app = Editor {
-            property_tab: PropertyTab::Source,
-            ..Default::default()
-        };
-        let ctx = egui::Context::default();
-        let before = app.layout.formats().clone();
-        let mut draft = FormatDraft::new(&app.layout, 1);
-        draft.input_size = [1920.0, 1000.0];
-        draft.source.input_crop = Crop::centered([1920.0, 1080.0], draft.input_size).unwrap();
-        app.format_draft = Some(draft);
-        click_text(&mut app, &ctx, "Apply source changes");
-        assert_eq!(app.layout.formats(), &before);
-        assert!(!app.device.local_source_editing);
-        click_text(&mut app, &ctx, "Edit local source geometry");
-        assert!(app.device.local_source_editing);
-        click_text(&mut app, &ctx, "Apply source changes");
-        assert_eq!(app.layout.formats().input(1).unwrap(), [1920.0, 1000.0]);
-        assert!(!app.device.sending);
-    }
-
-    #[test]
-    fn source_and_layer_dialog_applies_worked_example_with_one_undo() {
-        let mut app = Editor {
-            property_tab: PropertyTab::Source,
-            keep_aspect_ratio: false,
-            ..Default::default()
-        };
-        app.device.local_source_editing = true;
-        let ctx = egui::Context::default();
-        let before = app.layout.layers().clone();
-        let formats = app.layout.formats().clone();
-        let mut d = FormatDraft::new(&app.layout, 1);
-        d.input_size = [1920.0, 1000.0];
-        d.source.input_crop = Crop::centered([1920.0, 1080.0], d.input_size).unwrap();
-        d.size = [300.0, 250.0];
-        app.format_draft = Some(d);
-        click_text(&mut app, &ctx, "Apply source changes");
-        assert_eq!(app.layout.formats().input(1).unwrap(), [1920.0, 1000.0]);
-        let g = app.layout.layers()[1];
-        assert_eq!([g.width, g.height], [300.0, 250.0]);
-        assert_eq!(app.layout.formats().advanced[1].left, 360.0);
-        assert_eq!(app.layout.layers()[0], before[0]);
-        app.layout.undo();
-        assert_eq!(*app.layout.layers(), before);
-        assert_eq!(*app.layout.formats(), formats);
-    }
 }
 
 #[cfg(test)]
@@ -1839,7 +1598,6 @@ mod preview_paint_tests {
         let source = Source {
             aspect: canvas_pilot::formats::Aspect::Square,
             native: [1000, 1000],
-            ..Source::default()
         };
         let crop = Crop {
             left: 100.0,
@@ -1986,18 +1744,10 @@ mod preview_paint_tests {
     }
 
     #[test]
-    fn captured_texture_follows_both_crops_with_guides_above_and_opaque_fallback() {
+    fn captured_texture_follows_layer_crop_with_guides_above_and_opaque_fallback() {
         let ctx = egui::Context::default();
         let rect = Rect::from_min_size(Pos2::new(100., 100.), Vec2::new(132., 88.));
-        let source = Source {
-            input_crop: Crop {
-                left: 100.,
-                right: 100.,
-                top: 0.,
-                bottom: 0.,
-            },
-            ..Source::default()
-        };
+        let source = Source::default();
         let crop = Crop {
             left: 200.,
             right: 200.,
@@ -2043,8 +1793,13 @@ mod preview_paint_tests {
                     .fold(Pos2::new(f32::NEG_INFINITY, f32::NEG_INFINITY), |a, b| {
                         a.max(b)
                     });
-                assert_eq!(min, Pos2::new(70., 90.));
-                assert_eq!(max, Pos2::new(262., 198.));
+                let kx = rect.width() / (1920.0 - crop.left - crop.right) as f32;
+                let ky = rect.height() / (1080.0 - crop.top - crop.bottom) as f32;
+                assert_eq!(
+                    min,
+                    rect.min - Vec2::new(crop.left as f32 * kx, crop.top as f32 * ky)
+                );
+                assert_eq!(max, min + Vec2::new(1920.0 * kx, 1080.0 * ky));
                 assert!(
                     guides
                         .iter()

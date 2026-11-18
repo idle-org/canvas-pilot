@@ -7,6 +7,7 @@ pub(super) struct PreparedProject {
     capture: capture_ui::CaptureUi,
     layout: Layout,
     references: Vec<super::super::reference::Reference>,
+    warnings: Vec<String>,
 }
 type LoadedProject = (PreparedProject, Option<PathBuf>, Option<u64>);
 type ProjectJob = std::sync::mpsc::Receiver<Result<Option<LoadedProject>, String>>;
@@ -51,6 +52,49 @@ pub(super) struct FileUi {
     export_job: Option<ExportJob>,
 }
 impl PreparedProject {
+    fn prepare_recovered(
+        ctx: &egui::Context,
+        loaded: canvas_pilot::project_recovery::LoadedProject,
+    ) -> Result<Self, String> {
+        let canvas_pilot::project_recovery::LoadedProject {
+            mut project,
+            mut warnings,
+        } = loaded;
+        project.references.retain(|r| {
+            let valid = r.bytes().and_then(|bytes| {
+                let file = egui::DroppedFile {
+                    name: r.name.clone(),
+                    bytes: Some(bytes.into()),
+                    ..Default::default()
+                };
+                super::super::reference::Reference::load(ctx, &file).map(|_| ())
+            });
+            if let Err(error) = valid {
+                warnings.push(format!("Reference {} skipped: {error}", r.name));
+                false
+            } else {
+                true
+            }
+        });
+        let mut workspace = project.workspace.clone();
+        workspace.previews.clear();
+        project.workspace.previews.retain(|preview| {
+            workspace.previews = vec![preview.clone()];
+            if let Err(error) = capture_ui::CaptureUi::from_workspace(ctx, &workspace) {
+                warnings.push(format!(
+                    "Layer {} preview skipped: {error}",
+                    preview.layer_id
+                ));
+                false
+            } else {
+                true
+            }
+        });
+        let mut prepared = Self::prepare(ctx, project)?;
+        prepared.warnings = warnings;
+        Ok(prepared)
+    }
+
     fn prepare(ctx: &egui::Context, project: Project) -> Result<Self, String> {
         let layout = project.layout()?;
         let references = project
@@ -77,26 +121,13 @@ impl PreparedProject {
             project,
             layout,
             references,
+            warnings: Vec::new(),
         })
     }
 }
 impl Editor {
     pub(super) fn project(&self) -> Project {
         let mut p = Project::from_layout(&self.layout);
-        p.input_proposals = self
-            .device
-            .saved_input_proposals
-            .iter()
-            .filter(|proposal| {
-                p.layers.iter().any(|l| {
-                    l.id == proposal.layer_id
-                        && l.send_mapping
-                            .current_links()
-                            .any(|link| link == &proposal.device_link)
-                })
-            })
-            .cloned()
-            .collect();
         p.editor.position_point = self.corner;
         p.editor.position_layer_point = self.position_layer_point;
         p.editor.backdrop_title = self.backdrop_title.clone();
@@ -158,11 +189,10 @@ impl Editor {
             project,
             layout,
             references,
+            warnings: _,
         } = prepared;
         let e = project.editor;
         self.device.reset_mappings();
-        self.device.local_source_editing = false;
-        self.device.saved_input_proposals = project.input_proposals;
         self.capture.clear_preview();
         let mut layer_ui = layers_ui::LayerUi::default();
         layer_ui.collapsed = project.workspace.collapsed_folders.into_iter().collect();
@@ -223,6 +253,21 @@ impl Editor {
             ctx.request_repaint();
         });
     }
+    fn start_project_open(&mut self, ctx: &egui::Context, path: PathBuf) {
+        let (tx, rx) = std::sync::mpsc::channel();
+        self.files.loading = Some(rx);
+        self.files.loading_recovery = false;
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let result = (|| {
+                let (loaded, native) = canvas_pilot::interchange::read_project_for_open(&path)?;
+                let prepared = PreparedProject::prepare_recovered(&ctx, loaded)?;
+                Ok(Some((prepared, native.then_some(path), None)))
+            })();
+            let _ = tx.send(result);
+            ctx.request_repaint();
+        });
+    }
     pub(super) fn poll_project_job(&mut self) {
         let Some(rx) = &self.files.loading else {
             return;
@@ -235,9 +280,13 @@ impl Editor {
         let recovery = self.files.loading_recovery;
         self.files.loading = None;
         let result = result.and_then(|loaded| {
-            if let Some((prepared, path, time)) = loaded {
+            if let Some((prepared, mut path, mut time)) = loaded {
+                let warnings = prepared.warnings.clone();
+                if !warnings.is_empty() { path = None; time = None; }
                 self.install_prepared(prepared)?;
-                self.files.message = if recovery {
+                self.files.message = if !warnings.is_empty() {
+                    Some(format!("Opened a recovered, unsaved copy. Review it before saving. The original file has not been changed.\n\n{}", warnings.join("\n")))
+                } else if recovery {
                     None
                 } else {
                     Some(
@@ -634,12 +683,7 @@ impl Editor {
                 ui.horizontal(|ui| {load=ui.button(tr(ui.ctx(), "ui.open-project-5e5eba")).clicked();cancel=ui.button(tr(ui.ctx(), "ui.cancel")).clicked();});
             });
             if load {
-                self.start_project_job(ctx, false, move || {
-                    let (project, native) =
-                        canvas_pilot::interchange::read_project_or_parameters(&path)?;
-                    // Never autosave JSON over the source artwork.
-                    Ok(Some((project, native.then_some(path), None)))
-                });
+                self.start_project_open(ctx, path);
             } else if open && !cancel {
                 self.files.opening = Some(path);
             }
@@ -675,7 +719,11 @@ impl Editor {
                 .collapsible(false)
                 .open(&mut open)
                 .show(ctx, |ui| {
-                    ui.label(&message);
+                    egui::ScrollArea::vertical()
+                        .max_height(360.0)
+                        .show(ui, |ui| {
+                            ui.label(&message);
+                        });
                     done = ui.button(tr(ui.ctx(), "ui.ok")).clicked();
                 });
             if open && !done {
@@ -688,6 +736,59 @@ impl Editor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn partial_open_keeps_original_bytes_and_requires_save_as() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let mut raw = serde_json::to_value(app.project()).unwrap();
+        raw["layers"][0]["bounds"]["width"] = serde_json::json!(-1);
+        let bytes = raw.to_string();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("damaged.pilot.json");
+        std::fs::write(&path, &bytes).unwrap();
+        app.start_project_open(&ctx, path.clone());
+        app.wait_project_job();
+        assert_eq!(app.layout.layers().len(), 1);
+        assert!(app.files.project_path.is_none());
+        assert!(app.files.manual_saved_at.is_none());
+        assert!(
+            app.files
+                .message
+                .as_ref()
+                .unwrap()
+                .contains("recovered, unsaved copy")
+        );
+        app.autosave_position_points();
+        assert_eq!(std::fs::read_to_string(path).unwrap(), bytes);
+    }
+
+    #[test]
+    fn undecodable_reference_is_skipped_only_during_explicit_open() {
+        let ctx = egui::Context::default();
+        let mut project = Project::from_layout(&Layout::default());
+        project.references.push(SavedReference {
+            name: "broken.png".into(),
+            image_base64: STANDARD.encode(b"not an image"),
+            visible: true,
+            opacity: 1.0,
+            preserve_ratio: true,
+            native_size: false,
+            offset: [0.0; 2],
+        });
+        assert!(PreparedProject::prepare(&ctx, project.clone()).is_err());
+        let recovered = PreparedProject::prepare_recovered(
+            &ctx,
+            canvas_pilot::project_recovery::LoadedProject {
+                project,
+                warnings: vec![],
+            },
+        )
+        .unwrap();
+        assert!(recovered.references.is_empty());
+        assert_eq!(recovered.layout.layers().len(), 2);
+        assert_eq!(recovered.warnings.len(), 1);
+    }
+
     #[test]
     fn export_scope_is_explicit_and_unavailable_options_are_cleared() {
         let ctx = egui::Context::default();
@@ -774,25 +875,6 @@ mod tests {
         let time = app.files.manual_saved_at;
         app.autosave_position_points();
         assert_eq!(app.files.manual_saved_at, time);
-    }
-
-    #[test]
-    fn saved_input_proposals_reopen_inactive_and_follow_layer_identity() {
-        let ctx = egui::Context::default();
-        let mut app = Editor::default();
-        let project = Project::from_json(include_str!(
-            "../../../docs/interfaces/canvas-pilot-v16.example.json"
-        ))
-        .unwrap();
-        app.device.local_source_editing = true;
-        app.install_project(&ctx, project.clone()).unwrap();
-        assert!(!app.device.local_source_editing);
-        assert_eq!(app.project().input_proposals, project.input_proposals);
-        app.layout.set_device_link(0, None).unwrap();
-        assert!(app.project().input_proposals.is_empty());
-        app.install_project(&ctx, Project::from_layout(&Layout::default()))
-            .unwrap();
-        assert!(app.device.saved_input_proposals.is_empty());
     }
 
     #[test]

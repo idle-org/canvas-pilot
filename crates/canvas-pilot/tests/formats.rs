@@ -162,11 +162,11 @@ fn invalid_formats_crops_and_offsets_are_rejected() {
     }
 }
 #[test]
-fn input_crop_is_composed_once_and_keeps_original_source_format() {
+fn processed_source_dimensions_are_used_without_extra_input_crop() {
     let mut layout = Layout::default();
     let source = Source {
-        input_crop: Crop::centered([1920.0, 1080.0], [1920.0, 1000.0]).unwrap(),
-        ..Source::default()
+        native: [1920, 1000],
+        aspect: Aspect::Custom,
     };
     layout
         .configure(1, 1, source, box_size(300.0, 250.0), false)
@@ -180,13 +180,13 @@ fn input_crop_is_composed_once_and_keeps_original_source_format() {
             },
         )
         .unwrap();
-    assert_eq!(layout.formats().sources[1].aspect, Aspect::SixteenNine);
+    assert_eq!(layout.formats().sources[1].aspect, Aspect::Custom);
     let c = layout.formats().advanced[1];
-    close(source.input_crop.top + c.top, 290.0);
-    close(source.input_crop.left + c.left, 660.0);
+    close(c.top, 250.0);
+    close(c.left, 660.0);
     let report = layout.calculation_report(1).unwrap();
     assert!(report.contains("not a verified device recipe"));
-    assert!(report.contains("x 660.0, y 290.0, w 600.0, h 500.0"));
+    assert!(report.contains("x 660.0, y 250.0, w 600.0, h 500.0"));
 }
 #[test]
 fn shared_sources_update_atomically_and_layer_framing_stays_independent() {
@@ -206,8 +206,8 @@ fn shared_sources_update_atomically_and_layer_framing_stays_independent() {
     let old = layout.formats().clone();
     let boxes = layout.layers().clone();
     let source = Source {
-        input_crop: Crop::centered([1920.0, 1080.0], [1920.0, 1000.0]).unwrap(),
-        ..Source::default()
+        native: [1920, 1000],
+        aspect: Aspect::Custom,
     };
     layout.configure(1, 0, source, boxes[1], false).unwrap();
     assert_eq!(layout.formats().input(0).unwrap(), [1920.0, 1000.0]);

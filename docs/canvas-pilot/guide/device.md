@@ -155,12 +155,10 @@ is ready. Manual loading has a Cancel button; errors keep the old project.
 Recovery autosave pauses while loading, including on exit.
 
 
-In the opt-in **Layer properties → Source** section, **Editor input** offers Inputs 1–8 separately
-from Midra screen/layer destinations. Use **New editor input** for additional
-local identities, then **Apply source changes**. Layers sharing an editor input
-share its source format and input crop. Assignments are saved in projects and
-undoable; they do not change physical input routing.
-
+**Layer properties → Source** opens the shared Input settings window. Physical
+input preprocessing affects all consumers; it is not part of a layer send or a
+saved project. Reload affected layers after changing it to refresh processed
+source dimensions. Layer source relationships remain stored but do not route inputs.
 
 ## Aquilon / LivePremier
 
@@ -203,4 +201,4 @@ pooled, throttled, opt-in behavior, including inputs above 16. Older firmware,
 linked units and other Aquilon models remain unverified. See the
 [adapter contract](../../interfaces/device-adapters.md) for tested scope and limits.
 
-Saved device input corrections are optional [inactive proposals](advanced-exchange.md#saved-input-corrections); opening a file never enables or sends them.
+Shared device input drafts are session-only; [projects omit them](advanced-exchange.md#saved-input-corrections). Opening a file never changes an input.

@@ -51,8 +51,10 @@ fn independent_directions_roundtrip_and_undo_together() {
 #[test]
 fn v18_migration_synchronizes_links_and_v19_requires_both_directions() {
     let old = include_str!("../../../docs/interfaces/canvas-pilot-v18.example.json");
-    let project = Project::from_json(old).unwrap();
-    assert_eq!(project.version, 19);
+    let project = canvas_pilot::project_recovery::from_json(old)
+        .unwrap()
+        .project;
+    assert_eq!(project.version, 20);
     for layer in &project.layers {
         assert_eq!(
             layer.send_mapping,
@@ -62,7 +64,7 @@ fn v18_migration_synchronizes_links_and_v19_requires_both_directions() {
     assert_eq!(
         project,
         Project::from_json(include_str!(
-            "../../../docs/interfaces/canvas-pilot-v19.example.json"
+            "../../../docs/interfaces/canvas-pilot-v20.example.json"
         ))
         .unwrap()
     );
