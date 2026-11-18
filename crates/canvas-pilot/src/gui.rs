@@ -485,7 +485,6 @@ impl Editor {
             return;
         }
         let eligible = !self.inputs.open
-            && self.edit_content
             && self.navigation_tool == NavigationTool::Select
             && !self.layout.dragging()
             && !self.panning
@@ -518,6 +517,7 @@ impl Editor {
                 .selected()
                 .is_some_and(|i| !self.layout.locked(i) && self.layout.visible(i));
         let tab_eligible = eligible
+            && self.edit_content
             && self.format_draft.is_none()
             && self.layout.selected().is_some_and(|i| {
                 self.layout.formats().layer_fit[i]
@@ -541,7 +541,11 @@ impl Editor {
                 self.crop_mask_enter_held = *pressed;
                 if enter_eligible && modifiers.is_none() {
                     if *pressed && !was_held {
-                        self.finish_crop_edit();
+                        if self.edit_content {
+                            self.finish_crop_edit();
+                        } else {
+                            self.toggle_crop_edit();
+                        }
                     }
                     return false;
                 }
@@ -6635,6 +6639,59 @@ mod tests {
         alt_frame(&mut app, &ctx, false, vec![]);
         assert!(!app.mask_editing());
         assert!(app.edit_content);
+    }
+
+    #[test]
+    fn enter_opens_crop_and_release_is_required_before_closing() {
+        for fit in [None, Some(canvas_pilot::formats::LayerFit::OneToOne)] {
+            let ctx = egui::Context::default();
+            let mut app = Editor::default();
+            app.layout.select(Some(1));
+            app.layout
+                .set_layer_fit(1, fit, Default::default())
+                .unwrap();
+            let before = app.project();
+            let mut input = egui::RawInput {
+                events: vec![key(egui::Key::Enter)],
+                ..Default::default()
+            };
+            app.crop_mask_key_input(&ctx, &mut input);
+            assert!(app.edit_content);
+            assert!(input.events.is_empty());
+            input.events = vec![key(egui::Key::Enter)];
+            app.crop_mask_key_input(&ctx, &mut input);
+            assert!(app.edit_content);
+            let mut release = key(egui::Key::Enter);
+            if let egui::Event::Key { pressed, .. } = &mut release {
+                *pressed = false;
+            }
+            input.events = vec![release, key(egui::Key::Enter)];
+            app.crop_mask_key_input(&ctx, &mut input);
+            assert!(!app.edit_content);
+            assert_eq!(app.project(), before);
+        }
+    }
+
+    #[test]
+    fn enter_does_not_open_crop_while_typing_or_in_input_settings() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.layout.select(Some(1));
+        let field = egui::Id::new("typing-field");
+        ctx.memory_mut(|m| m.request_focus(field));
+        let mut input = egui::RawInput {
+            events: vec![key(egui::Key::Enter)],
+            ..Default::default()
+        };
+        app.crop_mask_key_input(&ctx, &mut input);
+        assert!(!app.edit_content);
+        assert_eq!(input.events.len(), 1);
+        ctx.memory_mut(|m| m.surrender_focus(field));
+        app.crop_mask_enter_held = false;
+        app.inputs.open = true;
+        app.crop_mask_key_input(&ctx, &mut input);
+        assert!(!app.edit_content);
+        assert_eq!(input.events.len(), 1);
     }
 
     #[test]

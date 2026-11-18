@@ -253,7 +253,8 @@ they are never exported or sent to the device. It works with normal crop and eve
 - Enter Left/Right/Top/Bottom distances in output pixels.
 - The alignment menu aligns the mask window to the selected reference’s edges or center.
 - **Center mask** preserves its size; **Reset mask** removes all blanking.
-- **Enter** finishes crop/mask editing and keeps the live changes. When typing in
+- **Enter** opens crop editing for the selected editable layer, just like
+  double-click. Press it again to finish crop/mask editing and keep the live changes. When typing in
   a numeric field, Enter confirms that value first; press Enter again after leaving
   the field to finish. Other unapplied properties use the existing Apply/Discard
   review, so finishing cannot silently discard them.

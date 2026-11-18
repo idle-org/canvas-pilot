@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.69
+
+- Enter now opens crop edit for the selected editable layer using the same rules
+  as double-click, and finishes an active crop/mask edit. Text fields, dialogs,
+  active drags and held-key repeats retain their existing safeguards.
+
+
 ### v0.9.68
 
 - Moved **Send changes**, validation feedback and status above the input editor.
