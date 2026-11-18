@@ -374,3 +374,12 @@ inputs remains pending; the removal of local pre-crop does not claim that suppor
 The old local source pre-crop model and saved input proposals have been removed.
 Projects retain processed source dimensions and independent layer framing; legacy
 native projects can be opened with a reported best-effort recovery.
+
+### Captured picture proportions
+
+Input captures and local reference pictures fit centered inside the source format
+without changing their ratio. Midra captures already include the input crop; they
+are not stretched back to the uncropped signal size. The layer’s crop, zoom, fit
+and mask then apply normally. **Centered (fit)** preserves proportions;
+**Fullscreen (stretch)** still deliberately stretches. This preview does not
+change source dimensions or device input settings.

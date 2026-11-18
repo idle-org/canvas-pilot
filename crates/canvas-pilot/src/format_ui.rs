@@ -777,12 +777,36 @@ fn paint_source_clipped(
         };
         let k = rect.width() as f64 / retained[0];
         let ky = rect.height() as f64 / retained[1];
+        // A Midra still already contains the input crop. Fit its actual aspect
+        // into source space before applying the layer transform; stretching it
+        // to source.native here distorts even Centered and ordinary crop modes.
+        // Reduced-resolution captures and local pictures use the same rule.
+        let picture = painter
+            .ctx()
+            .tex_manager()
+            .read()
+            .meta(texture)
+            .map(|meta| meta.size.map(|n| n as f64))
+            .unwrap_or(input);
+        let fitted = canvas_pilot::formats::LayerFit::Centered.image(
+            picture,
+            canvas_pilot::Geometry {
+                x: 0.,
+                y: 0.,
+                width: input[0],
+                height: input[1],
+            },
+        );
+        let Ok(fitted) = fitted else {
+            return;
+        };
         let native = Rect::from_min_size(
-            rect.min - Vec2::new(((crop.left) * k) as f32, ((crop.top) * ky) as f32),
-            Vec2::new(
-                (source.native[0] as f64 * k) as f32,
-                (source.native[1] as f64 * ky) as f32,
-            ),
+            rect.min
+                + Vec2::new(
+                    ((fitted.x - crop.left) * k) as f32,
+                    ((fitted.y - crop.top) * ky) as f32,
+                ),
+            Vec2::new((fitted.width * k) as f32, (fitted.height * ky) as f32),
         );
         painter
             .with_clip_rect(painter.clip_rect().intersect(clip))
@@ -1497,6 +1521,84 @@ mod tests {
 #[cfg(test)]
 mod preview_paint_tests {
     use super::*;
+    #[test]
+    fn cropped_capture_aspect_survives_layer_fit_and_helpers() {
+        use canvas_pilot::formats::LayerFit;
+        for size in [[361, 512], [512, 231], [512, 288]] {
+            for fit in std::iter::once(None).chain(LayerFit::ALL.into_iter().map(Some)) {
+                let ctx = egui::Context::default();
+                let texture = ctx.load_texture(
+                    "cropped-input",
+                    egui::ColorImage::filled(size, Color32::RED),
+                    Default::default(),
+                );
+                let mut app = Editor::default();
+                if fit.is_some() {
+                    app.layout
+                        .set_layer_fit(
+                            1,
+                            fit,
+                            Crop {
+                                left: 120.,
+                                right: 80.,
+                                top: 30.,
+                                bottom: 60.,
+                            },
+                        )
+                        .unwrap();
+                }
+                let g = app.layout.layers()[1];
+                let rect = Rect::from_min_size(
+                    Pos2::new(100., 100.),
+                    Vec2::new(g.width as f32, g.height as f32) * 0.25,
+                );
+                let before = app.project();
+                let output = ctx.run_ui(egui::RawInput::default(), |ui| {
+                    paint_layer_source(
+                        ui.painter(),
+                        rect,
+                        &app.layout,
+                        1,
+                        Some((texture.id(), 0.0)),
+                    );
+                    paint_mask_helper(
+                        ui.painter(),
+                        rect,
+                        &app.layout,
+                        1,
+                        Some((texture.id(), 0.0)),
+                    );
+                });
+                let meshes: Vec<_> = output
+                    .shapes
+                    .iter()
+                    .filter_map(|shape| match &shape.shape {
+                        egui::Shape::Mesh(mesh) if mesh.texture_id == texture.id() => Some(mesh),
+                        _ => None,
+                    })
+                    .collect();
+                assert!(!meshes.is_empty());
+                let retained = app.layout.formats().advanced[1]
+                    .remaining(app.layout.formats().input(1).unwrap())
+                    .unwrap();
+                let stretch = if fit == Some(LayerFit::Fullscreen) {
+                    (g.width / retained[0]) / (g.height / retained[1])
+                } else {
+                    1.
+                };
+                for mesh in meshes {
+                    let bounds = mesh.calc_bounds();
+                    let expected = size[0] as f64 / size[1] as f64 * stretch;
+                    assert!(
+                        (bounds.aspect_ratio() as f64 - expected).abs() < 0.00001,
+                        "{size:?} {fit:?}: {bounds:?}"
+                    );
+                }
+                assert_eq!(app.project(), before);
+            }
+        }
+    }
+
     #[test]
     fn masked_helper_is_translucent_hatched_and_confined_to_hidden_regions() {
         use canvas_pilot::formats::{LayerFit, Mask, MaskOrigin};

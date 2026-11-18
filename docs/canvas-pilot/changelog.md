@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.76
+
+- Preserve the actual picture ratio when fitting input captures and local reference
+  pictures into source space. Midra cropped captures no longer stretch back to
+  the declared source ratio before layer crop, zoom, fit and mask are applied.
+
 ### v0.9.75
 
 - Highlight Send changes when an input has pending edits. Keep view zoom, panning

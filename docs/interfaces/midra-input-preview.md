@@ -181,3 +181,18 @@ and 361×512 PNG; left 279/bottom 338 produced 1641×742 and 512×231 respective
 Only numeric framing observations are recorded; source images are not fixtures.
 Run `cargo run --example read_input_capture -- DEVICE_IP INPUT_NUMBER` for an
 explicit read-only before/capture/after check.
+
+## Layer preview aspect handling
+
+The decoded picture is centered at the largest size that fits the declared source
+rectangle while preserving its own aspect ratio. This happens before layer crop,
+zoom, fit and mask, including the crop/mask helper views. Midra captures already
+contain the retained input crop: do not stretch them back to the original signal
+ratio or apply that input crop a second time. Local reference pictures use the same
+fit rule. Layer Fullscreen remains an explicit stretch of the source-space image.
+The input-settings editor separately places captures at their applied crop position
+(as described above); it does not use this layer-preview fit.
+
+This affects rendering only. Stored image bytes, source dimensions, project schema
+and device transfers are unchanged. Input-settings/global fit inheritance is not
+inferred from a PNG; this does not add support for those device modes.
