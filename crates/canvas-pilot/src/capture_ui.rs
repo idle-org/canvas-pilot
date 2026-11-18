@@ -800,7 +800,7 @@ impl Editor {
                     follow,
                     ..Default::default()
                 });
-        ui.checkbox(&mut choice.follow,tr(ui.ctx(), "ui.follow-input")).on_hover_text("Use the input selected in Source properties for this preview. This does not route the device layer.");
+        let follow_enabled = ui.checkbox(&mut choice.follow,tr(ui.ctx(), "ui.follow-input")).on_hover_text("Use the input selected in Source properties for this preview. This does not route the device layer.").changed() && choice.follow;
         let following = choice.follow;
         let preview = self
             .capture
@@ -841,7 +841,7 @@ impl Editor {
             preview.paused = false;
         }
         let mut capture = false;
-        let mut changed_input = None;
+        let mut changed_input = (follow_enabled && chosen != 0).then_some(chosen);
         ui.add_enabled_ui(preview.enabled, |ui| {
             let before = preview.input;
             ui.add_enabled_ui(!following, |ui| {input_picker(ui, ("layer-preview-input", id), &mut preview.input, &inputs, &mut self.capture.show_empty_inputs);});
@@ -885,6 +885,9 @@ impl Editor {
         });
         if let Some(input) = changed_input {
             self.adapt_layer_to_input(i, input);
+        }
+        if follow_enabled {
+            self.sync_followed_inputs();
         }
         self.preview_warning(ui, i);
         if !self.capture.error.is_empty() {
@@ -1376,6 +1379,62 @@ mod tests {
         app.capture.layers.get_mut(&id).unwrap().host = app.device.host.clone();
         app.capture.layers.get_mut(&id).unwrap().enabled = false;
         assert!(app.preview_mismatch(0).is_none());
+    }
+    #[test]
+    fn enabling_follow_adapts_cropped_source_like_manual_selection() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
+        app.capture.last_request = Some(app.capture.now());
+        let i = app.layout.selected().unwrap();
+        let id = app.layout.layer_info(i).id;
+        app.device.snapshot = Some(device::Snapshot {
+            identity: "test".into(),
+            profile: device::Profile::Midra4k,
+            screens: vec![],
+            raw: serde_json::json!({"device":{"inputList":{"items":{"INPUT_1":{
+                "status":{"pp":{"plug":"HDMI"}},"plugList":{"items":{"HDMI":{
+                    "status":{"signal":{"pp":{"isValid":true,"aspectWidth":1920,"aspectHeight":1080,"imageWidth":942,"imageHeight":1029}}},
+                    "settings":{"cropping":{"control":{"pp":{"left":262,"right":716,"top":0,"bottom":51}}}}
+                }}}
+            }}}}}),
+        });
+        app.device.source_choices.insert(
+            id,
+            super::super::device_ui::SourceChoice {
+                input: 1,
+                follow: false,
+                change: false,
+            },
+        );
+        app.set_reference_picture(i, tiny_reference(&ctx, "old preview"));
+        app.capture.layers.get_mut(&id).unwrap().input = 2;
+        app.capture.layers.get_mut(&id).unwrap().host = app.device.host.clone();
+        let before = app.layout.clone();
+        let mut expected = before.clone();
+        expected
+            .set_layer_source_resolution(i, [942, 1029])
+            .unwrap();
+        app.format_draft = Some(FormatDraft::new(&app.layout, i));
+        app.property_tab = PropertyTab::Preview;
+        click_text(&mut app, &ctx, "Follow input");
+        assert_eq!(app.layout.formats(), expected.formats());
+        assert_eq!(app.layout.layers(), before.layers());
+        assert!(app.device.source_choices[&id].follow);
+        assert!(!app.device.source_choices[&id].change);
+        assert_eq!(app.capture.layers[&id].input, 1);
+        assert_eq!(
+            app.capture.layers[&id].source,
+            app.layout.formats().source_for[i]
+        );
+        assert!(app.capture.layers[&id].texture.is_none());
+        assert!(app.capture.pending.is_none());
+        assert!(app.capture.error.is_empty());
+        // Repainting must not reapply the crop or create another undo step.
+        frame(&mut app, &ctx, vec![]);
+        assert_eq!(app.layout.formats(), expected.formats());
+        app.layout.undo();
+        assert_eq!(app.layout.formats(), before.formats());
     }
     #[test]
     fn following_source_invalidates_old_capture_without_routing() {

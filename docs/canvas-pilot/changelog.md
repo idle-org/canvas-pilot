@@ -6,6 +6,9 @@
 
 ### v0.10.0-rc.9
 
+- Enabling Follow input now adapts the layer to the selected input’s processed
+  dimensions, using the same undoable crop/fit path as manual preview selection.
+
 - Avoid a transient mismatch warning in Follow input mode: hide the previous
   capture while its input binding catches up with a changed source selection.
 
