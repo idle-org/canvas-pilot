@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+## v0.10.0-rc.1 — 2026-11-18
+
+First release candidate for the 0.10 minor release, collecting the changes below.
+See the [release candidate notes](../development/release-notes/v0.10.0-rc.1.md)
+for highlights, compatibility changes and validation limits.
+
 ### v0.9.76
 
 - Preserve the actual picture ratio when fitting input captures and local reference

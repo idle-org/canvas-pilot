@@ -1,5 +1,12 @@
 # Release preparation
 
+## Local release candidate: v0.10.0-rc.1
+
+Annotated tag `v0.10.0-rc.1` marks the first candidate for the 0.10 minor release.
+See the [candidate notes](release-notes/v0.10.0-rc.1.md). This is a source checkpoint;
+no binaries have been built or published for this candidate, and the tag has not
+been pushed. The last published release remains v0.9.34 below.
+
 ## Published release: v0.9.34
 
 [Download v0.9.34](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.9.34)
