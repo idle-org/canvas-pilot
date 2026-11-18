@@ -2,17 +2,15 @@
 
 [Development](README.md) · [Project plan](../canvas-pilot/plan.md#stretch-goals-distant-future)
 
-These four issues are ready to publish. The supplied token can access the
-repository but Gitea rejected issue reads and creation with HTTP 403: missing
-`read:issue` and `write:issue`. No new issues were created. Publication requires
-a token with Issues: Read and Write access; publication status is recorded in
-the project plan. Copy each title and body below into a new issue, or publish
-with an issue-enabled token after checking for duplicates.
+These are historical issue drafts, not the current status checklist. As of
+2026-11-18, localization is done for its accepted scope, Midra rendering precision
+is done for now, and videos remain in progress. Additional adapters, independent
+mapping GUI and multiple project screens remain open. Follow the linked project
+plan before publishing or reopening any draft.
 
-The fifth stretch goal, additional presentation-switcher adapters, is already
-tracked in [Gitea issue #1](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/issues/1).
-Reuse that issue instead of creating another. These are future goals, not release
-commitments. The plan and linked roadmaps remain the detailed source documents.
+An earlier API publication attempt was rejected with HTTP 403 for missing
+`read:issue` and `write:issue` permissions. The plan records known issue links;
+this status update does not change or verify live Gitea issues.
 
 ## Localize the manual first, then the application
 

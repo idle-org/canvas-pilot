@@ -2,6 +2,13 @@
 
 [Development](README.md) · [Project plan](../canvas-pilot/plan.md)
 
+## Status
+
+The localization stretch goal is **done for the accepted current scope** as of
+2026-11-18. The broader checklist below is retained as optional expansion and
+maintenance guidance, not outstanding acceptance for that completed goal.
+Translation provenance and review limitations still apply.
+
 ## Current pilot: French quick start only
 
 The [French quick start](../canvas-pilot/guide/fr/quickstart.md) is based on machine translation,

@@ -110,18 +110,13 @@ Earlier goals have [ready-to-publish issue drafts](../development/stretch-goal-i
 Publication is pending an issue-enabled token; the current token lacks
 `read:issue` and `write:issue`. Preparing an issue does not complete its goal.
 
-- [ ] **Localization: book first, application second.** Follow the
-  [localization roadmap](../development/localization.md) for language selection,
-  translation workflow, publishing, UI catalogs and compatibility checks. Detailed
-  tasks and acceptance criteria live there. A French quick-start pilot is available
-  as an unverified machine translation; the rest of the book remains English. The application has a language selector with system detection, English and
-  French/Japanese/Simplified Chinese/Spanish/Ancient Greek/Esperanto previews,
-  plus European Portuguese/Nepali/Thai/Hindi/Toki Pona and native text shaping
-  (see localization notes for remaining Thai editing limits),
-  plus embedded Noto fonts for Latin, CJK and polytonic Greek. Human review,
-  remaining advanced controls/diagnostics and broader localization are pending.
+- [x] **Localization: book first, application second — done.** Current scope
+  accepted as complete on 2026-11-18: application localization and the French
+  quick-start pilot. The [localization notes](../development/localization.md)
+  retain translation provenance, maintenance guidance and optional future expansion;
+  this does not imply human review of every translation or a fully translated book.
 
-- [ ] **Video showcase, manual and optional chapter demonstrations.** Record a
+- [ ] **Video showcase, manual and optional chapter demonstrations — in progress.** Record a
   short showcase for the README and book introduction, then a guided video manual
   linked from quick start with chapter timestamps. Use the existing
   [feature demonstration checklist](feature-demo-checklist.md) as the recording
@@ -129,15 +124,15 @@ Publication is pending an issue-enabled token; the current token lacks
   movement, masks and device mapping/transfers; start with the two main videos.
   Keep written instructions as the searchable reference. Include captions and the
   recorded application version, avoid autoplay, and host large video files outside
-  Git. Link or embed them in the book once a host is chosen. This approach is
-  approved; recording, hosting choice and implementation remain future work.
+  Git. Link or embed them in the book once a host is chosen. Recording tools, chapter clips and a conference showcase kit already exist.
+  Final video assembly, hosting/publication, captions and book integration remain
+  in progress; this goal is not complete.
 
-- [ ] **Confirm Midra fit precision with a manufacturer/firmware engineer.**
-  Obtain crop quantization, subpixel centering and rasterization rules, plus
-  expected results for asymmetric crops and odd container dimensions. Use the
-  [engineer-ready questions and examples](midra-fit-precision.md). Operator
-  pixel measurements are not a prerequisite; current implementation uses
-  continuous crop-first geometry and nearest-integer device fields.
+- [x] **Midra rendering precision — done for now.** Closed for the current
+  scope on 2026-11-18. Keep the existing crop-first geometry and nearest-integer
+  device fields. The [engineering questions](midra-fit-precision.md) remain as
+  reference if precision work is reopened; closure does not claim manufacturer
+  confirmation or physical pixel-level validation.
 
 - [ ] **Consider additional presentation-switcher adapters.** Use the
   [adapter candidate survey](presentation-switcher-adapters.md) to select useful
@@ -205,7 +200,7 @@ integration planned for this scope.
   mismatched source/container ratios, smaller/larger 1:1 sources, asymmetric
   layer crop and broad visual placement/clipping. Compare Preview/Program and
   record reported content dimensions if available. Exact pixel measurements are
-  deferred to the engineering stretch goal. Input inheritance
+  outside current scope; the closed engineering notes retain the open questions. Input inheritance
   and input-correction combinations are no longer test prerequisites.
 
 - [ ] **Inkscape clipboard acceptance.** Obtain a sample and validate actual

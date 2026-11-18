@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.52
+
+- Closed localization for its accepted scope and Midra rendering precision for
+  now; retained technical limitations and reference notes. Videos remain in
+  progress; additional adapters, mapping GUI and multiple project screens stay open.
+
 ### v0.9.51
 
 - Added a standalone mapping-window visual study with one load source, grouped

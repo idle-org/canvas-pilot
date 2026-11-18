@@ -1,6 +1,8 @@
 # Midra layer fit precision: engineering follow-up
 
-Status: stretch goal, not a prerequisite for using explicit layer fit. The operator
+Status: **done for now**, closed for current scope on 2026-11-18. The questions
+below are retained for a possible future investigation, not an active stretch
+goal. Closure does not establish a verified firmware raster model. The operator
 cannot measure subpixel output with their available equipment. API readback alone
 cannot establish how the scaler renders pixels. Ask an Analog Way firmware or
 video-processing engineer for the following rules, ideally with reference results
