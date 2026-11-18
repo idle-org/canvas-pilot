@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Canvas Pilot — mapping window study</title>
+<style>
+:root{color-scheme:dark;--bg:#111720;--panel:#1b2330;--field:#121a25;--line:#354458;--text:#edf3fc;--muted:#a5b5c9;--cyan:#66dbef;--amber:#f6c577;--purple:#6655d9}
+*{box-sizing:border-box}body{margin:0;background:#0b1017;color:var(--text);font:14px/1.5 system-ui,sans-serif}button,select,input{font:inherit}button,select{color:inherit;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 12px}button:disabled{cursor:default}select{width:100%;padding-right:25px}button:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}h1,h2,h3,p{margin:0}h1{font-size:23px;font-weight:600}h2{font-size:19px;font-weight:600}h3{font-size:15px}small,.muted{color:var(--muted)}.study{max-width:1260px;margin:26px auto 12px;padding:0 12px;display:flex;justify-content:space-between;gap:16px;color:var(--muted);font-size:12px}.study a{color:var(--cyan)}.window{max-width:1260px;margin:0 auto 28px;border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden;box-shadow:0 24px 70px #0005}.top{padding:22px 26px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px}.eyebrow{font-size:11px;letter-spacing:.09em;color:var(--muted);text-transform:uppercase;margin-bottom:3px}.tag{border:1px solid #72603d;background:#332b20;color:var(--amber);font-size:11px;padding:4px 9px;border-radius:20px;white-space:nowrap}.body{display:grid;grid-template-columns:245px 1fr}.sidebar{background:var(--panel);border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:8px}.sidebarhead{display:flex;justify-content:space-between;padding:0 10px;margin-bottom:9px;font-size:12px;color:var(--muted)}.folder{padding:8px 10px;font-size:13px;color:var(--muted)}.layer{display:block;text-decoration:none;color:var(--text);padding:13px 12px;border:1px solid transparent;border-radius:7px}.layer.selected{border-color:var(--purple);background:#6655d922}.layer .name{font-weight:600;font-size:14px}.route-count{font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:13px}.cyan{color:var(--cyan)}.amber{color:var(--amber)}.sidebarfoot{margin-top:auto;border-top:1px solid var(--line);padding:18px 10px 0;font-size:12px;color:var(--muted)}main{padding:24px 28px 25px;min-width:0}.layer-title{display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:24px}.layer-title h2{font-size:23px}.pill{color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:4px 10px;font-size:12px}.section-title{display:flex;align-items:center;gap:10px;margin-bottom:4px}.direction{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;font-size:21px;background:#66dbef12;color:var(--cyan)}.direction.send{background:#f6c57712;color:var(--amber)}.hint{color:var(--muted);font-size:12px;margin:0 0 14px 40px}.card{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:17px 18px}.fields{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px}.fields label{display:grid;gap:6px;color:var(--muted);font-size:12px}.fields select{color:var(--text);font-size:14px}.note{display:flex;justify-content:space-between;gap:16px;margin-top:12px;color:var(--muted);font-size:12px}.note strong{font-weight:500;color:var(--text)}.between{height:29px;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:.06em;color:var(--muted)}.between span{background:var(--bg);padding:0 12px}.send-heading{display:flex;justify-content:space-between;align-items:center}.connection{border:1px solid var(--line);border-radius:8px;overflow:hidden}.connection-head{padding:11px 16px;background:var(--panel);display:flex;align-items:center;justify-content:space-between}.connection-head strong{font-size:13px}.connection-head span{font-size:12px;color:var(--muted)}.target{display:grid;grid-template-columns:minmax(120px,1fr) minmax(130px,1fr) minmax(150px,1.2fr) 30px;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}.target.labels{border-top:0;padding-top:9px;padding-bottom:3px;font-size:11px;color:var(--muted)}.target.first{border-top:0}.target select{padding:7px 9px;font-size:13px}.chain{font-size:12px;color:#c7c0ff;display:flex;align-items:center;gap:7px}.chain input{accent-color:var(--purple);width:15px;height:15px;margin:0}.remove{padding:1px 6px;font-size:19px;color:var(--muted);background:transparent;border-color:transparent}.addrow{padding:10px 16px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}.addrow button{font-size:12px;padding:6px 10px}.addrow small{font-size:11px}.future{margin-top:12px;border:1px dashed var(--line);border-radius:7px;padding:10px 14px;color:var(--muted);font-size:12px}.future summary{cursor:pointer}.future-content{padding-top:12px;display:flex;gap:20px;justify-content:space-between;color:var(--text)}.scope{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 0 0;font-size:12px;color:var(--muted)}.footer{border-top:1px solid var(--line);padding:15px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px}.footer p{font-size:12px;color:var(--muted)}.actions{display:flex;gap:10px}.primary{background:var(--purple);border-color:var(--purple)}.swatch{display:inline-block;width:7px;height:7px;background:var(--cyan);border-radius:50%;margin-right:7px}.legend{max-width:1260px;margin:0 auto 30px;padding:0 12px;color:var(--muted);font-size:12px}.legend strong{color:var(--text);font-weight:500}
+@media(max-width:900px){.study,.window,.legend{margin-left:12px;margin-right:12px}.body{grid-template-columns:190px 1fr}main{padding:20px 18px}.fields{grid-template-columns:1fr}.target{grid-template-columns:1fr 1fr 30px}.target .chain{grid-column:1 / 3;grid-row:2}.target .remove{grid-column:3;grid-row:1}.target.labels{display:none}.footer{align-items:flex-start;flex-direction:column}.layer-title{flex-wrap:wrap}}
+@media(max-width:600px){.body{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--line)}.sidebarfoot,.folder,.layer:not(.selected){display:none}.top{padding:16px}.top h1{font-size:20px}.top .tag{white-space:normal}.note,.scope{flex-direction:column;gap:5px}.actions{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="study"><span>CANVAS PILOT / DESIGN STUDY 01</span><a href="mapping-window.md">Design notes &amp; questions</a></div>
+<div class="window">
+<header class="top"><div><div class="eyebrow">Project connections</div><h1>Layer mapping</h1></div><span class="tag">Visual mockup · sample data</span></header>
+<div class="body">
+<aside class="sidebar" aria-label="Illustrative project layer list">
+<div class="sidebarhead"><span>PROJECT LAYERS</span><span>4 layers</span></div>
+<div class="folder">▾ &nbsp; Main show</div>
+<div class="layer selected" aria-current="true"><div class="name">02 / Slides</div><div class="route-count"><span><b class="cyan">↓</b> 1 load source</span><span><b class="amber">↑</b> 3 targets</span></div></div>
+<div class="layer"><div class="name">01 / Presenter</div><div class="route-count"><span><b class="cyan">↓</b> 1 source</span><span><b class="amber">↑</b> 1 target</span></div></div>
+<div class="layer"><div class="name">03 / Lower third</div><div class="route-count"><span>Not mapped</span></div></div>
+<div class="folder">▸ &nbsp; Holding slide <small>(1)</small></div>
+<div class="sidebarfoot">Choose an editor layer to inspect its routes.<br><br>One load source.<br>As many send targets as needed.</div>
+</aside>
+<main>
+<div class="layer-title"><div><div class="eyebrow">Main show</div><h2>02 / Slides</h2></div><span class="pill">Editor layer · 640 × 360</span></div>
+<section aria-labelledby="load-heading">
+<div class="section-title"><span class="direction" aria-hidden="true">↓</span><h3 id="load-heading">Load into this layer</h3></div>
+<p class="hint">Where its position, size, crop and supported appearance come from.</p>
+<div class="card">
+<div class="fields">
+<label>Connection<select aria-label="Load connection"><option>Main switcher · first connection</option><option>Backup switcher · future example</option><option>No load source</option></select></label>
+<label>Device screen<select aria-label="Load screen"><option>Screen 1 · Stage</option><option>Screen 2 · Relay</option></select></label>
+<label>Device layer<select aria-label="Load device layer"><option>Layer 3</option><option>Layer 1</option><option>Layer 2</option><option>Layer 5</option></select></label>
+</div>
+<div class="note"><span><span class="swatch"></span>1920 × 1080 <span aria-hidden="true">·</span> matches project</span><span><strong>One source</strong> per editor layer</span></div>
+</div>
+</section>
+<div class="between"><span>↓ &nbsp; EDIT HERE &nbsp; ↑</span></div>
+<section aria-labelledby="send-heading">
+<div class="send-heading"><div class="section-title"><span class="direction send" aria-hidden="true">↑</span><h3 id="send-heading">Send from this layer</h3></div><span class="pill">3 destinations</span></div>
+<p class="hint">One edit can feed several device layers. Sources and targets are independent.</p>
+<div class="connection">
+<div class="connection-head"><strong>Main switcher</strong><span>Current connection · MIDRA</span></div>
+<div class="target labels" aria-hidden="true"><span>DEVICE SCREEN</span><span>DEVICE LAYER</span><span>BEHAVIOR</span><span></span></div>
+<div class="target first">
+<select aria-label="First send screen"><option>Screen 1 · Stage</option></select><select aria-label="First send layer"><option>Layer 3</option></select>
+<label class="chain" title="Design proposal: this target follows the load source until unlinked. Not wired in this mockup."><input type="checkbox" checked> Follow load source</label><button class="remove" disabled aria-label="Remove first target">×</button>
+</div>
+<div class="target">
+<select aria-label="Second send screen"><option>Screen 1 · Stage</option><option>Screen 2 · Relay</option></select><select aria-label="Second send layer"><option>Layer 5</option><option>Layer 1</option><option>Layer 2</option></select><span class="muted" style="font-size:12px">Independent target</span><button class="remove" disabled aria-label="Remove second target">×</button>
+</div>
+<div class="target">
+<select aria-label="Third send screen"><option>Screen 2 · Relay</option><option>Screen 1 · Stage</option></select><select aria-label="Third send layer"><option>Layer 2</option><option>Layer 1</option><option>Layer 3</option></select><span class="muted" style="font-size:12px">Independent target</span><button class="remove" disabled aria-label="Remove third target">×</button>
+</div>
+<div class="addrow"><button disabled>＋ Add destination</button><small>Same layer, another screen—or another layer on this screen.</small></div>
+</div>
+<details class="future"><summary>Later: add destinations on another connection</summary><div class="future-content"><span><strong>Backup switcher</strong><br><small>A second group would use the same screen/layer rows.</small></span><span>Screen 1 → Layer 3</span></div></details>
+</section>
+<div class="scope"><span>Preview / Program stays a transfer choice, separate from mapping.</span><span>No device commands when editing routes.</span></div>
+</main>
+</div>
+<footer class="footer"><p>Review routes here. Load and Send remain explicit actions.<br><small>This mockup does not save, connect, load or send.</small></p><div class="actions"><button disabled>Cancel</button><button class="primary" disabled>Apply mapping</button></div></footer>
+</div>
+<p class="legend"><strong>Try the layout:</strong> open the dropdowns, expand the future-connection group, and resize this page. Values and counts are illustrative; controls are not connected to each other or to Canvas Pilot.</p>
+</body>
+</html>

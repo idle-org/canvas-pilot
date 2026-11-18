@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.9.51
+
+- Added a standalone mapping-window visual study with one load source, grouped
+  send destinations and a proposed “Follow load source” shortcut. Sample controls
+  have no application or device logic; production UI and behavior are unchanged.
+
 ### v0.9.50
 
 - Added a stretch goal for independent load/send mapping controls, multiple send

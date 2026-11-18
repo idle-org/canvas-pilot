@@ -154,7 +154,8 @@ Publication is pending an issue-enabled token; the current token lacks
   send targets, then add/remove destinations by screen and layer. Later extend
   this to named connections and multiple machines; only the current connection
   exists today. Keep this distinct from multiple editor screens below.
-  Prototype a compact interface before adding functional controls. Make transfer
+  Review the [standalone mapping-window mockup](../development/design/mapping-window.md)
+  before adding functional controls. Make transfer
   scope and destination summaries clear, detect overlapping destinations, and
   define reconnect, unavailable-target and partial-failure handling before enabling
   multi-machine sends. Mapping edits must not trigger device writes. Verify
