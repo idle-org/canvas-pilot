@@ -1,5 +1,6 @@
 use super::*;
 use canvas_pilot::device_capture;
+pub(super) const INPUT_REFERENCE_ROW_HEIGHT: f32 = 32.0;
 type CaptureTarget = (usize, usize, u32, String);
 type CaptureJob = std::sync::mpsc::Receiver<Result<super::super::reference::Reference, String>>;
 
@@ -551,9 +552,12 @@ impl Editor {
             else {
                 continue;
             };
-            let row_y = y + 44. + row as f32 * 44.;
+            let row_y = y + 44. + row as f32 * INPUT_REFERENCE_ROW_HEIGHT;
             row += 1;
-            let rect = Rect::from_min_size(ink.point(0., row_y), Vec2::new(w, 38.));
+            let rect = Rect::from_min_size(
+                ink.point(0., row_y),
+                Vec2::new(w, INPUT_REFERENCE_ROW_HEIGHT - 6.),
+            );
             ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut p.enabled, "")

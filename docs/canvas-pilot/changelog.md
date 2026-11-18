@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.0-rc.2
+
+- Tighten input reference picture rows from 44 to 32 pixels apart while retaining
+  the existing button size. Reclaim the space below the list as well.
+
 ## v0.10.0-rc.1 — 2026-11-18
 
 First release candidate for the 0.10 minor release, collecting the changes below.

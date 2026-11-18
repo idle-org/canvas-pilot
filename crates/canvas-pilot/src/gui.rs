@@ -1596,12 +1596,11 @@ impl Editor {
             } else {
                 self.references.len() + 1
             };
+        let row_offset = (row_count as f32 - 2.0) * 44.0
+            - input_reference_rows as f32 * (44.0 - capture_ui::INPUT_REFERENCE_ROW_HEIGHT);
         let palette = theme::palette(ui.ctx());
         let (r, _) = ui.allocate_exact_size(
-            Vec2::new(
-                ui.available_width(),
-                1071.0 + (row_count as f32 - 2.0) * 44.0,
-            ),
+            Vec2::new(ui.available_width(), 1071.0 + row_offset),
             egui::Sense::hover(),
         );
         let ink = Ink::new(ui, r);
@@ -1828,7 +1827,7 @@ impl Editor {
             28.0 + (layer_row_count + 1 + fixed_reference_rows) as f32 * 44.0,
             w,
         );
-        let r = r.translate(Vec2::new(0.0, (row_count as f32 - 2.0) * 44.0));
+        let r = r.translate(Vec2::new(0.0, row_offset));
         let ink = Ink::new(ui, r);
         ink.line([0.0, 130.0], [w, 130.0], palette.line);
         if self.layout.selected_indices().len() > 1 {
