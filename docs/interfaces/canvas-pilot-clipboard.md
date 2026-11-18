@@ -94,3 +94,19 @@ intentionally exchanging the legacy normal-crop geometry/zoom subset.
 Regression tests cover every mode, crop offsets, fractional values, masks,
 independent appearance controls, legacy summaries, invalid schemas, source/aspect
 mismatches, locked destinations, whole-batch rollback and undo/redo.
+
+## External text detection and fallback
+
+The GUI receives egui's text paste event; it does not enumerate OS clipboard MIME
+types or consume native PowerPoint/OLE packages. The parser keeps explicit
+Canvas Pilot markers and versioned representations strict. Ordinary unsupported
+text no longer falls through to the draw.io parser. Raw and percent-encoded
+draw.io XML are recognized by their root element.
+
+For well-formed, unversioned HTML text, detection attempts a single outermost
+embedded draw.io document, then a single outermost SVG document. A failed or
+geometry-empty candidate does not stop the next candidate. The first usable
+document enters normal import review with rejected-candidate details. Multiple
+documents of the same candidate type are rejected as ambiguous, not partially
+imported. HTML layout/CSS is not interpreted. Existing text-size, XML node,
+geometry and parser limits remain in force; external resources are never fetched.

@@ -82,18 +82,98 @@ pub fn parse_values(text: &str) -> Result<ImportDocument, String> {
     if crate::geometry_formats::looks_like_dxf(text) {
         return crate::geometry_formats::parse_dxf(text);
     }
-    if text.trim_start().starts_with('<')
-        && roxmltree::Document::parse_with_options(text, xml_options())
-            .is_ok_and(|d| d.root_element().has_tag_name("svg"))
+    let decoded;
+    let xml = if text.trim_start().to_ascii_lowercase().starts_with("%3c") {
+        decoded = crate::decode_percent(text.trim())?;
+        decoded.as_str()
+    } else {
+        text
+    };
+    if let Ok(document) = roxmltree::Document::parse_with_options(xml, xml_options()) {
+        let root = document.root_element();
+        match root.tag_name().name() {
+            "svg" => return parse_svg(xml),
+            "mxGraphModel" | "mxfile" => return parse_drawio_values(xml),
+            "html" => {
+                // Explicit Canvas Pilot documents remain strict: do not hide invalid
+                // versions or lost settings by falling back to incidental artwork.
+                if root.attribute("data-midra-layout-geometry").is_some() {
+                    return crate::geometry_formats::parse_html(xml);
+                }
+                let mut failures = Vec::new();
+                for (label, tags) in [
+                    ("draw.io", &["mxGraphModel", "mxfile"][..]),
+                    ("SVG", &["svg"][..]),
+                ] {
+                    let nodes: Vec<_> = root
+                        .descendants()
+                        .filter(|node| {
+                            node.is_element()
+                                && tags.contains(&node.tag_name().name())
+                                && !node.ancestors().skip(1).any(|parent| {
+                                    parent.is_element() && tags.contains(&parent.tag_name().name())
+                                })
+                        })
+                        .collect();
+                    if nodes.is_empty() {
+                        continue;
+                    }
+                    if nodes.len() != 1 {
+                        failures.push(format!(
+                            "{label}: multiple embedded documents; export a single file instead."
+                        ));
+                        continue;
+                    }
+                    let fragment = &xml[nodes[0].range()];
+                    let result = if label == "SVG" {
+                        parse_svg(fragment)
+                    } else {
+                        parse_drawio_values(fragment)
+                    };
+                    match result {
+                        Ok(mut imported)
+                            if imported.shapes.iter().any(|shape| !shape.background_only) =>
+                        {
+                            imported.note = format!(
+                                "Clipboard: used embedded {label}; HTML layout/CSS is not imported. {}{}",
+                                imported.note,
+                                if failures.is_empty() {
+                                    String::new()
+                                } else {
+                                    format!(
+                                        " Earlier candidates were rejected: {}",
+                                        failures.join(" | ")
+                                    )
+                                }
+                            );
+                            return Ok(imported);
+                        }
+                        Ok(_) => failures.push(format!("{label}: no usable layer geometry.")),
+                        Err(error) => failures.push(format!("{label}: {error}")),
+                    }
+                }
+                if !failures.is_empty() {
+                    return Err(format!(
+                        "No supported clipboard representation could be imported. {}",
+                        failures.join(" | ")
+                    ));
+                }
+            }
+            _ => {}
+        }
+    } else if xml.trim_start().starts_with("<svg")
+        || xml.trim_start().starts_with("<?xml") && xml.contains("<svg")
     {
-        return parse_svg(text);
-    }
-    if text.trim_start().starts_with('<')
-        && roxmltree::Document::parse_with_options(text, xml_options())
-            .is_ok_and(|d| d.root_element().has_tag_name("html"))
+        return parse_svg(xml);
+    } else if xml.trim_start().starts_with("<mxGraphModel")
+        || xml.trim_start().starts_with("<mxfile")
     {
-        return crate::geometry_formats::parse_html(text);
+        return parse_drawio_values(xml);
     }
+    Err("No supported layer geometry found in clipboard text. Copy SVG, draw.io XML or Canvas Pilot values, or import a supported file. For PowerPoint, use Import geometry with the .pptx file; native PowerPoint clipboard objects are not supported.".into())
+}
+
+fn parse_drawio_values(text: &str) -> Result<ImportDocument, String> {
     Ok(ImportDocument {
         shapes: parse_drawio(text)?
             .into_iter()

@@ -402,3 +402,32 @@ fn explicit_mapping_without_selection_is_atomic_and_preserves_selection() {
             .is_err()
     );
 }
+
+#[test]
+fn clipboard_tries_embedded_svg_after_invalid_drawio_candidate() {
+    let text = r#"<html><body><mxGraphModel/><svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect x="10" y="20" width="30" height="40"/></svg></body></html>"#;
+    let imported = parse_values(text).unwrap();
+    assert_eq!(imported.shapes.len(), 1);
+    assert_eq!(imported.shapes[0].geometry.x, 10.);
+    assert!(imported.note.contains("used embedded SVG"));
+    assert!(imported.note.contains("rejected"));
+}
+#[test]
+fn clipboard_unknown_text_is_not_misdiagnosed_as_drawio() {
+    for text in ["PowerPoint slide title and ordinary text", "\u{2060}"] {
+        let error = parse_values(text).unwrap_err();
+        assert!(error.contains("native PowerPoint clipboard"));
+        assert!(!error.contains("Invalid draw.io"));
+    }
+    let error =
+        parse_values("<html><body><mxGraphModel/><svg><path d='M0 0'/></svg></body></html>")
+            .unwrap_err();
+    assert!(error.contains("draw.io:"));
+    assert!(error.contains("SVG:"));
+}
+#[test]
+fn clipboard_keeps_explicit_versions_strict_and_rejects_ambiguous_svg() {
+    assert!(parse_values(r#"<html data-midra-layout-geometry="99"><svg width="100" height="100"><rect width="30" height="40"/></svg></html>"#).is_err());
+    let error = parse_values("<html><svg/><svg/></html>").unwrap_err();
+    assert!(error.contains("multiple embedded documents"));
+}

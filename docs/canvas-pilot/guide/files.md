@@ -202,6 +202,20 @@ styles for predictable results. Files are limited to 16 MiB, 256 rectangles plus
 64 levels of nesting. SVG imports retain the same outline and position-only
 choices as draw.io imports.
 
+### Clipboard detection and fallback
+
+Paste examines the text supplied by the clipboard. Unrecognized text is not
+assumed to be draw.io XML. For well-formed HTML supplied as text, it tries a single
+embedded draw.io document, then a single embedded SVG if the first candidate fails.
+The review identifies the chosen representation and any rejected candidates.
+Only the embedded drawing's coordinates are imported; surrounding HTML layout and
+CSS are not. Multiple drawings of the same format require exporting a single file.
+
+This does not enumerate native operating-system clipboard formats. PowerPoint
+objects copied inside PowerPoint remain unsupported; use **Import geometry** with
+the **.pptx** file. Invalid Canvas Pilot data keeps its specific error rather than
+silently dropping settings in a fallback.
+
 ### Figma SVG clipboard text
 
 The supplied [Figma SVG sample](../../../crates/canvas-pilot/tests/fixtures/figma-rectangles.svg)

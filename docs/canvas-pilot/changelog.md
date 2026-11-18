@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### v0.9.70
+
+- Stop treating unrecognized clipboard text as draw.io XML. Unsupported text now
+  explains the supported text formats and PowerPoint’s .pptx file-import route.
+- Well-formed HTML supplied as clipboard text can fall back from a rejected
+  embedded draw.io document to embedded SVG. Rejected candidates are reported in
+  the review; ambiguous multiple documents and invalid explicit Canvas Pilot
+  versions remain errors. Native binary clipboard support is unchanged.
+
+
 ### v0.9.69
 
 - Enter now opens crop edit for the selected editable layer using the same rules
