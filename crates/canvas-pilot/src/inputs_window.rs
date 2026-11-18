@@ -155,6 +155,14 @@ impl Editor {
             ui.label(format!("Input {} · plug {} · {}",id,draft.plug,draft.native.map(|n|format!("{} × {} source pixels",n[0],n[1])).unwrap_or("No valid signal dimensions".into())));
             let consumers: Vec<_> = snapshot.screens.iter().flat_map(|screen| screen.layers.iter().filter(move |layer|snapshot.profile.input_from_source(&layer.source)==Some(id)).map(move|layer|format!("Screen {} / {} · Layer {}",screen.id,screen.preview_bank,layer.id))).collect();
             ui.collapsing(format!("Known Preview consumers ({})",consumers.len()),|ui|{for consumer in consumers {ui.label(consumer);}ui.small("Program layers, other consumers, backgrounds and multiviewer may also use this input.");});
+            match draft.changes(snapshot) {
+                Ok(changes)=>{
+                    if ui.add_enabled(!changes.is_empty() && state.pending.is_none() && !self.device.busy(),egui::Button::new("Send changes")).clicked(){send=Some(draft.clone());}
+                }
+                Err(error)=>{ui.colored_label(theme::palette(ui.ctx()).amber,error);}
+            }
+            if state.pending.is_some(){ui.spinner();ui.label("Sending and verifying input settings…");}
+            if !state.message.is_empty(){ui.label(&state.message);}
             let before=draft.values.clone();
             let mut undoing=false;
             ui.add_enabled_ui(state.pending.is_none() && !self.device.busy(),|ui|{
@@ -213,14 +221,7 @@ impl Editor {
             if before!=draft.values && !undoing && state.edit_start.is_none(){state.edit_start=Some(before);}
             if !ui.input(|i|i.pointer.any_down()) && let Some(before)=state.edit_start.take(){let history=state.undo.entry(id).or_default();history.push(before);if history.len()>100{history.remove(0);}}
             ui.separator();
-            match draft.changes(snapshot) {
-                Ok(changes)=>{
-                    if ui.add_enabled(!changes.is_empty() && state.pending.is_none() && !self.device.busy(),egui::Button::new("Send changes")).clicked(){send=Some(draft.clone());}
-                }
-                Err(error)=>{ui.colored_label(theme::palette(ui.ctx()).amber,error);}
-            }
-            if state.pending.is_some(){ui.spinner();ui.label("Sending and verifying input settings…");}
-            if !state.message.is_empty(){ui.label(&state.message);}
+
         });
         self.inputs.open = open;
         if refresh && !self.device.busy() {
@@ -434,11 +435,14 @@ fn crop_editor(
         native: native.map(|n| n as u32),
         aspect: canvas_pilot::formats::Aspect::Custom,
     };
-    super::format_ui::paint_pattern_clipped(&painter, full, source, Crop::default(), full);
+    // Protection disables editing controls, not the visibility of the source picture.
+    let mut content_painter = painter.clone();
+    content_painter.set_opacity(1.0);
+    super::format_ui::paint_pattern_clipped(&content_painter, full, source, Crop::default(), full);
     if let Some((texture, geometry)) = preview
         && let Some((known, uv)) = geometry.rectangles(full, native)
     {
-        painter.image(texture, known, uv, Color32::WHITE);
+        content_painter.image(texture, known, uv, Color32::WHITE);
     }
     painter.rect_stroke(full, 0., Stroke::new(1., palette.muted), StrokeKind::Inside);
     let crop = draft.crop();
@@ -543,6 +547,78 @@ fn crop_editor(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn protected_crop_still_composites_capture_at_full_opacity() {
+        let app = input_app();
+        let mut draft = InputDraft::read(app.device.snapshot.as_ref().unwrap(), 1).unwrap();
+        let ctx = egui::Context::default();
+        let texture = ctx.load_texture(
+            "capture-test",
+            egui::ColorImage::filled([4, 4], Color32::RED),
+            Default::default(),
+        );
+        let geometry = CaptureGeometry {
+            native: [1920., 1080.],
+            crop: Crop {
+                left: 480.,
+                right: 480.,
+                top: 270.,
+                bottom: 270.,
+            },
+        };
+        let mut pivot = [1, 1];
+        let mut zoom = 1.;
+        let mut pan = Vec2::ZERO;
+        let mut drag = None;
+        let mut message = String::new();
+        let output = ctx.run_ui(Default::default(), |ui| {
+            ui.add_enabled_ui(false, |ui| {
+                crop_editor(
+                    ui,
+                    &mut draft,
+                    &mut pivot,
+                    (&mut zoom, &mut pan),
+                    &mut drag,
+                    &mut message,
+                    Some((texture.id(), geometry)),
+                )
+            });
+        });
+        let mesh = output
+            .shapes
+            .iter()
+            .find_map(|s| match &s.shape {
+                egui::Shape::Mesh(mesh) if mesh.texture_id == texture.id() => Some(mesh),
+                _ => None,
+            })
+            .expect("capture must be drawn over the pattern even when crop editing is protected");
+        assert!(mesh.vertices.iter().all(|v| v.color == Color32::WHITE));
+        assert!(
+            mesh.vertices
+                .iter()
+                .all(|v| (0.25..=0.75).contains(&v.uv.x) && (0.25..=0.75).contains(&v.uv.y))
+        );
+        assert_eq!(draft.crop().left, 24.);
+    }
+
+    #[test]
+    fn send_changes_is_above_the_crop_editor() {
+        let mut app = input_app();
+        let ctx = egui::Context::default();
+        super::super::tests::frame(&mut app, &ctx, vec![]);
+        let output = super::super::tests::frame(&mut app, &ctx, vec![]);
+        let y = |label: &str| {
+            output
+                .shapes
+                .iter()
+                .find_map(|s| match &s.shape {
+                    egui::Shape::Text(t) if t.galley.text() == label => Some(t.pos.y),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        assert!(y("Send changes") < y("Input crop"));
+    }
     #[test]
     fn input_categories_start_protected_and_full_zoom_clears_asymmetric_crop() {
         let mut app = input_app();

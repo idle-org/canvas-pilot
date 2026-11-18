@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.68
+
+- Moved **Send changes**, validation feedback and status above the input editor.
+- Keep the captured picture and sizing-grid composite at full opacity while
+  **Keep device values** disables crop editing. Verified capture geometry is still
+  required; draft crop changes never reposition or stretch the captured pixels.
+
+
 ### v0.9.67
 
 - Input editor categories now start with **Keep device values** enabled.

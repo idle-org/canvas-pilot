@@ -317,12 +317,13 @@ additional controls without downloading the complete device store.
 
 This edits preprocessing shared by every consumer of that input, including
 Program and layers outside the project. Nothing is sent while dragging, selecting
-an input, capturing an image or opening the window. Use **Send changes** to apply the edited fields directly, with fresh device
+an input, capturing an image or opening the window. Use **Send changes** above the editor to apply the edited fields directly, with fresh device
 validation and verified readback.
 
 - **Keep device values:** each category has this toggle. Check it to discard that
   category’s draft edits, disable its controls and leave it untouched when sending.
-  Crop protection also disables the visual crop editor. Uncheck to edit again.
+  Crop protection also disables the visual crop editor; the captured picture
+  and sizing grid remain at full opacity. Uncheck to edit again.
   All categories start protected. Uncheck only the categories you want to edit;
   unchanged fields are never sent. Protection is retained when discarding edits,
   and all categories return to protected when reloading the input.
