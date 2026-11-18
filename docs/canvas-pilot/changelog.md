@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.9.75
+
+- Highlight Send changes when an input has pending edits. Keep view zoom, panning
+  and Fit view available while Keep device values protects the input crop.
+
 ### v0.9.74
 
 - Reorganize Input settings around a larger crop workspace, with crop protection

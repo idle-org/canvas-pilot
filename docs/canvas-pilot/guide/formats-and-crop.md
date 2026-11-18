@@ -326,12 +326,14 @@ controls stay above the scrolling editor. The larger **Input crop** workspace
 contains its own protection toggle and live-capture control. Expand **Crop values
 & presets** for exact edge values. Use the **Input processing** category picker
 for Aspect, Color, Processing, Keying or LUT; only available categories appear.
-Narrow windows stack processing below the crop workspace.
+Narrow windows stack processing below the crop workspace. **Send changes** is
+highlighted when changes are pending; sending remains an explicit action.
 
 - **Keep device values:** each category has this toggle. Check it to discard that
   category’s draft edits, disable its controls and leave it untouched when sending.
-  Crop protection also disables the visual crop editor; the captured picture
-  and sizing grid remain at full opacity. Uncheck to edit again.
+  Crop protection prevents crop edits, but wheel zoom, middle-drag panning,
+  **View zoom** and **Fit view** remain available. These only change your view;
+  the captured picture and sizing grid remain at full opacity. Uncheck to edit again.
   All categories start protected. Uncheck only the categories you want to edit;
   unchanged fields are never sent. Protection is retained when discarding edits,
   and all categories return to protected when reloading the input.

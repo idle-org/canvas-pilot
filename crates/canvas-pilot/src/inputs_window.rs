@@ -166,7 +166,7 @@ impl Editor {
             let changes=draft.changes(snapshot);
             ui.horizontal_wrapped(|ui| {
                 let count=changes.as_ref().map_or(0,Vec::len);
-                if ui.add_enabled(count>0 && !self.device.busy(),egui::Button::new("Send changes")).clicked(){send=Some(draft.clone());}
+                if ui.add_enabled_ui(!self.device.busy(), |ui| super::apply_button(ui,"Send changes",count>0)).inner.clicked(){send=Some(draft.clone());}
                 ui.label(if count==0 {"No pending changes".into()} else {format!("{count} pending changes")});
                 ui.separator();
                 if ui.add_enabled(state.undo.get(&id).is_some_and(|h|!h.is_empty()) && !self.device.busy(),egui::Button::new("Undo input edit")).clicked() && let Some(previous)=state.undo.entry(id).or_default().pop(){draft.values=previous;draft.restore_kept_groups();undoing=true;state.edit_start=None;}
@@ -199,7 +199,7 @@ impl Editor {
                                 else {ui.small("Live · applied device crop");}
                             } else {ui.small("Sizing grid");}
                         });
-                        ui.add_enabled_ui(!draft.keeps_group("Crop"), |ui| { crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().filter(|_|state.live_capture).zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g))); });
+                        crop_editor(ui,draft,&mut state.pivot,(&mut state.view_zoom,&mut state.view_pan),&mut state.drag,&mut state.message,state.capture.as_ref().filter(|_|state.live_capture).zip(state.capture_geometry).map(|(r,g)|(r.texture.id(),g)));
                         ui.small("The picture follows the applied device crop. Unknown pixels show the sizing grid.");
                         egui::CollapsingHeader::new("Crop values & presets").show(ui,|ui|{
                             ui.add_enabled_ui(!draft.keeps_group("Crop"),|ui|{category_fields(ui,draft,"Crop");});
@@ -414,6 +414,10 @@ fn crop_editor(
     message: &mut String,
     preview: Option<(egui::TextureId, CaptureGeometry)>,
 ) {
+    let editable = !draft.keeps_group("Crop") && ui.is_enabled();
+    if !editable {
+        *drag = None;
+    }
     let (view_zoom, pan) = view;
     let Some(native) = draft.native else {
         ui.label("A valid signal is required for visual cropping.");
@@ -427,60 +431,64 @@ fn crop_editor(
         *view_zoom = 1.0;
         *pivot = [1, 1];
     }
-    ui.horizontal_wrapped(|ui| {
-        ui.label("Crop zoom");
-        let retained = draft.crop().remaining(native).unwrap();
-        let current = 100.0 * (native[0] * native[1] / (retained[0] * retained[1])).sqrt();
-        let maximum = 100.0 * (native[0] * native[1]).sqrt();
-        let mut zoom = current;
-        let mut changed = ui.button("−").clicked();
-        if changed {
-            zoom /= 1.1;
-        }
-        changed |= ui
-            .add(
-                egui::Slider::new(&mut zoom, 100.0..=500.0)
-                    .clamping(egui::SliderClamping::Never)
-                    .suffix("%")
-                    .max_decimals(1),
-            )
-            .changed();
-        if ui.button("+").clicked() {
-            changed = true;
-            zoom *= 1.1;
-        }
-        zoom = zoom.clamp(100.0, maximum);
-        if changed
-            && (zoom - current).abs() > 0.0001
-            && let Err(error) = set_crop_zoom(
-                draft,
-                zoom,
-                current,
-                [pivot[0] as f64 / 2.0, pivot[1] as f64 / 2.0],
-            )
-        {
-            *message = error;
-        }
-        if ui.button("Reset crop").clicked() {
-            let _ = draft.set_crop(Crop::default());
-        }
+    ui.add_enabled_ui(editable, |ui| {
+        ui.horizontal_wrapped(|ui| {
+            ui.label("Crop zoom");
+            let retained = draft.crop().remaining(native).unwrap();
+            let current = 100.0 * (native[0] * native[1] / (retained[0] * retained[1])).sqrt();
+            let maximum = 100.0 * (native[0] * native[1]).sqrt();
+            let mut zoom = current;
+            let mut changed = ui.button("−").clicked();
+            if changed {
+                zoom /= 1.1;
+            }
+            changed |= ui
+                .add(
+                    egui::Slider::new(&mut zoom, 100.0..=500.0)
+                        .clamping(egui::SliderClamping::Never)
+                        .suffix("%")
+                        .max_decimals(1),
+                )
+                .changed();
+            if ui.button("+").clicked() {
+                changed = true;
+                zoom *= 1.1;
+            }
+            zoom = zoom.clamp(100.0, maximum);
+            if changed
+                && (zoom - current).abs() > 0.0001
+                && let Err(error) = set_crop_zoom(
+                    draft,
+                    zoom,
+                    current,
+                    [pivot[0] as f64 / 2.0, pivot[1] as f64 / 2.0],
+                )
+            {
+                *message = error;
+            }
+            if ui.button("Reset crop").clicked() {
+                let _ = draft.set_crop(Crop::default());
+            }
+        });
     });
     ui.horizontal_wrapped(|ui| {
-        ui.label("Pivot");
-        egui::Grid::new("input-crop-pivot")
-            .spacing([2., 2.])
-            .show(ui, |ui| {
-                for y in 0..3 {
-                    for x in 0..3 {
-                        ui.selectable_value(
-                            pivot,
-                            [x, y],
-                            if *pivot == [x, y] { "●" } else { "○" },
-                        );
+        ui.add_enabled_ui(editable, |ui| {
+            ui.label("Pivot");
+            egui::Grid::new("input-crop-pivot")
+                .spacing([2., 2.])
+                .show(ui, |ui| {
+                    for y in 0..3 {
+                        for x in 0..3 {
+                            ui.selectable_value(
+                                pivot,
+                                [x, y],
+                                if *pivot == [x, y] { "●" } else { "○" },
+                            );
+                        }
+                        ui.end_row();
                     }
-                    ui.end_row();
-                }
-            });
+                });
+        });
         ui.label("View zoom");
         ui.add(
             egui::DragValue::new(view_zoom)
@@ -564,6 +572,9 @@ fn crop_editor(
         4.,
         palette.amber,
     );
+    if !editable {
+        return;
+    }
     let hover_edges = response.hover_pos().and_then(|pos| crop_hit(retained, pos));
     if let Some(edges) = drag.as_ref().map(|d| d.2).or(hover_edges) {
         let cursor = match edges {
@@ -876,6 +887,82 @@ mod tests {
         assert_eq!(draft.crop().left, 0.);
         assert!(draft.crop().right > 100.);
         assert_eq!(draft.crop().top, 0.);
+        assert!(message.is_empty());
+    }
+
+    #[test]
+    fn protected_crop_allows_view_navigation_but_not_crop_drag() {
+        let app = input_app();
+        let mut draft = InputDraft::read(app.device.snapshot.as_ref().unwrap(), 1).unwrap();
+        draft.keep_group("Crop", true);
+        let original = draft.values.clone();
+        let ctx = egui::Context::default();
+        let mut pivot = [1, 1];
+        let mut zoom = 1.;
+        let mut pan = Vec2::ZERO;
+        let mut drag = None;
+        let mut message = String::new();
+        let mut frame = |events| {
+            ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(700., 600.))),
+                    events,
+                    ..Default::default()
+                },
+                |ui| {
+                    crop_editor(
+                        ui,
+                        &mut draft,
+                        &mut pivot,
+                        (&mut zoom, &mut pan),
+                        &mut drag,
+                        &mut message,
+                        None,
+                    );
+                },
+            )
+        };
+        let output = frame(vec![]);
+        let rect = output
+            .shapes
+            .iter()
+            .find_map(|s| match &s.shape {
+                egui::Shape::Rect(r) if r.stroke.width == 2.0 => Some(r.rect),
+                _ => None,
+            })
+            .unwrap();
+        let start = rect.right_center();
+        frame(vec![
+            egui::Event::PointerMoved(start),
+            super::super::tests::mouse(start, true),
+        ]);
+        let end = start - Vec2::new(40., 0.);
+        frame(vec![egui::Event::PointerMoved(end)]);
+        frame(vec![super::super::tests::mouse(end, false)]);
+        let center = rect.center();
+        frame(vec![
+            egui::Event::PointerMoved(center),
+            egui::Event::MouseWheel {
+                phase: egui::TouchPhase::Move,
+                unit: egui::MouseWheelUnit::Point,
+                delta: Vec2::new(0., 120.),
+                modifiers: egui::Modifiers::NONE,
+            },
+        ]);
+        let middle = |pos, pressed| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Middle,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        frame(vec![middle(center, true)]);
+        let moved = center + Vec2::new(30., 20.);
+        frame(vec![egui::Event::PointerMoved(moved)]);
+        frame(vec![middle(moved, false)]);
+        assert!(zoom > 1.);
+        assert!(pan.length() > 0.);
+        assert!(drag.is_none());
+        assert_eq!(draft.values, original);
         assert!(message.is_empty());
     }
 
