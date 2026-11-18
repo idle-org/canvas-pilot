@@ -250,3 +250,31 @@ pub(crate) fn enrich_input(
     }
     Ok(())
 }
+
+/// Dimensions of the selected input after device preprocessing. Midra input crop
+/// is already included in imageWidth/imageHeight and must not be subtracted twice.
+pub fn input_content_resolution(snapshot: &Snapshot, input: u32) -> Result<[u32; 2], String> {
+    let raw = value(
+        &snapshot.raw,
+        &format!(
+            "/device/inputList/items/{}",
+            snapshot.profile.input_key(input)
+        ),
+    )?;
+    let plug = text(raw, "/status/pp/plug")?;
+    let settings = value(raw, &format!("/plugList/items/{plug}"))?;
+    if settings
+        .pointer("/status/signal/pp/isValid")
+        .and_then(Value::as_bool)
+        != Some(true)
+    {
+        return Err("Input has no valid signal".into());
+    }
+    match snapshot.profile {
+        Profile::Midra4k => midra::cropped_input_resolution(settings),
+        Profile::Aquilon6 => crate::formats::resolution_from_values([
+            number(settings, "/status/signal/pp/imageWidth")?,
+            number(settings, "/status/signal/pp/imageHeight")?,
+        ]),
+    }
+}

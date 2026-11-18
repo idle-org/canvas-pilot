@@ -166,3 +166,41 @@ pub(super) fn parse(identity: String, raw: &Value) -> Result<Snapshot, String> {
         raw: raw.clone(),
     })
 }
+
+/// Midra image dimensions already exclude the shared input crop. Verify that
+/// controls and signal readback agree before using that processed pixel space.
+pub(super) fn cropped_input_resolution(plug: &Value) -> Result<[u32; 2], String> {
+    let native = crate::formats::resolution_from_values([
+        number(plug, "/status/signal/pp/imageWidth")?,
+        number(plug, "/status/signal/pp/imageHeight")?,
+    ])?;
+    let edge = |key| {
+        plug.pointer(&format!("/settings/cropping/control/pp/{key}"))
+            .and_then(Value::as_f64)
+            .filter(|v| v.is_finite() && *v >= 0.)
+            .ok_or_else(|| {
+                "Input crop status unavailable; refresh before switching input.".to_owned()
+            })
+    };
+    let crop = crate::formats::Crop {
+        left: edge("left")?,
+        right: edge("right")?,
+        top: edge("top")?,
+        bottom: edge("bottom")?,
+    };
+    if crop != crate::formats::Crop::default() {
+        let full = [
+            number(plug, "/status/signal/pp/aspectWidth")?,
+            number(plug, "/status/signal/pp/aspectHeight")?,
+        ];
+        let retained = crop.remaining(full)?;
+        if retained
+            .iter()
+            .zip(native)
+            .any(|(expected, actual)| (*expected - actual as f64).abs() > 1.)
+        {
+            return Err("Input crop has not settled; refresh before switching input.".into());
+        }
+    }
+    Ok(native)
+}

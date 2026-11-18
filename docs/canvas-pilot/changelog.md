@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.0-rc.8
+
+- Support switching to cropped Midra inputs using their processed image dimensions,
+  without applying input crop twice. Verify crop controls against signal readback
+  and retain freshness checks. Preview source adaptation uses the same validation.
+- Aquilon shared-crop and input aspect-correction restrictions remain unchanged.
+
 ### v0.10.0-rc.7
 
 - Stabilize input-preview GUI tests under CI load with a controlled capture clock.

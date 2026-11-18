@@ -203,3 +203,11 @@ stays fixed; ordinary framing is recalculated with the existing zoom and normali
 focus, while explicit fit keeps crop fractions. A shared source is copied before
 replacement so other layers are unaffected. This is an undoable editor change,
 persisted through the existing source/crop fields without a schema change.
+
+Midra input switching accepts active input crop. The shared input-dimension reader
+checks nonnegative finite crop edges and, for active crop, verifies
+`aspectWidth - left - right` / `aspectHeight - top - bottom` against the processed
+`imageWidth` / `imageHeight` (one-pixel tolerance). Unsettled or incomplete state
+blocks the operation. Send conversion uses processed dimensions directly and
+observes the input state for preflight; no input crop writes are generated.
+Aquilon cropping and aspect-corrected input switching are not enabled by this rule.

@@ -12,6 +12,7 @@ fn main() -> Result<(), String> {
         .map_err(|_| "Invalid input number")?;
     let before = device::fetch_input(&host, input)?;
     let draft = InputDraft::read(&before, input)?;
+    let processed = device::input_content_resolution(&before, input)?;
     let bytes = device_capture::capture_for(&host, before.profile, input)?;
     let image = image::load_from_memory(&bytes).map_err(|e| e.to_string())?;
     let size = [image.width(), image.height()];
@@ -22,7 +23,7 @@ fn main() -> Result<(), String> {
         return Err("Capture geometry changed during the request".into());
     }
     println!(
-        "{} · input {input} · PNG {} × {} · {geometry:?}",
+        "{} · input {input} · processed {processed:?} · PNG {} × {} · {geometry:?}",
         before.identity, size[0], size[1]
     );
     Ok(())

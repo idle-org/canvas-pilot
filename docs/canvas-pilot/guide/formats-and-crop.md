@@ -395,4 +395,7 @@ same editor source. Undo restores the previous framing. Input routing remains
 opt-in through **Change input**, applied only on Send.
 
 Explicit input-switch sends also adapt framing when a saved source size differs.
-Existing restrictions on shared device input crop/aspect correction still apply.
+Midra inputs with applied crop are supported once crop controls and processed
+image dimensions agree. Input crop is already included in those dimensions;
+layer crop and fit apply afterward. Input aspect correction and Aquilon shared
+input crop retain their existing transfer restrictions.

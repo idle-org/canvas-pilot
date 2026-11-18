@@ -137,24 +137,8 @@ impl Plan {
             let settings = raw
                 .pointer(&format!("/plugList/items/{plug}"))
                 .ok_or("Input settings unavailable")?;
-            let native =
-                crate::formats::resolution_from_values(["imageWidth", "imageHeight"].map(|k| {
-                    settings
-                        .pointer(&format!("/status/signal/pp/{k}"))
-                        .and_then(Value::as_f64)
-                        .unwrap_or(0.)
-                }))?;
+            let native = device::input_content_resolution(snapshot, *input)?;
             if snapshot.profile == device::Profile::Midra4k {
-                for edge in ["left", "right", "top", "bottom"] {
-                    if settings
-                        .pointer(&format!("/settings/cropping/control/pp/{edge}"))
-                        .and_then(Value::as_f64)
-                        .ok_or("Input crop status unavailable; refresh before switching input.")?
-                        != 0.
-                    {
-                        return Err("Input switching with active input crop is not yet supported. Choose an uncropped input.".into());
-                    }
-                }
                 for (key, expected) in [("signal", "NATIVE"), ("transformTo", "SIGNAL")] {
                     if settings
                         .pointer(&format!("/settings/aspect/pp/{key}"))
@@ -880,6 +864,47 @@ mod tests {
             )
             .is_err()
         );
+        for (left, top) in [(12, 0), (978, 51), (0, 400)] {
+            let mut cropped = state.clone();
+            let plug = &mut cropped.raw["device"]["inputList"]["items"]["INPUT_5"]["plugList"]["items"]
+                ["HDMI"];
+            plug["status"]["signal"]["pp"]["aspectWidth"] = json!(1920);
+            plug["status"]["signal"]["pp"]["aspectHeight"] = json!(1080);
+            plug["status"]["signal"]["pp"]["imageWidth"] = json!(1920 - left);
+            plug["status"]["signal"]["pp"]["imageHeight"] = json!(1080 - top);
+            plug["settings"]["cropping"]["control"]["pp"]["left"] = json!(left);
+            plug["settings"]["cropping"]["control"]["pp"]["top"] = json!(top);
+            assert_eq!(
+                device::input_content_resolution(&cropped, 5).unwrap(),
+                [(1920 - left) as u32, (1080 - top) as u32]
+            );
+            let plan = Plan::prepare_with_inputs(
+                &cropped,
+                &editor,
+                0,
+                &mappings,
+                Target::Preview,
+                Sizing::OutputBox,
+                &[(2, 5)].into(),
+            )
+            .unwrap();
+            assert_eq!(plan.changes[0].after, json!("INPUT_5"));
+            assert!(
+                plan.changes
+                    .iter()
+                    .all(|change| !change.path.iter().any(|part| part == "inputList"))
+            );
+            assert!(validate_fresh(&plan, &cropped).is_ok());
+            let mut stale = cropped.clone();
+            stale.raw["device"]["inputList"]["items"]["INPUT_5"]["plugList"]["items"]["HDMI"]["settings"]
+                ["cropping"]["control"]["pp"]["left"] = json!(left + 20);
+            assert!(validate_fresh(&plan, &stale).is_err());
+            assert!(
+                device::input_content_resolution(&stale, 5)
+                    .unwrap_err()
+                    .contains("not settled")
+            );
+        }
     }
     #[test]
     fn sending_accepts_rounded_content_dimensions_but_rejects_real_mismatches() {

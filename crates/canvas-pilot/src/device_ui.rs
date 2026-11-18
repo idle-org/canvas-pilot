@@ -701,31 +701,7 @@ impl Editor {
                 .snapshot
                 .as_ref()
                 .ok_or("Refresh the connection to read input dimensions.")?;
-            let raw = snapshot
-                .raw
-                .pointer(&format!(
-                    "/device/inputList/items/{}",
-                    snapshot.profile.input_key(input)
-                ))
-                .ok_or("Input unavailable")?;
-            let plug = raw
-                .pointer("/status/pp/plug")
-                .and_then(serde_json::Value::as_str)
-                .ok_or("Input plug unavailable")?;
-            let signal = raw
-                .pointer(&format!("/plugList/items/{plug}/status/signal/pp"))
-                .ok_or("Input signal unavailable")?;
-            if signal.get("isValid").and_then(serde_json::Value::as_bool) != Some(true) {
-                return Err("Input has no valid signal".into());
-            }
-            let native = canvas_pilot::formats::resolution_from_values(
-                ["imageWidth", "imageHeight"].map(|key| {
-                    signal
-                        .get(key)
-                        .and_then(serde_json::Value::as_f64)
-                        .unwrap_or(0.)
-                }),
-            )?;
+            let native = device::input_content_resolution(snapshot, input)?;
             self.layout.set_layer_source_resolution(i, native)
         })();
         match result {
