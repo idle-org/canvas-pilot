@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.65
+
+- Added per-destination **Send options** to the mapping window mockup: Position,
+  Size, Crop, Fit mode, Mask and opt-in Input. This is a visual proposal only;
+  application transfer behavior and save formats are unchanged.
+
+
 ### v0.9.64
 
 - Source properties can stage a physical input with **Change input**, applied only

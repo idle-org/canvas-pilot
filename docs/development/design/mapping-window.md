@@ -37,6 +37,29 @@ The list shows small source/target counts so a layer with no routes or several
 destinations is easy to spot. It deliberately avoids a large checkbox matrix:
 connection × screen × layer combinations would quickly overwhelm that layout.
 
+## Send options per destination
+
+Each destination has a collapsed **Send options** control with independent
+checkboxes for **Position**, **Size**, **Crop**, **Fit mode**, **Mask**, and
+**Input**. Position and size are separate so an operator can move a layer without
+intentionally replacing its dimensions. Crop includes edges, zoom and offsets;
+fit mode is separate from that framing. Input means the destination’s video
+source, not shared input processing settings.
+
+The proposed default includes layout properties but leaves **Input unchecked**.
+Unchecked properties should keep their current device values; all unchecked
+should skip that destination. Following the load source should only link the
+destination address, not these checkboxes. Other destinations retain their own
+choices. In this mockup, controls only expand/collapse and toggle locally; nothing
+is saved or sent, and sample counts do not change.
+
+Before implementation, resolve geometric dependencies: device crop, fit, size
+and position can affect one another. Preparation must use fresh device values
+for excluded properties and explain or reject combinations that cannot preserve
+them faithfully. It must not silently enable extra categories. The final transfer
+review should show included properties and explicitly flag input changes.
+This is a design proposal, not a promise of independent device fields.
+
 ## Questions for visual review
 
 - Is the selected-layer approach comfortable, or is a project-wide route overview
