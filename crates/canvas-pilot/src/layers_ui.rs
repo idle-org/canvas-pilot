@@ -578,7 +578,7 @@ impl Editor {
     pub(super) fn layer_tree_header(&mut self, ui: &mut egui::Ui, ink: &Ink, width: f32) {
         if toolbar_icon(
             ui,
-            Rect::from_min_size(ink.point(width - 92.0, -5.0), Vec2::new(28.0, 24.0)),
+            Rect::from_min_size(ink.point(width - 92.0, 0.0), Vec2::new(28.0, 24.0)),
             "Create folder",
             ToolbarIcon::AddFolder,
         )
@@ -600,7 +600,7 @@ impl Editor {
             .add_enabled_ui(self.layout.layers().len() < 256, |ui| {
                 toolbar_icon(
                     ui,
-                    Rect::from_min_size(ink.point(width - 124.0, -5.0), Vec2::new(28.0, 24.0)),
+                    Rect::from_min_size(ink.point(width - 124.0, 0.0), Vec2::new(28.0, 24.0)),
                     "Add layer",
                     ToolbarIcon::AddLayer,
                 )

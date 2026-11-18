@@ -1597,7 +1597,7 @@ impl Editor {
         );
         if toolbar_icon(
             ui,
-            Rect::from_min_size(ink.point(w - 28.0, -5.0), Vec2::new(28.0, 24.0)),
+            Rect::from_min_size(ink.point(w - 28.0, 0.0), Vec2::new(28.0, 24.0)),
             "Manage layers and folders",
             ToolbarIcon::ManageLayers,
         )
@@ -1607,7 +1607,7 @@ impl Editor {
         }
         if toolbar_icon(
             ui,
-            Rect::from_min_size(ink.point(w - 60.0, -5.0), Vec2::new(28.0, 24.0)),
+            Rect::from_min_size(ink.point(w - 60.0, 0.0), Vec2::new(28.0, 24.0)),
             "Add reference image",
             ToolbarIcon::AddImage,
         )

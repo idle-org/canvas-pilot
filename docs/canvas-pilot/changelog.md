@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.9.48
+
+- Keep the four layer-header buttons inside the sidebar content area so their
+  icons are no longer clipped along the top edge.
+
 ### v0.9.47
 
 - Detect optional software at startup and use the same executable paths for
