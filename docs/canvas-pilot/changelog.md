@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.9.71
+
+- Load a local reference picture into a layer’s input preview for offline crop,
+  zoom, fit and mask preparation. Pictures never upload to a switcher.
+- List input reference pictures separately beneath fixed reference pictures.
+  Local pictures save with projects and disable capture refresh/follow for that layer.
+
 ### v0.9.70
 
 - Stop treating unrecognized clipboard text as draw.io XML. Unsupported text now

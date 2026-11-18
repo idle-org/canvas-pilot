@@ -322,6 +322,15 @@ original image bytes, empty if no still has been captured). Stale assignments fo
 removed layers or changed editor input slots are omitted on save. Captures retain
 original bytes, without recompression or display rounding.
 
+Local **Reference pictures** reuse this existing preview representation: `input: 0`,
+`host: ""`, `automatic: false`, and nonempty `image_base64`/`name`. No schema change
+is needed. They use the layer’s source frame and the same crop/fit/mask renderer;
+loading one changes neither geometry nor source dimensions nor device routing.
+Follow-input and pending selection refresh are disabled for that layer, and late
+physical-input captures cannot replace the local image. Selecting a physical input
+explicitly replaces the local picture. Preview images, including local ones, are
+not included in geometry-only exports.
+
 Reference and preview images together must fit within **64 MiB decoded base64
 bytes**, and the whole JSON within 96 MiB. Decoding uses the same bounded image
 loader as references, on the project-loading worker. Malformed images abort the

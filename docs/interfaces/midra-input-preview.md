@@ -143,3 +143,14 @@ request is created. Opening/enabling these controls does not fetch the preselect
 input; Capture still or explicit auto-refresh starts capture. The preselected input is saved with the preview assignment in project version 11.
 
 Aquilon uses the same capture scheduling and image limits through its own discovery profile (`IN_n`, layer source `LIVE_n`, up to 256 discovered inputs). See [Aquilon discovery and endpoints](device-adapters.md). Midra retains its 16-input limit; family-specific IDs are not guessed from a saved layer number.
+
+
+## Local reference pictures
+
+Layer previews also accept PNG/JPEG/BMP files through **Load reference picture**.
+They use the bounded reference decoder and the existing layer preview rendering;
+there is no network upload. A local picture clears the physical input and host,
+disables automatic capture and Follow input, and rejects late capture results.
+The project preview representation retains the original image bytes (see the
+[project contract](canvas-pilot.md)). The layer inspector lists these
+and captured previews under **Input reference pictures**, below fixed references.

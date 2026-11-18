@@ -96,6 +96,27 @@ See [hardware checks and limitations](../device-check.md) and the
 [device exchange contract](../../interfaces/midra-device-send.md). The footer's ONLINE
 status reflects the last successful read, not continuous polling.
 
+## Reference picture for offline cropping
+
+In a layer’s **Preview** controls, choose **Load reference picture…** and select a
+PNG, JPEG or BMP. The picture replaces that layer’s captured preview and follows
+its crop, zoom, fit and mask, just like an input preview. It is **local only**:
+Canvas Pilot never sends the picture to a switcher or changes device input routing.
+
+The picture represents the full source frame using the layer’s configured source
+format. Set that format to match the intended input; loading a picture does not
+change source dimensions or geometry automatically. Capture auto-refresh and
+**Follow input** are disabled when loading it. Choosing a physical input again
+replaces the local picture with a device capture.
+
+**Input reference pictures**, beneath the fixed reference pictures in the layer
+list, lists both local pictures and captured layer previews. Click a row to select
+its layer; use the checkbox to hide/show its preview or × to remove it. Fixed
+reference pictures remain independent canvas overlays.
+
+Save a `.pilot.json` project to retain pictures and preview visibility offline.
+As with captured previews, geometry-only exports do not retain these pictures.
+
 ## Capture an input still from Midra
 
 For a layer, open **Layer properties → Preview** (or right-click → **Configure capture…**):

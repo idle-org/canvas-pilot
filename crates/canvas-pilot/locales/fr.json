@@ -496,5 +496,9 @@
   "preset.quarter": "Quart",
   "preset.tiling": "Mosaïque",
   "preset.portrait": "Portrait",
-  "preset.landscape": "Paysage"
+  "preset.landscape": "Paysage",
+  "ui.reference-picture": "Image de référence",
+  "ui.load-reference-picture": "Charger une image de référence…",
+  "ui.input-reference-pictures": "Images de référence des entrées",
+  "ui.reference-picture-help": "Référence locale uniquement ; jamais envoyée à l’appareil. Utilise le format source, le crop, le zoom, le fit et le masque du calque. Choisissez une entrée à capturer pour la remplacer."
 }

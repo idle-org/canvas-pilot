@@ -496,5 +496,9 @@
   "preset.quarter": "Kvarono",
   "preset.tiling": "Kahelado",
   "preset.portrait": "Vertikale",
-  "preset.landscape": "Horizontale"
+  "preset.landscape": "Horizontale",
+  "ui.reference-picture": "Reference picture",
+  "ui.load-reference-picture": "Load reference picture…",
+  "ui.input-reference-pictures": "Input reference pictures",
+  "ui.reference-picture-help": "Local reference only; never sent to the device. Uses this layer’s source format, crop, zoom, fit and mask. Choose a capture input to replace it."
 }

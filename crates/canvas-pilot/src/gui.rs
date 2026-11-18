@@ -1582,7 +1582,13 @@ impl Editor {
     fn inspector(&mut self, ui: &mut egui::Ui) {
         let rows = self.layer_tree_rows();
         let layer_row_count = rows.len();
+        let input_reference_rows = self.input_reference_count();
         let row_count = layer_row_count
+            + if input_reference_rows == 0 {
+                0
+            } else {
+                input_reference_rows + 1
+            }
             + 1
             + if self.references.is_empty() {
                 0
@@ -1810,6 +1816,17 @@ impl Editor {
             true,
         );
         self.reference_rows(ui, &ink, 28.0 + (layer_row_count + 1) as f32 * 44.0, w);
+        let fixed_reference_rows = if self.references.is_empty() {
+            0
+        } else {
+            self.references.len() + 1
+        };
+        self.input_reference_rows(
+            ui,
+            &ink,
+            28.0 + (layer_row_count + 1 + fixed_reference_rows) as f32 * 44.0,
+            w,
+        );
         let r = r.translate(Vec2::new(0.0, (row_count as f32 - 2.0) * 44.0));
         let ink = Ink::new(ui, r);
         ink.line([0.0, 130.0], [w, 130.0], palette.line);

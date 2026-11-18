@@ -473,7 +473,141 @@ impl Editor {
             preview.guides = opacity / 100.0;
         }
     }
+    fn set_reference_picture(&mut self, i: usize, reference: super::super::reference::Reference) {
+        let id = self.layout.layer_info(i).id;
+        if let Some(choice) = self.device.source_choices.get_mut(&id) {
+            choice.follow = false;
+        }
+        self.capture.layers.insert(
+            id,
+            LayerPreview {
+                input: 0,
+                host: String::new(),
+                source: self.layout.formats().source_for[i],
+                texture: Some(reference.texture),
+                bytes: reference.bytes,
+                paused: false,
+                automatic: false,
+                capture_on_selection: false,
+                name: reference.name,
+                enabled: true,
+                guides: 0.35,
+            },
+        );
+    }
+    fn import_layer_reference_picture(&mut self, ctx: &egui::Context, i: usize) {
+        if let Some(path) = rfd::FileDialog::new()
+            .set_title(tr(ctx, "ui.reference-picture"))
+            .add_filter("Pictures", &["png", "jpg", "jpeg", "bmp"])
+            .pick_file()
+        {
+            match super::super::reference::Reference::load(
+                ctx,
+                &egui::DroppedFile {
+                    path: Some(path),
+                    ..Default::default()
+                },
+            ) {
+                Ok(reference) => {
+                    self.set_reference_picture(i, reference);
+                    self.capture.error.clear();
+                }
+                Err(error) => self.capture.error = error,
+            }
+        }
+    }
+    pub(super) fn input_reference_count(&self) -> usize {
+        (0..self.layout.layers().len())
+            .filter(|&i| {
+                self.capture
+                    .layers
+                    .get(&self.layout.layer_info(i).id)
+                    .is_some_and(|p| {
+                        p.texture.is_some() && p.source == self.layout.formats().source_for[i]
+                    })
+            })
+            .count()
+    }
+    pub(super) fn input_reference_rows(&mut self, ui: &mut egui::Ui, ink: &Ink, y: f32, w: f32) {
+        if self.input_reference_count() == 0 {
+            return;
+        }
+        let palette = theme::palette(ui.ctx());
+        ink.text(
+            0.,
+            y + 8.,
+            &tr(ui.ctx(), "ui.input-reference-pictures"),
+            11.,
+            palette.purple,
+        );
+        let mut row = 0;
+        let mut remove = None;
+        let mut selected = false;
+        for i in 0..self.layout.layers().len() {
+            let info = self.layout.layer_info(i);
+            let id = info.id;
+            let layer_name = info.name.clone();
+            let Some(p) =
+                self.capture.layers.get_mut(&id).filter(|p| {
+                    p.texture.is_some() && p.source == self.layout.formats().source_for[i]
+                })
+            else {
+                continue;
+            };
+            let row_y = y + 44. + row as f32 * 44.;
+            row += 1;
+            let rect = Rect::from_min_size(ink.point(0., row_y), Vec2::new(w, 38.));
+            ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut p.enabled, "")
+                        .on_hover_text(tr(ui.ctx(), "ui.enable-input-preview"));
+                    let label = format!("{}: {}", layer_name, p.name);
+                    if ui
+                        .add_sized(
+                            Vec2::new((ui.available_width() - 32.0).max(20.0), 24.0),
+                            egui::Button::new(label).truncate(),
+                        )
+                        .on_hover_text(tr(ui.ctx(), "ui.reference-picture-help"))
+                        .clicked()
+                    {
+                        self.layout.select(Some(i));
+                        self.reference_selected = None;
+                        self.edit_content = false;
+                        selected = true;
+                    }
+                    if ui
+                        .small_button("×")
+                        .on_hover_text(tr(ui.ctx(), "ui.remove-reference-image"))
+                        .clicked()
+                    {
+                        remove = Some(id);
+                    }
+                });
+            });
+        }
+        if let Some(id) = remove {
+            self.capture.layers.remove(&id);
+        }
+        if selected {
+            self.sync();
+        }
+    }
     pub(super) fn crop_preview_controls(&mut self, ui: &mut egui::Ui, i: usize) {
+        if ui
+            .button(tr(ui.ctx(), "ui.load-reference-picture"))
+            .on_hover_text(tr(ui.ctx(), "ui.reference-picture-help"))
+            .clicked()
+        {
+            self.import_layer_reference_picture(ui.ctx(), i);
+        }
+        let local_picture = self
+            .capture
+            .layers
+            .get(&self.layout.layer_info(i).id)
+            .is_some_and(|p| p.input == 0 && !p.bytes.is_empty());
+        if local_picture {
+            ui.small(tr(ui.ctx(), "ui.reference-picture-help"));
+        }
         let id = self.layout.layer_info(i).id;
         let source = self.layout.formats().source_for[i];
         let inputs = self
@@ -569,9 +703,9 @@ impl Editor {
                 preview.guides = opacity / 100.0;
             }
             if !preview.name.is_empty() { ui.small(&preview.name); }
-            if !online { ui.small(tr(ui.ctx(), "ui.connect-to-a-device-to-choose-and-capture-an-input")); }
-            else if preview.input == 0 { ui.small(tr(ui.ctx(), "ui.choose-an-input-to-capture-its-first-still-automatically")); }
-            else if !available { ui.small(tr(ui.ctx(), "ui.input-snapshots-are-unavailable-enable-snapshots-in-webrcs-then-refresh-the-connectio")); }
+            if !online && !local_picture { ui.small(tr(ui.ctx(), "ui.connect-to-a-device-to-choose-and-capture-an-input")); }
+            else if preview.input == 0 && !local_picture { ui.small(tr(ui.ctx(), "ui.choose-an-input-to-capture-its-first-still-automatically")); }
+            else if !available && !local_picture { ui.small(tr(ui.ctx(), "ui.input-snapshots-are-unavailable-enable-snapshots-in-webrcs-then-refresh-the-connectio")); }
             if !idle { ui.spinner(); ui.small(tr(ui.ctx(), "ui.fetching-an-input-snapshot")); }
             else if cooling { ui.small(tr(ui.ctx(), "ui.capture-available-again-shortly")); ui.ctx().request_repaint_after(std::time::Duration::from_secs(1)); }
         });
@@ -896,6 +1030,85 @@ impl Editor {
 mod tests {
     use super::super::tests::{click_text, frame};
     use super::*;
+
+    #[test]
+    fn local_reference_picture_survives_project_roundtrip_without_capture_or_geometry_changes() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let before = app.layout.layers().clone();
+        let formats = app.layout.formats().clone();
+        let reference = tiny_reference(&ctx, "offline.png");
+        let bytes = reference.bytes.clone();
+        let id = app.layout.layer_info(0).id;
+        app.device.source_choices.insert(
+            id,
+            super::super::device_ui::SourceChoice {
+                input: 4,
+                change: false,
+                follow: true,
+            },
+        );
+        app.set_reference_picture(0, reference);
+        app.sync_followed_inputs();
+        assert!(!app.device.source_choices[&id].follow);
+        assert!(!app.device.source_choices[&id].change);
+        assert_eq!(*app.layout.layers(), before);
+        assert_eq!(*app.layout.formats(), formats);
+        assert_eq!(app.input_reference_count(), 1);
+        assert!(app.layer_preview(0).is_some());
+        assert!(app.next_selection_capture().is_none());
+        assert!(app.next_preview_refresh().is_none());
+        let saved = app.project();
+        let json = saved.to_json().unwrap();
+        let mut restored = Editor::default();
+        restored
+            .install_project(
+                &ctx,
+                canvas_pilot::project::Project::from_json(&json).unwrap(),
+            )
+            .unwrap();
+        assert_eq!(restored.project(), saved);
+        assert_eq!(restored.capture.layers[&id].bytes, bytes);
+        assert_eq!(restored.capture.layers[&id].input, 0);
+        assert!(restored.capture.layers[&id].host.is_empty());
+        assert!(!restored.capture.layers[&id].automatic);
+        assert!(restored.layer_preview(0).is_some());
+        restored.capture.layers.get_mut(&id).unwrap().enabled = false;
+        assert!(restored.layer_preview(0).is_none());
+        assert_eq!(restored.input_reference_count(), 1);
+        restored.capture.layers.remove(&id);
+        assert_eq!(restored.input_reference_count(), 0);
+    }
+
+    #[test]
+    fn input_reference_list_selects_its_layer() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.set_reference_picture(0, tiny_reference(&ctx, "offline.png"));
+        app.layout.select(Some(1));
+        let label = format!("{}: offline.png", app.layout.layer_info(0).name);
+        click_text(&mut app, &ctx, &label);
+        assert_eq!(app.layout.selected(), Some(0));
+        assert!(app.reference_selected.is_none());
+        assert!(app.layer_preview(0).is_some());
+    }
+
+    #[test]
+    fn local_reference_rejects_a_capture_already_in_flight() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let id = app.layout.layer_info(0).id;
+        let source = app.layout.formats().source_for[0];
+        let (tx, rx) = std::sync::mpsc::channel();
+        app.capture.pending = Some(rx);
+        app.capture.pending_layer = Some((id, source, 4, app.device.host.clone()));
+        app.set_reference_picture(0, tiny_reference(&ctx, "offline.png"));
+        tx.send(Ok(tiny_reference(&ctx, "late device image")))
+            .unwrap();
+        app.capture_window(&ctx);
+        assert_eq!(app.capture.layers[&id].name, "offline.png");
+        assert!(app.capture.pending.is_none());
+    }
 
     #[test]
     fn following_source_invalidates_old_capture_without_routing() {
