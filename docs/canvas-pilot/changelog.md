@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### v0.9.67
+
+- Input editor categories now start with **Keep device values** enabled.
+- Crop zoom uses a 100–500% slider with manual entry beyond its range, subject
+  to device limits. Selecting 100% clears both crop axes exactly, avoiding a
+  residual crop after asymmetric edits.
+
+
 ### v0.9.66
 
 - Reopening a project now resumes saved preview auto-refresh when its matching

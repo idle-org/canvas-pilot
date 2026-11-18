@@ -148,7 +148,7 @@ impl Editor {
             }
 
             if let std::collections::btree_map::Entry::Vacant(entry)=self.inputs.drafts.entry(id) {
-                match InputDraft::read(snapshot,id){Ok(draft)=>{entry.insert(draft);},Err(e)=>{ui.label(e);return;}}
+                match InputDraft::read(snapshot,id){Ok(mut draft)=>{let groups: std::collections::BTreeSet<_> = draft.fields.iter().map(|f|f.group).collect(); for group in groups {draft.keep_group(group,true);} entry.insert(draft);},Err(e)=>{ui.label(e);return;}}
             }
             let state=&mut self.inputs;
             let draft=state.drafts.get_mut(&id).unwrap();
@@ -307,6 +307,19 @@ fn crop_hit(rect: Rect, pos: Pos2) -> Option<[i8; 2]> {
     ])
 }
 
+fn set_crop_zoom(
+    draft: &mut InputDraft,
+    percent: f64,
+    current: f64,
+    pivot: [f64; 2],
+) -> Result<(), String> {
+    if percent == 100.0 {
+        draft.set_crop(Crop::default())
+    } else {
+        draft.zoom_crop(percent / current, pivot)
+    }
+}
+
 fn crop_editor(
     ui: &mut egui::Ui,
     draft: &mut InputDraft,
@@ -341,8 +354,8 @@ fn crop_editor(
         }
         changed |= ui
             .add(
-                egui::Slider::new(&mut zoom, 100.0..=maximum)
-                    .logarithmic(true)
+                egui::Slider::new(&mut zoom, 100.0..=500.0)
+                    .clamping(egui::SliderClamping::Never)
                     .suffix("%")
                     .max_decimals(1),
             )
@@ -354,8 +367,10 @@ fn crop_editor(
         zoom = zoom.clamp(100.0, maximum);
         if changed
             && (zoom - current).abs() > 0.0001
-            && let Err(error) = draft.zoom_crop(
-                zoom / current,
+            && let Err(error) = set_crop_zoom(
+                draft,
+                zoom,
+                current,
                 [pivot[0] as f64 / 2.0, pivot[1] as f64 / 2.0],
             )
         {
@@ -529,6 +544,36 @@ fn crop_editor(
 mod tests {
     use super::*;
     #[test]
+    fn input_categories_start_protected_and_full_zoom_clears_asymmetric_crop() {
+        let mut app = input_app();
+        let ctx = egui::Context::default();
+        super::super::tests::frame(&mut app, &ctx, vec![]);
+        let draft = app.inputs.drafts.get_mut(&1).unwrap();
+        assert!(
+            draft
+                .fields
+                .iter()
+                .all(|field| draft.keeps_group(field.group))
+        );
+        assert!(!draft.dirty());
+        draft.keep_group("Crop", false);
+        draft
+            .set_crop(Crop {
+                left: 1.,
+                right: 0.,
+                top: 0.,
+                bottom: 0.,
+            })
+            .unwrap();
+        let native = draft.native.unwrap();
+        let retained = draft.crop().remaining(native).unwrap();
+        let current = 100. * (native[0] * native[1] / (retained[0] * retained[1])).sqrt();
+        set_crop_zoom(draft, 100., current, [0.5, 0.5]).unwrap();
+        assert_eq!(draft.crop(), Crop::default());
+        set_crop_zoom(draft, 600., 100., [0.5, 0.5]).unwrap();
+        assert_eq!(draft.crop().remaining(native).unwrap(), [320., 180.]);
+    }
+    #[test]
     fn enum_labels_are_readable_without_changing_wire_values() {
         for (wire, display) in [
             ("16_9", "16:9"),
@@ -649,6 +694,7 @@ mod tests {
     fn keep_crop_disables_editor_and_survives_undo() {
         let mut app = input_app();
         let ctx = egui::Context::default();
+        super::super::tests::click_text(&mut app, &ctx, "Keep device values");
         super::super::tests::click_text(&mut app, &ctx, "Reset crop");
         super::super::tests::click_text(&mut app, &ctx, "Keep device values");
         assert!(app.inputs.drafts[&1].keeps_group("Crop"));
@@ -669,6 +715,7 @@ mod tests {
         let mut app = input_app();
         let layers = app.layout.layers().clone();
         let ctx = egui::Context::default();
+        super::super::tests::click_text(&mut app, &ctx, "Keep device values");
         super::super::tests::click_text(&mut app, &ctx, "Reset crop");
         assert_eq!(app.inputs.drafts[&1].crop(), Crop::default());
         super::super::tests::click_text(&mut app, &ctx, "Undo input edit");

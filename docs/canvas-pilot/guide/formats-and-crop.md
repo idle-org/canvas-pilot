@@ -323,12 +323,14 @@ validation and verified readback.
 - **Keep device values:** each category has this toggle. Check it to discard that
   category’s draft edits, disable its controls and leave it untouched when sending.
   Crop protection also disables the visual crop editor. Uncheck to edit again.
-  Categories start editable; unchanged fields are never sent. Protection is retained
-  when discarding edits, and cleared when reloading the input.
+  All categories start protected. Uncheck only the categories you want to edit;
+  unchanged fields are never sent. Protection is retained when discarding edits,
+  and all categories return to protected when reloading the input.
 - **Input crop:** drag edges/corners or move the retained box. Crop zoom reduces
   or expands the retained region around the selected pivot using the **− slider +**
-  percentage control; it does not add a
-  second zoom stage. Numeric edges use native device crop coordinates.
+  percentage control. The slider spans **100–500%**; click its numeric value to
+  enter a percentage beyond that range, within device limits. **100%** clears
+  all crop edges exactly. This does not add a second zoom stage. Numeric edges use native device crop coordinates.
 - **View zoom:** changes only the editor view; wheel zooms and middle drag pans.
   Reset crop, Undo input edit and Escape during a drag help recover an edit.
 - **Aspect**, **Color** and **Processing** expose adapter-specific settings.
