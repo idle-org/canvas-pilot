@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.10.0-rc.4
+
+- Fix Midra layer input switching reading the wrong input crop path. Validate
+  Midra crop controls rather than Aquilon crop status; missing or malformed data
+  still blocks switching, as do active crop and aspect correction.
+
 ### v0.10.0-rc.3
 
 - Use stable selectable rows and a subtle background hover in device input

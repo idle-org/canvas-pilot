@@ -146,7 +146,7 @@ impl Plan {
             if snapshot.profile == device::Profile::Midra4k {
                 for edge in ["left", "right", "top", "bottom"] {
                     if settings
-                        .pointer(&format!("/settings/cropping/status/pp/{edge}"))
+                        .pointer(&format!("/settings/cropping/control/pp/{edge}"))
                         .and_then(Value::as_f64)
                         .ok_or("Input crop status unavailable; refresh before switching input.")?
                         != 0.
@@ -718,7 +718,7 @@ mod tests {
             "status":{"pp":{"isAvailable":true,"plug":"HDMI"}},
             "plugList":{"items":{"HDMI":{
                 "status":{"signal":{"pp":{"isValid":true,"imageWidth":1920,"imageHeight":1080}}},
-                "settings":{"cropping":{"status":{"pp":{"left":0,"right":0,"top":0,"bottom":0}}},
+                "settings":{"cropping":{"control":{"pp":{"left":0,"right":0,"top":0,"bottom":0}}},
                     "aspect":{"pp":{"signal":"NATIVE","transformTo":"SIGNAL"}}}
             }}}
         }}});
@@ -769,8 +769,26 @@ mod tests {
             )
             .is_err()
         );
+        // Midra has no cropping/status branch. Missing or malformed control data
+        // must still fail closed instead of being treated as an uncropped input.
+        for value in [Value::Null, json!("unknown")] {
+            let mut incomplete = state.clone();
+            incomplete.raw["device"]["inputList"]["items"]["INPUT_5"]["plugList"]["items"]["HDMI"]
+                ["settings"]["cropping"]["control"]["pp"]["left"] = value;
+            let error = Plan::prepare_with_inputs(
+                &incomplete,
+                &editor,
+                0,
+                &mappings,
+                Target::Preview,
+                Sizing::OutputBox,
+                &[(2, 5)].into(),
+            )
+            .unwrap_err();
+            assert!(error.contains("Input crop status unavailable"));
+        }
         state.raw["device"]["inputList"]["items"]["INPUT_5"]["plugList"]["items"]["HDMI"]["settings"]
-            ["cropping"]["status"]["pp"]["left"] = json!(12);
+            ["cropping"]["control"]["pp"]["left"] = json!(12);
         assert!(
             Plan::prepare_with_inputs(
                 &state,
