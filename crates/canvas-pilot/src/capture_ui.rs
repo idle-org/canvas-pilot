@@ -91,6 +91,9 @@ pub(super) struct CaptureUi {
     host: String,
     pending: Option<CaptureJob>,
     pending_layer: Option<CaptureTarget>,
+    external_input: Option<u32>,
+    external_geometry:
+        Option<std::sync::mpsc::Receiver<Option<super::inputs_window::CaptureGeometry>>>,
     preview: Option<super::super::reference::Reference>,
     error: String,
     last_request: Option<std::time::Instant>,
@@ -185,6 +188,37 @@ impl CaptureUi {
     }
 }
 impl Editor {
+    pub(super) fn capture_idle(&self) -> bool {
+        self.capture.pending.is_none() && !self.capture.cooling_down()
+    }
+    pub(super) fn capture_for_inputs_window(&mut self, ctx: &egui::Context) {
+        if !self.capture_idle() {
+            return;
+        }
+        let input = self.inputs.selected;
+        let Some(plug) = self
+            .device
+            .snapshot
+            .as_ref()
+            .and_then(|s| {
+                s.raw.pointer(&format!(
+                    "/device/inputList/items/{}_{input}/status/pp/plug",
+                    if s.profile == canvas_pilot::device::Profile::Aquilon6 {
+                        "IN"
+                    } else {
+                        "INPUT"
+                    }
+                ))
+            })
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_owned)
+        else {
+            return;
+        };
+        self.inputs.capture_key = Some((self.device.host.clone(), input, plug));
+        self.capture.external_input = Some(input);
+        self.start_input_capture(ctx, input, false);
+    }
     pub(super) fn open_snapshot_import(&mut self) {
         self.capture.target_layer = self.layout.selected().map(|i| self.layout.layer_info(i).id);
         self.capture.keep_refreshing = false;
@@ -280,9 +314,12 @@ impl Editor {
         self.capture.refresh.pending_input = automatic.then_some(input);
         if automatic {
             self.capture.refresh.last_input = input;
-        } else {
+        } else if self.capture.external_input.is_none() {
             self.capture.preview = None;
         }
+        let external = self.capture.external_input.is_some();
+        let (geometry_tx, geometry_rx) = std::sync::mpsc::channel();
+        self.capture.external_geometry = external.then_some(geometry_rx);
         let (tx, rx) = std::sync::mpsc::channel();
         self.capture.pending = Some(rx);
         let host = self.device.host.clone();
@@ -294,16 +331,40 @@ impl Editor {
             .map(|s| s.profile)
             .unwrap_or_default();
         std::thread::spawn(move || {
-            let result = device_capture::capture_for(&host, profile, input).and_then(|bytes| {
-                super::super::reference::Reference::load(
+            let result = (|| {
+                let before = if external {
+                    Some(canvas_pilot::device::fetch_input(&host, input)?)
+                } else {
+                    None
+                };
+                let bytes = device_capture::capture_for(&host, profile, input)?;
+                let reference = super::super::reference::Reference::load(
                     &ctx,
                     &egui::DroppedFile {
                         name: format!("Device input {input} · {host}"),
                         bytes: Some(bytes.into()),
                         ..Default::default()
                     },
-                )
-            });
+                )?;
+                if let Some(before) = before {
+                    let draft = canvas_pilot::device_inputs::InputDraft::read(&before, input)?;
+                    let after = canvas_pilot::device::fetch_input(&host, input)?;
+                    draft.changes(&after)?;
+                    let geometry = if profile == canvas_pilot::device::Profile::Aquilon6 {
+                        draft.native.filter(|n|((reference.size[0] as f64/reference.size[1] as f64)/(n[0]/n[1])-1.).abs()<0.01).and_then(|native| {
+                            let base=format!("/device/inputList/items/IN_{input}/plugList/items/{}/settings/cropping/status/pp",draft.plug);
+                            let edge=|key|before.raw.pointer(&format!("{base}/{key}")).and_then(serde_json::Value::as_f64);
+                            let crop=canvas_pilot::formats::Crop {left:edge("left")?,right:edge("right")?,top:edge("top")?,bottom:edge("bottom")?};
+                            crop.remaining(native).ok()?;
+                            Some(super::inputs_window::CaptureGeometry {native,crop})
+                        })
+                    } else {
+                        None
+                    };
+                    let _ = geometry_tx.send(geometry);
+                }
+                Ok(reference)
+            })();
             let _ = tx.send(result);
             ctx.request_repaint();
         });
@@ -523,16 +584,19 @@ impl Editor {
                 self.capture.pending = None;
                 let automatic = self.capture.refresh.pending_input.take();
                 let direct = self.capture.pending_layer.take();
+                let external = self.capture.external_input.take();
                 let input = direct
                     .as_ref()
                     .map(|target| target.2)
                     .or(automatic)
+                    .or(external)
                     .unwrap_or(self.capture.input);
                 // Pool by device/input, including targets selected while this request ran.
                 // Consume their one-shot requests on failure too: one failed fetch must
                 // not turn into one retry per waiting layer.
                 for (id, preview) in &mut self.capture.layers {
-                    if preview.enabled
+                    if external.is_none()
+                        && preview.enabled
                         && preview.input == input
                         && preview.host == self.device.host
                         && (0..self.layout.layers().len()).any(|i| {
@@ -556,13 +620,57 @@ impl Editor {
                         }
                     }
                 }
-                let dialog_requested = self.capture.open
+                let dialog_requested = external.is_none()
+                    && self.capture.open
                     && self.capture.input == input
                     && self.capture.capture_on_selection;
                 if dialog_requested {
                     self.capture.capture_on_selection = false;
                 }
-                if self.capture.discard_result {
+                if let Some(input) = external {
+                    if !self.capture.discard_result
+                        && self
+                            .inputs
+                            .capture_key
+                            .as_ref()
+                            .is_some_and(|(host, id, plug)| {
+                                host == &self.device.host
+                                    && *id == input
+                                    && self.inputs.selected == input
+                                    && self
+                                        .device
+                                        .snapshot
+                                        .as_ref()
+                                        .and_then(|s| {
+                                            s.raw.pointer(&format!(
+                                                "/device/inputList/items/{}_{input}/status/pp/plug",
+                                                if s.profile
+                                                    == canvas_pilot::device::Profile::Aquilon6
+                                                {
+                                                    "IN"
+                                                } else {
+                                                    "INPUT"
+                                                }
+                                            ))
+                                        })
+                                        .and_then(serde_json::Value::as_str)
+                                        == Some(plug.as_str())
+                            })
+                    {
+                        match result {
+                            Ok(reference) => {
+                                self.inputs.capture_geometry = self
+                                    .capture
+                                    .external_geometry
+                                    .take()
+                                    .and_then(|rx| rx.try_recv().ok())
+                                    .flatten();
+                                self.inputs.capture = Some(reference);
+                            }
+                            Err(error) => self.inputs.message = error,
+                        }
+                    }
+                } else if self.capture.discard_result {
                     self.capture.discard_result = false;
                 } else {
                     match result {

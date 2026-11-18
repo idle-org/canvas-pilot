@@ -9,6 +9,8 @@ mod document_reference_ui;
 mod format_ui;
 #[path = "input_ui.rs"]
 mod input_ui;
+#[path = "inputs_window.rs"]
+mod inputs_window;
 #[path = "layers_ui.rs"]
 mod layers_ui;
 #[path = "menu_ui.rs"]
@@ -49,6 +51,7 @@ enum NavigationTool {
 
 pub struct Editor {
     device: device_ui::DeviceUi,
+    inputs: inputs_window::InputsWindow,
     capture: capture_ui::CaptureUi,
     layer_ui: layers_ui::LayerUi,
     settings: settings::Store,
@@ -380,6 +383,7 @@ impl Default for Editor {
     fn default() -> Self {
         let mut this = Self {
             device: Default::default(),
+            inputs: Default::default(),
             capture: Default::default(),
             layer_ui: Default::default(),
             ui_scale: 1.0,
@@ -482,7 +486,8 @@ impl Editor {
             self.crop_mask_enter_held = false;
             return;
         }
-        let eligible = self.edit_content
+        let eligible = !self.inputs.open
+            && self.edit_content
             && self.navigation_tool == NavigationTool::Select
             && !self.layout.dragging()
             && !self.panning
@@ -523,6 +528,7 @@ impl Editor {
         let enter_eligible = eligible
             && !self.device.open
             && !self.device.connection_open
+            && !self.inputs.open
             && (self.format_draft.is_none()
                 || matches!(self.property_tab, PropertyTab::Crop | PropertyTab::Mask));
         input.events.retain(|event| {
@@ -1214,7 +1220,8 @@ impl Editor {
             self.preferences_open = true;
             return;
         }
-        if self.paste.is_some()
+        if self.inputs.open
+            || self.paste.is_some()
             || self.format_draft.is_some()
             || self.output_draft.is_some()
             || self.layer_ui.open
@@ -4408,6 +4415,7 @@ impl Editor {
         self.new_project_window(ctx);
         self.preferences_window(ctx);
         self.device_window(ctx);
+        self.inputs_window(ctx);
         self.layers_window(ctx);
         self.theme_window(ctx);
     }

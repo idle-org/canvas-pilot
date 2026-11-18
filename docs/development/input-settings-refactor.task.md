@@ -1,6 +1,9 @@
 # Shared input settings and Midra preprocessing
 
-Status: requested implementation; investigation underway, not implemented.
+Status: input-owned window and isolated sends implemented; automated checks and
+emulator crop tests passed. Physical-output and persistence-extension acceptance
+remain explicitly listed below.
+Aquilon is the primary development target; Midra emulator testing is secondary.
 Checkpoint: annotated local tag `pre-input-settings-refactor`, commit `b711239`.
 The tag includes the non-cumulative crop-preset change and has not been pushed.
 
@@ -51,9 +54,21 @@ They describe padded thumbnails; existing measured captures have different sizes
 from the guide's example. Do not infer native dimensions or preprocessing stage
 from PNG size. No separate raw/native capture endpoint was established.
 
-The emulator at `192.168.10.146:3000` was unreachable during this investigation.
-A request for its current address/availability is pending. Device capability and
-capture-stage checks must resume before the behavioral refactor is finalized.
+Aquilon Cmax 6.2.79 now runs at the authorized emulator address on port 3000.
+Input 1 asymmetric crop writes were verified and restored, with editable screen
+state unchanged. Captures show blackened cropped edges, not recoverable raw pixels.
+Pulse 4K 3.3.7 also passed crop write/restoration checks but served unchanged images.
+Neither observation establishes physical-device capture pipeline behavior.
+
+The current window uses session-only, per-input drafts. Existing project source
+geometry and inert input proposals remain compatible; they have not been migrated
+into a new persistent input schema. Legacy layer-send proposals remain behind a
+compatibility expander. New input-window edits never add local layer crop/zoom.
+
+Aquilon definitions were checked against its served WebRCS app and native state:
+unsigned color values, KEEP_INPUT_RATIO, larger horizontal crop range, aspect
+bounds and settings/pp/xUpdate differ from Midra. Selected-input reads stay bounded
+and targeted; ordinary layout fetches do not acquire these additional controls.
 
 ## Refactor boundaries
 
@@ -79,15 +94,15 @@ capture-stage checks must resume before the behavioral refactor is finalized.
 
 ## Capture decision and acceptance
 
-- [ ] Inspect all input paths, enums, ranges and update actions on the emulator.
+- [x] Inspect implemented input paths, enums, ranges and update actions in native WebRCS; verify Aquilon crop writes on the emulator.
 - [ ] Identify whether a native/raw capture mode exists in WebRCS or the API.
 - [ ] Establish snapshot stage with a marked edge/grid image, asymmetric crop and
   aspect change; compare before/after images and reported dimensions. A simulator
   serving static thumbnails cannot establish physical processing order.
-- [ ] If only processed captures exist, display them as processed previews. Only
+- [x] Display processed captures, with sizing artwork filling unavailable pixels. Only
   overlay editable crop geometry with a known coordinate transform; never invent
   missing edge pixels or silently reset device crop to obtain an image.
-- [ ] Build the input-owned window, isolated drafts, explicit send review and
+- [x] Build the input-owned window, isolated drafts, explicit send review and
   native crop/view interaction, including capture cancellation/stale-result guards.
 - [ ] Prove two layers sharing one device input receive one input change, retain
   independent layer framing and do not double-crop. Include unrepresented device
@@ -99,3 +114,19 @@ capture-stage checks must resume before the behavioral refactor is finalized.
   format round trip. Saved drafts stay inactive; plain geometry exports state losses.
 - [ ] Update contracts, manual, feature matrices, screenshots and changelog; run
   required Rust checks, coverage and book validation before declaring completion.
+
+## Remaining acceptance boundaries
+
+Raw-capture recovery is replaced by the requested sizing-pattern fallback. The
+Aquilon composite uses known status-crop bounds and matching source/thumbnail frame
+ratios; other cases keep the unmodified capture separate. Capture checks bracket
+image acquisition and reject changed geometry. Physical capture-stage/latency tests
+remain useful; emulator output is not physical-device acceptance.
+
+The checks above deliberately keep future persistent input-owned proposals and
+exhaustive per-field/physical-output acceptance open. This implementation introduces
+no persistence migration: existing project, recovery and snapshot formats retain
+their tested source geometry and inactive proposal behavior. Current shared-window
+drafts are session-only. Color/keying/LUT output still requires visual acceptance
+on appropriate allocated hardware; crop write/readback/restoration was exercised
+on both emulators, with Aquilon as the continuing target.

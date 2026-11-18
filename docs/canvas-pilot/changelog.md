@@ -6,10 +6,20 @@
 
 ### v0.9.55
 
-- Recorded the requested input-settings refactor, official Midra preprocessing
-  controls, capture uncertainties and migration/test requirements. Created the
-  annotated `pre-input-settings-refactor` checkpoint before behavioral changes.
-  Implementation remains pending device inspection; the emulator was unreachable.
+- Added a shared **Input settings** window, independent of layer selection, with
+  native input crop edges, move, pivot-based crop zoom, view zoom, Undo and explicit
+  reviewed input-only sends. Aspect, color and processing controls follow the
+  connected adapter; supported keying/LUT controls are capability-dependent.
+- Aquilon reads only the selected input's additional controls. Sends preflight fresh
+  state, use each adapter's input apply command, verify readback and never send
+  layer geometry or pulse preset apply. Existing local source geometry and saved
+  input proposals retain a compatibility path.
+- Created the local `pre-input-settings-refactor` checkpoint. Pulse 4K 3.3.7 and
+  Aquilon Cmax 6.2.79 emulator crop tests verified restoration and unchanged screen
+  settings. Aquilon captures show cropped edges blanked; raw capture is unconfirmed.
+  The input crop editor reuses the sizing artwork for unavailable pixels and
+  anchors verified Aquilon capture pixels to their original source region. An
+  unchanged capture remains available below the editor.
 
 ### v0.9.54
 

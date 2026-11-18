@@ -229,3 +229,24 @@ impl<R: Read> Read for CancelReader<'_, R> {
         self.inner.read(bytes)
     }
 }
+
+/// Read one input's preprocessing controls without downloading the whole Aquilon store.
+pub fn fetch_input(host: &str, input: u32) -> Result<Snapshot, String> {
+    let mut snapshot = fetch(host)?;
+    enrich_input(host, &mut snapshot, input, 10606)?;
+    Ok(snapshot)
+}
+pub(crate) fn enrich_input(
+    host: &str,
+    snapshot: &mut Snapshot,
+    input: u32,
+    port: u16,
+) -> Result<(), String> {
+    if !(1..=snapshot.profile.input_limit()).contains(&input) {
+        return Err("Invalid input".into());
+    }
+    if snapshot.profile == Profile::Aquilon6 {
+        state::input_settings(SocketAddr::new(address(host)?.ip(), port), snapshot, input)?;
+    }
+    Ok(())
+}

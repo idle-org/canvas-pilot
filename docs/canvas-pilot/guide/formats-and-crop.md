@@ -332,3 +332,37 @@ content dimensions. These details need evidence before claiming an exact device
 round trip.
 
 Saved device input corrections are optional [inactive proposals](advanced-exchange.md#saved-input-corrections); opening a file never enables or sends them.
+
+## Shared device input settings
+
+Open **Input settings…** from the application menu, or **Open shared input
+settings…** in the layer's Source tab. Choose a physical input independently of
+editor layer selection. On Aquilon, **Read input settings** loads that input's
+additional controls without downloading the complete device store.
+
+This edits preprocessing shared by every consumer of that input, including
+Program and layers outside the project. Nothing is sent while dragging, selecting
+an input, capturing an image or opening the window. Use **Review input changes**,
+then **Send input settings** to apply the edited fields and verify them.
+
+- **Input crop:** drag edges/corners or move the retained box. Crop zoom reduces
+  or expands the retained region around the selected pivot; it does not add a
+  second zoom stage. Numeric edges use native device crop coordinates.
+- **View zoom:** changes only the editor view; wheel zooms and middle drag pans.
+  Reset crop, Undo input edit and Escape during a drag help recover an edit.
+- **Aspect**, **Color** and **Processing** expose adapter-specific settings.
+  Keying and LUT controls appear only when supported/available. Resource allocation,
+  signal negotiation and HDCP remain in WebRCS.
+- **Capture input:** displays the device thumbnail unchanged. Aquilon's emulator
+  blanks cropped edges in this image. No raw/pre-crop endpoint is confirmed, so it
+  is displayed separately from the crop grid, without applying crop a second time.
+
+Drafts are session-only and are not included in projects or exports. Switching
+inputs retains their drafts; changing connection discards them. Reload selected
+input replaces its draft with device values. If another controller, signal or plug
+changes, refresh and review before sending. After changing input geometry, reload
+its affected layers before sending their layout.
+
+Existing local source geometry and saved inactive input proposals remain under
+**Legacy input proposals / layer-send compatibility**. Their previous save/export
+behavior is preserved. They are distinct from this window's native input edits.

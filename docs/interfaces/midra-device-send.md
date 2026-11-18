@@ -288,3 +288,43 @@ current controls keep both directions synchronized with one destination, and the
 current connection is the only accepted connection scope. No UI or transfer defaults
 change. Persistence and migrations are specified in the
 [project contract](canvas-pilot.md#directional-device-mapping-version-19).
+
+## Independent shared-input editor (v0.9.55)
+
+`device_inputs::InputDraft` is a transient adapter-specific input/active-plug draft,
+not a persistent project field. The common window edits native input preprocessing
+without changing editor sources, layer geometry, routing or preset selection.
+Only edited fields are sent after fresh signal/plug/settings checks; readback is
+verified. There is no automatic retry, rollback or preset-apply pulse. Partial
+failures are reported and require refresh. This does not migrate existing source
+geometry or saved layer-bound input proposals; that compatibility path remains.
+
+Aquilon 6.2 uses `IN_N`, `KEEP_INPUT_RATIO` and unsigned 0–255 color controls
+(neutral 128), with hue 90–270 (neutral 180). Midra uses `INPUT_N`, `SIGNAL`, signed
+−128–127 color values and hue −90–90. Crop bounds use signal `aspectWidth` and
+`aspectHeight` when published, rather than potentially cropped image dimensions.
+Aquilon horizontal edges allow 0–32767, vertical edges 0–8191; Midra uses 0–8191.
+At least one pixel must remain. Crop zoom rounds once to whole native pixels.
+
+For Midra, crop apply pulses `settings/cropping/control/pp/xUpdate`. Aquilon pulses
+`settings/pp/xUpdate`; it must not receive the Midra path. Opposing crop edges are
+released before larger crops are written. Aquilon selected-input reads request
+only an explicit set of fields, bound response/time budgets and double-check their
+values and active plug before publishing the draft. Normal layout reads remain
+unchanged. Unsupported or absent fields are not invented.
+
+Input-window capture uses the existing bounded snapshot reader and shared throttle.
+It never updates layer preview images or changes input crop to obtain a raw image.
+The input crop editor uses the existing sizing pattern behind available pixels.
+For Aquilon, fresh reads bracket capture; stable crop/aspect/plug state and a matching
+thumbnail frame ratio are required for compositing. The image is clipped to the
+captured status-crop region using corresponding full-frame UV coordinates; it is
+never stretched to a newly edited crop. Unknown pixels retain the pattern. Other
+capture geometries remain separate previews. No raw-capture contract is claimed. Aquilon Cmax 6.2.79 emulator testing showed
+blanked cropped edges; Pulse 4K 3.3.7 served an unchanged thumbnail. Input drafts
+and captures are not serialized, and existing project/exchange versions are unchanged.
+
+Manual diagnostic: `cargo run -p canvas-pilot --example check_device_inputs -- HOST`
+changes Input 1 crop and restores the original values. Run only against an expressly
+authorized test device. An optional second argument saves before/after PNGs in an
+existing temporary directory. It is never part of CI or physical-output acceptance.

@@ -287,6 +287,7 @@ impl Plan {
         });
         Ok(plan)
     }
+    #[cfg(test)]
     fn verified(&self, snapshot: &Snapshot) -> bool {
         self.changes.iter().all(|c| {
             snapshot
@@ -308,19 +309,34 @@ trait Transport {
     fn pause(&self) {}
 }
 fn execute(plan: &Plan, transport: &mut impl Transport) -> Result<Snapshot, String> {
-    for (i, change) in plan.changes.iter().enumerate() {
-        transport.write(change).map_err(|e| format!("Send stopped after {i}/{} confirmed socket writes. Device may be partially changed; refresh before retrying. {e}", plan.changes.len()))?;
+    execute_changes(plan.profile, &plan.changes, transport, true)
+}
+fn execute_changes(
+    profile: device::Profile,
+    changes: &[Change],
+    transport: &mut impl Transport,
+    apply_preset: bool,
+) -> Result<Snapshot, String> {
+    for (i, change) in changes.iter().enumerate() {
+        transport.write(change).map_err(|e| format!("Send stopped after {i}/{} confirmed socket writes. Device may be partially changed; refresh before retrying. {e}", changes.len()))?;
     }
     // Input crop is staged independently of preset geometry, as in WebRCS.
-    let input_crops: BTreeSet<_> = plan
-        .changes
+    let input_crops: BTreeSet<_> = changes
         .iter()
         .filter_map(|change| {
             let p = &change.path;
             (p.get(1).is_some_and(|v| v == "inputList")
                 && p.get(8).is_some_and(|v| v == "cropping")
                 && p.len() == 12)
-                .then(|| p[..11].to_vec())
+                .then(|| {
+                    if profile == device::Profile::Aquilon6 {
+                        let mut path = p[..8].to_vec();
+                        path.push("pp".into());
+                        path
+                    } else {
+                        p[..11].to_vec()
+                    }
+                })
         })
         .collect();
     for mut path in input_crops {
@@ -337,25 +353,31 @@ fn execute(plan: &Plan, transport: &mut impl Transport) -> Result<Snapshot, Stri
     }
     // WebRCS commits staged preset edits with a false -> true edge.
     // Always pulse, even if values already match the server's staging store.
-    for value in [false, true] {
-        let apply = Change {
-            path: plan.profile.apply_path(),
-            before: json!(!value),
-            after: json!(value),
-        };
-        transport
-            .write(&apply)
-            .map_err(|e| format!("Layer values sent, but applying preset updates failed: {e}"))?;
+    if apply_preset {
+        for value in [false, true] {
+            let apply = Change {
+                path: profile.apply_path(),
+                before: json!(!value),
+                after: json!(value),
+            };
+            transport.write(&apply).map_err(|e| {
+                format!("Layer values sent, but applying preset updates failed: {e}")
+            })?;
+        }
     }
     let mut mismatches = Vec::new();
     for _ in 0..3 {
         transport.pause();
         let snapshot = transport.read().map_err(|e| format!("Commands sent, but readback failed; outcome uncertain. Refresh before retrying. {e}"))?;
-        if plan.verified(&snapshot) {
+        if changes.iter().all(|c| {
+            snapshot
+                .raw
+                .pointer(&format!("/{}", c.path.join("/")))
+                .is_some_and(|v| values_equal(v, &c.after))
+        }) {
             return Ok(snapshot);
         }
-        mismatches = plan
-            .changes
+        mismatches = changes
             .iter()
             .filter_map(|change| {
                 let path = format!("/{}", change.path.join("/"));
@@ -379,15 +401,20 @@ fn execute(plan: &Plan, transport: &mut impl Transport) -> Result<Snapshot, Stri
 struct Connection {
     host: String,
     awj_port: u16,
+    input: Option<u32>,
     socket: Option<tungstenite::WebSocket<TcpStream>>,
 }
 impl Transport for Connection {
     fn read(&mut self) -> Result<Snapshot, String> {
-        device::fetch_with_awj_port(
+        let mut snapshot = device::fetch_with_awj_port(
             &self.host,
             &std::sync::atomic::AtomicBool::new(false),
             self.awj_port,
-        )
+        )?;
+        if let Some(input) = self.input {
+            device::enrich_input(&self.host, &mut snapshot, input, self.awj_port)?;
+        }
+        Ok(snapshot)
     }
     fn write(&mut self, change: &Change) -> Result<(), String> {
         if self.socket.is_none() {
@@ -430,6 +457,7 @@ pub(crate) fn send_with_awj_port(
         host: host.trim().into(),
         awj_port,
         socket: None,
+        input: None,
     };
     let fresh = connection.read()?;
     validate_fresh(plan, &fresh)?;
@@ -473,6 +501,25 @@ fn validate_fresh(plan: &Plan, fresh: &Snapshot) -> Result<(), String> {
     Ok(())
 }
 
+/// Input-only edits: fresh preflight and readback, without preset updates or layer writes.
+pub fn send_inputs(
+    host: &str,
+    draft: &crate::device_inputs::InputDraft,
+) -> Result<Snapshot, String> {
+    let mut connection = Connection {
+        host: host.trim().into(),
+        awj_port: 10606,
+        socket: None,
+        input: Some(draft.input),
+    };
+    let fresh = connection.read()?;
+    let changes = draft.changes(&fresh)?;
+    if changes.is_empty() {
+        return Ok(fresh);
+    }
+    execute_changes(fresh.profile, &changes, &mut connection, false)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -493,6 +540,7 @@ mod tests {
             host,
             awj_port: 10606,
             socket: None,
+            input: None,
         };
         connection
             .write(&Change {
@@ -758,6 +806,21 @@ mod tests {
             ignore: false,
             writes_log: vec![],
         };
+        let mut isolated = Mock {
+            state: transport.state.clone(),
+            writes: 0,
+            fail_at: None,
+            ignore: false,
+            writes_log: vec![],
+        };
+        execute_changes(plan.profile, &plan.changes, &mut isolated, false).unwrap();
+        assert_eq!(isolated.writes_log.len(), 3);
+        assert!(
+            isolated
+                .writes_log
+                .iter()
+                .all(|(path, _)| path[1] == "inputList")
+        );
         execute(&plan, &mut transport).unwrap();
         assert_eq!(transport.writes_log.len(), 5);
         for (i, value) in [(1, false), (2, true)] {

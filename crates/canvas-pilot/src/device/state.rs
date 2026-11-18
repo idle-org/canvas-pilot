@@ -150,6 +150,121 @@ pub(super) fn fetch(
     };
     collect(&mut connection, identity)
 }
+pub(super) fn input_settings(
+    address: SocketAddr,
+    snapshot: &mut Snapshot,
+    input: u32,
+) -> Result<(), String> {
+    let root = format!("/device/inputList/items/IN_{input}");
+    let plug = snapshot
+        .raw
+        .pointer(&format!("{root}/status/pp/plug"))
+        .and_then(Value::as_str)
+        .ok_or("Input plug unavailable")?;
+    if plug.is_empty() || !plug.bytes().all(|b| b.is_ascii_digit()) {
+        return Err("Invalid input plug".into());
+    }
+    let base = format!("{root}/plugList/items/{plug}");
+    let mut paths = Vec::new();
+    for (group, keys) in [
+        (
+            "status/signal/pp",
+            &[
+                "aspectWidth",
+                "aspectHeight",
+                "imageWidth",
+                "imageHeight",
+                "isValid",
+            ][..],
+        ),
+        (
+            "settings/aspect/pp",
+            &["signal", "transformTo", "layerFill", "customRatio"][..],
+        ),
+        (
+            "settings/cropping/control/pp",
+            &["left", "right", "top", "bottom"][..],
+        ),
+        (
+            "settings/cropping/status/pp",
+            &["left", "right", "top", "bottom"][..],
+        ),
+        ("settings/pp", &["xUpdate"][..]),
+        ("control/pp", &["enableCropFinder"][..]),
+        (
+            "settings/color/pp",
+            &[
+                "brightness",
+                "contrast",
+                "saturation",
+                "hue",
+                "gainR",
+                "gainG",
+                "gainB",
+                "offsetR",
+                "offsetG",
+                "offsetB",
+            ][..],
+        ),
+        (
+            "settings/processing/pp",
+            &["sharpness", "pulldown22", "pulldown32"][..],
+        ),
+        ("settings/keying/control/pp", &["mode"][..]),
+        ("settings/keying/status/pp", &["modeValidity"][..]),
+        (
+            "settings/keying/chroma/pp",
+            &[
+                "hue",
+                "transparency",
+                "colorCorrection",
+                "foreground",
+                "background",
+            ][..],
+        ),
+        (
+            "settings/keying/luma/pp",
+            &["luma", "foreground", "transparency", "invert"][..],
+        ),
+        ("settings/correctionLut/control/pp", &["mode", "source"][..]),
+        (
+            "settings/correctionLut/status/pp",
+            &["isEnabled", "sourceValidity"][..],
+        ),
+    ] {
+        for key in keys {
+            paths.push(format!("{base}/{group}/{key}"));
+        }
+    }
+    paths.push(format!("{root}/status/pp/plug"));
+    let stream =
+        TcpStream::connect_timeout(&address, Duration::from_secs(3)).map_err(|e| e.to_string())?;
+    stream
+        .set_read_timeout(Some(Duration::from_millis(250)))
+        .map_err(|e| e.to_string())?;
+    stream
+        .set_write_timeout(Some(Duration::from_secs(3)))
+        .map_err(|e| e.to_string())?;
+    let cancelled = AtomicBool::new(false);
+    let mut reader = Connection {
+        reader: BufReader::new(stream),
+        cancelled: &cancelled,
+        deadline: Instant::now() + Duration::from_secs(30),
+        bytes: 0,
+    };
+    let values = reader.get(&paths)?;
+    if reader.get(&paths)? != values {
+        return Err("Input changed during read; retry".into());
+    }
+    if values.last().and_then(Value::as_str) != Some(plug) {
+        return Err("Input plug changed during read; retry".into());
+    }
+    for (path, value) in paths.iter().zip(values) {
+        set(&mut snapshot.raw, path, value);
+    }
+    Ok(())
+}
+
 fn set(raw: &mut Value, path: &str, value: Value) {
     let mut node = raw;
     for key in path.trim_start_matches('/').split('/') {

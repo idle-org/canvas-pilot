@@ -392,7 +392,17 @@ impl Editor {
             }
             if self.property_tab == PropertyTab::Source {
             ui.heading(tr(ui.ctx(), "ui.advanced-source-input-settings"));
-            self.advanced_input_controls(ui, i);
+            if ui.button("Open shared input settings…").clicked() {
+                self.inputs.open = true;
+                if let Some(snapshot) = &self.device.snapshot
+                    && let Some(link) = self.layout.layer_info(i).send_mapping.current_links().next()
+                    && let Some(screen) = snapshot.screens.iter().find(|s| s.id == link.screen)
+                    && let Some(layer) = screen.layers.iter().find(|l| l.id == link.layer) {
+                    self.inputs.selected = snapshot.profile.input_from_source(&layer.source).unwrap_or(0);
+                }
+            }
+            ui.small("Device preprocessing is edited per input in the shared window. Local source geometry below is retained for existing projects.");
+            ui.collapsing("Legacy input proposals / layer-send compatibility", |ui| self.advanced_input_controls(ui, i));
             ui.separator();
             ui.label(tr(ui.ctx(), "ui.editor-source-model-local-geometry"));
             ui.small(tr(ui.ctx(), "ui.these-dimensions-describe-the-editor-source-not-a-device-timing-command-local-input-c"));
@@ -909,7 +919,7 @@ fn paint_source_clipped(
     paint_pattern_clipped(&guides, rect, source, crop, clip);
 }
 
-fn paint_pattern_clipped(
+pub(super) fn paint_pattern_clipped(
     painter: &egui::Painter,
     rect: Rect,
     source: Source,
@@ -1683,6 +1693,11 @@ mod tests {
         click_text(&mut app, &ctx, "Apply source changes");
         assert_eq!(app.layout.formats(), &before);
         assert!(!app.device.input_edits.enabled);
+        click_text(
+            &mut app,
+            &ctx,
+            "Legacy input proposals / layer-send compatibility",
+        );
         click_text(
             &mut app,
             &ctx,

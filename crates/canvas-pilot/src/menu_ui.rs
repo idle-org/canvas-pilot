@@ -330,6 +330,10 @@ impl Editor {
             self.device.connection_open = true;
             ui.close();
         }
+        if ui.button("Input settings…").clicked() {
+            self.inputs.open = true;
+            ui.close();
+        }
         ui.menu_button(tr(ui.ctx(), "ui.project"), |ui| self.project_menu(ui));
         ui.menu_button(tr(ui.ctx(), "ui.import"), |ui| self.import_menu(ui));
         ui.menu_button(tr(ui.ctx(), "ui.export"), |ui| self.export_menu(ui));

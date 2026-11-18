@@ -4,6 +4,7 @@ pub use device_mapping::{ConnectionTarget, SendDestination, SendMapping};
 pub mod clipboard;
 pub mod device;
 pub mod device_capture;
+pub mod device_inputs;
 pub mod device_send;
 use std::collections::HashMap;
 pub mod exchange;

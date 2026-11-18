@@ -113,6 +113,7 @@ pub(super) struct DeviceUi {
     pub(super) autoconnect_at_startup: bool,
     sizing: Sizing,
     pub(super) sending: bool,
+    pub(super) input_sending: bool,
     message: String,
     pub(super) host: String,
     pub(super) recent_hosts: Vec<String>,
@@ -281,10 +282,17 @@ impl DeviceUi {
         }
         self.mapping_scope = Some(key);
     }
+    pub(super) fn busy(&self) -> bool {
+        self.pending.is_some() || self.input_sending
+    }
     pub(super) fn online(&self) -> bool {
         self.snapshot.is_some()
     }
     fn send(&mut self, ctx: &egui::Context, plans: Vec<Plan>) {
+        if self.input_sending {
+            self.error = "Wait for the input send to finish.".into();
+            return;
+        }
         let (tx, rx) = mpsc::channel();
         self.pending = Some(rx);
         self.sending = true;
@@ -317,6 +325,10 @@ impl DeviceUi {
         self.loading = None;
     }
     fn fetch(&mut self, ctx: &egui::Context) {
+        if self.input_sending {
+            self.error = "Wait for the input send to finish.".into();
+            return;
+        }
         self.cancel_read();
         let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         self.cancel_read = Some(cancel.clone());
