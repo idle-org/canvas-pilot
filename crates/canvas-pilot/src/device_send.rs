@@ -1,4 +1,4 @@
-//! Explicit WebRCS layer writes, plus separately opted-in advanced input edits. No routing or TAKE.
+//! Explicit WebRCS layer writes, plus separately opted-in advanced input edits. Source routing requires explicit opt-in; no TAKE.
 use crate::{
     Layout,
     device::{self, Snapshot},
@@ -85,6 +85,134 @@ impl Plan {
                 }
             }
         }
+        Ok(plan)
+    }
+    /// Opt-in physical source selection, separate from editor source-slot identity.
+    #[allow(clippy::too_many_arguments)]
+    pub fn prepare_with_inputs(
+        snapshot: &Snapshot,
+        layout: &Layout,
+        screen_index: usize,
+        mappings: &[(usize, String)],
+        target: Target,
+        sizing: Sizing,
+        inputs: &std::collections::BTreeMap<usize, u32>,
+    ) -> Result<Self, String> {
+        if !mappings.iter().any(|(id, _)| inputs.contains_key(id)) {
+            return Self::prepare(snapshot, layout, screen_index, mappings, target, sizing);
+        }
+        let screen = snapshot
+            .screens
+            .get(screen_index)
+            .ok_or("Choose a screen.")?;
+        let bank = if target == Target::Preview {
+            &screen.preview_bank
+        } else {
+            &screen.program_bank
+        };
+        let mut projected = snapshot.clone();
+        let mut routes = Vec::new();
+        for (id, destination) in mappings {
+            let Some(input) = inputs.get(id) else {
+                continue;
+            };
+            if !crate::device_capture::inputs(snapshot)
+                .iter()
+                .any(|i| i.id == *input && i.signal)
+            {
+                return Err(format!(
+                    "Input {input} is unavailable or has no valid signal."
+                ));
+            }
+            let input_path = format!(
+                "/device/inputList/items/{}",
+                snapshot.profile.input_key(*input)
+            );
+            let raw = field(&snapshot.raw, &input_path)?;
+            let plug = raw
+                .pointer("/status/pp/plug")
+                .and_then(Value::as_str)
+                .ok_or("Input plug unavailable")?;
+            let settings = raw
+                .pointer(&format!("/plugList/items/{plug}"))
+                .ok_or("Input settings unavailable")?;
+            let native =
+                crate::formats::resolution_from_values(["imageWidth", "imageHeight"].map(|k| {
+                    settings
+                        .pointer(&format!("/status/signal/pp/{k}"))
+                        .and_then(Value::as_f64)
+                        .unwrap_or(0.)
+                }))?;
+            if snapshot.profile == device::Profile::Midra4k {
+                for edge in ["left", "right", "top", "bottom"] {
+                    if settings
+                        .pointer(&format!("/settings/cropping/status/pp/{edge}"))
+                        .and_then(Value::as_f64)
+                        .ok_or("Input crop status unavailable; refresh before switching input.")?
+                        != 0.
+                    {
+                        return Err("Input switching with active input crop is not yet supported. Choose an uncropped input.".into());
+                    }
+                }
+                for (key, expected) in [("signal", "NATIVE"), ("transformTo", "SIGNAL")] {
+                    if settings
+                        .pointer(&format!("/settings/aspect/pp/{key}"))
+                        .and_then(Value::as_str)
+                        .ok_or("Input aspect status unavailable; refresh before switching input.")?
+                        != expected
+                    {
+                        return Err(
+                            "Input switching with aspect correction is not yet supported.".into(),
+                        );
+                    }
+                }
+            }
+            let layer_path = snapshot.profile.layer_path(&screen.id, bank, destination);
+            let path = format!("{layer_path}{}", snapshot.profile.source_field());
+            let before = field(&snapshot.raw, &path)?.clone();
+            let after = json!(format!(
+                "{}{}",
+                if snapshot.profile == device::Profile::Aquilon6 {
+                    "LIVE_"
+                } else {
+                    "INPUT_"
+                },
+                input
+            ));
+            *projected
+                .raw
+                .pointer_mut(&path)
+                .ok_or("Source selector unavailable")? = after.clone();
+            if snapshot.profile == device::Profile::Midra4k {
+                for (key, value) in [("contentWidth", native[0]), ("contentHeight", native[1])] {
+                    *projected
+                        .raw
+                        .pointer_mut(&format!("{layer_path}/status/pp/{key}"))
+                        .ok_or("Layer content dimensions unavailable")? = json!(value);
+                }
+            }
+            if before != after {
+                routes.push(Change {
+                    path: path
+                        .trim_start_matches('/')
+                        .split('/')
+                        .map(str::to_owned)
+                        .collect(),
+                    before,
+                    after,
+                });
+            }
+        }
+        let mut plan = Self::prepare(&projected, layout, screen_index, mappings, target, sizing)?;
+        // Conversion uses the selected input; preflight still compares the actual device state.
+        for (path, before) in &mut plan.observed {
+            *before = field(&snapshot.raw, path)?.clone();
+        }
+        for change in &mut plan.changes {
+            change.before = field(&snapshot.raw, &format!("/{}", change.path.join("/")))?.clone();
+        }
+        routes.append(&mut plan.changes);
+        plan.changes = routes;
         Ok(plan)
     }
     pub(crate) fn prepare_midra(
@@ -581,6 +709,80 @@ mod tests {
         )
         .unwrap();
         l
+    }
+
+    #[test]
+    fn selected_input_requires_opt_in_and_preserves_fresh_state_guards() {
+        let mut state = snapshot();
+        state.raw["device"]["inputList"] = json!({"items":{"INPUT_5":{
+            "status":{"pp":{"isAvailable":true,"plug":"HDMI"}},
+            "plugList":{"items":{"HDMI":{
+                "status":{"signal":{"pp":{"isValid":true,"imageWidth":1920,"imageHeight":1080}}},
+                "settings":{"cropping":{"status":{"pp":{"left":0,"right":0,"top":0,"bottom":0}}},
+                    "aspect":{"pp":{"signal":"NATIVE","transformTo":"SIGNAL"}}}
+            }}}
+        }}});
+        let editor = layout();
+        let mappings = [(2, "2".into())];
+        let plain = Plan::prepare_with_inputs(
+            &state,
+            &editor,
+            0,
+            &mappings,
+            Target::Preview,
+            Sizing::OutputBox,
+            &Default::default(),
+        )
+        .unwrap();
+        assert!(
+            !plain
+                .changes
+                .iter()
+                .any(|c| c.path.join("/").ends_with("source/pp/input"))
+        );
+        let plan = Plan::prepare_with_inputs(
+            &state,
+            &editor,
+            0,
+            &mappings,
+            Target::Preview,
+            Sizing::OutputBox,
+            &[(2, 5)].into(),
+        )
+        .unwrap();
+        assert_eq!(plan.changes[0].after, json!("INPUT_5"));
+        assert_eq!(plan.changes[0].before, json!("INPUT_4"));
+        assert!(validate_fresh(&plan, &state).is_ok());
+        let mut changed = state.clone();
+        changed.raw["device"]["inputList"]["items"]["INPUT_5"]["status"]["pp"]["plug"] =
+            json!("OTHER");
+        assert!(validate_fresh(&plan, &changed).is_err());
+        assert!(
+            Plan::prepare_with_inputs(
+                &state,
+                &editor,
+                0,
+                &mappings,
+                Target::Preview,
+                Sizing::OutputBox,
+                &[(2, 99)].into()
+            )
+            .is_err()
+        );
+        state.raw["device"]["inputList"]["items"]["INPUT_5"]["plugList"]["items"]["HDMI"]["settings"]
+            ["cropping"]["status"]["pp"]["left"] = json!(12);
+        assert!(
+            Plan::prepare_with_inputs(
+                &state,
+                &editor,
+                0,
+                &mappings,
+                Target::Preview,
+                Sizing::OutputBox,
+                &[(2, 5)].into()
+            )
+            .is_err()
+        );
     }
     #[test]
     fn sending_accepts_rounded_content_dimensions_but_rejects_real_mismatches() {

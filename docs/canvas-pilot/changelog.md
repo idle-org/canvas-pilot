@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### v0.9.64
+
+- Source properties can stage a physical input with **Change input**, applied only
+  on explicit Send. Fresh-state checks and readback include the selected source.
+- Preview **Follow input** follows that selection without routing the device.
+  These choices are session-only; project/export schemas are unchanged.
+- Switching currently requires a valid, uncorrected input matching the editor
+  source dimensions. Unsupported input processing is rejected before writes.
+
+
 ### v0.9.63
 
 - Added a device-state conflict dialog with changed fields, Cancel send, Send my

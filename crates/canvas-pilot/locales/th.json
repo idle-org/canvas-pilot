@@ -1,4 +1,7 @@
 {
+  "ui.change-input": "Change input",
+  "ui.follow-input": "Follow input",
+  "ui.device-input": "Device input",
   "language.packs": "ชุดภาษา",
   "language.remove-pack": "ลบชุดภาษา…",
   "language.overwrite-pack": "เขียนทับชุดภาษา",

@@ -24,7 +24,7 @@ Normal geometry fields under the mapped live layer are:
 - `crop.pp.aspectOverride`: `CENTERED` normally; explicit fit also supports `1_1`, `FULLSCREEN`, `CROPPED`.
 
 At `AT_DOWN`, Preview is UP and Program DOWN; `AT_UP` reverses those roles.
-The selected configuration captures one physical bank. Send first refreshes the device and rejects changed bank roles, conversion inputs or destination values before writing. Commands do not retarget halfway through. No TAKE or source routing,
+The selected configuration captures one physical bank. Send first refreshes the device and rejects changed bank roles, conversion inputs or destination values before writing. Commands do not retarget halfway through. No TAKE; source routing requires explicit Change input opt-in. No
 effect, opacity or output setting is sent. Shared input aspect/crop fields
 are omitted unless explicitly opted into and edited as described below.
 
@@ -101,7 +101,7 @@ Only numeric live-layer IDs 1 through that count are listed or accepted as send
 destinations, even though the firmware stores eight slots. The staged NEW
 configuration, physical input count, background and foreground planes do not
 determine this list. Missing/invalid allocation metadata produces a connection
-error rather than exposing all slots. Missing layer IDs are not synthesized. Input routing is informational and is never changed by geometry
+error rather than exposing all slots. Missing layer IDs are not synthesized. Input routing is only changed with explicit Change input opt-in, never implicitly by geometry
 transfers. A Centered layer without usable content dimensions and with zero crop
 imports container geometry and mask without inferred source framing; nonzero crops
 still require valid dimensions for visible-bound reconstruction.
@@ -367,3 +367,20 @@ fit and masks, atomically and through normal undo. Program and ambiguous fan-out
 reloads are disabled. The dialog and attempted mapping are transient UI state;
 project and exchange schemas are unchanged. Partial-send errors do not offer this
 no-writes conflict dialog.
+
+
+### Explicit source selection on Send
+
+Session-only per-editor-layer input selections are separate from persistent editor
+source identity and directional mappings. Only checked **Change input** selections
+enter a send plan. The adapter prepares geometry against the requested input,
+while preflight observes the actual destination and requested input state.
+Source changes precede geometry writes, share the preset apply, and participate in
+readback verification. No TAKE is issued. Rebuilding a conflicted plan preserves
+the explicit selection and reruns validation.
+
+Midra writes source.pp.input = INPUT_n; Aquilon writes source.pp.inputNum = LIVE_n.
+Only available inputs with valid signals, compatible native dimensions, and supported
+uncorrected input processing are accepted. Preview following is read-only, clears
+stale captures, and uses the existing pooled capture scheduler. Neither option
+changes the project or exchange schema.

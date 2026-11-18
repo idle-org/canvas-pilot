@@ -1,4 +1,7 @@
 {
+  "ui.change-input": "Change input",
+  "ui.follow-input": "Follow input",
+  "ui.device-input": "Device input",
   "language.packs": "kulupu toki",
   "language.remove-pack": "o weka e kulupu…",
   "language.overwrite-pack": "o ante e kulupu",

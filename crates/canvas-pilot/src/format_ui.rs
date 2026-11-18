@@ -345,15 +345,12 @@ impl Editor {
                 ui.separator();
             }
             if self.property_tab == PropertyTab::Source {
+            self.source_input_controls(ui,i);
+            ui.separator();
             ui.heading(tr(ui.ctx(), "ui.advanced-source-input-settings"));
             if ui.button("Open shared input settings…").clicked() {
                 self.inputs.open = true;
-                if let Some(snapshot) = &self.device.snapshot
-                    && let Some(link) = self.layout.layer_info(i).send_mapping.current_links().next()
-                    && let Some(screen) = snapshot.screens.iter().find(|s| s.id == link.screen)
-                    && let Some(layer) = screen.layers.iter().find(|l| l.id == link.layer) {
-                    self.inputs.selected = snapshot.profile.input_from_source(&layer.source).unwrap_or(0);
-                }
+                self.inputs.selected = self.selected_physical_input(i);
             }
             ui.small("Shared input settings apply to every layer using that physical input. Load the layout again after changing device preprocessing.");
             }

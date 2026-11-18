@@ -193,7 +193,7 @@ explicitly clears destination blanking during a reviewed send. Fully blanked axe
 are allowed. Non-centered fit modes, malformed masks and shared input aspect/crop
 corrections are reported explicitly when their visible bounds cannot be imported. Shared input
 correction controls remain managed in WebRCS for this adapter. Ordinary sends
-never route inputs, TAKE, or change shared input processing.
+do not TAKE or change shared input processing; routing requires **Change input**.
 
 Aquilon reads only the required properties through AWJ TCP 10606, in batches,
 including a consistency check. The tested emulator now downloads about 197 KB
@@ -213,7 +213,7 @@ Shared device input drafts are session-only; [projects omit them](advanced-excha
 
 - **Cancel send** keeps your local edits and sends nothing.
 - **Send my layout anyway** rebuilds the original mapped send against the refreshed
-  device state. It overwrites the mapped layout fields, not source routing. Range,
+  device state. It overwrites the mapped layout fields and any explicitly staged input selection. Range,
   input compatibility and fresh-state checks still apply. A changed device family
   or Preview/Program bank requires checking the mapping again instead.
 - **Discard local changes and reload** uses a warning color because it replaces
@@ -225,3 +225,23 @@ Shared device input drafts are session-only; [projects omit them](advanced-excha
 If the device changes again before an explicit overwrite, sending can be stopped
 again. Changes or failures occurring during a send remain reported as partial-send
 errors, with the completed-screen count; they never trigger an automatic retry.
+
+
+## Select the input to send or preview
+
+In **Layer properties → Source**, select a **Device input**. Enable **Change input**
+to route the mapped destination layer to that input on the next explicit **Send**.
+Selecting an input alone does not change the device. Leave the checkbox off to
+send geometry without changing its source.
+
+In **Preview**, enable **Follow input** to capture the input selected in Source.
+Enable input preview as usual; automatic refresh remains a separate option.
+Following an input does not route it, and changing the selection clears the old
+picture before requesting a new capture.
+
+Discarding local changes in the send conflict dialog also clears these choices for the reloaded layers.
+These selections are session-only and reset when a project or connection is
+replaced; they are not saved in projects or exchange files. Input switching requires
+a valid signal with native dimensions matching the editor source format and no
+input crop/aspect correction. Unsupported combinations stop preparation with an
+error. Sending to Program can visibly change the live source.

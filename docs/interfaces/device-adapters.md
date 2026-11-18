@@ -99,7 +99,7 @@ half-pixel/top-left geometry is not rounded. Conversion rejects a rounded visibl
 size error above one pixel. Center rounding contributes at most half a pixel.
 Strict readback checks the quantized values rather than silently accepting clamps.
 Only `MIDDLE_CENTER` anchors are currently accepted. Source routing is
-`source.pp.inputNum` (`LIVE_n`, `NONE`, etc.); production geometry sends omit it.
+`source.pp.inputNum` (`LIVE_n`, `NONE`, etc.); geometry-only sends omit it; explicit Change input sends include it.
 
 `cropping.classic.pp.{left,right,top,bottom}` are integer fractions 0–65535.
 Layer crop combines the editor input crop and dynamic crop in native source pixels,
@@ -195,3 +195,20 @@ local layer more than once for distinct destinations and reject duplicate device
 destinations. No new network connections or automatic writes are introduced.
 Current mapping controls still synchronize one load source and one send target.
 See the [project contract](canvas-pilot.md#directional-device-mapping-version-19).
+
+
+### Explicit source selection on Send
+
+Session-only per-editor-layer input selections are separate from persistent editor
+source identity and directional mappings. Only checked **Change input** selections
+enter a send plan. The adapter prepares geometry against the requested input,
+while preflight observes the actual destination and requested input state.
+Source changes precede geometry writes, share the preset apply, and participate in
+readback verification. No TAKE is issued. Rebuilding a conflicted plan preserves
+the explicit selection and reruns validation.
+
+Midra writes source.pp.input = INPUT_n; Aquilon writes source.pp.inputNum = LIVE_n.
+Only available inputs with valid signals, compatible native dimensions, and supported
+uncorrected input processing are accepted. Preview following is read-only, clears
+stale captures, and uses the existing pooled capture scheduler. Neither option
+changes the project or exchange schema.

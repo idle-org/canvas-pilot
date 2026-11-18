@@ -485,6 +485,17 @@ impl Editor {
         let online = self.device.online();
         let idle = self.capture.pending.is_none();
         let cooling = self.capture.cooling_down();
+        let chosen = self.selected_physical_input(i);
+        let choice =
+            self.device
+                .source_choices
+                .entry(id)
+                .or_insert(super::device_ui::SourceChoice {
+                    input: chosen,
+                    ..Default::default()
+                });
+        ui.checkbox(&mut choice.follow,tr(ui.ctx(), "ui.follow-input")).on_hover_text("Use the input selected in Source properties for this preview. This does not route the device layer.");
+        let following = choice.follow;
         let preview = self
             .capture
             .layers
@@ -511,14 +522,22 @@ impl Editor {
             preview.automatic = false;
             preview.capture_on_selection = false;
         }
-        ui.checkbox(
-            &mut preview.enabled,
-            tr(ui.ctx(), "ui.enable-input-preview"),
-        );
+        if ui
+            .checkbox(
+                &mut preview.enabled,
+                tr(ui.ctx(), "ui.enable-input-preview"),
+            )
+            .changed()
+            && preview.enabled
+            && following
+        {
+            preview.capture_on_selection = preview.input != 0;
+            preview.paused = false;
+        }
         let mut capture = false;
         ui.add_enabled_ui(preview.enabled, |ui| {
             let before = preview.input;
-            input_picker(ui, ("layer-preview-input", id), &mut preview.input, &inputs, &mut self.capture.show_empty_inputs);
+            ui.add_enabled_ui(!following, |ui| {input_picker(ui, ("layer-preview-input", id), &mut preview.input, &inputs, &mut self.capture.show_empty_inputs);});
             if before != preview.input {
                 preview.host = self.device.host.clone();
                 preview.paused = false;
@@ -573,7 +592,28 @@ impl Editor {
             self.capture.pending_layer = Some((id, source, input, self.device.host.clone()));
         }
     }
+    fn sync_followed_inputs(&mut self) {
+        for i in 0..self.layout.layers().len() {
+            let id = self.layout.layer_info(i).id;
+            let Some(choice) = self.device.source_choices.get(&id).filter(|c| c.follow) else {
+                continue;
+            };
+            let Some(preview) = self.capture.layers.get_mut(&id) else {
+                continue;
+            };
+            if preview.input != choice.input || preview.host != self.device.host {
+                preview.input = choice.input;
+                preview.host = self.device.host.clone();
+                preview.texture = None;
+                preview.bytes.clear();
+                preview.name.clear();
+                preview.capture_on_selection = preview.enabled && choice.input != 0;
+                preview.paused = false;
+            }
+        }
+    }
     pub(super) fn capture_window(&mut self, ctx: &egui::Context) {
+        self.sync_followed_inputs();
         if self.capture.host != self.device.host || !self.device.online() {
             self.capture.discard_result = true;
             self.capture.preview = None;
@@ -856,6 +896,31 @@ impl Editor {
 mod tests {
     use super::super::tests::{click_text, frame};
     use super::*;
+
+    #[test]
+    fn following_source_invalidates_old_capture_without_routing() {
+        let mut app = Editor::default();
+        let ctx = egui::Context::default();
+        let _ = ctx.run_ui(Default::default(), |ui| app.crop_preview_controls(ui, 0));
+        let id = app.layout.layer_info(0).id;
+        let preview = app.capture.layers.get_mut(&id).unwrap();
+        preview.enabled = true;
+        preview.input = 1;
+        preview.bytes = vec![1, 2, 3];
+        let choice = app.device.source_choices.get_mut(&id).unwrap();
+        choice.input = 5;
+        choice.follow = true;
+        app.sync_followed_inputs();
+        let preview = &app.capture.layers[&id];
+        assert_eq!(preview.input, 5);
+        assert!(preview.bytes.is_empty());
+        assert!(preview.capture_on_selection);
+        assert!(!app.device.source_choices[&id].change);
+        app.device.source_choices.get_mut(&id).unwrap().follow = false;
+        app.device.source_choices.get_mut(&id).unwrap().input = 6;
+        app.sync_followed_inputs();
+        assert_eq!(app.capture.layers[&id].input, 5);
+    }
     #[test]
     fn project_restores_capture_stills_and_settings_without_network_work() {
         use canvas_pilot::project::Project;

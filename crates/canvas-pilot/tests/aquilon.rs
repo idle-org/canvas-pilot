@@ -669,3 +669,31 @@ fn one_editor_layer_can_prepare_multiple_distinct_aquilon_destinations() {
         .is_err()
     );
 }
+
+#[test]
+fn explicit_source_selection_is_guarded_and_verified_in_the_plan() {
+    let snapshot = Snapshot::parse(&identity(), &raw()).unwrap();
+    let layout = Layout::default();
+    let id = layout.layer_info(0).id;
+    let plan = Plan::prepare_with_inputs(
+        &snapshot,
+        &layout,
+        0,
+        &[(id, "1".into())],
+        Target::Preview,
+        Sizing::OutputBox,
+        &[(id, 1)].into(),
+    )
+    .unwrap();
+    assert_eq!(plan.changes[0].after, json!("LIVE_1"));
+    assert!(
+        plan.changes[0]
+            .path
+            .join("/")
+            .ends_with("source/pp/inputNum")
+    );
+    canvas_pilot::device_send::validate_fresh(&plan, &snapshot).unwrap();
+    let mut changed = snapshot.clone();
+    changed.raw["device"]["inputList"]["items"]["IN_1"]["status"]["pp"]["plug"] = json!("OTHER");
+    assert!(canvas_pilot::device_send::validate_fresh(&plan, &changed).is_err());
+}

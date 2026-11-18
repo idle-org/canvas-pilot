@@ -1,4 +1,7 @@
 {
+  "ui.change-input": "Change input",
+  "ui.follow-input": "Follow input",
+  "ui.device-input": "Device input",
   "language.packs": "Pacotes de idiomas",
   "language.remove-pack": "Remover pacote…",
   "language.overwrite-pack": "Substituir pacote",

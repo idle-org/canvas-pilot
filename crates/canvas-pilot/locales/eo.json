@@ -1,4 +1,7 @@
 {
+  "ui.change-input": "Change input",
+  "ui.follow-input": "Follow input",
+  "ui.device-input": "Device input",
   "language.packs": "Lingvopakaĵoj",
   "language.remove-pack": "Forigi pakaĵon…",
   "language.overwrite-pack": "Anstataŭigi pakaĵon",

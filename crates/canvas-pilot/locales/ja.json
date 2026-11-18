@@ -1,4 +1,7 @@
 {
+  "ui.change-input": "Change input",
+  "ui.follow-input": "Follow input",
+  "ui.device-input": "Device input",
   "language.packs": "言語パック",
   "language.remove-pack": "パックを削除…",
   "language.overwrite-pack": "パックを上書き",

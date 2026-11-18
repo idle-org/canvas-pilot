@@ -42,6 +42,12 @@ impl DeviceFailure {
     }
 }
 
+#[derive(Clone, Copy, Default)]
+pub(super) struct SourceChoice {
+    pub input: u32,
+    pub change: bool,
+    pub follow: bool,
+}
 #[derive(Clone)]
 struct SendConflict {
     host: String,
@@ -49,6 +55,7 @@ struct SendConflict {
     links: Vec<(usize, canvas_pilot::DeviceLink)>,
     sizing: Sizing,
     details: Vec<String>,
+    inputs: std::collections::BTreeMap<usize, u32>,
 }
 impl SendConflict {
     fn reload_links(&self) -> Result<Vec<(usize, canvas_pilot::DeviceLink)>, String> {
@@ -101,7 +108,15 @@ impl SendConflict {
                 if mappings.is_empty() {
                     return Err("The original mapping is no longer available.".into());
                 }
-                Plan::prepare(snapshot, layout, index, &mappings, old.target, self.sizing)
+                Plan::prepare_with_inputs(
+                    snapshot,
+                    layout,
+                    index,
+                    &mappings,
+                    old.target,
+                    self.sizing,
+                    &self.inputs,
+                )
             })
             .collect()
     }
@@ -301,8 +316,16 @@ pub(super) struct DeviceUi {
     error: String,
     send_attempt: Option<SendConflict>,
     conflict: Option<SendConflict>,
+    pub(super) source_choices: std::collections::BTreeMap<usize, SourceChoice>,
 }
 impl DeviceUi {
+    fn input_changes(&self) -> std::collections::BTreeMap<usize, u32> {
+        self.source_choices
+            .iter()
+            .filter(|(_, c)| c.change)
+            .map(|(id, c)| (*id, c.input))
+            .collect()
+    }
     pub(super) fn try_startup_connection(&mut self, ctx: &egui::Context) {
         if self.autoconnect_at_startup && !self.host.trim().is_empty() {
             self.fetch(ctx);
@@ -312,6 +335,7 @@ impl DeviceUi {
         self.destinations.fill(Destination::Skip);
         self.mapping_scope = None;
         self.loading = None;
+        self.source_choices.clear();
     }
     pub(super) fn with_connection_preferences(host: String, allow_program: bool) -> Self {
         Self {
@@ -393,7 +417,7 @@ impl DeviceUi {
                     .iter()
                     .position(|s| s.id == screen)
                     .ok_or_else(|| format!("Linked screen {screen} is unavailable."))?;
-                let plan = Plan::prepare(
+                let plan = Plan::prepare_with_inputs(
                     snapshot,
                     layout,
                     index,
@@ -404,6 +428,7 @@ impl DeviceUi {
                         Target::Preview
                     },
                     self.sizing,
+                    &self.input_changes(),
                 )?;
                 Ok(plan)
             })
@@ -488,6 +513,7 @@ impl DeviceUi {
             links,
             sizing: self.sizing,
             details: vec![],
+            inputs: self.input_changes(),
         });
         self.conflict = None;
         self.error.clear();
@@ -644,6 +670,55 @@ impl DeviceUi {
     }
 }
 impl Editor {
+    pub(super) fn selected_physical_input(&self, i: usize) -> u32 {
+        let info = self.layout.layer_info(i);
+        if let Some(choice) = self.device.source_choices.get(&info.id) {
+            return choice.input;
+        }
+        self.device
+            .snapshot
+            .as_ref()
+            .and_then(|snapshot| {
+                let link = info
+                    .send_mapping
+                    .current_links()
+                    .find(|link| link.family == snapshot.profile.family())?;
+                let layer = snapshot
+                    .screens
+                    .iter()
+                    .find(|s| s.id == link.screen)?
+                    .layers
+                    .iter()
+                    .find(|l| l.id == link.layer)?;
+                snapshot.profile.input_from_source(&layer.source)
+            })
+            .unwrap_or(0)
+    }
+    pub(super) fn source_input_controls(&mut self, ui: &mut egui::Ui, i: usize) {
+        let input = self.selected_physical_input(i);
+        let available = self
+            .device
+            .snapshot
+            .as_ref()
+            .map(canvas_pilot::device_capture::inputs)
+            .unwrap_or_default();
+        let choice = self
+            .device
+            .source_choices
+            .entry(self.layout.layer_info(i).id)
+            .or_insert(SourceChoice {
+                input,
+                ..Default::default()
+            });
+        ui.horizontal(|ui| {
+            ui.label(tr(ui.ctx(), "ui.device-input"));
+            egui::ComboBox::from_id_salt(("source-input",i)).selected_text(if choice.input==0 {"Choose input…".into()} else {format!("Input {}",choice.input)}).show_ui(ui,|ui| {
+                for input in &available {ui.selectable_value(&mut choice.input,input.id,format!("Input {}{}",input.id,if input.signal {""} else {" · No signal"}));}
+            });
+            ui.checkbox(&mut choice.change,tr(ui.ctx(), "ui.change-input")).on_hover_text("Switch this layer's mapped device destinations to the selected input on the next Send. Nothing changes immediately.");
+        });
+        ui.small("Input changes are staged for this session only. Nothing is routed until Send.");
+    }
     pub(super) fn layer_mapping_controls(&mut self, ui: &mut egui::Ui, i: usize) {
         let original = self.layout.layer_info(i).load_mapping.clone();
         let mut link = original.clone();
@@ -1064,7 +1139,7 @@ impl Editor {
             ui.label("The device no longer matches the state used to prepare this send. No layers were sent.");
             egui::ScrollArea::vertical().max_height(260.).show(ui,|ui| {for detail in &conflict.details {ui.label(detail);}});
             ui.separator();
-            ui.label("Send my layout anyway rebuilds the send against the current device state. Input routing is not changed, and all validation checks remain active.");
+            ui.label("Send my layout anyway rebuilds the send against the current device state. Only explicitly selected input changes are included; all validation checks remain active.");
             if let Err(error)=&prepared {ui.colored_label(ui.visuals().error_fg_color,error);}
             ui.label("Discard local changes and reload replaces the mapped local layers’ geometry, crop, fit and masks with the device Preview values. Other layers remain unchanged. Undo is available.");
             if program {ui.small("Reload is available for Preview destinations only.");}
@@ -1100,6 +1175,9 @@ impl Editor {
                     reload_links.as_ref().unwrap(),
                 ) {
                     Ok(()) => {
+                        for (id, _) in reload_links.as_ref().unwrap() {
+                            self.device.source_choices.remove(id);
+                        }
                         self.sync();
                         self.device.conflict = None;
                         self.device.error.clear();
@@ -1215,8 +1293,9 @@ impl Editor {
                             (info.id, info.send_mapping.current_links().find(|link| link.family == snapshot.profile.family() && link.screen == screen_id).map(|link| link.layer.clone()).unwrap_or_default())
                         }).collect();
                         let previous = targets.clone();
+                        let input_changes = self.device.input_changes();
                         let prepared_plan = send_review(ui, &self.layout, &scope_indices, snapshot, self.device.screen, &mut targets,
-                            &mut self.device.target, &mut self.device.sizing, self.device.pending.is_some(), self.device.allow_program);
+                            &mut self.device.target, &mut self.device.sizing, self.device.pending.is_some(), self.device.allow_program, &input_changes);
                         for (id, destination) in targets {
                             if previous.get(&id) != Some(&destination) {
                                 let i = (0..self.layout.layers().len()).find(|&i| self.layout.layer_info(i).id == id).unwrap();
@@ -1441,6 +1520,7 @@ fn send_review(
     sizing: &mut Sizing,
     busy: bool,
     allow_program: bool,
+    inputs: &std::collections::BTreeMap<usize, u32>,
 ) -> Option<Plan> {
     let screen = &snapshot.screens[screen_index];
     if !allow_program {
@@ -1482,6 +1562,12 @@ fn send_review(
         }
         let target = targets.entry(id).or_default();
         ui.separator();
+        if let Some(input) = inputs.get(&id) {
+            ui.colored_label(
+                ui.visuals().warn_fg_color,
+                format!("Change input on Send: Input {input}"),
+            );
+        }
         ui.horizontal(|ui| {
             ui.strong(layout.layer_label(i));
             egui::ComboBox::from_id_salt(("device_send_target", id))
@@ -1577,13 +1663,14 @@ fn send_review(
         ui.colored_label(ui.visuals().error_fg_color, error);
         return None;
     }
-    match Plan::prepare(
+    match Plan::prepare_with_inputs(
         snapshot,
         layout,
         screen_index,
         &mappings,
         *target_mode,
         *sizing,
+        inputs,
     ) {
         Ok(plan) => {
             ui.label(format!(
@@ -1706,6 +1793,7 @@ mod tests {
             links: vec![(app.layout.layer_info(0).id, link)],
             sizing: Sizing::default(),
             details,
+            inputs: Default::default(),
         };
         app.device.snapshot = Some(fresh);
         (app, conflict)
@@ -1777,6 +1865,15 @@ mod tests {
         let ctx = egui::Context::default();
         let (mut app, conflict) = conflict_fixture();
         let before = app.layout.layers().clone();
+        let id = app.layout.layer_info(0).id;
+        app.device.source_choices.insert(
+            id,
+            SourceChoice {
+                input: 5,
+                change: true,
+                follow: true,
+            },
+        );
         app.device.conflict = Some(conflict.clone());
         super::super::tests::click_text(&mut app, &ctx, "Cancel send");
         assert!(app.device.conflict.is_none());
@@ -1785,6 +1882,7 @@ mod tests {
         app.device.conflict = Some(conflict);
         super::super::tests::click_text(&mut app, &ctx, "Discard local changes and reload");
         assert!(app.device.conflict.is_none());
+        assert!(!app.device.source_choices.contains_key(&id));
         assert_ne!(app.layout.layers()[0], before[0]);
         assert_eq!(app.layout.layers()[1], before[1]);
         assert!(app.device.pending.is_none());
@@ -2333,6 +2431,7 @@ mod tests {
                         &mut Sizing::OutputBox,
                         false,
                         allow,
+                        &Default::default(),
                     );
                 });
             });
@@ -2498,6 +2597,7 @@ mod tests {
                     &mut Sizing::OutputBox,
                     false,
                     false,
+                    &Default::default(),
                 )
             });
         });
@@ -2520,6 +2620,7 @@ mod tests {
                     &mut Sizing::OutputBox,
                     false,
                     false,
+                    &Default::default(),
                 )
             });
         });
@@ -2740,6 +2841,7 @@ mod tests {
                         &mut Sizing::OutputBox,
                         false,
                         false,
+                        &Default::default()
                     )
                     .is_none()
                 );
@@ -2904,6 +3006,7 @@ mod tests {
                     &mut Sizing::OutputBox,
                     false,
                     false,
+                    &Default::default(),
                 );
             });
         });
