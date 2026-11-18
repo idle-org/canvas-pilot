@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "レイヤーで選択した入力を表示していません",
+  "ui.preview-size-mismatch": "プレビューの解像度が異なります",
   "ui.preview-ratio-mismatch": "プレビューの縦横比が異なります",
   "ui.preview-ratio-warning": "プレビューの縦横比が異なるため、構図が正確でない場合があります。入力に追従を有効にしてください。",
   "ui.preview-size-warning": "プレビューの解像度が異なります。選択したソースを使うには入力に追従を有効にしてください。",

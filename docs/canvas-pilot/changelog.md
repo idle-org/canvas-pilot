@@ -11,6 +11,9 @@
   properties, including a canvas/preview
   overlay. Compare processed signal dimensions, not reduced capture thumbnails;
   existing image framing and explicit reference-picture choices are preserved.
+- Picture overlays identify previews that are not the selected layer input:
+  blue for a different input, amber for differing resolution, red for differing
+  ratio. Text states the reason as well, and wraps inside the picture.
 
 ### v0.10.0-rc.8
 

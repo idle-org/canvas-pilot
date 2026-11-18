@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "Not displaying selected layer input",
+  "ui.preview-size-mismatch": "Preview resolution mismatch",
   "ui.preview-ratio-mismatch": "Preview ratio mismatch",
   "ui.preview-ratio-warning": "Preview has a different aspect ratio. Framing may be misleading; enable Follow input.",
   "ui.preview-size-warning": "Preview has a different resolution. Enable Follow input to use the selected source.",

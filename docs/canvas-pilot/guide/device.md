@@ -264,8 +264,10 @@ picture before requesting a new capture.
 
 An independently selected preview with a different processed resolution shows an
 amber notice in both **Source** (input selection) and **Preview** properties.
-A different aspect ratio shows a stronger warning and a **Preview
-ratio mismatch** overlay on the canvas and Preview tab. Enable **Follow input**
+The canvas and Preview tab show **Not displaying selected layer input** when
+the picture comes from another input. The overlay is blue for a different input,
+amber when its resolution differs, and red when its ratio differs. The text also
+identifies resolution or ratio mismatches; color is not the only indication. Enable **Follow input**
 to match the selected source. These notices do not alter crop, fit or device
 routing. Reduced-resolution capture thumbnails do not trigger size warnings;
 intentional differences between the layer box and its source are not mismatches.

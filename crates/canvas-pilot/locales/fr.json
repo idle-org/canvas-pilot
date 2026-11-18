@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "L’entrée sélectionnée du calque n’est pas affichée",
+  "ui.preview-size-mismatch": "Résolution de prévisualisation différente",
   "ui.preview-ratio-mismatch": "Ratio de prévisualisation différent",
   "ui.preview-ratio-warning": "Le ratio de la prévisualisation est différent. Le cadrage peut être trompeur ; activez Suivre l’entrée.",
   "ui.preview-size-warning": "La résolution de la prévisualisation est différente. Activez Suivre l’entrée pour utiliser la source sélectionnée.",

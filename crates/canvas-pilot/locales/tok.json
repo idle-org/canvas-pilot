@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "sitelen ni li tan ala sitelen pi wile sina",
+  "ui.preview-size-mismatch": "suli pi sitelen lukin li ante",
   "ui.preview-ratio-mismatch": "suli pi sitelen lukin li ante",
   "ui.preview-ratio-warning": "nasin suli pi sitelen lukin li ante. sitelen li ken pana e sona ike. o kepeken sitelen pi tomo Follow input.",
   "ui.preview-size-warning": "suli pi sitelen lukin li ante. o kepeken tomo Follow input tawa sitelen tan wile.",

@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "当前显示的不是图层所选输入",
+  "ui.preview-size-mismatch": "预览分辨率不匹配",
   "ui.preview-ratio-mismatch": "预览宽高比不匹配",
   "ui.preview-ratio-warning": "预览宽高比不同，构图可能产生误导。请启用跟随输入。",
   "ui.preview-size-warning": "预览分辨率不同。请启用跟随输入以使用所选信号源。",

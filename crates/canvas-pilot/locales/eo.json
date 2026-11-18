@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "La elektita tavola enigo ne estas montrata",
+  "ui.preview-size-mismatch": "Malsama distingivo de antaŭvido",
   "ui.preview-ratio-mismatch": "Malsama bildformato de antaŭvido",
   "ui.preview-ratio-warning": "La antaŭvido havas alian bildformaton. La enkadrigo povas misgvidi; ŝaltu Sekvi enigon.",
   "ui.preview-size-warning": "La antaŭvido havas alian distingivon. Ŝaltu Sekvi enigon por uzi la elektitan fonton.",

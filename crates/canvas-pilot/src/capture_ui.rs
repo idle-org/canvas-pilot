@@ -475,18 +475,61 @@ impl Editor {
             ));
         }
     }
+    fn preview_is_other_input(&self, i: usize) -> bool {
+        let selected = self.selected_physical_input(i);
+        selected != 0
+            && self
+                .capture
+                .layers
+                .get(&self.layout.layer_info(i).id)
+                .is_some_and(|p| p.input != selected || p.host != self.device.host)
+    }
     pub(super) fn paint_preview_warning(&self, painter: &egui::Painter, rect: Rect, i: usize) {
-        if self.layer_preview(i).is_none() || !self.preview_mismatch(i).is_some_and(|m| m.ratio) {
+        if self.layer_preview(i).is_none() {
+            return;
+        }
+        let mismatch = self.preview_mismatch(i);
+        let different_input = self.preview_is_other_input(i);
+        if mismatch.is_none() && !different_input {
             return;
         }
         let painter = painter.with_clip_rect(painter.clip_rect().intersect(rect));
-        let label = tr(painter.ctx(), "ui.preview-ratio-mismatch");
-        let galley = painter.layout_no_wrap(label, FontId::proportional(12.), Color32::WHITE);
+        let mut label = if different_input {
+            tr(painter.ctx(), "ui.preview-other-input")
+        } else {
+            String::new()
+        };
+        let background = if let Some(mismatch) = mismatch {
+            if !label.is_empty() {
+                label.push('\n');
+            }
+            label.push_str(&tr(
+                painter.ctx(),
+                if mismatch.ratio {
+                    "ui.preview-ratio-mismatch"
+                } else {
+                    "ui.preview-size-mismatch"
+                },
+            ));
+            if mismatch.ratio {
+                Color32::from_rgb(130, 35, 35)
+            } else {
+                Color32::from_rgb(105, 70, 0)
+            }
+        } else {
+            Color32::from_rgb(25, 70, 110)
+        };
+        let galley = painter.layout(
+            label,
+            FontId::proportional(12.),
+            Color32::WHITE,
+            (rect.width() - 16.).max(1.),
+        );
         let pos = rect.left_top() + Vec2::new(8., 34.);
         painter.rect_filled(
             Rect::from_min_size(pos - Vec2::splat(3.), galley.size() + Vec2::splat(6.)),
             3.,
-            Color32::from_rgb(130, 35, 35),
+            background,
         );
         painter.galley(pos, galley, Color32::WHITE);
     }
@@ -1288,6 +1331,7 @@ mod tests {
         preview.host = app.device.host.clone();
         let before = app.layout.formats().clone();
         assert!(!app.preview_mismatch(0).unwrap().ratio);
+        assert!(app.preview_is_other_input(0));
         app.device.snapshot.as_mut().unwrap().raw["device"]["inputList"]["items"]["INPUT_2"] =
             plug(942, 1029);
         assert!(app.preview_mismatch(0).unwrap().ratio);
@@ -1300,6 +1344,7 @@ mod tests {
         });
         assert_eq!(app.layout.formats(), &before);
         app.capture.layers.get_mut(&id).unwrap().input = 1;
+        assert!(!app.preview_is_other_input(0));
         assert!(
             app.preview_mismatch(0).is_none(),
             "matching signals ignore thumbnail dimensions"

@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "No se muestra la entrada seleccionada de la capa",
+  "ui.preview-size-mismatch": "Resolución de vista previa distinta",
   "ui.preview-ratio-mismatch": "Relación de vista previa distinta",
   "ui.preview-ratio-warning": "La vista previa tiene otra relación de aspecto. El encuadre puede ser engañoso; active Seguir entrada.",
   "ui.preview-size-warning": "La vista previa tiene otra resolución. Active Seguir entrada para usar la fuente seleccionada.",

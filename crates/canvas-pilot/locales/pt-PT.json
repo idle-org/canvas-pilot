@@ -1,4 +1,6 @@
 {
+  "ui.preview-other-input": "Não mostra a entrada selecionada da camada",
+  "ui.preview-size-mismatch": "Resolução da pré-visualização diferente",
   "ui.preview-ratio-mismatch": "Proporção da pré-visualização diferente",
   "ui.preview-ratio-warning": "A pré-visualização tem outra proporção. O enquadramento pode ser enganador; ative Seguir entrada.",
   "ui.preview-size-warning": "A pré-visualização tem outra resolução. Ative Seguir entrada para usar a fonte selecionada.",

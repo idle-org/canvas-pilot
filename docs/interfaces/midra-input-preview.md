@@ -219,6 +219,8 @@ bindings are not rewritten merely by reopening a project. Mismatch notices compa
 processed device input dimensions on the current connection (or actual local
 picture dimensions) with the selected source, falling back to editor source size.
 They never compare a device thumbnail's resolution with the full signal size.
-A relative ratio difference above 0.5% receives a stronger notice and viewer overlay;
-smaller differences receive only a resolution notice. No schema or image-transform
-change is involved.
+Picture overlays identify an independently selected input even when dimensions
+match (blue). Different dimensions use amber; a relative ratio difference above
+0.5% uses red. Each severity also has explanatory text. Unknown signal dimensions
+never imply a resolution match: only input identity can be reported in that case.
+No schema or image-transform change is involved.
