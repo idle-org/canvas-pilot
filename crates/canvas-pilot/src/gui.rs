@@ -5179,6 +5179,40 @@ mod tests {
         app.crop_mask_key_input(ctx, &mut input);
         ctx.run_ui(input, |ui| app.ui(ui))
     }
+
+    #[test]
+    fn extreme_camera_zoom_keeps_canvas_text_out_of_the_font_atlas() {
+        let ctx = egui::Context::default();
+        let mut app = Editor {
+            zoom: 256.0,
+            ..Default::default()
+        };
+        let output = frame(&mut app, &ctx, vec![]);
+        let text: Vec<_> = output
+            .shapes
+            .iter()
+            .filter_map(|shape| match &shape.shape {
+                egui::Shape::Text(text) => Some(text),
+                _ => None,
+            })
+            .collect();
+        assert!(!text.is_empty(), "ordinary UI text should still render");
+        assert!(text.iter().all(|text| {
+            text.galley
+                .job
+                .sections
+                .iter()
+                .all(|section| section.format.font_id.size <= MAX_CANVAS_TEXT_RASTER_PIXELS)
+        }));
+        assert!(!text.iter().any(|text| {
+            text.galley.text() == "Ideas worth sharing."
+                || text
+                    .galley
+                    .text()
+                    .starts_with("Illustrative reference artwork")
+        }));
+        assert_eq!(app.zoom, 256.0, "precision camera zoom remains available");
+    }
     fn key(key: egui::Key) -> egui::Event {
         egui::Event::Key {
             key,

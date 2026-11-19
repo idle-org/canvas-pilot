@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.0-rc.17
+
+- Keep extreme scroll zoom responsive by omitting camera-scaled decorative canvas
+  text before it would request oversized glyphs from egui's shared font atlas.
+  Layer geometry, fixed-size layer labels, pixel guides and the existing 256× camera
+  range remain available for precise placement.
+
 ## v0.10.0-rc.16 — 2026-11-19
 
 Published release candidate collecting the crop, preview, input adaptation and

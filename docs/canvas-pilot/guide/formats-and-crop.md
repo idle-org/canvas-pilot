@@ -16,6 +16,10 @@ Valid output presets and numeric resolution edits apply immediately; invalid dra
 leave the output unchanged and are retained for correction.
 The same window offers numeric camera zoom relative to fit-to-screen and a
 **1:1 display pixels** action; camera changes never modify crop geometry.
+Scroll zoom and the Zoom tool retain the full precision camera range. At extreme
+zoom, decorative screen titles and reference-hint text are hidden before their
+camera-scaled glyphs would slow the renderer; layers, handles, fixed-size layer
+labels, pixel guides and placement remain visible and editable.
 
 Select one layer and click its **Layer resolution** card to open **Layer properties**:
 

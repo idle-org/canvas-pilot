@@ -64,6 +64,17 @@ struct Ink {
     scale: f32,
 }
 
+// egui rasterizes text into one shared font texture. Camera-scaled decorative text
+// must not request multi-thousand-pixel glyphs and evict/corrupt ordinary UI text.
+const MAX_CANVAS_TEXT_RASTER_PIXELS: f32 = 128.0;
+
+fn bounded_canvas_font_size(ctx: &egui::Context, size: f32) -> Option<f32> {
+    (size.is_finite()
+        && size > 0.0
+        && size * ctx.pixels_per_point() <= MAX_CANVAS_TEXT_RASTER_PIXELS)
+        .then_some(size)
+}
+
 impl Ink {
     fn new(ui: &egui::Ui, rect: Rect) -> Self {
         Self {
@@ -96,11 +107,15 @@ impl Ink {
     }
 
     fn text(&self, x: f32, y: f32, text: &str, size: f32, color: Color32) {
+        let size = size * self.scale;
+        let Some(size) = bounded_canvas_font_size(self.painter.ctx(), size) else {
+            return;
+        };
         self.painter.text(
             self.point(x, y),
             Align2::LEFT_TOP,
             text,
-            FontId::proportional(size * self.scale),
+            FontId::proportional(size),
             color,
         );
     }
@@ -154,13 +169,15 @@ fn screen_labels(ink: &Ink, output: [u32; 2]) {
         12.0 * k,
         palette.muted,
     );
-    ink.painter.text(
-        ink.point(width, -SCREEN_LABEL_TOP * k),
-        Align2::RIGHT_TOP,
-        format!("{} × {} px", output[0], output[1]),
-        FontId::proportional(13.0 * k * ink.scale),
-        palette.muted,
-    );
+    if let Some(size) = bounded_canvas_font_size(ink.painter.ctx(), 13.0 * k * ink.scale) {
+        ink.painter.text(
+            ink.point(width, -SCREEN_LABEL_TOP * k),
+            Align2::RIGHT_TOP,
+            format!("{} × {} px", output[0], output[1]),
+            FontId::proportional(size),
+            palette.muted,
+        );
+    }
 }
 
 fn screen_artwork(ink: &Ink, title: &str, output: [u32; 2]) {
@@ -203,10 +220,13 @@ fn screen_reference_hint(ink: &Ink, output: [u32; 2]) {
         .painter
         .with_clip_rect(ink.painter.clip_rect().intersect(rect));
     let color = theme::palette(ink.painter.ctx()).muted;
+    let Some(font_size) = bounded_canvas_font_size(ink.painter.ctx(), 12.0 * ink.scale) else {
+        return;
+    };
     let text = painter.layout(
         "Illustrative reference artwork · Drag & drop an image or use Import > Reference image…"
             .into(),
-        FontId::proportional(12.0 * ink.scale),
+        FontId::proportional(font_size),
         color,
         (size.x - 48.0).max(1.0) * ink.scale,
     );
