@@ -1,5 +1,49 @@
 # Release preparation
 
+## Published prerelease: v0.10.0-rc.18
+
+[Download v0.10.0-rc.18](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.10.0-rc.18)
+was published on 2026-11-19 from annotated tag `v0.10.0-rc.18`, source commit
+`171a9198b693fcce4111f3d88726984691c92754`. See the
+[release notes](release-notes/v0.10.0-rc.18.md). This publication record does not
+move the tag.
+
+The prerelease contains 18 assets: four portable bundles, four canonical
+cargo-binstall archives, four raw binaries, the artifact manifest and primary
+checksums, `classic-themes.zip`, `video-game-themes.zip`, `language-pack.zip`, and
+`EXTRAS-SHA256SUMS.txt`. The release fixes decorative canvas text at extreme zoom,
+keeps precise canvas zoom responsive, and gives mouse positioning and scaling a
+soft preference for quarter-pixel positions that place edges on whole pixels. Its
+lockfile also replaces three yanked transitive package versions.
+
+Every draft asset was downloaded before publication. Both checksum files verified
+all generated payloads and supplemental packs, every archive passed an integrity
+check, and the raw binaries were identified as ELF x86-64, PE x86-64, Mach-O arm64
+and Mach-O x86-64. After publication, anonymous API access resolved the annotated
+tag to the source commit above and all 18 public asset URLs returned HTTP 200. An
+isolated cargo-binstall fetched the public Linux archive and installed a binary
+identical to the published raw executable
+(`b1fce938eb4a9ea0b6b9a760652f1c662c10f1c6a0456ca680d2e86a1d2fda84`).
+
+rust_realease 0.1.6-rc.3 built Linux and Windows with Cross and both Apple targets
+with the validated local Rust 1.100.0 image. The checked-in Apple image still has
+Rust 1.93, which is too old for the locked CAD dependencies. Linux, Windows and
+Apple ARM outputs were retained after the release command detached while the Apple
+ARM container completed; Apple Intel was then built separately. The four output
+hashes were registered against the same tagged commit and the release tool reused
+them for its normal packaging, manifest and validation stages. Portable tree,
+embedded-file hash and architecture checks passed for every target; both macOS
+binaries also passed macOS 13.0 deployment-minimum, system-library, archive-layout
+and checksum validation. Native Windows and macOS runtime acceptance remains
+outstanding.
+
+Formatting, both Clippy configurations, all required Rust test configurations,
+rustdoc, all 33 Python checks, the theme-pack consistency check and the pinned
+manual build passed before tagging. Whole-application line coverage is 91.69%.
+The exact locked `cargo install` path also passed without yanked-package warnings.
+No device writes were performed. Generated archives, credentials and build caches
+are not committed to Git.
+
 ## Published prerelease: v0.10.0-rc.16
 
 [Download v0.10.0-rc.16](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.10.0-rc.16)
