@@ -52,7 +52,8 @@ modes center the container at the rounded requested visible center.
 
 Reconstruct the retained size from quantized crop fractions, then use
 `min(container_width/retained_width, container_height/retained_height)` to derive
-visible bounds. Reject size errors above one output pixel. Center rounding has
+visible bounds. Record size errors above one output pixel for transfer diagnostics;
+valid geometry remains sendable. Errors at or below one pixel are silent. Center rounding has
 at most half a pixel of error. Stored editor coordinates retain full precision;
 review values use one decimal and transmitted geometry uses whole pixels.
 
@@ -162,10 +163,12 @@ when clicked. Switching scope while a read is pending cannot redirect that impor
 Direct sends validate destination uniqueness within the chosen scope, across each
 screen. Duplicate destinations within or across folders are valid persistent links.
 Mapping warnings list other linked editor layers and folders, without preventing
-link edits. Conflicting sends are disabled before any writes and list every
-conflicting screen/layer and editor layer in the chosen scope. A conflict-free
-folder/selection or remapped/skipped review rows can send; out-of-scope links do
-not block that send. Loading the same device layer into multiple
+link edits. A linked send with invalid/conflicting mappings opens an explicit
+review listing every included/skipped destination and editor layer. All members of
+a conflicting destination are excluded. Only **Send valid layers** authorizes the
+remaining valid subset; no partial subset is sent merely by opening the review.
+A conflict-free folder/selection or remapped review can still send normally;
+out-of-scope links do not block that send. Loading the same device layer into multiple
 local linked copies is allowed; destination editor IDs must still be unique, visible,
 and unlocked. Existing geometry validation and atomic import guarantees are unchanged.
 
@@ -246,7 +249,8 @@ Native-source compatibility compares the editor's integer resolution with the
 same rounded content dimensions used during snapshot import (nearest pixel,
 positive halves upward, original values bounded to 1–16384). Fractional reports
 such as 1919.7 × 1080.2 therefore match 1920 × 1080 instead of blocking a send.
-Actual resolution mismatches still fail. Snapshot feedback reports the rounding;
+Actual resolution mismatches still fail unless the operator selects a supported
+send-only conversion in transfer review. Snapshot feedback reports the rounding;
 raw device state is not rewritten. Existing whole-pixel size/position export and
 crop quantization remain unchanged.
 
@@ -394,3 +398,55 @@ Only available inputs with valid signals, compatible native dimensions, and supp
 uncorrected input processing are accepted. Preview following is read-only, clears
 stale captures, and uses the existing pooled capture scheduler. Neither option
 changes the project or exchange schema.
+
+## Reviewed transfer conversions
+
+`Conversion` is transient, never serialized into projects or settings. Default
+canvas conversion is Exact and source adaptation is false. KeepPixels changes only
+the temporary output resolution; Scale multiplies x/width and y/height by the
+respective destination/editor canvas ratios and uses the editor's normal crop
+resize behavior. Explicit fit keeps its crop/fit semantics. Source adaptation uses
+reported destination content dimensions and the existing source-reframing routine,
+preserving the box and proportional explicit-fit crop. It does not alter device
+input settings or implicitly route an input. Each destination is prepared separately
+so fanout to differing source resolutions stays independent. Plans are grouped by
+screen after validation. The UI lists conversions and the valid and invalid rows;
+only the explicit reviewed send submits the subset. All-empty results cannot send.
+Freshness checks and explicit Program permission remain required. Conflict rebuilding
+retains conversion choices and never silently adds skipped destinations.
+
+## Transfer discrepancy log v1
+
+Local diagnostic output, not a project/interchange format. The existing
+`ProjectDirs("org", "beffroi", "midra-layout")` configuration directory contains
+`logs/device-transfers.jsonl` and at most one rotated
+`logs/device-transfers.previous.jsonl`. Each file is bounded to 1 MiB; rotation
+replaces the previous file before the next record would exceed the limit. Each UTF-8
+line is one JSON object, terminated by a newline. Oversized entries are rejected;
+logging errors are written to stderr and never block device writes.
+
+[Versioned example](device-transfer-log-v1.example.jsonl).
+
+| Field | Meaning |
+| --- | --- |
+| `version` | Integer 1; readers must reject unsupported versions |
+| `unix_seconds` | Integer UTC seconds since Unix epoch; 0 if system clock is before epoch |
+| `application_version` | Application version string |
+| `profile` | `Midra4k` or `Aquilon6` |
+| `screen`, `bank` | Native destination identifiers, strings |
+| `target` | `Preview` or `Program` |
+| `verified` | Boolean: the send returned successful changed-field readback; false also covers partial/uncertain outcomes |
+| `discrepancies` | Array of calculated conversion differences |
+| `discrepancies[].layer` | Native destination layer ID, string |
+| `discrepancies[].field` | `visible_size` or `mask_bounds` |
+| `discrepancies[].requested`, `.actual` | Floating-point output pixels; `[width,height]` for visible size, `[x,y,width,height]` for mask bounds |
+
+A discrepancy is included only if at least one compared component differs by more
+than 1.0 output pixel in absolute value. Normal rounding at/below 1.0 is omitted.
+Records are emitted after an attempted send returns, only when discrepancies exist;
+preflight failures and reviews produce none. No geometry writes or pulses are retried
+because of a discrepancy. Readback still compares the quantized command values.
+No credentials, device addresses, source documents, input signal data or screenshots
+are recorded. These are predictions, not measured physical-output acceptance. Logs
+are write-only diagnostics: the app does not load/migrate them or round-trip them
+into any project, settings, recovery or exchange representation.

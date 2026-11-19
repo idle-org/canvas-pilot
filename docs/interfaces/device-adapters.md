@@ -95,8 +95,8 @@ are pixel sizes. Editor geometry is top-left based. Firmware accepts/stores f32
 values, but WebRCS 6.2.79 throws `oldAnchorRect are not integers` when rendering
 fractional position/size fields. Therefore sends round sizes and centers to whole
 pixels (sizes 1–1000000). Saved/editor geometry retains double precision; imported
-half-pixel/top-left geometry is not rounded. Conversion rejects a rounded visible
-size error above one pixel. Center rounding contributes at most half a pixel.
+half-pixel/top-left geometry is not rounded. Conversion records a rounded visible
+size error above one pixel in the transfer discrepancy log without blocking valid geometry. Center rounding contributes at most half a pixel.
 Strict readback checks the quantized values rather than silently accepting clamps.
 Only `MIDDLE_CENTER` anchors are currently accepted. Source routing is
 `source.pp.inputNum` (`LIVE_n`, `NONE`, etc.); geometry-only sends omit it; explicit Change input sends include it.
@@ -119,7 +119,8 @@ crop do not silently produce a visible-box estimate.
 Both Output-sized and Source aspect use the existing editor sizing contract.
 The retained cropped source fits inside the chosen container with a uniform
 minimum-axis scale. Quantized crop must reproduce the requested visible size
-within one output pixel. Import reverses this conversion for centered framing;
+with discrepancies above one output pixel recorded in the transfer log.
+Import reverses this conversion for centered framing;
 unsupported fit modes and malformed masks are reported on each layer and block its import.
 
 Explicit sends refresh state first and reject stale banks, source/framing values
@@ -164,8 +165,9 @@ Sends convert either editor mask origin (Layer or Source) to an output-space
 reveal rectangle, then express it relative to the rounded device container.
 For Source aspect sizing this includes the centered margins around the visible
 image. Clip edges to the container, round fractions ×65535 and cap opposite sums
-at 65535. Reject a quantized reveal position/size error above one output pixel,
-measured on the centered visible image. A completely zero editor mask explicitly
+at 65535. Record a quantized reveal position/size error above one output pixel
+in the transfer discrepancy log, measured on the centered visible image; valid
+geometry remains sendable. At/below-one-pixel discrepancies are silent. A completely zero editor mask explicitly
 sends four zeros, clearing any destination mask in the reviewed send. Geometry,
 classic crop and source routing are not changed by mask conversion itself.
 

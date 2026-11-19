@@ -25,6 +25,43 @@ are still validated. Eikos 4K hardware and a Pulse 4K 3.3.7 emulator have been
 read successfully; QuickVu/QuickMatrix have parser regression coverage but
 still need individual emulator/hardware acceptance.
 
+## Review resolution conversions
+
+When a linked transfer cannot be prepared, its review offers explicit conversions.
+The mapping window also has **Review conversions / send valid layers…**.
+Choices apply to this transfer only: the project, saved links and source routing
+are unchanged unless an input change was already explicitly selected.
+
+- **Require matching resolution** is the default.
+- **Keep pixel coordinates** sends the same positions and box sizes to a different
+  canvas. A 500-pixel box remains 500 pixels on a larger screen.
+- **Scale to destination canvas** scales positions and box sizes independently on
+  each axis. A 1920 × 1080 layout sent to 3840 × 2160 doubles both. A different
+  canvas ratio changes box proportions; normal cropping follows the resized box,
+  while explicit fit retains its meaning.
+- **Adapt source dimensions to the destination input** preserves the box and
+  reframes crop for the reported input dimensions. It does not change the physical
+  input signal or its shared settings. Unsupported input processing still blocks
+  that destination.
+
+Review the listed conversions and exact changes before sending. Invalid destinations
+remain explicitly listed, and conversions do not bypass freshness checks.
+
+## Transfer discrepancy logs
+
+Subpixel and exactly one-pixel conversion differences produce no discrepancy warning
+or log. Larger calculated visible-size or Aquilon mask-bound differences are recorded
+when a send is attempted, rather than blocking otherwise valid geometry. Impossible
+sizes, exhausted crops and unexpected device readback still fail validation.
+
+Logs are stored in `logs/device-transfers.jsonl` beside the existing settings file
+(see [Preferences](preferences.md)). One previous file is retained; each file is at most
+1 MiB. Records contain requested/calculated pixel values, destination, timestamp,
+application version and whether readback verified the send. They do not measure
+physical output. Opening a review does not write a log. A log-write failure does
+not stop a device transfer. The [log contract](../../interfaces/midra-device-send.md#transfer-discrepancy-log-v1)
+describes the fields.
+
 ## Use folders as local device layouts
 
 The **Apply to** selector is shared by the status bar, Export menu, and
@@ -46,9 +83,12 @@ To prepare several layouts that reuse the same device layers:
 
 Multiple editor layers may link to the same device destination, within or across
 folders. Mapping shows a warning listing the other linked layers and their folders.
-Sending is disabled when the chosen scope contains overlapping **screen + layer**
-destinations, with a list of the conflicts. Choose a conflict-free folder or selection,
-or remap/skip rows; links outside that send scope do not block it.
+A linked send with invalid or overlapping **screen + layer** destinations opens
+**Review device transfer**. It lists every included and skipped layer, its destination
+and the reason for skipping. All layers competing for one destination are skipped;
+none wins automatically. **Send valid layers** sends only the listed valid destinations.
+Cancel to repair mappings or choose a different scope. No send is possible when
+all destinations are invalid. Links outside the chosen scope do not block it.
 Linked send/load skip unlinked layers. An empty selection or missing folder never
 falls back to All. Transfers already started retain the links captured at click time.
 These are local geometry layouts, not device preset recalls or source-routing memories.
@@ -210,7 +250,8 @@ or a changed bank/source before Send requires a refresh, without writing.
 
 Centered live-input framing supports layer crop and zoom. Fractional geometry is
 retained in projects; sends round device sizes/centers to whole pixels for WebRCS
-compatibility and check the visible-box error within one pixel.
+compatibility. Calculated visible-box errors above one pixel are logged without
+blocking the transfer; smaller discrepancies remain silent.
 Rectangular masks load and send without resizing the image. Both editor mask
 origins are supported; device loads return a Layer-relative mask. A zero mask
 explicitly clears destination blanking during a reviewed send. Fully blanked axes

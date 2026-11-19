@@ -264,6 +264,10 @@ pub(super) fn prepare(
         Target::Program => &screen.program_bank,
     };
     let mut plan = Plan {
+        mappings: mappings.to_vec(),
+        conversion: Default::default(),
+        conversions: vec![],
+        discrepancies: vec![],
         profile: snapshot.profile,
         observed: vec![],
         screen: screen.id.clone(),
@@ -335,13 +339,13 @@ pub(super) fn prepare(
             native[1] * (1.0 - (units[2] + units[3]) / 65535.0),
         ];
         let scale = (size[0] / retained[0]).min(size[1] / retained[1]);
-        if (retained[0] * scale - g.width).abs() > 1.0
-            || (retained[1] * scale - g.height).abs() > 1.0
-        {
-            return Err(
-                "Quantized crop differs from the visible box by more than one pixel.".into(),
-            );
-        }
+        crate::device_send::record_discrepancy(
+            &mut plan.discrepancies,
+            destination,
+            "visible_size",
+            &[g.width, g.height],
+            &[retained[0] * scale, retained[1] * scale],
+        );
         let center = g.center().map(f64::round);
         let mut requested = vec![
             ("position/pp/sizeH", json!(size[0])),
@@ -394,20 +398,13 @@ pub(super) fn prepare(
             };
             let expected = relative_mask(reveal, visible).bounds(visible);
             let actual = relative_mask(quantized.bounds(container), visible).bounds(visible);
-            if [
-                (expected.x, actual.x),
-                (expected.y, actual.y),
-                (expected.width, actual.width),
-                (expected.height, actual.height),
-            ]
-            .iter()
-            .any(|(a, b)| (a - b).abs() > 1.0)
-            {
-                return Err(
-                    "Mask quantization differs from the reveal bounds by more than one pixel."
-                        .into(),
-                );
-            }
+            crate::device_send::record_discrepancy(
+                &mut plan.discrepancies,
+                destination,
+                "mask_bounds",
+                &[expected.x, expected.y, expected.width, expected.height],
+                &[actual.x, actual.y, actual.width, actual.height],
+            );
         }
         for (edge, units) in ["left", "right", "top", "bottom"]
             .into_iter()
@@ -452,4 +449,8 @@ pub(super) fn prepare(
                 .is_some_and(|(a, b)| a < b))
     });
     Ok(plan)
+}
+
+pub(super) fn source_resolution(raw: &Value, layer: &Value) -> Result<Option<[u32; 2]>, String> {
+    Ok(source_info(raw, &text(layer, "/source/pp/inputNum")?)?.map(|(source, _)| source.native))
 }

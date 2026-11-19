@@ -24,8 +24,24 @@ pub struct Change {
     pub before: Value,
     pub after: Value,
 }
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum CanvasConversion {
+    #[default]
+    Exact,
+    KeepPixels,
+    Scale,
+}
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Conversion {
+    pub canvas: CanvasConversion,
+    pub source: bool,
+}
 #[derive(Clone, Debug)]
 pub struct Plan {
+    pub mappings: Vec<(usize, String)>,
+    pub conversion: Conversion,
+    pub conversions: Vec<String>,
+    pub discrepancies: Vec<serde_json::Value>,
     pub profile: device::Profile,
     /// Native values that affect conversion, checked again before the first write.
     pub observed: Vec<(String, Value)>,
@@ -59,6 +75,7 @@ impl Plan {
             snapshot
                 .profile
                 .prepare(snapshot, layout, screen_index, mappings, target, sizing)?;
+        plan.mappings = mappings.to_vec();
         for path in snapshot.profile.screen_context_paths(&plan.screen) {
             plan.observed
                 .push((path.clone(), field(&snapshot.raw, &path)?.clone()));
@@ -235,6 +252,10 @@ impl Plan {
         };
         let base = format!("/device/screenList/items/{}", screen.id);
         let mut plan = Self {
+            mappings: mappings.to_vec(),
+            conversion: Conversion::default(),
+            conversions: vec![],
+            discrepancies: vec![],
             profile: snapshot.profile,
             observed: vec![],
             screen: screen.id.clone(),
@@ -307,11 +328,14 @@ impl Plan {
                 native[1] * (1.0 - (quantized[2] + quantized[3]) as f64 / 65535.0),
             ];
             let scale = (size[0] as f64 / retained[0]).min(size[1] as f64 / retained[1]);
-            if fit.is_none()
-                && ((retained[0] * scale - g.width).abs() > 1.0
-                    || (retained[1] * scale - g.height).abs() > 1.0)
-            {
-                return Err("Rounded device crop/size differs from the requested visible box by more than one pixel. Adjust the box or zoom.".into());
+            if fit.is_none() {
+                record_discrepancy(
+                    &mut plan.discrepancies,
+                    destination,
+                    "visible_size",
+                    &[g.width, g.height],
+                    &[retained[0] * scale, retained[1] * scale],
+                );
             }
             let center = g.center();
             let mut requested = vec![
@@ -415,6 +439,208 @@ impl Plan {
         })
     }
 }
+/// Keep only discrepancies above one output pixel; normal rounding is silent.
+pub(crate) fn record_discrepancy(
+    out: &mut Vec<Value>,
+    layer: &str,
+    field: &str,
+    requested: &[f64],
+    actual: &[f64],
+) {
+    if requested
+        .iter()
+        .zip(actual)
+        .any(|(a, b)| (a - b).abs() > 1.0)
+    {
+        out.push(json!({"layer":layer,"field":field,"requested":requested,"actual":actual}));
+    }
+}
+
+/// A temporary transfer projection. It never edits the working document or routes inputs implicitly.
+#[allow(clippy::too_many_arguments)]
+pub fn prepare_converted(
+    snapshot: &Snapshot,
+    layout: &Layout,
+    index: usize,
+    mappings: &[(usize, String)],
+    target: Target,
+    sizing: Sizing,
+    inputs: &std::collections::BTreeMap<usize, u32>,
+    conversion: Conversion,
+) -> Result<Plan, String> {
+    let screen = snapshot
+        .screens
+        .get(index)
+        .ok_or("Choose a device screen.")?;
+    let mut projected = layout.clone();
+    let mut notes = Vec::new();
+    if screen.resolution != layout.formats.output && conversion.canvas != CanvasConversion::Exact {
+        notes.push(format!(
+            "Canvas {} × {} → {} × {} ({})",
+            layout.formats.output[0],
+            layout.formats.output[1],
+            screen.resolution[0],
+            screen.resolution[1],
+            if conversion.canvas == CanvasConversion::Scale {
+                "scale coordinates and boxes"
+            } else {
+                "keep pixel coordinates and boxes"
+            }
+        ));
+        if conversion.canvas == CanvasConversion::Scale {
+            let scale = [
+                screen.resolution[0] as f64 / layout.formats.output[0] as f64,
+                screen.resolution[1] as f64 / layout.formats.output[1] as f64,
+            ];
+            let ids: BTreeSet<_> = mappings.iter().map(|(id, _)| *id).collect();
+            for i in 0..projected.layers.len() {
+                if !ids.contains(&projected.info[i].id) {
+                    continue;
+                }
+                let old = projected.layers[i];
+                let next = crate::Geometry {
+                    x: old.x * scale[0],
+                    y: old.y * scale[1],
+                    width: old.width * scale[0],
+                    height: old.height * scale[1],
+                }
+                .validate()?;
+                projected.formats.resize(i, old, next)?;
+                projected.layers[i] = next;
+            }
+        }
+        projected.formats.output = screen.resolution;
+    }
+    if conversion.source {
+        let bank = if target == Target::Preview {
+            &screen.preview_bank
+        } else {
+            &screen.program_bank
+        };
+        for (id, destination) in mappings {
+            let i = projected
+                .info
+                .iter()
+                .position(|info| info.id == *id)
+                .ok_or("An editor layer was removed.")?;
+            let native = if let Some(input) = inputs.get(id) {
+                Some(device::input_content_resolution(snapshot, *input)?)
+            } else {
+                let path = snapshot.profile.layer_path(&screen.id, bank, destination);
+                let raw = field(&snapshot.raw, &path)?;
+                match snapshot.profile {
+                    device::Profile::Midra4k => {
+                        if device::has_content_size(raw) {
+                            Some(device::content_resolution(raw)?)
+                        } else {
+                            None
+                        }
+                    }
+                    device::Profile::Aquilon6 => {
+                        device::aquilon_source_resolution(&snapshot.raw, raw)?
+                    }
+                }
+            };
+            if let Some(native) = native {
+                let old = projected.formats.sources[projected.formats.source_for[i]].native;
+                if old != native {
+                    notes.push(format!(
+                        "{}: source {} × {} → {} × {} (preserve box and reframe crop)",
+                        layout.layer_label(i),
+                        old[0],
+                        old[1],
+                        native[0],
+                        native[1]
+                    ));
+                    projected.set_layer_source_resolution(i, native)?;
+                }
+            }
+        }
+    }
+    let mut plan = Plan::prepare_with_inputs(
+        snapshot, &projected, index, mappings, target, sizing, inputs,
+    )?;
+    plan.conversion = conversion;
+    plan.conversions = notes;
+    Ok(plan)
+}
+
+#[derive(Default)]
+pub struct ReviewedSend {
+    pub plans: Vec<Plan>,
+    pub skipped: Vec<String>,
+    pub included: Vec<String>,
+}
+/// Reject every member of a conflicting destination; never arbitrarily pick a winner.
+#[allow(clippy::too_many_arguments)]
+pub fn review_links(
+    snapshot: &Snapshot,
+    layout: &Layout,
+    links: &[(usize, crate::DeviceLink)],
+    target: Target,
+    sizing: Sizing,
+    inputs: &std::collections::BTreeMap<usize, u32>,
+    conversion: Conversion,
+) -> ReviewedSend {
+    let mut result = ReviewedSend::default();
+    let mut counts = std::collections::BTreeMap::new();
+    for (_, link) in links {
+        *counts
+            .entry((link.family, &link.screen, &link.layer))
+            .or_insert(0) += 1;
+    }
+    for (id, link) in links {
+        let label = layout
+            .info
+            .iter()
+            .position(|i| i.id == *id)
+            .map_or_else(|| format!("Layer ID {id}"), |i| layout.layer_label(i));
+        let label = format!(
+            "{label} → {:?} screen {} / layer {}",
+            link.family, link.screen, link.layer
+        );
+        let prepared = (|| {
+            if link.family != snapshot.profile.family() {
+                return Err("Different device family".into());
+            }
+            if counts[&(link.family, &link.screen, &link.layer)] > 1 {
+                return Err("Multiple editor layers target this destination".into());
+            }
+            let index = snapshot
+                .screens
+                .iter()
+                .position(|s| s.id == link.screen)
+                .ok_or("Destination screen is unavailable")?;
+            prepare_converted(
+                snapshot,
+                layout,
+                index,
+                &[(*id, link.layer.clone())],
+                target,
+                sizing,
+                inputs,
+                conversion,
+            )
+        })();
+        match prepared {
+            Err(error) => result.skipped.push(format!("{label}: {error}")),
+            Ok(mut plan) => {
+                result.included.push(label);
+                if let Some(group) = result.plans.iter_mut().find(|p| p.screen == plan.screen) {
+                    group.mappings.append(&mut plan.mappings);
+                    group.observed.append(&mut plan.observed);
+                    group.changes.append(&mut plan.changes);
+                    group.conversions.append(&mut plan.conversions);
+                    group.discrepancies.append(&mut plan.discrepancies);
+                } else {
+                    result.plans.push(plan);
+                }
+            }
+        }
+    }
+    result
+}
+
 fn values_equal(a: &Value, b: &Value) -> bool {
     a == b
         || a.as_f64()
@@ -600,7 +826,9 @@ pub(crate) fn send_with_awj_port(
     };
     let fresh = connection.read()?;
     validate_fresh(plan, &fresh)?;
-    execute(plan, &mut connection)
+    let result = execute(plan, &mut connection);
+    crate::device_send_log::record(plan, result.is_ok());
+    result
 }
 
 /// Read-only stale-state validation; does not weaken execution-time checks.
@@ -663,6 +891,162 @@ pub fn send_inputs(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn reviewed_canvas_and_source_conversions_are_explicit_and_leave_document_unchanged() {
+        let mut state = snapshot();
+        state.screens[0].resolution = [3840, 2160];
+        *state
+            .raw
+            .pointer_mut("/device/screenList/items/1/canvas/status/size/pp")
+            .unwrap() = json!({"sizeH":3840,"sizeV":2160});
+        let editor = layout();
+        let before = crate::project::Project::from_layout(&editor);
+        let mappings = [(editor.layer_info(0).id, "1".into())];
+        let build = |canvas| {
+            prepare_converted(
+                &state,
+                &editor,
+                0,
+                &mappings,
+                Target::Preview,
+                Sizing::OutputBox,
+                &Default::default(),
+                Conversion {
+                    canvas,
+                    source: false,
+                },
+            )
+        };
+        assert!(
+            build(CanvasConversion::Exact)
+                .unwrap_err()
+                .contains("resolutions")
+        );
+        for (conversion, width, height) in [
+            (CanvasConversion::KeepPixels, 300, 250),
+            (CanvasConversion::Scale, 600, 500),
+        ] {
+            let plan = build(conversion).unwrap();
+            assert_eq!(plan.conversions.len(), 1);
+            for (field, expected) in [("sizeH", width), ("sizeV", height)] {
+                assert_eq!(
+                    plan.changes
+                        .iter()
+                        .find(|c| c.path.last().unwrap() == field)
+                        .unwrap()
+                        .after,
+                    json!(expected)
+                );
+            }
+            validate_fresh(&plan, &state).unwrap();
+        }
+        // Source adaptation is independent of canvas conversion and respects the actual content dimensions.
+        for key in ["contentWidth", "contentHeight"] {
+            let path = format!(
+                "/device/screenList/items/1/presetList/items/UP/liveLayerList/items/1/status/pp/{key}"
+            );
+            *state.raw.pointer_mut(&path).unwrap() = if key == "contentWidth" {
+                json!(3840)
+            } else {
+                json!(2160)
+            };
+        }
+        let conversion = Conversion {
+            canvas: CanvasConversion::KeepPixels,
+            source: true,
+        };
+        let plan = prepare_converted(
+            &state,
+            &editor,
+            0,
+            &mappings,
+            Target::Preview,
+            Sizing::OutputBox,
+            &Default::default(),
+            conversion,
+        )
+        .unwrap();
+        assert_eq!(plan.conversions.len(), 2);
+        assert!(plan.discrepancies.is_empty());
+        validate_fresh(&plan, &state).unwrap();
+        assert_eq!(crate::project::Project::from_layout(&editor), before);
+    }
+
+    #[test]
+    fn review_lists_every_invalid_destination_and_keeps_only_unambiguous_links() {
+        let state = snapshot();
+        let editor = layout();
+        let id = editor.layer_info(0).id;
+        let other = editor.layer_info(1).id;
+        let link = |family, screen: &str, layer: &str| crate::DeviceLink {
+            family,
+            screen: screen.into(),
+            layer: layer.into(),
+        };
+        let links = vec![
+            (id, link(device::Family::Midra4k, "1", "1")),
+            (id, link(device::Family::Midra4k, "1", "2")),
+            (other, link(device::Family::Midra4k, "1", "2")),
+            (id, link(device::Family::Midra4k, "99", "1")),
+            (id, link(device::Family::Midra4k, "1", "99")),
+            (id, link(device::Family::Aquilon, "S1", "1")),
+        ];
+        let reviewed = review_links(
+            &state,
+            &editor,
+            &links,
+            Target::Preview,
+            Sizing::OutputBox,
+            &Default::default(),
+            Conversion::default(),
+        );
+        assert_eq!(reviewed.included.len(), 1);
+        assert_eq!(reviewed.skipped.len(), 5);
+        assert_eq!(reviewed.plans.len(), 1);
+        assert!(reviewed.skipped.iter().any(|s| s.contains("screen 99")));
+        assert!(reviewed.skipped.iter().any(|s| s.contains("layer 99")));
+        assert_eq!(
+            reviewed
+                .skipped
+                .iter()
+                .filter(|s| s.contains("Multiple editor layers"))
+                .count(),
+            2
+        );
+        for row in &reviewed.skipped {
+            assert!(row.contains(&editor.layer_label(0)) || row.contains(&editor.layer_label(1)));
+        }
+        assert!(
+            reviewed.plans[0]
+                .observed
+                .iter()
+                .all(|(p, _)| !p.ends_with("liveLayerList/items/2"))
+        );
+        assert!(
+            review_links(
+                &state,
+                &editor,
+                &[],
+                Target::Preview,
+                Sizing::OutputBox,
+                &Default::default(),
+                Conversion::default()
+            )
+            .plans
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn discrepancies_at_or_below_one_pixel_are_silent() {
+        let mut out = vec![];
+        record_discrepancy(&mut out, "1", "size", &[100., 200.], &[100.4, 201.]);
+        assert!(out.is_empty());
+        record_discrepancy(&mut out, "1", "size", &[100., 200.], &[101.01, 200.]);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0]["field"], "size");
+    }
+
     #[test]
     fn websocket_writes_use_the_configured_port() {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -1187,6 +1571,10 @@ mod tests {
         let path =
             "device/inputList/items/INPUT_4/plugList/items/2/settings/cropping/control/pp/left";
         let plan = Plan {
+            mappings: vec![],
+            conversion: Conversion::default(),
+            conversions: vec![],
+            discrepancies: vec![],
             profile: Default::default(),
             observed: vec![],
             screen: "1".into(),

@@ -4,6 +4,17 @@
 
 ## Unreleased
 
+### v0.10.0-rc.11
+
+- Review problematic transfers with explicit included/skipped layer lists and
+  **Send valid layers**. Conflicting mappings never select an arbitrary winner.
+- Offer send-only canvas conversion (keep pixels or scale to destination) and
+  source-dimension adaptation. Projects and saved mappings remain unchanged.
+- Record conversion discrepancies above one output pixel in bounded local JSONL
+  logs instead of blocking valid geometry. Subpixel and one-pixel discrepancies
+  remain silent; invalid ranges, exhausted crops and readback mismatches still fail.
+  Logs describe calculated geometry and verification, not physical-output accuracy.
+
 ### v0.10.0-rc.10
 
 - Recover from temporary send-readback failures using up to three read attempts,

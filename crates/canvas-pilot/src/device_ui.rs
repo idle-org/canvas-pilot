@@ -117,15 +117,35 @@ impl SendConflict {
                 if mappings.is_empty() {
                     return Err("The original mapping is no longer available.".into());
                 }
-                Plan::prepare_with_inputs(
+                let links = mappings
+                    .into_iter()
+                    .map(|(id, layer)| {
+                        (
+                            id,
+                            canvas_pilot::DeviceLink {
+                                family: snapshot.profile.family(),
+                                screen: old.screen.clone(),
+                                layer,
+                            },
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                let mut reviewed = device_send::review_links(
                     snapshot,
                     layout,
-                    index,
-                    &mappings,
+                    &links,
                     old.target,
                     self.sizing,
                     &self.inputs,
-                )
+                    old.conversion,
+                );
+                if !reviewed.skipped.is_empty() {
+                    return Err(reviewed.skipped.join("\n"));
+                }
+                reviewed
+                    .plans
+                    .pop()
+                    .ok_or_else(|| "No destinations remain.".into())
             })
             .collect()
     }
@@ -299,8 +319,19 @@ enum Destination {
     Existing(usize),
 }
 
+#[derive(Clone)]
+struct TransferReview {
+    host: String,
+    links: Vec<(usize, canvas_pilot::DeviceLink)>,
+    target: Target,
+    sizing: Sizing,
+    inputs: std::collections::BTreeMap<usize, u32>,
+    conversion: device_send::Conversion,
+}
+
 #[derive(Default)]
 pub(super) struct DeviceUi {
+    transfer_review: Option<TransferReview>,
     pub open: bool,
     pub(super) scope: TransferScope,
     import_closing: bool,
@@ -328,6 +359,20 @@ pub(super) struct DeviceUi {
     pub(super) source_choices: std::collections::BTreeMap<usize, SourceChoice>,
 }
 impl DeviceUi {
+    fn review_transfer(&mut self, links: Vec<(usize, canvas_pilot::DeviceLink)>) {
+        self.transfer_review = Some(TransferReview {
+            host: self.host.clone(),
+            links,
+            target: if self.allow_program {
+                self.target
+            } else {
+                Target::Preview
+            },
+            sizing: self.sizing,
+            inputs: self.input_changes(),
+            conversion: Default::default(),
+        });
+    }
     fn input_changes(&self) -> std::collections::BTreeMap<usize, u32> {
         self.source_choices
             .iter()
@@ -496,7 +541,7 @@ impl DeviceUi {
     pub(super) fn online(&self) -> bool {
         self.snapshot.is_some()
     }
-    fn send(&mut self, ctx: &egui::Context, plans: Vec<Plan>, layout: &canvas_pilot::Layout) {
+    fn send(&mut self, ctx: &egui::Context, plans: Vec<Plan>, _layout: &canvas_pilot::Layout) {
         if self.input_sending {
             self.error = "Wait for the input send to finish.".into();
             return;
@@ -504,15 +549,18 @@ impl DeviceUi {
         let (tx, rx) = mpsc::channel();
         self.pending = Some(rx);
         self.sending = true;
-        let links = self
-            .scoped_send_links(layout)
-            .into_iter()
-            .filter(|(_, link)| {
-                plans.iter().any(|p| {
-                    p.screen == link.screen
-                        && p.observed.iter().any(|(path, _)| {
-                            *path == p.profile.layer_path(&p.screen, &p.bank, &link.layer)
-                        })
+        let links = plans
+            .iter()
+            .flat_map(|plan| {
+                plan.mappings.iter().map(|(id, layer)| {
+                    (
+                        *id,
+                        canvas_pilot::DeviceLink {
+                            family: plan.profile.family(),
+                            screen: plan.screen.clone(),
+                            layer: layer.clone(),
+                        },
+                    )
                 })
             })
             .collect();
@@ -1049,7 +1097,7 @@ impl Editor {
     pub(super) fn device_send_button(&mut self, ui: &mut egui::Ui) {
         let plans = self.device.linked_plans(&self.layout);
         let conflicts = link_conflicts(&self.layout, &self.device.scoped_send_links(&self.layout));
-        let enabled = self.device.online() && !self.device.busy() && conflicts.is_none();
+        let enabled = self.device.online() && !self.device.busy();
         let tooltip = if let Some(error) = conflicts {
             error
         } else if self.device.sending {
@@ -1087,10 +1135,9 @@ impl Editor {
                 Ok(plans) => {
                     self.device.send(ui.ctx(), plans, &self.layout);
                 }
-                Err(error) => {
-                    self.device.error = error;
-                    self.device.prepare_send = true;
-                    self.device.open = true;
+                Err(_) => {
+                    let links = self.device.scoped_send_links(&self.layout);
+                    self.device.review_transfer(links);
                 }
             }
             ui.close();
@@ -1152,6 +1199,61 @@ impl Editor {
             self.settings.save(&self.application_settings(ctx));
         }
     }
+    fn transfer_review_window(&mut self, ctx: &egui::Context) {
+        let Some(mut review) = self.device.transfer_review.take() else {
+            return;
+        };
+        if review.host != self.device.host || !self.device.online() {
+            return;
+        }
+        let mut send = None;
+        let mut cancel = false;
+        let modal = egui::Modal::new(egui::Id::new("review-device-transfer")).show(ctx, |ui| {
+            ui.set_max_width(720.);
+            ui.heading("Review device transfer");
+            ui.label(format!("{} · {:?}", review.host, review.target));
+            ui.label("Conversions affect this send only. Your document and saved mappings stay unchanged.");
+            ui.horizontal_wrapped(|ui| {
+                ui.label("Destination canvas:");
+                ui.stable_selectable_value(&mut review.conversion.canvas, device_send::CanvasConversion::Exact, "Require matching resolution");
+                ui.stable_selectable_value(&mut review.conversion.canvas, device_send::CanvasConversion::KeepPixels, "Keep pixel coordinates");
+                ui.stable_selectable_value(&mut review.conversion.canvas, device_send::CanvasConversion::Scale, "Scale to destination canvas");
+            });
+            ui.small("Scaling changes positions and box sizes on each axis. Cropping follows the resized box; explicit fit modes retain their meaning.");
+            ui.checkbox(&mut review.conversion.source, "Adapt source dimensions to the destination input (preserve box and reframe crop)");
+            let prepared = device_send::review_links(self.device.snapshot.as_ref().unwrap(), &self.layout,
+                &review.links, review.target, review.sizing, &review.inputs, review.conversion);
+            egui::ScrollArea::vertical().max_height(360.).show(ui, |ui| {
+                ui.strong(format!("Will send: {} destination(s)", prepared.included.len()));
+                for row in &prepared.included { ui.label(row); }
+                for plan in &prepared.plans {
+                    for note in &plan.conversions { ui.label(note); }
+                    ui.collapsing(format!("Exact changes · Screen {}", plan.screen), |ui| {
+                        for change in &plan.changes { ui.label(format!("{}: {} → {}", change.path.join("/"), change.before, change.after)); }
+                    });
+                }
+                if !prepared.skipped.is_empty() {
+                    ui.separator();
+                    ui.strong(format!("Will NOT send: {} destination(s)", prepared.skipped.len()));
+                    for row in &prepared.skipped { ui.colored_label(ui.visuals().warn_fg_color, row); }
+                }
+            });
+            if !review.inputs.is_empty() { ui.label("Explicitly selected input changes are included for destinations being sent."); }
+            let allowed = !prepared.plans.is_empty() && !self.device.busy()
+                && (review.target != Target::Program || self.device.allow_program);
+            ui.horizontal(|ui| {
+                if ui.button("Cancel").clicked() { cancel = true; }
+                let label = if prepared.skipped.is_empty() { "Send reviewed layers" } else { "Send valid layers" };
+                if ui.add_enabled(allowed, egui::Button::new(label)).clicked() { send = Some(prepared.plans); }
+            });
+        });
+        if let Some(plans) = send {
+            self.device.send(ctx, plans, &self.layout);
+        } else if !cancel && !modal.should_close() {
+            self.device.transfer_review = Some(review);
+        }
+    }
+
     fn send_conflict_window(&mut self, ctx: &egui::Context) {
         let Some(conflict) = self.device.conflict.clone() else {
             return;
@@ -1233,6 +1335,7 @@ impl Editor {
         let recent_before = self.device.recent_hosts.clone();
         self.device.poll();
         self.send_conflict_window(ctx);
+        self.transfer_review_window(ctx);
         if self.device.recent_hosts != recent_before {
             self.settings.save(&self.application_settings(ctx));
         }
@@ -1247,6 +1350,7 @@ impl Editor {
         let mut open = true;
         let mut imported = false;
         let mut send_plan = None;
+        let mut review_links = None;
         let title = if self.device.prepare_send {
             "Device mapping & transfer"
         } else {
@@ -1331,6 +1435,9 @@ impl Editor {
                         let input_changes = self.device.input_changes();
                         let prepared_plan = send_review(ui, &self.layout, &scope_indices, snapshot, self.device.screen, &mut targets,
                             &mut self.device.target, &mut self.device.sizing, self.device.pending.is_some(), self.device.allow_program, &input_changes);
+                        let reviewed_links = targets.iter().filter(|(_, layer)| !layer.is_empty()).map(|(id,layer)| (*id, canvas_pilot::DeviceLink {
+                            family: snapshot.profile.family(), screen: screen_id.clone(), layer: layer.clone(),
+                        })).collect();
                         for (id, destination) in targets {
                             if previous.get(&id) != Some(&destination) {
                                 let i = (0..self.layout.layers().len()).find(|&i| self.layout.layer_info(i).id == id).unwrap();
@@ -1341,7 +1448,10 @@ impl Editor {
                         ui.separator();
                         ui.horizontal(|ui| {
                             self.device_load_control(ui, true);
-                            let enabled = prepared_plan.is_some() && self.device.pending.is_none();
+                            if ui.add_enabled(!self.device.busy(), egui::Button::new("Review conversions / send valid layers…")).clicked() {
+                                review_links = Some(reviewed_links);
+                            }
+                            let enabled = prepared_plan.is_some() && !self.device.busy();
                             if transfer_button(ui, &tr(ui.ctx(), "transfer.send-mapped"), enabled, true)
                                 .on_hover_text(tr(ui.ctx(), "ui.send-the-mapped-editor-layers-to-the-selected-device-target"))
                                 .clicked() {
@@ -1436,6 +1546,9 @@ impl Editor {
             }
         }
         self.device.open = open;
+        if let Some(links) = review_links {
+            self.device.review_transfer(links);
+        }
         if let Some(plan) = send_plan {
             self.device.send(ctx, vec![plan], &self.layout);
         }
@@ -2492,6 +2605,61 @@ mod tests {
             assert_eq!(program_visible, allow);
         }
     }
+    #[test]
+    fn invalid_link_review_lists_skipped_layers_and_requires_explicit_send() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.device.snapshot = Some(linked_test_snapshot());
+        app.device.host.clear(); // Workers cannot contact hardware.
+        for (i, destination) in [(0, "1"), (1, "99")] {
+            app.layout
+                .set_device_link(
+                    i,
+                    Some(canvas_pilot::DeviceLink {
+                        family: Default::default(),
+                        screen: "1".into(),
+                        layer: destination.into(),
+                    }),
+                )
+                .unwrap();
+        }
+        let before = canvas_pilot::project::Project::from_layout(&app.layout);
+        let links = app.device.scoped_send_links(&app.layout);
+        app.device.review_transfer(links);
+        let _ = super::super::tests::frame(&mut app, &ctx, vec![]);
+        let output = super::super::tests::frame(&mut app, &ctx, vec![]);
+        let text = output
+            .shapes
+            .iter()
+            .filter_map(|shape| match &shape.shape {
+                egui::Shape::Text(t) => Some(t.galley.text()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(text.contains("Will NOT send: 1"), "{text}");
+        assert!(text.contains("layer 99"), "{text}");
+        assert!(text.contains(&app.layout.layer_label(1)), "{text}");
+        assert!(app.device.pending.is_none());
+        super::super::tests::click_text(&mut app, &ctx, "Cancel");
+        assert!(app.device.transfer_review.is_none());
+        assert!(app.device.pending.is_none());
+        assert_eq!(
+            canvas_pilot::project::Project::from_layout(&app.layout),
+            before
+        );
+        let links = app.device.scoped_send_links(&app.layout);
+        app.device.review_transfer(links);
+        super::super::tests::click_text(&mut app, &ctx, "Send valid layers");
+        assert!(app.device.transfer_review.is_none());
+        assert!(app.device.sending);
+        assert_eq!(app.device.send_attempt.as_ref().unwrap().links.len(), 1);
+        assert_eq!(
+            canvas_pilot::project::Project::from_layout(&app.layout),
+            before
+        );
+    }
+
     #[test]
     fn send_all_linked_starts_without_opening_export_window() {
         let ctx = egui::Context::default();

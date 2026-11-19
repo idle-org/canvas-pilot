@@ -280,3 +280,11 @@ pub fn input_content_resolution(snapshot: &Snapshot, input: u32) -> Result<[u32;
         ]),
     }
 }
+
+/// Processed source dimensions supported by the Aquilon adapter; preserves its compatibility checks.
+pub(crate) fn aquilon_source_resolution(
+    raw: &Value,
+    layer: &Value,
+) -> Result<Option<[u32; 2]>, String> {
+    aquilon::source_resolution(raw, layer)
+}

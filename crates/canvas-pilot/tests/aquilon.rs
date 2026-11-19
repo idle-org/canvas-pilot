@@ -572,7 +572,7 @@ fn all_models_and_firmware_versions_use_checked_geometry_with_compatibility_warn
 }
 
 #[test]
-fn excessive_mask_quantization_is_rejected_before_writing() {
+fn excessive_mask_quantization_is_recorded_without_blocking_send() {
     let snapshot = Snapshot::parse(&identity(), &routed()).unwrap();
     let mut layout = Layout::default();
     layout
@@ -595,7 +595,7 @@ fn excessive_mask_quantization_is_rejected_before_writing() {
             },
         )
         .unwrap();
-    let err = Plan::prepare(
+    let plan = Plan::prepare(
         &snapshot,
         &layout,
         0,
@@ -603,8 +603,12 @@ fn excessive_mask_quantization_is_rejected_before_writing() {
         Target::Preview,
         Sizing::OutputBox,
     )
-    .unwrap_err();
-    assert!(err.contains("Mask quantization"), "{err}");
+    .unwrap();
+    assert!(
+        plan.discrepancies
+            .iter()
+            .any(|entry| entry["field"] == "mask_bounds")
+    );
 }
 
 #[test]
@@ -696,4 +700,70 @@ fn explicit_source_selection_is_guarded_and_verified_in_the_plan() {
     let mut changed = snapshot.clone();
     changed.raw["device"]["inputList"]["items"]["IN_1"]["status"]["pp"]["plug"] = json!("OTHER");
     assert!(canvas_pilot::device_send::validate_fresh(&plan, &changed).is_err());
+}
+
+#[test]
+fn reviewed_aquilon_source_adaptation_is_explicit_and_preserves_input_processing_guards() {
+    use canvas_pilot::device_send::{self, Conversion};
+    let mut state = routed();
+    state["device"]["inputList"]["items"]["IN_1"]["plugList"]["items"]["1"]["status"]["signal"]["pp"]
+        ["imageWidth"] = json!(3840);
+    state["device"]["inputList"]["items"]["IN_1"]["plugList"]["items"]["1"]["status"]["signal"]["pp"]
+        ["imageHeight"] = json!(2160);
+    let snapshot = Snapshot::parse(&identity(), &state).unwrap();
+    let editor = Layout::default();
+    let before = Project::from_layout(&editor);
+    let mappings = [(editor.layer_info(0).id, "1".into())];
+    assert!(
+        Plan::prepare(
+            &snapshot,
+            &editor,
+            0,
+            &mappings,
+            Target::Preview,
+            Sizing::OutputBox
+        )
+        .is_err()
+    );
+    let options = Conversion {
+        source: true,
+        ..Default::default()
+    };
+    let plan = device_send::prepare_converted(
+        &snapshot,
+        &editor,
+        0,
+        &mappings,
+        Target::Preview,
+        Sizing::OutputBox,
+        &Default::default(),
+        options,
+    )
+    .unwrap();
+    assert_eq!(plan.conversions.len(), 1);
+    assert!(
+        !plan
+            .changes
+            .iter()
+            .any(|c| c.path.join("/").contains("source/"))
+    );
+    device_send::validate_fresh(&plan, &snapshot).unwrap();
+    assert_eq!(Project::from_layout(&editor), before);
+    state["device"]["inputList"]["items"]["IN_1"]["plugList"]["items"]["1"]["settings"]["aspect"]
+        ["pp"]["transformTo"] = json!("CUSTOM");
+    let corrected = Snapshot::parse(&identity(), &state).unwrap();
+    assert!(
+        device_send::prepare_converted(
+            &corrected,
+            &editor,
+            0,
+            &mappings,
+            Target::Preview,
+            Sizing::OutputBox,
+            &Default::default(),
+            options
+        )
+        .unwrap_err()
+        .contains("aspect correction")
+    );
 }

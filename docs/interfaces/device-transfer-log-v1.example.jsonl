@@ -1,0 +1,1 @@
+{"version":1,"unix_seconds":1795080000,"application_version":"0.10.0-rc.11","profile":"Aquilon6","screen":"S1","bank":"B","target":"Preview","verified":true,"discrepancies":[{"layer":"1","field":"mask_bounds","requested":[111110.4,0.0,788889.6,506250.0],"actual":[111112.8,0.0,788887.2,506250.0]}]}
