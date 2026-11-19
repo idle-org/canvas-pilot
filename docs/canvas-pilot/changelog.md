@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.8
+
+- Remove inspector Copy/Paste buttons, including the multi-selection Copy button,
+  while retaining clipboard shortcuts and context-menu actions.
+
 ### v0.10.7
 
 - Pre-map geometry imports by exact included-item count: selected layers, their

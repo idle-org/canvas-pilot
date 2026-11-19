@@ -1628,7 +1628,7 @@ impl Editor {
             - input_reference_rows as f32 * (44.0 - capture_ui::INPUT_REFERENCE_ROW_HEIGHT);
         let details_height = match self.layout.selected_indices().len() {
             0 => 220.0,
-            1 => 927.0,
+            1 => 823.0,
             _ => 1071.0,
         };
         let palette = theme::palette(ui.ctx());
@@ -2169,17 +2169,9 @@ impl Editor {
             12.0,
             palette.muted,
         );
-        ink.button(0.0, 695.0, w, "Copy layer values", true);
-        if click(ui, &ink, [0.0, 695.0, w, 34.0], "copy-values") {
-            self.copy(ui.ctx());
-        }
-        ink.button(0.0, 744.0, w, "Paste layer(s) values", false);
-        if click(ui, &ink, [0.0, 744.0, w, 34.0], "paste-button") {
-            self.open_paste(String::new());
-        }
         ink.text(
             0.0,
-            799.0,
+            695.0,
             &tr(
                 ink.painter.ctx(),
                 "ui.or-ctrl-cmd-v-with-the-viewport-focused",
@@ -2731,10 +2723,6 @@ impl Editor {
                 19.0,
                 palette.text,
             );
-        }
-        ink.button(0.0, 552.0, w, "Copy selected layer values", true);
-        if click(ui, ink, [0.0, 552.0, w, 34.0], "copy-selected") {
-            self.copy(ui.ctx());
         }
         ink.text(
             0.0,
