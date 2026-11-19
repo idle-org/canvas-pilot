@@ -4,12 +4,21 @@
 
 ## Unreleased
 
+## v0.10.0-rc.18 — 2026-11-19
+
+Published release candidate collecting the extreme-zoom performance fix and
+soft whole-pixel canvas placement below. See the
+[release notes](../development/release-notes/v0.10.0-rc.18.md) for downloads,
+pack contents and validation limits.
+
 ### v0.10.0-rc.18
 
 - Make **Pixel edges** a soft whole-pixel preference for mouse movement and
   resizing. Coordinates within one quarter pixel settle on the integer after
   stronger screen, layer and grid snaps; farther fractional placement remains
   available for precise work at high canvas zoom.
+- Refresh three yanked transitive packages to their compatible patch releases so
+  local Cargo installation and release builds resolve without yanked-package warnings.
 
 ### v0.10.0-rc.17
 
