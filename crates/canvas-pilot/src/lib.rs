@@ -507,6 +507,7 @@ pub struct Layout {
     drag: Option<(Vec<bool>, Snapshot, [f64; 2])>,
     content_drag: Option<(usize, Snapshot, [f64; 2])>,
     content_resize: Option<Resize>,
+    pending_edge_crop: Option<formats::Crop>,
     mask_drag: Option<(usize, Snapshot, [f64; 2], Option<ResizeHandle>)>,
     pub gesture_error: Option<String>,
     resize: Option<Resize>,
@@ -609,6 +610,7 @@ impl Default for Layout {
             formats: Formats::default(),
             content_drag: None,
             content_resize: None,
+            pending_edge_crop: None,
             mask_drag: None,
             gesture_error: None,
             undo: Vec::new(),
@@ -1028,15 +1030,59 @@ impl Layout {
     }
     /// Resize content in normal crop mode, or trim source pixels in centered 1:1 mode.
     /// The layer container stays fixed; 1:1 ignores proportional scaling and pivots.
-    pub fn start_content_resize(&mut self, index: usize, handle: ResizeHandle, point: [f64; 2]) {
-        if self
-            .formats
-            .layer_fit
-            .get(index)
-            .is_some_and(|mode| mode.is_some_and(|fit| fit != formats::LayerFit::OneToOne))
-        {
-            return;
+    /// Pending retained-image bounds under the frozen source transform.
+    pub fn edge_crop_bounds(&self, i: usize) -> Result<Geometry, String> {
+        let crop = self.formats.advanced[i];
+        let input = self.formats.input(i)?;
+        let retained = crop.remaining(input)?;
+        let image = self.formats.layer_fit[i]
+            .ok_or("No advanced fit")?
+            .image(retained, self.layers[i])?;
+        let pending = self
+            .content_resize
+            .as_ref()
+            .filter(|r| r.index == i)
+            .and(self.pending_edge_crop)
+            .unwrap_or(crop);
+        let size = pending.remaining(input)?;
+        Ok(Geometry {
+            x: image.x + (pending.left - crop.left) * image.width / retained[0],
+            y: image.y + (pending.top - crop.top) * image.height / retained[1],
+            width: size[0] * image.width / retained[0],
+            height: size[1] * image.height / retained[1],
+        })
+    }
+
+    /// Switch to normal cover framing, retaining an exactly representable crop.
+    pub fn convert_to_smart_crop(&mut self, i: usize) -> Result<(), String> {
+        if !self.selectable(i) {
+            return Err("Unlock and show this layer first.".into());
         }
+        self.finish_drag();
+        let g = self.layers[i];
+        let input = self.formats.input(i)?;
+        let crop = self.formats.advanced[i];
+        let exact = self.formats.layer_fit[i].is_none_or(|fit| {
+            fit.image(crop.remaining(input).unwrap_or(input), g)
+                .is_ok_and(|image| {
+                    (image.width - g.width).abs() < 1e-7 && (image.height - g.height).abs() < 1e-7
+                })
+        }) && crop
+            .remaining(input)
+            .is_ok_and(|r| (g.width / r[0] - g.height / r[1]).abs() < 1e-10)
+            && formats::mapping(input, [g.width, g.height], crop).is_ok();
+        let before = self.snapshot();
+        self.formats.advanced[i] = if exact {
+            crop
+        } else {
+            formats::crop_from_framing(input, [g.width, g.height], Framing::default())?
+        };
+        self.formats.layer_fit[i] = None;
+        self.remember(before);
+        Ok(())
+    }
+
+    pub fn start_content_resize(&mut self, index: usize, handle: ResizeHandle, point: [f64; 2]) {
         self.finish_drag();
         if !self.selectable(index)
             || self.selected() != Some(index)
@@ -1475,7 +1521,22 @@ impl Layout {
             }
             if let Some((source, crop)) = framing {
                 if let Some(mode) = fit {
-                    mode.image(crop.remaining(source.input()?)?, *geometry)?;
+                    let image = mode.image(crop.remaining(source.input()?)?, *geometry)?;
+                    // Normalize only an identical, uniformly scaled visible rectangle.
+                    if (image.width - geometry.width).abs() < 1e-7
+                        && (image.height - geometry.height).abs() < 1e-7
+                        && crop.remaining(source.input()?).is_ok_and(|r| {
+                            (geometry.width / r[0] - geometry.height / r[1]).abs() < 1e-10
+                        })
+                        && formats::mapping(
+                            source.input()?,
+                            [geometry.width, geometry.height],
+                            *crop,
+                        )
+                        .is_ok()
+                    {
+                        draft.formats.layer_fit[i] = None;
+                    }
                 } else {
                     formats::mapping(source.input()?, [geometry.width, geometry.height], *crop)?;
                 }
@@ -1833,13 +1894,15 @@ impl Layout {
                 let i = r.index;
                 let g = r.before.layers[i];
                 let input = r.before.formats.input(i)?;
-                if r.before.formats.layer_fit[i] == Some(formats::LayerFit::OneToOne) {
+                if let Some(fit) = r.before.formats.layer_fit[i] {
                     let mut crop = r.before.formats.advanced[i];
                     let remaining = crop.remaining(input)?;
-                    // The retained image stays centered: moving a displayed edge
-                    // by d changes retained size by 2d. Only the chosen source
-                    // crop edge changes; pixel scale and container never change.
-                    let delta = [2.0 * (point[0] - r.start[0]), 2.0 * (point[1] - r.start[1])];
+                    // Freeze the source transform until release; each edge follows the pointer.
+                    let image = fit.image(remaining, g)?;
+                    let delta = [
+                        (point[0] - r.start[0]) * remaining[0] / image.width,
+                        (point[1] - r.start[1]) * remaining[1] / image.height,
+                    ];
                     let left = matches!(
                         r.handle,
                         ResizeHandle::Left
@@ -1962,7 +2025,11 @@ impl Layout {
             })();
             match result {
                 Ok(crop) => {
-                    self.formats.advanced[r.index] = crop;
+                    if r.before.formats.layer_fit[r.index].is_some() {
+                        self.pending_edge_crop = Some(crop);
+                    } else {
+                        self.formats.advanced[r.index] = crop;
+                    }
                     self.gesture_error = None;
                 }
                 Err(e) => self.gesture_error = Some(e),
@@ -2146,6 +2213,9 @@ impl Layout {
             self.remember(before);
         }
         if let Some(r) = self.content_resize.take() {
+            if let Some(crop) = self.pending_edge_crop.take() {
+                self.formats.advanced[r.index] = crop;
+            }
             self.remember(r.before);
         }
         if let Some((_, before, _)) = self.content_drag.take() {
@@ -2159,6 +2229,7 @@ impl Layout {
         }
     }
     pub fn cancel_drag(&mut self) {
+        self.pending_edge_crop = None;
         if let Some((_, before, _, _)) = self.mask_drag.take() {
             self.restore(before);
         }

@@ -190,10 +190,10 @@ fn one_to_one_handles_trim_source_edges_without_zoom_and_undo_atomically() {
         assert_eq!(
             [crop.left, crop.right, crop.top, crop.bottom],
             [
-                100.0 + changes[0],
-                80.0 + changes[1],
-                60.0 + changes[2],
-                40.0 + changes[3]
+                100.0 + changes[0] / 2.0,
+                80.0 + changes[1] / 2.0,
+                60.0 + changes[2] / 2.0,
+                40.0 + changes[3] / 2.0
             ]
         );
         assert_eq!(layout.layers()[0], g);
@@ -221,11 +221,10 @@ fn one_to_one_crop_stops_at_source_limits_and_uncropped_image_cannot_move() {
     layout
         .set_layer_fit(0, Some(LayerFit::OneToOne), Crop::default())
         .unwrap();
-    let input = layout.formats().input(0).unwrap();
     layout.start_content_resize(0, ResizeHandle::Left, [0.0, 0.0]);
     layout.drag_to([100000.0, 0.0]);
-    let crop = layout.formats().advanced[0];
-    near(crop.remaining(input).unwrap()[0], 0.001);
+    near(layout.edge_crop_bounds(0).unwrap().width, 0.001);
+    assert_eq!(layout.formats().advanced[0], Crop::default());
     layout.drag_to([-100000.0, 0.0]);
     assert_eq!(layout.formats().advanced[0], Crop::default());
     layout.finish_drag();
@@ -237,7 +236,7 @@ fn one_to_one_crop_stops_at_source_limits_and_uncropped_image_cannot_move() {
         .set_layer_fit(0, Some(LayerFit::Centered), Crop::default())
         .unwrap();
     layout.start_content_resize(0, ResizeHandle::Left, [0.0, 0.0]);
-    assert!(!layout.dragging());
+    assert!(layout.dragging());
 }
 
 #[test]
@@ -305,4 +304,116 @@ fn one_to_one_pan_preserves_crop_size_and_clamps_each_axis_with_undo_cancel() {
     layout.cancel_drag();
     assert_eq!(Project::from_layout(&layout), after);
     assert!(crop.pan_image([f64::NAN, 0.0]).is_err());
+}
+
+#[test]
+fn advanced_edges_freeze_image_until_release_and_cancel_atomically() {
+    use canvas_pilot::ResizeHandle;
+    for fit in LayerFit::ALL {
+        let mut layout = Layout::default();
+        layout.select(Some(0));
+        layout.set_layer_fit(0, Some(fit), Crop::default()).unwrap();
+        let before = Project::from_layout(&layout);
+        let bounds = layout.edge_crop_bounds(0).unwrap();
+        layout.start_content_resize(0, ResizeHandle::Left, [bounds.x, bounds.y]);
+        layout.drag_to([bounds.x + bounds.width / 4.0, bounds.y]);
+        assert_eq!(Project::from_layout(&layout), before);
+        let pending = layout.edge_crop_bounds(0).unwrap();
+        near(pending.x, bounds.x + bounds.width / 4.0);
+        near(pending.width, bounds.width * 0.75);
+        layout.finish_drag();
+        near(
+            layout.formats().advanced[0].left,
+            layout.formats().input(0).unwrap()[0] / 4.0,
+        );
+        layout.undo();
+        assert_eq!(Project::from_layout(&layout), before);
+        layout.start_content_resize(0, ResizeHandle::Right, [0.0, 0.0]);
+        layout.drag_to([-10.0, 0.0]);
+        layout.cancel_drag();
+        assert_eq!(Project::from_layout(&layout), before);
+    }
+}
+
+#[test]
+fn device_exact_fit_uses_smart_crop_but_letterbox_and_stretch_stay_advanced() {
+    use canvas_pilot::formats::Source;
+    for (fit, width, height, normal) in [
+        (LayerFit::Centered, 960.0, 540.0, true),
+        (LayerFit::Cropped, 960.0, 540.0, true),
+        (LayerFit::OneToOne, 1920.0, 1080.0, true),
+        (LayerFit::Fullscreen, 960.0, 540.0, true),
+        (LayerFit::Centered, 960.0, 600.0, false),
+        (LayerFit::Cropped, 960.0, 600.0, false),
+        (LayerFit::Fullscreen, 960.0, 540.01, false),
+    ] {
+        let mut layout = Layout::default();
+        let g = Geometry {
+            x: 10.0,
+            y: 20.0,
+            width,
+            height,
+        };
+        layout
+            .import_device_layers_with_fit(
+                &[(None, g, Some((Source::default(), Crop::default())))],
+                &[Some(fit)],
+            )
+            .unwrap();
+        let i = layout.layers().len() - 1;
+        assert_eq!(
+            layout.formats().layer_fit[i].is_none(),
+            normal,
+            "{fit:?} {height}"
+        );
+        let before = Project::from_layout(&layout);
+        layout.convert_to_smart_crop(i).unwrap();
+        assert!(layout.formats().layer_fit[i].is_none());
+        assert_eq!(layout.layers()[i], g);
+        if !normal {
+            layout.undo();
+            assert_eq!(Project::from_layout(&layout), before);
+        }
+    }
+}
+
+#[test]
+fn exact_import_keeps_nonzero_crop_and_mask() {
+    use canvas_pilot::formats::{LayerAppearance, Mask, Source};
+    let mut layout = Layout::default();
+    let crop = Crop {
+        left: 160.0,
+        right: 160.0,
+        top: 90.0,
+        bottom: 90.0,
+    };
+    let mask = Mask {
+        left: 0.1,
+        ..Default::default()
+    };
+    let g = Geometry {
+        x: 20.0,
+        y: 30.0,
+        width: 800.0,
+        height: 450.0,
+    };
+    layout
+        .import_device_layers_with_appearance(
+            &[(None, g, Some((Source::default(), crop)))],
+            &[LayerAppearance {
+                fit: Some(LayerFit::Centered),
+                mask,
+            }],
+        )
+        .unwrap();
+    let i = layout.layers().len() - 1;
+    assert_eq!(layout.formats().layer_fit[i], None);
+    assert_eq!(layout.formats().advanced[i], crop);
+    assert_eq!(layout.formats().masks[i], mask);
+    layout
+        .set_layer_fit(i, Some(LayerFit::Centered), crop)
+        .unwrap();
+    layout.convert_to_smart_crop(i).unwrap();
+    assert_eq!(layout.formats().advanced[i], crop);
+    assert_eq!(layout.formats().masks[i], mask);
 }

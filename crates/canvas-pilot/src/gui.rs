@@ -463,15 +463,6 @@ fn bounds(g: Geometry) -> String {
     )
 }
 impl Editor {
-    fn automatic_layer_fit(&self, i: usize) -> bool {
-        matches!(
-            self.layout.formats().layer_fit[i],
-            Some(
-                canvas_pilot::formats::LayerFit::Centered
-                    | canvas_pilot::formats::LayerFit::Cropped
-            )
-        )
-    }
     fn mask_editing(&self) -> bool {
         self.edit_mask || (self.edit_content && self.alt_mask)
     }
@@ -603,18 +594,8 @@ impl Editor {
 
     fn toggle_crop_edit(&mut self) {
         self.edit_mask = false;
-        if let Some(i) = self.layout.selected()
-            && self.layout.formats().layer_fit[i]
-                .is_some_and(|fit| fit != canvas_pilot::formats::LayerFit::OneToOne)
-        {
-            self.edit_content = false;
-            self.property_tab = PropertyTab::Crop;
-            if self.format_draft.is_none() {
-                self.format_draft = Some(FormatDraft::new(&self.layout, i));
-            }
-        } else {
-            self.edit_content = !self.edit_content;
-        }
+        self.layout.finish_drag();
+        self.edit_content = !self.edit_content;
     }
 
     pub(super) fn with_saved_settings(ctx: &egui::Context) -> Self {
@@ -1929,25 +1910,18 @@ impl Editor {
             "crop.adjust"
         };
         let edit_width = if self.edit_content { w - 120.0 } else { w };
-        let automatic_fit = self.automatic_layer_fit(i) && !self.mask_editing();
-        if automatic_fit {
-            ink.card(0.0, 275.0, edit_width, 34.0, palette.field, palette.line);
-            ink.text(
-                12.0,
-                284.0,
-                &tr(ink.painter.ctx(), "ui.crop-helper-unavailable"),
-                13.0,
-                palette.muted,
-            );
-        } else {
-            ink.button(
-                0.0,
-                275.0,
-                edit_width,
-                &tr(ui.ctx(), edit_label),
-                self.edit_content,
-            );
-        }
+        let edit_label_text = tr(ui.ctx(), edit_label);
+        ink.button(
+            0.0,
+            275.0,
+            edit_width,
+            if self.layout.formats().layer_fit[i].is_some() && !self.edit_content {
+                "Adjust edge crop"
+            } else {
+                &edit_label_text
+            },
+            self.edit_content,
+        );
         if self.edit_content {
             ink.button(
                 w - 108.0,
@@ -1987,14 +1961,12 @@ impl Editor {
                 }
             }
         }
-        if !automatic_fit
-            && click(
-                ui,
-                &ink,
-                [0.0, 275.0, edit_width, 34.0],
-                "edit-layer-content",
-            )
-        {
+        if click(
+            ui,
+            &ink,
+            [0.0, 275.0, edit_width, 34.0],
+            "edit-layer-content",
+        ) {
             if self.mask_editing() {
                 self.edit_content = false;
                 self.format_draft = None;
@@ -2009,14 +1981,8 @@ impl Editor {
                     ui.ctx(),
                     if self.mask_editing() {
                         "crop.help-mask"
-                    } else if automatic_fit {
-                        "crop.help-auto"
-                    } else if self.layout.formats().layer_fit[i]
-                        == Some(canvas_pilot::formats::LayerFit::OneToOne)
-                    {
-                        "crop.help-native"
                     } else if self.layout.formats().layer_fit[i].is_some() {
-                        "crop.help-advanced"
+                        "Drag green edges to trim. Image refits on release."
                     } else {
                         "crop.help-normal"
                     },
@@ -2526,15 +2492,27 @@ impl Editor {
             "crop.adjust"
         };
         if ui
-            .add_enabled(
-                !self.automatic_layer_fit(i),
-                egui::Button::new(tr(ui.ctx(), crop_label)),
-            )
-            .on_disabled_hover_text("Centered and Cropped fit automatically; use Crop properties for numeric crop edges.")
-            .on_hover_text(tr(ui.ctx(), "ui.change-crop-zoom-and-offset-inside-the-layer-keep-its-visible-box-fixed"))
+            .button(if self.layout.formats().layer_fit[i].is_some() {
+                if self.edit_content && !self.mask_editing() { "Finish edge crop" } else { "Adjust edge crop" }.into()
+            } else {
+                tr(ui.ctx(), crop_label)
+            })
+            .on_hover_text(if self.layout.formats().layer_fit[i].is_some() {
+                "Trim green edges independently. The image refits on release; the container stays fixed.".into()
+            } else { tr(ui.ctx(), "ui.change-crop-zoom-and-offset-inside-the-layer-keep-its-visible-box-fixed") })
             .clicked()
         {
             self.toggle_crop_edit();
+            ui.close();
+        }
+        if self.layout.formats().layer_fit[i].is_some()
+            && ui.button("Convert to Smart crop")
+                .on_hover_text("Keep an exact matching crop; otherwise reset to centered cover framing. Undo restores the advanced fit.")
+                .clicked() {
+            match self.layout.convert_to_smart_crop(i) {
+                Ok(()) => { self.sync(); self.edit_mask = false; self.edit_content = true; },
+                Err(e) => self.error = e,
+            }
             ui.close();
         }
         if ui.button(tr(ui.ctx(), "ui.reset-crop")).clicked() {
@@ -2734,15 +2712,12 @@ impl Editor {
                     .is_some_and(|bounds| bounds.contains(pointer)))
             .then_some(i);
         }
-        if self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne) {
+        if self.layout.formats().layer_fit[i].is_some() {
             return (rect.contains(pointer)
                 || self
                     .crop_bounds(origin, scale)
                     .is_some_and(|r| r.contains(pointer)))
             .then_some(i);
-        }
-        if self.layout.formats().layer_fit[i].is_some() {
-            return None;
         }
         format_ui::content_bounds(
             rect,
@@ -2768,14 +2743,8 @@ impl Editor {
                 Vec2::new(g.width as f32, g.height as f32) * scale,
             ));
         }
-        if let Some(fit) = self.layout.formats().layer_fit[i] {
-            if fit != canvas_pilot::formats::LayerFit::OneToOne {
-                return None;
-            }
-            let retained = self.layout.formats().advanced[i]
-                .remaining(self.layout.formats().input(i).ok()?)
-                .ok()?;
-            let g = fit.image(retained, self.layout.layers()[i]).ok()?;
+        if self.layout.formats().layer_fit[i].is_some() {
+            let g = self.layout.edge_crop_bounds(i).ok()?;
             return Some(Rect::from_min_size(
                 origin + Vec2::new(g.x as f32, g.y as f32) * scale,
                 Vec2::new(g.width as f32, g.height as f32) * scale,
@@ -3779,17 +3748,21 @@ impl Editor {
         if self.edit_content
             && !self.mask_editing()
             && let Some(i) = self.layout.selected()
-            && self.layout.formats().layer_fit[i]
-                .is_none_or(|fit| fit == canvas_pilot::formats::LayerFit::OneToOne)
         {
             let g = self.layout.layers()[i];
             let rect = Rect::from_min_size(
                 origin + Vec2::new(g.x as f32, g.y as f32) * scale,
                 Vec2::new(g.width as f32, g.height as f32) * scale,
             );
-            if self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)
-            {
-                if let Some(image) = self.crop_bounds(origin, scale) {
+            if let Some(fit) = self.layout.formats().layer_fit[i] {
+                if let Ok(image) = self.layout.formats().advanced[i]
+                    .remaining(self.layout.formats().input(i).unwrap())
+                    .and_then(|retained| fit.image(retained, g))
+                {
+                    let image = Rect::from_min_size(
+                        origin + Vec2::new(image.x as f32, image.y as f32) * scale,
+                        Vec2::new(image.width as f32, image.height as f32) * scale,
+                    );
                     // Do not stack the crop ghost over the masked-area ghost inside
                     // the layer. Keep the usable-source guide outside it and in the reveal.
                     let reveal = format_ui::layer_mask_rect(rect, &self.layout, i)
@@ -3964,9 +3937,29 @@ impl Editor {
             let p = &screen.painter;
             let helper_color = if self.mask_editing() {
                 Color32::from_rgb(222, 108, 220)
+            } else if self
+                .layout
+                .selected()
+                .is_some_and(|i| self.layout.formats().layer_fit[i].is_some())
+            {
+                Color32::from_rgb(100, 220, 130)
             } else {
                 palette.cyan
             };
+            if !self.mask_editing()
+                && self.layout.dragging()
+                && let Some(i) = self.layout.selected()
+                && self.layout.formats().layer_fit[i].is_some()
+            {
+                let g = self.layout.layers()[i];
+                let container = Rect::from_min_size(
+                    origin + Vec2::new(g.x as f32, g.y as f32) * scale,
+                    Vec2::new(g.width as f32, g.height as f32) * scale,
+                );
+                for strip in format_ui::outside_strips(container, rect) {
+                    p.rect_filled(strip, 0.0, Color32::from_black_alpha(110));
+                }
+            }
             let covers = selection_outline::covers(
                 &self.layout,
                 self.layout.selected().unwrap(),
@@ -4073,7 +4066,7 @@ impl Editor {
             ink.text(
             24.0,
             r.height() - 40.0,
-            if move_pointer { "Move tool · Drag anywhere to move the current selection · V: Select · H: Pan" } else if self.navigation_tool == NavigationTool::Pan { "Pan tool · Drag to move the view · V: Select · Z: Zoom · Space/middle-drag pans from any tool" } else if self.navigation_tool == NavigationTool::Zoom { "Zoom tool · Click to zoom in · Alt-click to zoom out · Drag right/left to zoom · V: Select · H: Pan" } else if self.edit_content && self.mask_editing() { "Mask · Enter: finish · Tab: crop · Drag edges to blank · Drag inside layer or use arrows to move window · Shift+arrows: 10 px · Escape cancels" } else if self.edit_content && self.layout.selected().is_some_and(|i| self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)) { "1:1 crop · Tab: mask · Drag edges to trim · Drag picture or use arrows to reposition · Enter, double-click or click outside to finish" } else if pivot_visible { "Pivot resize · Drag pivot to position · Double-click to center · Ctrl temporarily toggles pivot" } else if self.edit_content { "Crop mode · Tab: mask · Hold Alt/Option for temporary mask · Drag crop handles to zoom content · Drag image to reposition · Enter, double-click or click outside to finish" } else { match self.active_resize_mode() {
+            if move_pointer { "Move tool · Drag anywhere to move the current selection · V: Select · H: Pan" } else if self.navigation_tool == NavigationTool::Pan { "Pan tool · Drag to move the view · V: Select · Z: Zoom · Space/middle-drag pans from any tool" } else if self.navigation_tool == NavigationTool::Zoom { "Zoom tool · Click to zoom in · Alt-click to zoom out · Drag right/left to zoom · V: Select · H: Pan" } else if self.edit_content && self.mask_editing() { "Mask · Enter: finish · Tab: crop · Drag edges to blank · Drag inside layer or use arrows to move window · Shift+arrows: 10 px · Escape cancels" } else if self.edit_content && self.layout.selected().is_some_and(|i| self.layout.formats().layer_fit[i] == Some(canvas_pilot::formats::LayerFit::OneToOne)) { "1:1 edge crop · Tab: mask · Green edges refit on release · Drag picture or use arrows to reposition · Enter, double-click or click outside to finish" } else if self.edit_content && self.layout.selected().is_some_and(|i| self.layout.formats().layer_fit[i].is_some()) { "Edge crop · Drag green edges to trim · Image refits on release · Enter/double-click: finish · Escape: cancel" } else if pivot_visible { "Pivot resize · Drag pivot to position · Double-click to center · Ctrl temporarily toggles pivot" } else if self.edit_content { "Crop mode · Tab: mask · Hold Alt/Option for temporary mask · Drag crop handles to zoom content · Drag image to reposition · Enter, double-click or click outside to finish" } else { match self.active_resize_mode() {
                 ResizeMode::Individual => "Corners resize · Side handles keep opposite edge fixed · Shift-click selects",
                 ResizeMode::Same => "Same handles · Matching handles scale selected layers proportionally · Escape cancels drag",
                 ResizeMode::Mirror => "Mirror horizontally · Left/right mirrored handles · Escape cancels drag",
@@ -6682,7 +6675,47 @@ mod tests {
     }
 
     #[test]
-    fn automatic_fit_shortcuts_open_crop_properties_without_changing_fit_or_geometry() {
+    fn advanced_crop_handles_stage_until_pointer_release() {
+        use canvas_pilot::formats::{Crop, LayerFit};
+        for fit in [LayerFit::Centered, LayerFit::Cropped, LayerFit::Fullscreen] {
+            let mut app = Editor::default();
+            let ctx = egui::Context::default();
+            let rect = layer_rects(&frame(&mut app, &ctx, vec![]))[1];
+            app.layout.select(Some(1));
+            app.layout
+                .set_layer_fit(1, Some(fit), Crop::default())
+                .unwrap();
+            app.edit_content = true;
+            frame(&mut app, &ctx, vec![]);
+            let before = app.project();
+            let g = app.layout.layers()[1];
+            let image = app.layout.edge_crop_bounds(1).unwrap();
+            let k = rect.width() / g.width as f32;
+            let start = rect.min
+                + Vec2::new(
+                    (image.x - g.x) as f32,
+                    (image.y + image.height / 2.0 - g.y) as f32,
+                ) * k;
+            let end = start + Vec2::new(15.0, 0.0);
+            frame(
+                &mut app,
+                &ctx,
+                vec![egui::Event::PointerMoved(start), mouse(start, true)],
+            );
+            frame(&mut app, &ctx, vec![egui::Event::PointerMoved(end)]);
+            assert!(app.layout.dragging(), "{fit:?}");
+            assert_eq!(app.project(), before);
+            assert!(app.layout.edge_crop_bounds(1).unwrap().x > image.x);
+            frame(&mut app, &ctx, vec![mouse(end, false)]);
+            assert!(app.layout.formats().advanced[1].left > 0.0);
+            assert_eq!(app.layout.layers()[1], g);
+            app.layout.undo();
+            assert_eq!(app.project(), before);
+        }
+    }
+
+    #[test]
+    fn advanced_fit_shortcuts_open_edge_crop_without_changing_fit_or_geometry() {
         use canvas_pilot::formats::LayerFit;
         for fit in [LayerFit::Centered, LayerFit::Cropped, LayerFit::Fullscreen] {
             for keyboard in [false, true] {
@@ -6708,14 +6741,8 @@ mod tests {
                         frame(&mut app, &ctx, vec![mouse(pos, false)]);
                     }
                 }
-                assert!(
-                    app.format_draft
-                        .as_ref()
-                        .is_some_and(|draft| draft.is_for(1)),
-                    "{fit:?}, keyboard={keyboard}"
-                );
-                assert!(matches!(app.property_tab, PropertyTab::Crop));
-                assert!(!app.edit_content);
+                assert!(app.edit_content, "{fit:?}, keyboard={keyboard}");
+                assert!(app.format_draft.is_none());
                 assert_eq!(app.project(), before);
             }
         }

@@ -176,29 +176,29 @@ pixels, apply first; the retained image is centered and clipped to that containe
 1:1 preserves pixel scale, Centered preserves proportions with transparent
 margins, Fullscreen stretches, and Cropped fills while clipping overflow.
 
-Resize changes the container and preserves these crop edges. For **1:1**, double-click
-the layer or choose **Adjust layer crop** to show the crop helper. Drag a side to
-trim/restore that source edge; corners adjust two edges independently. The cyan
-outline shows the retained image, with the usable source faded behind it. It
-never zooms or stretches the image, and ignores aspect lock/pivot scaling.
-The retained picture stays centered, so its outline contracts/expands symmetrically
-even though only the chosen source crop edge changes. The container stays fixed.
-Drag anywhere inside the layer, including empty margins outside the retained
-picture, to reposition the crop as a whole. The picture follows the pointer;
-opposite crop edges trade pixels, preserving the retained width/height and 1:1
-scale. Movement stops at the usable source boundaries. Arrow keys move by one
-source pixel; Shift+arrows move by ten. The layer container stays in place.
-Use viewport zoom/pan to reach handles outside the screen. Each drag is one Undo
-step; Escape cancels an active drag and exits the helper. Numeric crop fields stay
-in sync. **Centered** and **Cropped** fit automatically, so their helper button
-and context-menu helper action are disabled. Double-click or Enter opens their
-**Crop properties** with editable numeric crop edges instead of the canvas helper.
-Fullscreen uses those same numeric crop controls. These shortcuts preserve the
-selected fit mode and do not change the document. Unchecking
-resets to normal centered cover framing. Input/global inheritance is intentionally
-omitted. Pending Source edits remain staged and require Apply as usual.
+Resize changes the container and preserves these crop edges. Double-click, Enter,
+or **Adjust edge crop** opens the advanced helper. Its **green** outline shows the
+retained image; the full usable source appears faded behind it. Drag a side to
+trim/restore that edge, or a corner to change two edges independently. The image
+stays still during the drag, with discarded areas shaded. On release, the chosen
+fit recenters/refits the retained image inside the unchanged container. Aspect
+lock and pivot scaling do not affect this edge operation.
 
-Midra loads preserve all four explicit modes and open the checkbox automatically.
+Use viewport zoom/pan to reach handles outside the screen. Each drag is one Undo
+step; Escape cancels it. In 1:1 mode, dragging the picture or using arrow keys also
+repositions the crop without changing its retained size (Shift moves ten pixels).
+Numeric crop controls remain available in Crop properties.
+
+**Convert to Smart crop**, in the right-click menu and Crop properties, switches
+to Canvas Pilot's normal zoom/position algorithm. It preserves an exactly matching
+crop; otherwise it resets to centered cover framing, so the picture can change.
+Undo restores the previous fit and crop. Unchecking Advanced layer fit also resets
+to centered cover framing. Pending Source edits still require Apply.
+
+Device loads use Smart crop when the retained picture exactly fills the container
+with uniform scaling and the crop is representable by the normal algorithm.
+Letterboxing, overflow and stretching retain their advanced fit. Existing saved
+projects keep their explicitly chosen modes.
 Sends use container dimensions regardless of sizing strategy, and never change
 input routing. Aquilon sends reject advanced fit until its adapter supports it.
 Projects/recovery preserve the mode. Pixel rounding is approximate pending the

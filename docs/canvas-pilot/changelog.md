@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### v0.10.0-rc.13
+
+- Import exact device fits as normal Smart crop. Preserve advanced modes for
+  letterboxing, overflow and stretching, and preserve saved project choices.
+- Add green advanced edge-crop handles with a frozen image during dragging and
+  refitting on release. Add explicit, undoable Convert to Smart crop actions in
+  Crop properties and the context menu. Geometry/interaction regression tests
+  cover exact-fit selection, staged edits, source limits and undo/cancel.
+
 ### v0.10.0-rc.12
 
 - Double-click and Enter open Crop properties for Centered/Cropped layers instead

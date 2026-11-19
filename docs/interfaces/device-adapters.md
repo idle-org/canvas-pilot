@@ -214,3 +214,14 @@ Only available inputs with valid signals, compatible native dimensions, and supp
 uncorrected input processing are accepted. Preview following is read-only, clears
 stale captures, and uses the existing pooled capture scheduler. Neither option
 changes the project or exchange schema.
+
+### Editor normalization of exact imported fits
+
+Adapter snapshots retain the device fit. On import into the editor, an explicit
+fit becomes normal (`null`) only if its retained-image width/height equal the
+container within 1e-7 output pixels, horizontal/vertical scales differ by less than
+1e-10, and the normal crop mapping validates. Source, crop, container and mask are
+unchanged. This applies to linked and unlinked loads; project deserialization does
+not normalize saved modes. Advanced edge-helper drags stage crop changes until
+release, keeping the source transform fixed; cancellation discards the staged crop
+and release creates one undo entry. This is editor behavior, not device acceptance.

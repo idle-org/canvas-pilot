@@ -469,14 +469,16 @@ impl Editor {
                 let current = self.layout.layers()[i];
                 let (_, area) = ui.allocate_space(Vec2::new(ui.available_width(),170.0));
                 paint_layer_source(ui.painter(),fit_rect(area,[current.width,current.height]), &self.layout, i, self.layer_preview(i));
-                if current_fit == canvas_pilot::formats::LayerFit::OneToOne {
-                    ui.small(tr(ui.ctx(), "ui.drag-helper-edges-to-trim-without-zooming-drag-anywhere-inside-the-layer-including-em"));
-                } else if matches!(current_fit, canvas_pilot::formats::LayerFit::Centered | canvas_pilot::formats::LayerFit::Cropped) {
-                    ui.small(tr(ui.ctx(), "ui.this-mode-fits-automatically-the-canvas-crop-helper-is-disabled-numeric-crop-edges-re"));
-                } else {
-                    ui.small(tr(ui.ctx(), "ui.edit-crop-edges-here-visual-zoom-drag-controls-are-for-normal-crop-mode"));
+                ui.small("Drag green edge handles on the canvas to trim each side. The image stays still until release, then refits. Double-click or Enter opens/closes this helper.");
+                if ui.button("Convert to Smart crop")
+                    .on_hover_text("Keep an exact matching crop; otherwise reset to centered cover framing. Undo restores the advanced fit.")
+                    .clicked() {
+                    match self.layout.convert_to_smart_crop(i) {
+                        Ok(()) => { self.sync(); d.refresh_fit(&self.layout); self.edit_mask = false; self.edit_content = true; }
+                        Err(e) => d.error = e,
+                    }
                 }
-                ui.small(tr(ui.ctx(), "ui.disabling-advanced-fit-restores-normal-cover-framing-device-subpixel-rendering-is-app"));
+
             } else {
 
             ui.label(tr(ui.ctx(), "ui.zoom-and-position-change-the-crop-values-inside-this-layer-keeping-its-visible-box-fi"));
@@ -582,9 +584,10 @@ pub(super) fn content_bounds(rect: Rect, source: Source, crop: Crop) -> Option<R
     let input = source.input().ok()?;
     let retained = crop.remaining(input).ok()?;
     let k = rect.width() as f64 / retained[0];
+    let ky = rect.height() as f64 / retained[1];
     Some(Rect::from_min_size(
-        rect.min - Vec2::new((crop.left * k) as f32, (crop.top * k) as f32),
-        Vec2::new((input[0] * k) as f32, (input[1] * k) as f32),
+        rect.min - Vec2::new((crop.left * k) as f32, (crop.top * ky) as f32),
+        Vec2::new((input[0] * k) as f32, (input[1] * ky) as f32),
     ))
 }
 
