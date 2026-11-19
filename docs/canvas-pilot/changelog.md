@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.3
+
+- Tighten the selected-layer inspector spacing around crop, measurement, geometry
+  and ratio controls, keeping the same controls visible in less vertical space.
+
 ### v0.10.2
 
 - Store **Keep aspect ratio when resizing** on each layer, so layers can use

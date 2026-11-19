@@ -1574,7 +1574,7 @@ impl Editor {
             - input_reference_rows as f32 * (44.0 - capture_ui::INPUT_REFERENCE_ROW_HEIGHT);
         let details_height = match self.layout.selected_indices().len() {
             0 => 220.0,
-            1 => 958.0,
+            1 => 927.0,
             _ => 1071.0,
         };
         let palette = theme::palette(ui.ctx());
@@ -1860,7 +1860,7 @@ impl Editor {
         ink.text(0.0, 150.0, &self.layout.layer_label(i), 25.0, palette.text);
         ink.text(
             0.0,
-            191.0,
+            184.0,
             &tr(
                 ink.painter.ctx(),
                 "ui.layer-resolution-click-for-layer-properties",
@@ -1868,10 +1868,10 @@ impl Editor {
             11.0,
             palette.muted,
         );
-        ink.card(0.0, 214.0, w, 34.0, palette.field, palette.line);
+        ink.card(0.0, 203.0, w, 34.0, palette.field, palette.line);
         ink.text(
             12.0,
-            223.0,
+            212.0,
             &format!(
                 "{} × {} px  /  {}",
                 number(g.width),
@@ -1881,14 +1881,14 @@ impl Editor {
             13.0,
             palette.text,
         );
-        if click(ui, &ink, [0.0, 214.0, w, 34.0], "open-formats") {
+        if click(ui, &ink, [0.0, 203.0, w, 34.0], "open-formats") {
             self.property_tab = PropertyTab::Layer;
             self.format_draft = Some(FormatDraft::new(&self.layout, i));
         }
         if let Some(mode) = self.layout.formats().layer_fit[i] {
             ink.text(
                 0.0,
-                251.0,
+                240.0,
                 &format!("{} · container bounds", mode.label()),
                 11.0,
                 palette.muted,
@@ -1896,7 +1896,7 @@ impl Editor {
         } else if let Ok(m) = self.layout.formats().mapping(i, g) {
             ink.text(
                 0.0,
-                251.0,
+                240.0,
                 &format!(
                     "Input {} · content {:.1}% · offset {:.1}, {:.1}",
                     self.layout.formats().source_for[i] + 1,
@@ -1919,7 +1919,7 @@ impl Editor {
         let edit_label_text = tr(ui.ctx(), edit_label);
         ink.button(
             0.0,
-            275.0,
+            263.0,
             edit_width,
             if self.layout.formats().layer_fit[i].is_some() && !self.edit_content {
                 "Adjust edge crop"
@@ -1931,7 +1931,7 @@ impl Editor {
         if self.edit_content {
             ink.button(
                 w - 108.0,
-                275.0,
+                263.0,
                 108.0,
                 if self.mask_editing() {
                     "Reset mask"
@@ -1943,7 +1943,7 @@ impl Editor {
             if click(
                 ui,
                 &ink,
-                [w - 108.0, 275.0, 108.0, 34.0],
+                [w - 108.0, 263.0, 108.0, 34.0],
                 "reset-visual-crop",
             ) {
                 let result = if self.mask_editing() {
@@ -1970,7 +1970,7 @@ impl Editor {
         if click(
             ui,
             &ink,
-            [0.0, 275.0, edit_width, 34.0],
+            [0.0, 263.0, edit_width, 34.0],
             "edit-layer-content",
         ) {
             if self.mask_editing() {
@@ -1981,7 +1981,7 @@ impl Editor {
             }
         }
         ui.put(
-            Rect::from_min_size(ink.point(0.0, 317.0), Vec2::new(w, 48.0)),
+            Rect::from_min_size(ink.point(0.0, 305.0), Vec2::new(w, 48.0)),
             egui::Label::new(
                 egui::RichText::new(tr(
                     ui.ctx(),
@@ -2001,7 +2001,7 @@ impl Editor {
         );
         ink.text(
             0.0,
-            375.0,
+            357.0,
             &tr(ink.painter.ctx(), "ui.measure-position-from"),
             11.0,
             palette.muted,
@@ -2014,7 +2014,7 @@ impl Editor {
         )
         .into_owned();
         let button = ui.put(
-            Rect::from_min_size(ink.point(0.0, 394.0), Vec2::new(w, 34.0)),
+            Rect::from_min_size(ink.point(0.0, 376.0), Vec2::new(w, 34.0)),
             egui::Button::new(label),
         );
         let arrow = button.rect.right_center() - Vec2::new(13.0, 0.0);
@@ -2038,7 +2038,7 @@ impl Editor {
             PositionPoint::BottomLeft => ("position.left", "position.bottom"),
             PositionPoint::BottomRight => ("position.right", "position.bottom"),
         };
-        let ink = Ink::new(ui, r.translate(Vec2::new(0.0, 88.0)));
+        let ink = Ink::new(ui, r.translate(Vec2::new(0.0, 70.0)));
         let half = (w - 12.0) / 2.0;
         let mut enter = false;
         for (index, x, y, title) in [
@@ -2048,14 +2048,14 @@ impl Editor {
             (3, half + 12.0, 449.0, "position.height"),
         ] {
             ink.text(x, y, &tr(ui.ctx(), title), 12.0, palette.muted);
-            let rect = Rect::from_min_size(ink.point(x, y + 23.0), Vec2::new(half, 42.0));
+            let rect = Rect::from_min_size(ink.point(x, y + 23.0), Vec2::new(half, 38.0));
             self.field_rects[index] = rect;
             let response = ui.put(
                 rect,
                 egui::TextEdit::singleline(&mut self.fields[index])
                     .id(egui::Id::new(("geometry", index)))
                     .font(egui::FontId::proportional(18.0))
-                    .margin(Vec2::new(12.0, 10.0)),
+                    .margin(Vec2::new(12.0, 8.0)),
             );
             if response.changed() {
                 self.fields_edited = true;
@@ -2082,12 +2082,12 @@ impl Editor {
         }
         ui.scope_builder(
             egui::UiBuilder::new().max_rect(Rect::from_min_size(
-                ink.point(0.0, 530.0),
+                ink.point(0.0, 522.0),
                 Vec2::new(w, 76.0),
             )),
             |ui| self.resize_ratio_option(ui),
         );
-        let ink = Ink::new(ui, r.translate(Vec2::new(0.0, 140.0)));
+        let ink = Ink::new(ui, r.translate(Vec2::new(0.0, 109.0)));
         let pending = self.fields_pending();
         if enter && pending {
             self.apply_fields();
@@ -2104,7 +2104,7 @@ impl Editor {
                     .wrap(),
             );
         }
-        let ink = Ink::new(ui, r.translate(Vec2::new(0.0, 119.0)));
+        let ink = Ink::new(ui, r.translate(Vec2::new(0.0, 88.0)));
         ink.line([0.0, 640.0], [w, 640.0], palette.line);
         ink.text(
             0.0,
