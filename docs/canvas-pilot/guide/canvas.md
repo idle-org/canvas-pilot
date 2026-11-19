@@ -217,6 +217,11 @@ stay selected across selection changes and project loads in this session; they
 are not saved to projects/settings and start off on launch. They affect layer
 movement/resize, not numeric edits or crop-content handles.
 
+With snapping enabled, **Pixel edges** gives whole output pixels a small magnetic
+zone during layer movement and resizing. Screen, layer and grid alignment keeps
+priority. Moving beyond one quarter pixel from the nearest integer retains the
+fractional coordinate, so precise subpixel placement remains available at high zoom.
+
 <!-- Screenshot recipe: ../images/capture.md#advanced-guide-captures -->
 ![Overlay grid controls with eight columns, six rows and separate visibility and snapping switches](../images/10-guide-grid.png)
 

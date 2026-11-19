@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.0-rc.18
+
+- Make **Pixel edges** a soft whole-pixel preference for mouse movement and
+  resizing. Coordinates within one quarter pixel settle on the integer after
+  stronger screen, layer and grid snaps; farther fractional placement remains
+  available for precise work at high canvas zoom.
+
 ### v0.10.0-rc.17
 
 - Keep extreme scroll zoom responsive by omitting camera-scaled decorative canvas

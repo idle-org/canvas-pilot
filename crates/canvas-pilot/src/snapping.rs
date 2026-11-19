@@ -1,6 +1,15 @@
 //! Proximity snapping for layer movement and anchored single/group resizing.
 use crate::{Geometry, Layout, ResizeHandle, ResizeMode};
 
+// Favor integer screen coordinates without turning the pixel option into a hard grid.
+// A quarter-pixel capture zone leaves an equally wide free zone around half pixels.
+const PIXEL_MAGNET_RADIUS: f64 = 0.25;
+
+fn pixel_magnet(value: f64) -> Option<f64> {
+    let target = value.round();
+    ((target - value).abs() <= PIXEL_MAGNET_RADIUS).then_some(target)
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Snapping {
@@ -166,8 +175,10 @@ impl Layout {
             {
                 target[axis] = edge;
                 guides[axis] = Some(edge);
-            } else if options.pixels {
-                target[axis] = point[axis].round();
+            } else if options.pixels
+                && let Some(pixel) = pixel_magnet(point[axis])
+            {
+                target[axis] = pixel;
             }
         }
         (target, guides)
@@ -274,7 +285,9 @@ impl Layout {
                 && let Some(i) = selected.iter().position(|v| *v)
             {
                 let coordinate = edge(before.layers[i], axis)[0] + delta[axis];
-                delta[axis] += coordinate.round() - coordinate;
+                if let Some(pixel) = pixel_magnet(coordinate) {
+                    delta[axis] += pixel - coordinate;
+                }
             }
         }
         let mut next = before.layers;
@@ -348,7 +361,9 @@ impl Layout {
         grid: Option<f64>,
     ) -> [Option<f64>; 2] {
         let r = self.resize.clone().expect("resize gesture");
-        self.drag_to_with_precision(point, grid.is_some());
+        // Pixel-edge snapping needs the precise pointer result so its small magnetic
+        // zone can favor integers without making fractional resizing unreachable.
+        self.drag_to_with_precision(point, grid.is_some() || options.pixels);
         if self.gesture_error.is_some() || point.iter().any(|v| !v.is_finite()) {
             return [None; 2];
         }
@@ -452,7 +467,9 @@ impl Layout {
             if options.pixels {
                 let spacing = grid.unwrap_or(1.0);
                 let target = (current[axis] / spacing).round() * spacing;
-                candidates.push((2, (target - current[axis]).abs(), axis, target, None));
+                if grid.is_some() || pixel_magnet(current[axis]).is_some() {
+                    candidates.push((2, (target - current[axis]).abs(), axis, target, None));
+                }
             }
         }
         candidates.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)));
@@ -509,5 +526,34 @@ impl Layout {
             self.restore(base.clone());
         }
         [None; 2]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn pixels_only() -> Snapping {
+        Snapping {
+            enabled: true,
+            pixels: true,
+            screen_edges: false,
+            layer_edges: false,
+            mask_edges: false,
+            grid: false,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn pixel_edges_are_magnetic_without_forbidding_fractional_resizes() {
+        let mut layout = Layout::default();
+        layout.start_handle_resize(1, ResizeHandle::Right, [1800.0, 360.0], false);
+
+        layout.drag_to_snapped([1800.2, 360.0], pixels_only(), 6.0);
+        assert_eq!(layout.layers()[1].x + layout.layers()[1].width, 1800.0);
+
+        layout.drag_to_snapped([1800.4, 360.0], pixels_only(), 6.0);
+        assert!((layout.layers()[1].x + layout.layers()[1].width - 1800.4).abs() < 1e-9);
     }
 }

@@ -250,8 +250,12 @@ fn pivot_placement_honors_screen_layer_pixel_and_grid_options() {
     options.layer_edges = false;
     options.pixels = true;
     assert_eq!(
-        layout.snap_pivot(1, [833.3, 653.7], options, 6.0, None, true),
+        layout.snap_pivot(1, [833.2, 653.8], options, 6.0, None, true),
         ([833.0, 654.0], [None; 2])
+    );
+    assert_eq!(
+        layout.snap_pivot(1, [833.3, 653.7], options, 6.0, None, true),
+        ([833.3, 653.7], [None; 2])
     );
     for spacing in [10.0, 100.0] {
         let target = [833.3_f64, 653.7].map(|p| (p / spacing).round() * spacing);

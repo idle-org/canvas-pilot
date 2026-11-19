@@ -76,25 +76,26 @@ fn group_snapping_preserves_spacing_and_cancel_restores_geometry() {
     assert_eq!(layout.layers()[0].x, 3.0);
 }
 #[test]
-fn pixel_snap_can_be_disabled_and_numeric_entry_bypasses_it() {
+fn pixel_snap_is_soft_and_optional_while_numeric_entry_bypasses_it() {
     let mut layout = Layout::default();
     let mut g = layout.layers()[1];
     g.x = 1160.25;
     layout.apply(1, g).unwrap();
-    for pixels in [false, true] {
+    let options = |pixels| Snapping {
+        enabled: true,
+        pixels,
+        screen_edges: false,
+        layer_edges: false,
+        ..Default::default()
+    };
+    for (pixels, pointer, expected) in [
+        (false, 1199.9, 1160.15),
+        (true, 1199.9, 1160.0),
+        (true, 1200.2, 1160.45),
+    ] {
         layout.start_drag([1200.0, 200.0]);
-        layout.drag_to_snapped(
-            [1200.2, 200.0],
-            Snapping {
-                enabled: true,
-                pixels,
-                screen_edges: false,
-                layer_edges: false,
-                ..Default::default()
-            },
-            6.0,
-        );
-        assert!((layout.layers()[1].x - if pixels { 1160.0 } else { 1160.45 }).abs() < 1e-8);
+        layout.drag_to_snapped([pointer, 200.0], options(pixels), 6.0);
+        assert!((layout.layers()[1].x - expected).abs() < 1e-8);
         layout.cancel_drag();
         assert_eq!(layout.layers()[1], g);
     }
