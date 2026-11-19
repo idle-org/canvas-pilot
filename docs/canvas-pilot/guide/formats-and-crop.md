@@ -192,8 +192,10 @@ Numeric crop controls remain available in Crop properties.
 **Convert to Smart crop**, in the right-click menu and Crop properties, switches
 to Canvas Pilot's normal zoom/position algorithm. It preserves an exactly matching
 crop; otherwise it resets to centered cover framing, so the picture can change.
-Undo restores the previous fit and crop. Unchecking Advanced layer fit also resets
-to centered cover framing. Pending Source edits still require Apply.
+**Convert to Edge crop** appears in the same places for a Smart crop. It keeps the
+current picture, crop, container and mask exactly as they are, selects Centered fit,
+and opens the green edge helper. Undo returns to Smart crop. Unchecking Advanced
+layer fit resets to centered cover framing. Pending Source edits still require Apply.
 
 Device loads use Smart crop when the retained picture exactly fills the container
 with uniform scaling and the crop is representable by the normal algorithm.

@@ -1082,6 +1082,28 @@ impl Layout {
         Ok(())
     }
 
+    /// Switch a normal crop to Centered edge crop without changing its picture.
+    pub fn convert_to_edge_crop(&mut self, i: usize) -> Result<(), String> {
+        if !self.selectable(i) {
+            return Err("Unlock and show this layer first.".into());
+        }
+        if self.formats.layer_fit[i].is_some() {
+            return Ok(());
+        }
+        self.finish_drag();
+        let geometry = self.layers[i];
+        let crop = self.formats.advanced[i];
+        formats::mapping(
+            self.formats.input(i)?,
+            [geometry.width, geometry.height],
+            crop,
+        )?;
+        let before = self.snapshot();
+        self.formats.layer_fit[i] = Some(formats::LayerFit::Centered);
+        self.remember(before);
+        Ok(())
+    }
+
     pub fn start_content_resize(&mut self, index: usize, handle: ResizeHandle, point: [f64; 2]) {
         self.finish_drag();
         if !self.selectable(index)

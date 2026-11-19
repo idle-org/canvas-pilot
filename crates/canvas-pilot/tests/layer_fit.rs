@@ -505,3 +505,48 @@ fn rounded_import_tolerance_is_bounded_and_does_not_change_native_or_stretch_mod
         }
     }
 }
+
+#[test]
+fn smart_crop_converts_to_centered_edge_crop_losslessly_and_undoes() {
+    use canvas_pilot::formats::{Framing, Mask};
+    let mut layout = Layout::default();
+    layout.select(Some(0));
+    layout
+        .set_framing(
+            0,
+            Framing {
+                zoom: 1.75,
+                offset: [41.0, -23.0],
+            },
+        )
+        .unwrap();
+    let mask = Mask {
+        left: 0.1,
+        right: 0.05,
+        ..Default::default()
+    };
+    layout.set_mask(0, mask).unwrap();
+    let before = Project::from_layout(&layout);
+    let geometry = layout.layers()[0];
+    let crop = layout.formats().advanced[0];
+    let input = layout.formats().input(0).unwrap();
+
+    layout.convert_to_edge_crop(0).unwrap();
+    assert_eq!(layout.formats().layer_fit[0], Some(LayerFit::Centered));
+    assert_eq!(layout.layers()[0], geometry);
+    assert_eq!(layout.formats().advanced[0], crop);
+    assert_eq!(layout.formats().masks[0], mask);
+    let image = LayerFit::Centered
+        .image(crop.remaining(input).unwrap(), geometry)
+        .unwrap();
+    near(image.x, geometry.x);
+    near(image.y, geometry.y);
+    near(image.width, geometry.width);
+    near(image.height, geometry.height);
+
+    layout.undo();
+    assert_eq!(Project::from_layout(&layout), before);
+    layout.redo();
+    layout.convert_to_smart_crop(0).unwrap();
+    assert_eq!(Project::from_layout(&layout), before);
+}

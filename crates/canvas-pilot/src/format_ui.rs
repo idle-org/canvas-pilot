@@ -511,6 +511,19 @@ impl Editor {
             });
             if !ui.input(|input| input.pointer.primary_down()) { d.crop_before = None; }
             ui.small(tr(ui.ctx(), "ui.crop-zoom-and-offsets-apply-as-you-edit-offsets-stop-at-the-content-edges-and-adjust"));
+            if ui.button("Convert to Edge crop")
+                .on_hover_text("Keep the current picture and crop, then edit its source edges independently. Undo returns to Smart crop.")
+                .clicked() {
+                match self.layout.convert_to_edge_crop(i) {
+                    Ok(()) => {
+                        self.sync();
+                        d.refresh_fit(&self.layout);
+                        self.edit_mask = false;
+                        self.edit_content = true;
+                    }
+                    Err(e) => d.error = e,
+                }
+            }
             }
             }
             if self.property_tab == PropertyTab::Preview {

@@ -2515,6 +2515,16 @@ impl Editor {
             }
             ui.close();
         }
+        if self.layout.formats().layer_fit[i].is_none()
+            && ui.button("Convert to Edge crop")
+                .on_hover_text("Keep the current picture and crop, then edit its source edges independently. Undo returns to Smart crop.")
+                .clicked() {
+            match self.layout.convert_to_edge_crop(i) {
+                Ok(()) => { self.sync(); self.edit_mask = false; self.edit_content = true; },
+                Err(e) => self.error = e,
+            }
+            ui.close();
+        }
         if ui.button(tr(ui.ctx(), "ui.reset-crop")).clicked() {
             let result = if let Some(mode) = self.layout.formats().layer_fit[i] {
                 self.layout
@@ -9126,6 +9136,8 @@ mod tests {
                     !labels.iter().any(|label| label.starts_with("crop.")),
                     "raw key in {language:?} menu"
                 );
+                assert!(labels.contains(&"Convert to Edge crop"));
+                assert!(!labels.contains(&"Convert to Smart crop"));
             }
         }
     }

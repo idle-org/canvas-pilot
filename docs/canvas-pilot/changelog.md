@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.10.0-rc.15
+
+- Add the inverse **Convert to Edge crop** action to the layer context menu and
+  Crop properties. Preserve the Smart crop's picture, crop, container and mask,
+  enter the green edge helper immediately, and return to Smart crop with Undo.
+
 ### v0.10.0-rc.14
 
 - Enabling an input preview from the right-click menu or Preview properties queues
