@@ -2163,10 +2163,12 @@ impl Editor {
                 }
                 _ => default_name.to_owned(),
             };
-            egui::ComboBox::from_id_salt("alignment-target")
-                .width(210.0)
-                .selected_text(target_name(self.align_target))
-                .show_ui(ui, |ui| {
+            egui::containers::menu::SubMenuButton::new(target_name(self.align_target))
+                .config(
+                    egui::containers::menu::MenuConfig::new()
+                        .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
+                )
+                .ui(ui, |ui| {
                     ui.stable_selectable_value(
                         &mut self.align_target,
                         AlignTarget::Selection,
@@ -9670,6 +9672,24 @@ mod tests {
         frame(app, ctx, vec![mouse(pos, false)]);
         frame(app, ctx, vec![])
     }
+    fn open_context_alignment_test_menu(app: &mut Editor, ctx: &egui::Context) -> egui::FullOutput {
+        let output = frame(app, ctx, vec![]);
+        let pos = layer_rects(&output)[1].center();
+        let secondary = |pressed| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Secondary,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        frame(
+            app,
+            ctx,
+            vec![egui::Event::PointerMoved(pos), secondary(true)],
+        );
+        frame(app, ctx, vec![secondary(false)]);
+        click_text(app, ctx, &tr(ctx, "ui.align"));
+        frame(app, ctx, vec![])
+    }
     fn alignment_test_position(output: &egui::FullOutput, title: &str) -> Pos2 {
         let rects: Vec<_> = output
             .shapes
@@ -9805,6 +9825,30 @@ mod tests {
             assert_eq!(*app.layout.formats(), formats);
             app.layout.undo();
             assert_eq!(*app.layout.layers(), before);
+        }
+    }
+    #[test]
+    fn alignment_target_submenu_selects_a_target_without_closing_alignment() {
+        for context_menu in [false, true] {
+            let mut app = Editor::default();
+            app.layout.set_selection([true; 2]);
+            app.align_target = AlignTarget::Layer(0);
+            let current_target = format!("Layer 1: {}", app.layout.layer_info(0).name);
+            let ctx = egui::Context::default();
+
+            if context_menu {
+                open_context_alignment_test_menu(&mut app, &ctx);
+            } else {
+                open_alignment_test_menu(&mut app, &ctx);
+            }
+            click_text(&mut app, &ctx, &current_target);
+            click_text(&mut app, &ctx, "Selected layers");
+
+            assert_eq!(app.align_target, AlignTarget::Selection);
+            let output = frame(&mut app, &ctx, vec![]);
+            assert!(output.shapes.iter().any(
+                |shape| matches!(&shape.shape, egui::Shape::Text(text) if text.galley.text() == "ALIGN TO")
+            ));
         }
     }
     #[test]

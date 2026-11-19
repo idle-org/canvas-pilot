@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.10.6
+
+- Keep the alignment menu open while choosing its target, making **Selected
+  layers** and individual layer targets usable from both the toolbar and canvas
+  context menu.
+
 ### v0.10.5
 
 - Place **Size presets** before **Output format** and **Viewport options** in the
