@@ -146,6 +146,7 @@ impl ImportScope {
 struct Paste {
     clipboard_entry: bool,
     scope: ImportScope,
+    automatic_scopes: Vec<(ImportScope, Vec<usize>)>,
     pages: Vec<canvas_pilot::interchange::Page>,
     page_index: usize,
     import_job:
@@ -181,6 +182,7 @@ impl Paste {
             .collect()
     }
     fn set_scope(&mut self, scope: ImportScope, layout: &Layout) {
+        self.automatic_scopes.clear();
         self.targets = match &scope {
             ImportScope::All => Vec::new(),
             ImportScope::Selected => layout.selected_indices(),
@@ -200,7 +202,7 @@ impl Paste {
             }
         }
     }
-    fn set_document(&mut self, doc: ImportDocument) {
+    fn set_document(&mut self, doc: ImportDocument, layout: &Layout) {
         self.shapes = doc.shapes;
         self.note = doc.note;
         self.ignored = self
@@ -208,6 +210,42 @@ impl Paste {
             .iter()
             .map(|shape| shape.background_only)
             .collect();
+        let count = self.ignored.iter().filter(|ignored| !**ignored).count();
+        if let Some((_, selected)) = self.automatic_scopes.first() {
+            self.scope = if selected.is_empty() {
+                ImportScope::All
+            } else {
+                ImportScope::Selected
+            };
+            self.targets = selected.clone();
+            self.target_ids = self
+                .targets
+                .iter()
+                .filter_map(|&i| self.available_ids.get(i).copied())
+                .collect();
+        }
+        for (scope, indices) in &self.automatic_scopes {
+            let candidates: Vec<_> = indices
+                .iter()
+                .copied()
+                .filter(|&i| {
+                    i < layout.layers().len()
+                        && self.available_ids.get(i) == Some(&layout.layer_info(i).id)
+                        && layout.visible(i)
+                        && !layout.locked(i)
+                })
+                .collect();
+            if count > 0 && candidates.len() == count {
+                self.scope = scope.clone();
+                self.targets = candidates;
+                self.target_ids = self
+                    .targets
+                    .iter()
+                    .map(|&i| layout.layer_info(i).id)
+                    .collect();
+                break;
+            }
+        }
         self.reset_mapping();
         self.error.clear();
     }
@@ -225,11 +263,11 @@ impl Paste {
             })
             .collect();
     }
-    fn parse(&mut self) {
+    fn parse(&mut self, layout: &Layout) {
         self.import_job = None;
         self.pages.clear();
         match parse_values(&self.text) {
-            Ok(doc) => self.set_document(doc),
+            Ok(doc) => self.set_document(doc, layout),
             Err(e) => {
                 self.shapes.clear();
                 self.mapping.clear();
@@ -940,7 +978,23 @@ impl Editor {
 
     fn open_paste(&mut self, text: String) {
         let targets = self.layout.selected_indices();
+        let mut automatic_scopes = vec![(ImportScope::Selected, targets.clone())];
+        if let Some(&first) = targets.first() {
+            let folder = &self.layout.layer_info(first).folder;
+            if !folder.is_empty()
+                && targets
+                    .iter()
+                    .all(|&i| &self.layout.layer_info(i).folder == folder)
+            {
+                automatic_scopes.push((
+                    ImportScope::Folder(folder.clone()),
+                    self.layout.folder_members(folder),
+                ));
+            }
+        }
+        automatic_scopes.push((ImportScope::All, (0..self.layout.layers().len()).collect()));
         let mut p = Paste {
+            automatic_scopes,
             clipboard_entry: true,
             scope: if targets.is_empty() {
                 ImportScope::All
@@ -974,7 +1028,7 @@ impl Editor {
             error: String::new(),
         };
         if !p.text.is_empty() {
-            p.parse();
+            p.parse(&self.layout);
         }
         self.paste = Some(p);
     }
@@ -1362,7 +1416,7 @@ impl Editor {
             match job.try_recv() {
                 Ok(Ok(pages)) => {
                     if let Some(first) = pages.first() {
-                        p.set_document(first.document.clone());
+                        p.set_document(first.document.clone(), &self.layout);
                     }
                     p.pages = pages;
                     p.page_index = 0;
@@ -1386,12 +1440,12 @@ impl Editor {
                 egui::ComboBox::new("File / page / frame / slide", tr(ui.ctx(), "ui.file-page-frame-slide")).selected_text(&p.pages[p.page_index].name).show_ui(ui, |ui| {
                     for (index, page) in p.pages.iter().enumerate() { ui.stable_selectable_value(&mut p.page_index, index, &page.name); }
                 });
-                if previous != p.page_index { p.set_document(p.pages[p.page_index].document.clone()); }
+                if previous != p.page_index { p.set_document(p.pages[p.page_index].document.clone(), &self.layout); }
             }
             if p.clipboard_entry && p.shapes.is_empty() && p.import_job.is_none() {
                 ui.label(tr(ui.ctx(), "ui.paste-layer-values-to-review-their-geometry-and-destinations"));
                 ui.add(egui::TextEdit::multiline(&mut p.text).desired_rows(4).desired_width(f32::INFINITY));
-                if ui.button(tr(ui.ctx(), "ui.review-pasted-values")).clicked() { p.parse(); }
+                if ui.button(tr(ui.ctx(), "ui.review-pasted-values")).clicked() { p.parse(&self.layout); }
             }
             egui::ScrollArea::vertical().id_salt("import-review").max_height((ctx.content_rect().height()-260.0).max(150.0)).show(ui,|ui| {
                 if !p.error.is_empty() {ui.colored_label(palette.amber,&p.error);}
@@ -8467,6 +8521,44 @@ mod tests {
         app.open_paste("invalid".into());
         frame(&mut app, &ctx, vec![]);
         assert!(texts(&frame(&mut app, &ctx, vec![])).contains(&"Review pasted values".into()));
+    }
+
+    #[test]
+    fn import_count_falls_back_to_folder_then_all_and_respects_manual_scope() {
+        for folder_match in [true, false] {
+            let mut app = Editor::default();
+            for i in 0..2 {
+                let id = app.layout.layer_info(i).id;
+                if folder_match || i == 1 {
+                    app.layout.move_layer_to_folder(id, "Group", i).unwrap();
+                }
+            }
+            app.layout.select(Some(1));
+            let selection = app.layout.selected_indices();
+            let before = app.project();
+            let mut doc =
+                parse_values(include_str!("../tests/fixtures/drawio-rectangle.txt")).unwrap();
+            doc.shapes.push(doc.shapes[0].clone());
+            app.open_paste(String::new());
+            let p = app.paste.as_mut().unwrap();
+            p.set_document(doc.clone(), &app.layout);
+            assert!(
+                p.scope
+                    == if folder_match {
+                        ImportScope::Folder("Group".into())
+                    } else {
+                        ImportScope::All
+                    }
+            );
+            assert_eq!(p.mapping, vec![Some(0), Some(1)]);
+            assert!(p.values(&app.layout).is_ok());
+            p.set_scope(ImportScope::Selected, &app.layout);
+            p.set_document(doc, &app.layout);
+            assert!(p.scope == ImportScope::Selected);
+            assert_eq!(p.mapping, vec![Some(1), None]);
+            assert_eq!(app.layout.selected_indices(), selection);
+            assert_eq!(app.project(), before);
+        }
     }
 
     #[test]

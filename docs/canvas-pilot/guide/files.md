@@ -108,8 +108,12 @@ to 16 MiB; a failed document leaves the batch unapplied and reports its filename
    no additional file/paste buttons inside the review. Multiple documents/pages
    retain their page chooser.
 3. Under **Destination layers**, choose **All layers**, **Selected layers**, or
-   **Folder: …**. Existing selection initially scopes and pre-maps the import;
-   with no selection, choose destinations individually from All layers. Changing
+   **Folder: …**. Imports try exact included-item counts against the selection, then all
+   available layers in its shared folder, then all available layers. Background
+   items and hidden/locked destinations do not count. Selections spanning folders
+   skip the folder fallback. Matches map in layer order; review before applying.
+   If no count matches, the initial scope remains available for manual mapping.
+   Choosing a scope manually disables automatic scope changes for that review. Changing
    the scope never changes canvas selection and preserves mappings still in scope.
    Hidden/locked layers are excluded. Each source item has a prominent destination
    dropdown and collapsed **Geometry · before / after** details. Uncheck **Include

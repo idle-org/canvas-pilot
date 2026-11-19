@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.7
+
+- Pre-map geometry imports by exact included-item count: selected layers, their
+  shared folder, then all available layers. Manual scope and mapping remain available.
+
 ### v0.10.6
 
 - Keep the alignment menu open while choosing its target, making **Selected
