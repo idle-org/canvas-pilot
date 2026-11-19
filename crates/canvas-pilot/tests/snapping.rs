@@ -143,6 +143,7 @@ fn resize_can_bypass_snapping_and_cancel() {
     let options = Snapping {
         enabled: true,
         pixels: false,
+        force_pixels: false,
         screen_edges: true,
         layer_edges: false,
         ..Default::default()
@@ -649,6 +650,7 @@ fn overlay_grid_snaps_moves_resizes_and_pivots_with_fractional_divisions() {
     let options = Snapping {
         enabled: true,
         pixels: false,
+        force_pixels: false,
         screen_edges: false,
         layer_edges: true,
         grid: true,

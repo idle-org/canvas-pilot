@@ -180,7 +180,7 @@ impl Project {
             folders: layout.folders.clone(),
             workspace: Workspace::default(),
             format: FORMAT.into(),
-            version: 21,
+            version: 22,
             next_layer_id: layout.next_id,
             output_resolution: layout.formats.output.into(),
             inputs: (0..layout.formats.sources.len())
@@ -231,9 +231,9 @@ impl Project {
     }
     /// Build a fresh document only after validating the entire file. No history is restored.
     pub fn layout(&self) -> Result<Layout, String> {
-        if self.format != FORMAT || self.version != 21 {
+        if self.format != FORMAT || self.version != 22 {
             return Err(
-                "Unsupported project format/version; expected beffroi.midra-layout version 21."
+                "Unsupported project format/version; expected beffroi.midra-layout version 22."
                     .into(),
             );
         }
@@ -429,8 +429,8 @@ impl Project {
         }
         let header: Header =
             serde_json::from_str(text).map_err(|e| format!("Invalid project JSON: {e}"))?;
-        if !(1..=21).contains(&header.version) {
-            return Err("Unsupported project version; expected versions 1–21.".into());
+        if !(1..=22).contains(&header.version) {
+            return Err("Unsupported project version; expected versions 1–22.".into());
         }
         let mut migrated: serde_json::Value = if header.version == 1 || header.version == 2 {
             let mut value: serde_json::Value =
@@ -745,6 +745,16 @@ impl Project {
                 layer.insert("keep_aspect_ratio".into(), keep.into());
             }
             migrated["version"] = 21.into();
+        }
+        if header.version <= 21 {
+            let snapping = migrated["workspace"]["snapping"]
+                .as_object_mut()
+                .ok_or("Missing snapping")?;
+            if header.version >= 11 && snapping.contains_key("force_pixels") {
+                return Err("Unexpected force_pixels in old project.".into());
+            }
+            snapping.insert("force_pixels".into(), false.into());
+            migrated["version"] = 22.into();
         }
         let p: Self =
             serde_json::from_value(migrated).map_err(|e| format!("Invalid project JSON: {e}"))?;

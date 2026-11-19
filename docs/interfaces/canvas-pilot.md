@@ -7,7 +7,7 @@ These are offline editor formats, not Analog Way REST payloads. Implementation:
 [`project.rs`](../../crates/canvas-pilot/tests/project.rs). Update this contract,
 examples and tests in the same change as any save/export schema change.
 
-## Project JSON, version 21
+## Project JSON, version 22
 
 Suggested filename: `layout.pilot.json`. **Open project** accepts any `.json`
 filename, including legacy `.midra.json` projects, and validates the project
@@ -35,13 +35,13 @@ session-only and are not project data. Strict migration accepts older projects o
 when the retired proposal list is empty and all retired input crop edges are zero;
 otherwise it directs the caller to explicit best-effort Open project.
 
-Version 21 moves `editor.keep_aspect_ratio` to required `layers[].keep_aspect_ratio`. Versions 1–20 copy the former project-wide value to every layer, preserving their resize behavior. Saving now writes version 21; older applications reject it.
+Version 21 moves `editor.keep_aspect_ratio` to required `layers[].keep_aspect_ratio`. Versions 1–20 copy the former project-wide value to every layer, preserving their resize behavior. Version 22 adds required `workspace.snapping.force_pixels` (false). Versions 1–21 migrate with forced whole-pixel snapping disabled and reject the field under an older version. Saving now writes version 22; older applications reject it.
 
 ### Best-effort Open project
 
 The native-project opening path uses `project_recovery::from_json`. It first tries
 known migrations and strict validation, then recovers supported fields independently.
-Only valid UTF-8 JSON with the Canvas Pilot format and a known version (1–21) is
+Only valid UTF-8 JSON with the Canvas Pilot format and a known version (1–22) is
 accepted, within the 96 MiB limit. Invalid JSON and unknown future versions are errors.
 Retired proposals and local input crops are discarded with a report; old appearance
 is not guaranteed. Reload affected layers from the device after input preprocessing.
@@ -57,7 +57,7 @@ projects open as unsaved copies, with no automatic overwrite target. Loading nev
 writes to the source or sends device commands. Strict exchange imports and automatic
 recovery envelopes retain their separate validation rules.
 
-[Complete example](canvas-pilot-v21.example.json) is a valid project with an empty `Memory A` folder and a Midra link,
+[Complete example](canvas-pilot-v22.example.json) is a valid project with an empty `Memory A` folder and a Midra link,
 with an unlinked Fullscreen example layer and no reference image. New projects label the lower layer `02 / Slides` and
 the upper layer `01 / Presenter`; existing projects retain their saved IDs/names.
 It is loaded by the regression tests.
@@ -65,7 +65,7 @@ It is loaded by the regression tests.
 | Root field | Representation / meaning |
 | --- | --- |
 | `format` | Exactly `"beffroi.midra-layout"` |
-| `version` | Integer `21` |
+| `version` | Integer `22` |
 | `folders` | Required array of 0–256 unique explicit folder names, each trimmed and 1–128 characters. Explicit folders remain even with no members; layer folder labels also form implicit groups. |
 | `next_layer_id` | Positive integer strictly greater than every layer ID; not rewound by undo |
 | `output_resolution` | `{ "width": integer, "height": integer }`, screen pixels |
@@ -262,7 +262,7 @@ and `viewBox="0 0 W H"` equal to the output screen. The root carries
 
 ## Compatibility changes
 
-Project version 21 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
+Project version 22 and the versioned geometry exchanges are strict contracts. A breaking project field/meaning change must bump
 `version` and either implement a tested migration or clearly reject older/newer
 files. Changing rectangle/marker semantics requires a corresponding documented
 exchange-interface revision and importer tests. Update this document and its example
@@ -280,7 +280,7 @@ retarget existing links; choosing a destination there explicitly replaces that
 layer's saved link. Direct send/load actions use each layer's saved screen,
 independently of the screen currently displayed in the configuration window.
 
-Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 21.
+Automatic session recovery wraps this project representation in a separate [recovery file](canvas-pilot-recovery.md); named project JSON is version 22.
 
 ## Folder-scoped Midra transfers
 
@@ -306,7 +306,7 @@ device preprocessing to refresh the source dimensions used for layer geometry.
 
 | Field | Representation / validation / migration default |
 | --- | --- |
-| `snapping` | Required booleans `enabled` (false), `pixels` (true), `screen_edges` (true), `layer_edges` (true), `mask_edges` (false), `grid` (false), `show_grid` (true), and `grid_divisions` (two integers 1–64, default `[8,6]`). These override application defaults for the opened project. |
+| `snapping` | Required booleans `enabled` (false), `pixels` (true), `force_pixels` (false), `screen_edges` (true), `layer_edges` (true), `mask_edges` (false), `grid` (false), `show_grid` (true), and `grid_divisions` (two integers 1–64, default `[8,6]`). These override application defaults for the opened project. |
 | `resize_mode` | `individual` (default), `same`, `mirror`, or `opposite` |
 | `grid_spacing` | null (default), 10 or 100, in output pixels |
 | `collapsed_folders` | Unique existing nonempty folder names (including empty explicit folders); default `[]`. Deleted/renamed stale entries are omitted when saving. |
@@ -351,7 +351,7 @@ background export behavior.
 For the complete persistence audit and the reasons for keeping other controls
 out of project files, see [Project persistence audit](canvas-pilot-persistence-audit.md).
 
-Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 21 and use the same migration on import.
+Device links distinguish family, screen/auxiliary and layer. A link from another family cannot be used on the current device without explicit remapping. Multiple editor layers may share one destination; a send scope containing duplicates is rejected with the conflicting layer names. Device state and physical bank roles are never saved in the project. Geometry-only exports omit these links; embedded editor snapshots retain version 22 and use the same migration on import.
 
 ### Explicit layer fit (v14)
 

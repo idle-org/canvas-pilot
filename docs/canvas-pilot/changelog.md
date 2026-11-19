@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.9
+
+- Add optional forced whole-pixel snapping for moves, resizes and pivots, with a
+  temporary Shift+Space modifier. The existing soft pixel magnet remains the default.
+
 ### v0.10.8
 
 - Remove inspector Copy/Paste buttons, including the multi-selection Copy button,

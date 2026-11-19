@@ -105,7 +105,7 @@ fn mask_schema_migration_validation_reorder_resize_and_atomic_import() {
     let migrated = canvas_pilot::project_recovery::from_json(old)
         .unwrap()
         .project;
-    assert_eq!(migrated.version, 21);
+    assert_eq!(migrated.version, 22);
     assert!(migrated.layers.iter().all(|l| l.mask == Mask::default()));
     let mut json = serde_json::to_value(&p).unwrap();
     json["layers"][0].as_object_mut().unwrap().remove("mask");

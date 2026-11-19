@@ -105,6 +105,14 @@ impl Editor {
         ui.add_enabled_ui(self.snapping.enabled, |ui| {
             ui.checkbox(&mut self.snapping.pixels, tr(ui.ctx(), "ui.pixel-edges"));
             ui.checkbox(
+                &mut self.snapping.force_pixels,
+                tr(ui.ctx(), "ui.force-snapping-to-whole-pixels"),
+            )
+            .on_hover_text(tr(
+                ui.ctx(),
+                "ui.force-whole-pixels-help",
+            ));
+            ui.checkbox(
                 &mut self.snapping.screen_edges,
                 tr(ui.ctx(), "ui.screen-edges-center-quarters"),
             );
@@ -115,10 +123,7 @@ impl Editor {
             .on_hover_text("Snap moving outer borders and use other layers’ borders as targets. Independent of masks. Also controls mirrored/opposite resize contact; center and direct resize-handle snapping remain available.");
             ui.checkbox(&mut self.snapping.mask_edges, tr(ui.ctx(), "ui.mask-edges"));
         });
-        ui.weak(tr(
-            ui.ctx(),
-            "ui.alt-invert-snapping-shift-10-px-ctrl-shift-100-px",
-        ));
+        ui.weak(tr(ui.ctx(), "ui.snapping-modifiers-help"));
     }
     pub(super) fn snapping_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button(tr(ui.ctx(), "ui.snapping"), |ui| {

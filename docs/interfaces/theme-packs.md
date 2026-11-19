@@ -78,11 +78,11 @@ changes to installed files take effect after restart.
 
 ## Settings, missing packs and round trips
 
-[Settings version 15](canvas-pilot-settings.md) stores a packed theme as
+[Settings version 16](canvas-pilot-settings.md) stores a packed theme as
 `{"pack":"tokyo-night/night"}` in `theme` and `recent_themes`; built-in string IDs
 are unchanged. Versions 1–14 migrate preserving preferences and history, but pack
-choices under a legacy version are rejected. Older applications reject version 15.
-The [default fixture](canvas-pilot-settings-v15.example.json) is the migration target.
+choices under a legacy version are rejected. Older applications reject version 16.
+The [default fixture](canvas-pilot-settings-v16.example.json) is the current target.
 
 Missing/invalid packs preserve the saved theme choice and show an unavailable
 label, rendering with Midra Dark until the pack is installed again or the user

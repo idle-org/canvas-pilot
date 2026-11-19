@@ -2849,9 +2849,13 @@ impl Editor {
         point: [f64; 2],
         modifiers: egui::Modifiers,
         scale: f32,
+        force_pixels: bool,
     ) {
         let mut options = self.snapping;
-        if modifiers.alt {
+        if force_pixels {
+            options.enabled = true;
+            options.force_pixels = true;
+        } else if modifiers.alt {
             options.enabled = !options.enabled;
         }
         let (target, guides) = self.layout.snap_pivot(
@@ -2939,10 +2943,17 @@ impl Editor {
         point: [f64; 2],
         modifiers: egui::Modifiers,
         scale: f32,
+        force_pixels: bool,
     ) -> [Option<f64>; 2] {
         self.layout
             .use_resize_pivot(self.effective_pivot(modifiers));
-        if let Some(spacing) = self.effective_grid(modifiers) {
+        if force_pixels {
+            let mut snapping = self.snapping;
+            snapping.enabled = true;
+            snapping.force_pixels = true;
+            self.layout
+                .drag_to_snapped(point, snapping, 6.0 / scale as f64)
+        } else if let Some(spacing) = self.effective_grid(modifiers) {
             self.layout.drag_to_grid(point, spacing as f64)
         } else {
             let mut snapping = self.snapping;
@@ -3390,8 +3401,11 @@ impl Editor {
         let mut origin = area.center() - Vec2::new(sw / 2.0, sh / 2.0) * scale + self.pan * scale;
         let response = ui.interact(area, egui::Id::new("canvas"), egui::Sense::click_and_drag());
         let pointer = ui.input(|i| i.pointer.interact_pos());
+        let force_pixels =
+            ui.input(|i| i.key_down(egui::Key::Space) && i.modifiers.shift && !i.modifiers.alt);
         let temporary_pan = ui.input(|i| {
-            i.key_down(egui::Key::Space) || i.pointer.button_down(egui::PointerButton::Middle)
+            (i.key_down(egui::Key::Space) && !i.modifiers.shift)
+                || i.pointer.button_down(egui::PointerButton::Middle)
         });
         let edit_pointer = self.navigation_tool == NavigationTool::Select && !temporary_pan;
         let move_pointer = self.navigation_tool == NavigationTool::Move && !temporary_pan;
@@ -3606,12 +3620,13 @@ impl Editor {
                 let p = (p - origin) / scale;
                 let point = [p.x as f64, p.y as f64];
                 if let Some(i) = self.pivot_drag.as_ref().map(|(i, _)| *i) {
-                    self.move_pivot_snapped(i, point, modifiers, scale);
+                    self.move_pivot_snapped(i, point, modifiers, scale, force_pixels);
                 } else if let Some(m) = self.marquee.as_mut() {
                     m.end = point;
                     self.layout.select_region(m.start, point, &m.base);
                 } else {
-                    self.snap_guides = self.drag_with_modifiers(point, modifiers, scale);
+                    self.snap_guides =
+                        self.drag_with_modifiers(point, modifiers, scale, force_pixels);
                 }
                 self.sync();
             }
@@ -3623,12 +3638,13 @@ impl Editor {
                 let p = (p - origin) / scale;
                 let point = [p.x as f64, p.y as f64];
                 if let Some(i) = self.pivot_drag.as_ref().map(|(i, _)| *i) {
-                    self.move_pivot_snapped(i, point, modifiers, scale);
+                    self.move_pivot_snapped(i, point, modifiers, scale, force_pixels);
                 } else if let Some(m) = self.marquee.as_mut() {
                     m.end = point;
                     self.layout.select_region(m.start, point, &m.base);
                 } else {
-                    self.snap_guides = self.drag_with_modifiers(point, modifiers, scale);
+                    self.snap_guides =
+                        self.drag_with_modifiers(point, modifiers, scale, force_pixels);
                 }
                 self.sync();
             }
@@ -5381,11 +5397,11 @@ mod tests {
         app.layout.set_selection([true; 2]);
         app.sync();
         let before = app.layout.layers().clone();
-        app.move_pivot_snapped(0, [122.0, 361.0], egui::Modifiers::NONE, 1.0);
+        app.move_pivot_snapped(0, [122.0, 361.0], egui::Modifiers::NONE, 1.0, false);
         assert_eq!(app.pivot_for(0), [0.0, 0.5]);
         assert_eq!(app.pivot_for(1), [1.0, 0.5]);
         assert_eq!(app.snap_guides, [Some(120.0), Some(360.0)]);
-        app.move_pivot_snapped(0, [833.0, 653.0], egui::Modifiers::NONE, 1.0);
+        app.move_pivot_snapped(0, [833.0, 653.0], egui::Modifiers::NONE, 1.0, false);
         assert_eq!(app.snap_guides, [Some(800.0), Some(700.0)]);
         app.move_pivot_snapped(
             0,
@@ -5396,6 +5412,7 @@ mod tests {
                 ..Default::default()
             },
             1.0,
+            false,
         );
         assert_eq!(app.snap_guides, [None; 2]);
         app.snapping.enabled = true;
@@ -5407,6 +5424,7 @@ mod tests {
                 ..Default::default()
             },
             1.0,
+            false,
         );
         assert_eq!(app.snap_guides, [None; 2]);
         assert_ne!(app.pivot_for(0), [0.0, 0.5]);
@@ -6112,7 +6130,8 @@ mod tests {
                 original.x + original.width * 0.25,
                 original.y + original.height * 0.75,
             ];
-            let guides = app.drag_with_modifiers([1837.0, 360.0], egui::Modifiers::NONE, 1.0);
+            let guides =
+                app.drag_with_modifiers([1837.0, 360.0], egui::Modifiers::NONE, 1.0, false);
             let target = (1837.0 / spacing as f64).round() * spacing as f64;
             assert_eq!(guides[0], Some(target));
             let g = app.layout.layers()[1];
@@ -6126,9 +6145,9 @@ mod tests {
                 ctrl: spacing == 100,
                 ..Default::default()
             };
-            app.drag_with_modifiers([1173.0, 217.0], modifiers, 1.0);
+            app.drag_with_modifiers([1173.0, 217.0], modifiers, 1.0, false);
             assert_eq!(app.layout.layers()[1].x, 1173.0);
-            app.drag_with_modifiers([1173.0, 217.0], egui::Modifiers::NONE, 1.0);
+            app.drag_with_modifiers([1173.0, 217.0], egui::Modifiers::NONE, 1.0, false);
             assert_eq!(
                 app.layout.layers()[1].x,
                 (1173.0 / spacing as f64).round() * spacing as f64
@@ -6282,13 +6301,15 @@ mod tests {
                                 ..Default::default()
                             },
                             0.75,
+                            false,
                         );
                         assert_eq!(guides[0], if enabled { None } else { Some(1920.0) });
                         let g = app.layout.layers()[1];
                         assert_eq!(g.x + g.width, if enabled { 1918.0 } else { 1920.0 });
                         assert_eq!(app.snapping, saved);
                         // Releasing Alt restores the stored setting without a pointer move.
-                        let guides = app.drag_with_modifiers(point, egui::Modifiers::NONE, 0.75);
+                        let guides =
+                            app.drag_with_modifiers(point, egui::Modifiers::NONE, 0.75, false);
                         assert_eq!(guides[0], if enabled { Some(1920.0) } else { None });
                         let g = app.layout.layers()[1];
                         assert_eq!(g.x + g.width, if enabled { 1920.0 } else { 1918.0 });
@@ -6300,6 +6321,27 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn shift_space_forces_pixels_instead_of_the_shift_grid() {
+        let mut app = Editor::default();
+        let saved = app.snapping;
+        app.layout.start_drag([1160.0, 180.0]);
+        app.drag_with_modifiers(
+            [1163.6, 184.4],
+            egui::Modifiers {
+                shift: true,
+                ..Default::default()
+            },
+            1.0,
+            true,
+        );
+        assert_eq!(
+            [app.layout.layers()[1].x, app.layout.layers()[1].y],
+            [1164.0, 184.0]
+        );
+        assert_eq!(app.snapping, saved);
     }
 
     #[test]

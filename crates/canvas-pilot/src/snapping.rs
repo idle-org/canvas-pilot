@@ -15,6 +15,7 @@ fn pixel_magnet(value: f64) -> Option<f64> {
 pub struct Snapping {
     pub enabled: bool,
     pub pixels: bool,
+    pub force_pixels: bool,
     pub screen_edges: bool,
     pub layer_edges: bool,
     pub mask_edges: bool,
@@ -27,6 +28,7 @@ impl Default for Snapping {
         Self {
             enabled: false,
             pixels: true,
+            force_pixels: false,
             screen_edges: true,
             layer_edges: true,
             mask_edges: false,
@@ -151,6 +153,9 @@ impl Layout {
         if !options.enabled {
             return (point, [None; 2]);
         }
+        if options.force_pixels {
+            return (point.map(f64::round), [None; 2]);
+        }
         let mut target = point;
         let mut guides = [None; 2];
         for axis in 0..2 {
@@ -216,6 +221,13 @@ impl Layout {
             }
         };
         for axis in 0..2 {
+            if options.force_pixels {
+                if let Some(i) = selected.iter().position(|v| *v) {
+                    let coordinate = edge(before.layers[i], axis)[0] + delta[axis];
+                    delta[axis] += coordinate.round() - coordinate;
+                }
+                continue;
+            }
             let mut targets = Vec::new();
             if options.screen_edges {
                 targets.extend(screen_guides(self.formats.output[axis]));
@@ -417,18 +429,22 @@ impl Layout {
                     }
                 }
             }
-            if let Some(target) = targets
-                .into_iter()
-                .filter(|t| (*t - current[axis]).abs() <= tolerance)
-                .min_by(|a, b| {
-                    (a - current[axis])
-                        .abs()
-                        .total_cmp(&(b - current[axis]).abs())
-                })
+            if !options.force_pixels
+                && let Some(target) = targets
+                    .into_iter()
+                    .filter(|t| (*t - current[axis]).abs() <= tolerance)
+                    .min_by(|a, b| {
+                        (a - current[axis])
+                            .abs()
+                            .total_cmp(&(b - current[axis]).abs())
+                    })
             {
                 candidates.push((1, (target - current[axis]).abs(), axis, target, None));
             }
-            if options.layer_edges && matches!(r.mode, ResizeMode::Mirror | ResizeMode::Opposite) {
+            if !options.force_pixels
+                && options.layer_edges
+                && matches!(r.mode, ResizeMode::Mirror | ResizeMode::Opposite)
+            {
                 let original = r.before.layers[r.index];
                 let moving = handle_point(original)[axis];
                 let anchor = r.anchor(r.index)[axis];
@@ -464,11 +480,12 @@ impl Layout {
                     }
                 }
             }
-            if options.pixels {
+            if options.pixels || options.force_pixels {
                 let spacing = grid.unwrap_or(1.0);
                 let target = (current[axis] / spacing).round() * spacing;
-                if grid.is_some() || pixel_magnet(current[axis]).is_some() {
-                    candidates.push((2, (target - current[axis]).abs(), axis, target, None));
+                if grid.is_some() || options.force_pixels || pixel_magnet(current[axis]).is_some() {
+                    let priority = if options.force_pixels { 0 } else { 2 };
+                    candidates.push((priority, (target - current[axis]).abs(), axis, target, None));
                 }
             }
         }
@@ -517,6 +534,26 @@ impl Layout {
                 && touching
                 && (handle_point(self.layers[r.index])[axis] - target).abs() < 1e-6
             {
+                if options.force_pixels {
+                    let mut rounded = self.layers.clone();
+                    for (i, geometry) in rounded.iter_mut().enumerate() {
+                        if !r.targets[i] {
+                            continue;
+                        }
+                        let right = (geometry.x + geometry.width).round();
+                        let bottom = (geometry.y + geometry.height).round();
+                        geometry.x = geometry.x.round();
+                        geometry.y = geometry.y.round();
+                        geometry.width = right - geometry.x;
+                        geometry.height = bottom - geometry.y;
+                    }
+                    if rounded.iter().all(|geometry| geometry.validate().is_ok()) {
+                        self.layers = rounded;
+                    } else {
+                        self.restore(base.clone());
+                        continue;
+                    }
+                }
                 let mut guides = [None; 2];
                 if priority < 2 || grid.is_some() {
                     guides[axis] = Some(target);
@@ -555,5 +592,48 @@ mod tests {
 
         layout.drag_to_snapped([1800.4, 360.0], pixels_only(), 6.0);
         assert!((layout.layers()[1].x + layout.layers()[1].width - 1800.4).abs() < 1e-9);
+    }
+
+    #[test]
+    fn forced_pixels_round_moves_and_resize_handles_outside_the_soft_magnet() {
+        let options = Snapping {
+            enabled: true,
+            force_pixels: true,
+            screen_edges: false,
+            layer_edges: false,
+            ..Default::default()
+        };
+        let mut layout = Layout::default();
+        layout.start_drag([1160.0, 180.0]);
+        layout.drag_to_snapped([1163.6, 184.4], options, 6.0);
+        assert_eq!(
+            [layout.layers()[1].x, layout.layers()[1].y],
+            [1164.0, 184.0]
+        );
+        layout.finish_drag();
+
+        layout.start_handle_resize(1, ResizeHandle::Right, [1804.0, 364.0], false);
+        layout.drag_to_snapped([1804.6, 364.0], options, 6.0);
+        assert_eq!(layout.layers()[1].x + layout.layers()[1].width, 1805.0);
+
+        let mut ratio_layout = Layout::default();
+        let original_ratio = ratio_layout.layers()[1].width / ratio_layout.layers()[1].height;
+        ratio_layout.start_handle_resize(
+            1,
+            ResizeHandle::Corner(crate::Corner::BottomRight),
+            [1800.0, 540.0],
+            true,
+        );
+        ratio_layout.drag_to_snapped([1801.4, 540.8], options, 6.0);
+        let resized = ratio_layout.layers()[1];
+        for edge in [
+            resized.x,
+            resized.y,
+            resized.x + resized.width,
+            resized.y + resized.height,
+        ] {
+            assert_eq!(edge.fract(), 0.0);
+        }
+        assert!((resized.width / resized.height - original_ratio).abs() > 1e-9);
     }
 }

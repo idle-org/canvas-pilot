@@ -23,8 +23,8 @@ pub fn from_json(text: &str) -> Result<LoadedProject, String> {
     }
     let version = raw["version"]
         .as_u64()
-        .filter(|v| (1..=21).contains(v))
-        .ok_or("Unsupported project version; expected versions 1–21.")?;
+        .filter(|v| (1..=22).contains(v))
+        .ok_or("Unsupported project version; expected versions 1–22.")?;
     let mut warnings = Vec::new();
     if let Some(proposals) = raw.as_object_mut().unwrap().remove("input_proposals") {
         if proposals != serde_json::json!([]) {

@@ -24,7 +24,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            version: 15,
+            version: 16,
             ui_scale: 1.0,
             text_scale: None,
             language: Default::default(),
@@ -74,7 +74,13 @@ impl Settings {
             }
             value["snapping"] = serde_json::to_value(canvas_pilot::snapping::Snapping::default())
                 .map_err(|e| e.to_string())?;
-            for field in ["grid", "show_grid", "grid_divisions", "mask_edges"] {
+            for field in [
+                "grid",
+                "show_grid",
+                "grid_divisions",
+                "mask_edges",
+                "force_pixels",
+            ] {
                 value["snapping"].as_object_mut().unwrap().remove(field);
             }
             value["version"] = 3.into();
@@ -181,18 +187,28 @@ impl Settings {
             snapping.insert("mask_edges".into(), false.into());
             value["version"] = 14.into();
         }
-        if matches!(value["version"].as_u64(), Some(14 | 15)) && value.get("text_scale").is_none() {
+        if matches!(value["version"].as_u64(), Some(14..=16)) && value.get("text_scale").is_none() {
             return Err("Missing text_scale in current settings".into());
         }
         if value["version"] == 14 {
             value["version"] = 15.into();
+        }
+        if value["version"] == 15 {
+            let snapping = value["snapping"]
+                .as_object_mut()
+                .ok_or("Missing snapping")?;
+            if snapping.contains_key("force_pixels") {
+                return Err("Unexpected force_pixels in old settings".into());
+            }
+            snapping.insert("force_pixels".into(), false.into());
+            value["version"] = 16.into();
         }
         let settings: Self = serde_json::from_value(value).map_err(|e| e.to_string())?;
         settings.validate()?;
         Ok(settings)
     }
     fn validate(&self) -> Result<(), String> {
-        if self.version != 15 {
+        if self.version != 16 {
             return Err(format!("unsupported settings version {}", self.version));
         }
         for theme in std::iter::once(&self.theme).chain(&self.recent_themes) {
@@ -346,7 +362,7 @@ mod tests {
         let legacy =
             include_str!("../../../docs/interfaces/canvas-pilot-settings-v14.example.json");
         let current =
-            include_str!("../../../docs/interfaces/canvas-pilot-settings-v15.example.json");
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v16.example.json");
         assert_eq!(
             Settings::parse(legacy).unwrap(),
             Settings::parse(current).unwrap()
@@ -359,7 +375,7 @@ mod tests {
         assert_eq!(serde_json::to_value(saved).unwrap(), value);
         value["version"] = 14.into();
         assert!(Settings::parse(&value.to_string()).is_err());
-        value["version"] = 15.into();
+        value["version"] = 16.into();
         for id in ["", "no-slash", "../theme", "pack/a/b", "pack/Upper"] {
             value["theme"] = serde_json::json!({"pack":id});
             value["recent_themes"][0] = value["theme"].clone();
@@ -372,7 +388,7 @@ mod tests {
         let legacy =
             include_str!("../../../docs/interfaces/canvas-pilot-settings-v13.example.json");
         let current =
-            include_str!("../../../docs/interfaces/canvas-pilot-settings-v15.example.json");
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v16.example.json");
         assert_eq!(
             Settings::parse(legacy).unwrap(),
             Settings::parse(current).unwrap()
@@ -389,6 +405,28 @@ mod tests {
             .as_object_mut()
             .unwrap()
             .remove("mask_edges");
+        assert!(Settings::parse(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn forced_pixel_snapping_migrates_disabled_and_round_trips() {
+        let legacy =
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v15.example.json");
+        let current =
+            include_str!("../../../docs/interfaces/canvas-pilot-settings-v16.example.json");
+        assert_eq!(
+            Settings::parse(legacy).unwrap(),
+            Settings::parse(current).unwrap()
+        );
+        let mut value: serde_json::Value = serde_json::from_str(current).unwrap();
+        value["snapping"]["force_pixels"] = true.into();
+        assert!(
+            Settings::parse(&value.to_string())
+                .unwrap()
+                .snapping
+                .force_pixels
+        );
+        value["version"] = 15.into();
         assert!(Settings::parse(&value.to_string()).is_err());
     }
 
@@ -461,7 +499,7 @@ mod tests {
         let old = include_str!("../../../docs/interfaces/canvas-pilot-settings-v8.example.json");
         let migrated = Settings::parse(old).unwrap();
         assert_eq!(migrated.language, Language::System);
-        assert_eq!(migrated.version, 15);
+        assert_eq!(migrated.version, 16);
         let current =
             include_str!("../../../docs/interfaces/canvas-pilot-settings-v10.example.json");
         assert_eq!(Settings::parse(current).unwrap(), migrated);
@@ -470,13 +508,14 @@ mod tests {
             let mut old: serde_json::Value = serde_json::from_str(v9).unwrap();
             old["language"] = old_language.into();
             let upgraded = Settings::parse(&old.to_string()).unwrap();
-            assert_eq!(upgraded.version, 15);
+            assert_eq!(upgraded.version, 16);
             assert_eq!(
                 serde_json::to_value(&upgraded.language).unwrap(),
                 old["language"]
             );
-            old["version"] = 15.into();
+            old["version"] = 16.into();
             old["snapping"]["mask_edges"] = false.into();
+            old["snapping"]["force_pixels"] = false.into();
             old["ui_scale"] = serde_json::json!(1.0);
             old["text_scale"] = serde_json::Value::Null;
             assert_eq!(serde_json::to_value(upgraded).unwrap(), old);
@@ -518,8 +557,9 @@ mod tests {
         assert!(Settings::parse(&value.to_string()).is_err());
         value["version"] = 13.into();
         let saved = Settings::parse(&value.to_string()).unwrap();
-        value["version"] = 15.into();
+        value["version"] = 16.into();
         value["snapping"]["mask_edges"] = false.into();
+        value["snapping"]["force_pixels"] = false.into();
         assert_eq!(serde_json::to_value(saved).unwrap(), value);
         for id in ["", "../uk", "uk_UA"] {
             value["language"] = serde_json::json!({"pack":id});
@@ -554,8 +594,9 @@ mod tests {
             value["ui_scale"] = 1.5.into();
             value["text_scale"] = 1.25.into();
             let saved = Settings::parse(&value.to_string()).unwrap();
-            value["version"] = 15.into();
+            value["version"] = 16.into();
             value["snapping"]["mask_edges"] = false.into();
+            value["snapping"]["force_pixels"] = false.into();
             assert_eq!(serde_json::to_value(saved).unwrap(), value);
         }
     }
@@ -628,7 +669,7 @@ mod tests {
         for text in [
             "broken".to_string(),
             serde_json::to_string(&Settings {
-                version: 16,
+                version: 17,
                 ..Default::default()
             })
             .unwrap(),
