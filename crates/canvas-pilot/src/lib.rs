@@ -1520,6 +1520,7 @@ impl Layout {
                 )?;
             }
             if let Some((source, crop)) = framing {
+                let mut imported_crop = *crop;
                 if let Some(mode) = fit {
                     let image = mode.image(crop.remaining(source.input()?)?, *geometry)?;
                     // Normalize only an identical, uniformly scaled visible rectangle.
@@ -1536,6 +1537,35 @@ impl Layout {
                         .is_ok()
                     {
                         draft.formats.layer_fit[i] = None;
+                    } else if matches!(
+                        mode,
+                        formats::LayerFit::Centered | formats::LayerFit::Cropped
+                    ) && (image.width - geometry.width).abs() <= 1.0
+                        && (image.height - geometry.height).abs() <= 1.0
+                    {
+                        // Device crop fractions can round a uniform fit away from the
+                        // exact box aspect. Trim symmetrically to cover, preserving
+                        // the source-space center and never revealing new pixels.
+                        let input = source.input()?;
+                        let retained = crop.remaining(input)?;
+                        let scale =
+                            (geometry.width / retained[0]).max(geometry.height / retained[1]);
+                        let trim = [
+                            ((retained[0] - geometry.width / scale) / 2.0).max(0.0),
+                            ((retained[1] - geometry.height / scale) / 2.0).max(0.0),
+                        ];
+                        let normalized = formats::Crop {
+                            left: crop.left + trim[0],
+                            right: crop.right + trim[0],
+                            top: crop.top + trim[1],
+                            bottom: crop.bottom + trim[1],
+                        };
+                        if formats::mapping(input, [geometry.width, geometry.height], normalized)
+                            .is_ok()
+                        {
+                            imported_crop = normalized;
+                            draft.formats.layer_fit[i] = None;
+                        }
                     }
                 } else {
                     formats::mapping(source.input()?, [geometry.width, geometry.height], *crop)?;
@@ -1559,7 +1589,7 @@ impl Layout {
                 };
                 draft.formats.sources[source_id] = *source;
                 draft.formats.source_for[i] = source_id;
-                draft.formats.advanced[i] = *crop;
+                draft.formats.advanced[i] = imported_crop;
             }
         }
         self.finish_drag();

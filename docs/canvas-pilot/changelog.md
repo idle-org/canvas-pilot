@@ -6,6 +6,11 @@
 
 ### v0.10.0-rc.13
 
+- Tolerate up to one output pixel of device rounding when importing Centered/Cropped
+  fits. Normalize to an exact Smart crop without moving the container or source
+  center; preserve larger mismatches and stretched/native modes. Regression tests
+  include the observed Midra crop fractions that left a 0.036-pixel width gap.
+
 - Import exact device fits as normal Smart crop. Preserve advanced modes for
   letterboxing, overflow and stretching, and preserve saved project choices.
 - Add green advanced edge-crop handles with a frozen image during dragging and

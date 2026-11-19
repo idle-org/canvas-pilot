@@ -417,3 +417,91 @@ fn exact_import_keeps_nonzero_crop_and_mask() {
     assert_eq!(layout.formats().advanced[i], crop);
     assert_eq!(layout.formats().masks[i], mask);
 }
+
+#[test]
+fn midra_rounded_fit_imports_as_exact_smart_crop_without_moving_container_or_center() {
+    use canvas_pilot::formats::{LayerAppearance, Mask, Source};
+    // Read-only observation: Midra Screen 2 Layer 2, 2026-11-19.
+    let crop = Crop {
+        left: 408.75623712520024,
+        right: 460.02655069810027,
+        top: 262.6871137560082,
+        bottom: 225.98672465094987,
+    };
+    let g = Geometry {
+        x: 552.0,
+        y: 260.5,
+        width: 1296.0,
+        height: 729.0,
+    };
+    for fit in [LayerFit::Centered, LayerFit::Cropped] {
+        let mut layout = Layout::default();
+        let before = Project::from_layout(&layout);
+        let mask = Mask {
+            left: 0.1,
+            ..Default::default()
+        };
+        layout
+            .import_device_layers_with_appearance(
+                &[(
+                    Some(before.layers[0].id),
+                    g,
+                    Some((Source::default(), crop)),
+                )],
+                &[LayerAppearance {
+                    fit: Some(fit),
+                    mask,
+                }],
+            )
+            .unwrap();
+        let i = 0;
+        assert_eq!(layout.formats().layer_fit[i], None);
+        assert_eq!(layout.layers()[i], g);
+        assert_eq!(layout.formats().masks[i], mask);
+        let normalized = layout.formats().advanced[i];
+        near(normalized.left - normalized.right, crop.left - crop.right);
+        near(normalized.top - normalized.bottom, crop.top - crop.bottom);
+        let mapping = layout.formats().mapping(i, g).unwrap();
+        near(mapping.retained[0] * mapping.scale, g.width);
+        near(mapping.retained[1] * mapping.scale, g.height);
+        assert!(normalized.left >= crop.left && normalized.top >= crop.top);
+        layout.undo();
+        assert_eq!(Project::from_layout(&layout), before);
+    }
+}
+
+#[test]
+fn rounded_import_tolerance_is_bounded_and_does_not_change_native_or_stretch_modes() {
+    use canvas_pilot::formats::Source;
+    for (fit, width, normal) in [
+        (LayerFit::Centered, 1919.0, true),
+        (LayerFit::Centered, 1918.0, false),
+        (LayerFit::Cropped, 1919.0, true),
+        (LayerFit::Cropped, 1918.0, false),
+        (LayerFit::Fullscreen, 1919.0, false),
+        (LayerFit::OneToOne, 1919.0, false),
+    ] {
+        let mut layout = Layout::default();
+        let g = Geometry {
+            x: 0.0,
+            y: 0.0,
+            width,
+            height: 1080.0,
+        };
+        layout
+            .import_device_layers_with_fit(
+                &[(None, g, Some((Source::default(), Crop::default())))],
+                &[Some(fit)],
+            )
+            .unwrap();
+        let i = layout.layers().len() - 1;
+        assert_eq!(
+            layout.formats().layer_fit[i].is_none(),
+            normal,
+            "{fit:?} {width}"
+        );
+        if normal {
+            layout.formats().mapping(i, g).unwrap();
+        }
+    }
+}

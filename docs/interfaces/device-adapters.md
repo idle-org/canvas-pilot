@@ -221,7 +221,13 @@ Adapter snapshots retain the device fit. On import into the editor, an explicit
 fit becomes normal (`null`) only if its retained-image width/height equal the
 container within 1e-7 output pixels, horizontal/vertical scales differ by less than
 1e-10, and the normal crop mapping validates. Source, crop, container and mask are
-unchanged. This applies to linked and unlinked loads; project deserialization does
-not normalize saved modes. Advanced edge-helper drags stage crop changes until
+unchanged. Centered/Cropped fits also accept up to one output pixel of difference
+in each retained-image dimension. These near-matches trim the retained source
+symmetrically to the exact container aspect, preserving its source-space center;
+the resulting normal mapping must validate (including zoom limits). This never
+reveals new source pixels. Larger differences, stretching and native 1:1 modes
+retain their explicit mode unless they meet the exact-match rule above. This
+applies to linked and unlinked loads; project deserialization does not normalize
+saved modes. Advanced edge-helper drags stage crop changes until
 release, keeping the source transform fixed; cancellation discards the staged crop
 and release creates one undo entry. This is editor behavior, not device acceptance.

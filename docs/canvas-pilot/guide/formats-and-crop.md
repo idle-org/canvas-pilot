@@ -197,8 +197,11 @@ to centered cover framing. Pending Source edits still require Apply.
 
 Device loads use Smart crop when the retained picture exactly fills the container
 with uniform scaling and the crop is representable by the normal algorithm.
-Letterboxing, overflow and stretching retain their advanced fit. Existing saved
-projects keep their explicitly chosen modes.
+Centered/Cropped fits with rounding differences of up to one output pixel per
+image dimension also use Smart crop: a tiny symmetric crop adjustment restores
+the exact aspect while preserving the source center and layer container. Larger
+letterboxing/overflow differences and stretching retain their advanced fit.
+Existing saved projects keep their explicitly chosen modes.
 Sends use container dimensions regardless of sizing strategy, and never change
 input routing. Aquilon sends reject advanced fit until its adapter supports it.
 Projects/recovery preserve the mode. Pixel rounding is approximate pending the

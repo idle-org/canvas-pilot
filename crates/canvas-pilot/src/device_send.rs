@@ -1954,8 +1954,16 @@ mod tests {
                     &[layer.fit],
                 )
                 .unwrap();
-            assert_eq!(restored.formats().layer_fit[0], layer.fit);
-            assert_eq!(restored.formats().advanced[0], crop);
+            assert_eq!(restored.layers()[0], layer.geometry);
+            if sizing == Sizing::OutputBox {
+                assert_eq!(restored.formats().layer_fit[0], None);
+                let normal = restored.formats().mapping(0, layer.geometry).unwrap();
+                assert!((normal.framing.zoom - 2.0).abs() < 0.001);
+                assert!((normal.framing.offset[0] - 30.0).abs() < 0.01);
+            } else {
+                assert_eq!(restored.formats().layer_fit[0], layer.fit);
+                assert_eq!(restored.formats().advanced[0], crop);
+            }
             let framing =
                 crate::formats::mapping(source.input().unwrap(), [image.width, image.height], crop)
                     .unwrap()
