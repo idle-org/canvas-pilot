@@ -1882,8 +1882,7 @@ impl Editor {
             palette.text,
         );
         if click(ui, &ink, [0.0, 203.0, w, 34.0], "open-formats") {
-            self.property_tab = PropertyTab::Layer;
-            self.format_draft = Some(FormatDraft::new(&self.layout, i));
+            self.toggle_layer_properties(i);
         }
         if let Some(mode) = self.layout.formats().layer_fit[i] {
             ink.text(
@@ -8843,6 +8842,30 @@ mod tests {
         click_text(&mut app, &ctx, "Open shared input settings…");
         assert!(app.inputs.open);
         assert_eq!(app.project(), before);
+    }
+    #[test]
+    fn selected_layer_resolution_row_toggles_layer_properties() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        let i = app.layout.selected().unwrap();
+        let geometry = app.layout.layers()[i];
+        let label = format!(
+            "{} × {} px  /  {}",
+            number(geometry.width),
+            number(geometry.height),
+            ratio_ui::label(geometry.width / geometry.height)
+        );
+
+        click_text(&mut app, &ctx, &label);
+        assert!(
+            app.format_draft
+                .as_ref()
+                .is_some_and(|draft| draft.is_for(i))
+        );
+        assert_eq!(app.property_tab, PropertyTab::Layer);
+
+        click_text(&mut app, &ctx, &label);
+        assert!(app.format_draft.is_none());
     }
     #[test]
     fn snapped_move_and_resize_stay_snapped_on_release_and_undo_as_one_edit() {

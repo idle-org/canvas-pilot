@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.10.4
+
+- Make the selected layer's resolution row toggle its Layer properties window:
+  click once to open it and again to close it, preserving the existing review
+  prompt when the window contains unapplied edits.
+
 ### v0.10.3
 
 - Tighten the selected-layer inspector spacing around crop, measurement, geometry

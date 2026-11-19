@@ -284,7 +284,7 @@ impl Editor {
             self.output_draft = Some(d);
         }
     }
-    pub(super) fn finish_crop_edit(&mut self) {
+    fn request_formats_close(&mut self) {
         if let Some(draft) = self
             .format_draft
             .as_mut()
@@ -294,6 +294,23 @@ impl Editor {
         } else {
             self.format_draft = None;
         }
+    }
+
+    pub(super) fn toggle_layer_properties(&mut self, layer: usize) {
+        if self
+            .format_draft
+            .as_ref()
+            .is_some_and(|draft| draft.is_for(layer))
+        {
+            self.request_formats_close();
+        } else {
+            self.property_tab = PropertyTab::Layer;
+            self.format_draft = Some(FormatDraft::new(&self.layout, layer));
+        }
+    }
+
+    pub(super) fn finish_crop_edit(&mut self) {
+        self.request_formats_close();
         self.edit_content = false;
         self.edit_mask = false;
         self.alt_mask = false;
