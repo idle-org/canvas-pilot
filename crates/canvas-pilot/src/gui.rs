@@ -4614,8 +4614,8 @@ fn toolbar_groups(width: f32, captions: bool) -> ([Rect; 19], Vec<Rect>, f32) {
         &[4, 5],
         &[6, 7, 8, 9],
         &[10, 11, 16, 12],
-        &[13, 14],
         &[17],
+        &[13, 14],
     ] {
         let cell_width = |slot| match slot {
             0 | 15 => 68.0,
@@ -5916,8 +5916,8 @@ mod tests {
                     &[4, 5],
                     &[6, 7, 8, 9],
                     &[10, 11, 16, 12],
-                    &[13, 14],
                     &[17],
+                    &[13, 14],
                 ] {
                     assert!(
                         slots
@@ -5926,6 +5926,12 @@ mod tests {
                                 && buttons[pair[0]].right() < buttons[pair[1]].left())
                     );
                 }
+                let precedes = |first: Rect, second: Rect| {
+                    first.top() < second.top()
+                        || (first.top() == second.top() && first.left() < second.left())
+                };
+                assert!(precedes(buttons[17], buttons[13]));
+                assert!(precedes(buttons[13], buttons[14]));
             }
         }
     }

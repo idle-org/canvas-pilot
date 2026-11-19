@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.5
+
+- Place **Size presets** before **Output format** and **Viewport options** in the
+  canvas toolbar, including when toolbar groups wrap onto another row.
+
 ### v0.10.4
 
 - Make the selected layer's resolution row toggle its Layer properties window:
