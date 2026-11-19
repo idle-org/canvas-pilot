@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.0-rc.12
+
+- Double-click and Enter open Crop properties for Centered/Cropped layers instead
+  of silently doing nothing. Preserve automatic fitting, geometry and crop; normal
+  crop and 1:1 still use their interactive helper. Regression tests cover both
+  shortcuts across all explicit fit modes.
+
 ### v0.10.0-rc.11
 
 - Review problematic transfers with explicit included/skipped layer lists and

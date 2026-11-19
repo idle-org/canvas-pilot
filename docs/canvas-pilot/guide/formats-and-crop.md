@@ -191,9 +191,10 @@ source pixel; Shift+arrows move by ten. The layer container stays in place.
 Use viewport zoom/pan to reach handles outside the screen. Each drag is one Undo
 step; Escape cancels an active drag and exits the helper. Numeric crop fields stay
 in sync. **Centered** and **Cropped** fit automatically, so their helper button
-and context-menu action are disabled and double-click does not open a helper.
-Their numeric crop edges remain editable in Crop properties. Fullscreen continues
-to use the numeric crop controls. Unchecking
+and context-menu helper action are disabled. Double-click or Enter opens their
+**Crop properties** with editable numeric crop edges instead of the canvas helper.
+Fullscreen uses those same numeric crop controls. These shortcuts preserve the
+selected fit mode and do not change the document. Unchecking
 resets to normal centered cover framing. Input/global inheritance is intentionally
 omitted. Pending Source edits remain staged and require Apply as usual.
 

@@ -603,14 +603,6 @@ impl Editor {
 
     fn toggle_crop_edit(&mut self) {
         self.edit_mask = false;
-        if self
-            .layout
-            .selected()
-            .is_some_and(|i| self.automatic_layer_fit(i))
-        {
-            self.edit_content = false;
-            return;
-        }
         if let Some(i) = self.layout.selected()
             && self.layout.formats().layer_fit[i]
                 .is_some_and(|fit| fit != canvas_pilot::formats::LayerFit::OneToOne)
@@ -6687,6 +6679,46 @@ mod tests {
         alt_frame(&mut app, &ctx, false, vec![]);
         assert!(!app.mask_editing());
         assert!(app.edit_content);
+    }
+
+    #[test]
+    fn automatic_fit_shortcuts_open_crop_properties_without_changing_fit_or_geometry() {
+        use canvas_pilot::formats::LayerFit;
+        for fit in [LayerFit::Centered, LayerFit::Cropped, LayerFit::Fullscreen] {
+            for keyboard in [false, true] {
+                let ctx = egui::Context::default();
+                let mut app = Editor::default();
+                let output = frame(&mut app, &ctx, vec![]);
+                let pos = layer_rects(&output)[1].center();
+                app.layout.select(Some(1));
+                app.layout
+                    .set_layer_fit(1, Some(fit), Default::default())
+                    .unwrap();
+                let before = app.project();
+                frame(&mut app, &ctx, vec![]);
+                if keyboard {
+                    frame(&mut app, &ctx, vec![key(egui::Key::Enter)]);
+                } else {
+                    for _ in 0..2 {
+                        frame(
+                            &mut app,
+                            &ctx,
+                            vec![egui::Event::PointerMoved(pos), mouse(pos, true)],
+                        );
+                        frame(&mut app, &ctx, vec![mouse(pos, false)]);
+                    }
+                }
+                assert!(
+                    app.format_draft
+                        .as_ref()
+                        .is_some_and(|draft| draft.is_for(1)),
+                    "{fit:?}, keyboard={keyboard}"
+                );
+                assert!(matches!(app.property_tab, PropertyTab::Crop));
+                assert!(!app.edit_content);
+                assert_eq!(app.project(), before);
+            }
+        }
     }
 
     #[test]
