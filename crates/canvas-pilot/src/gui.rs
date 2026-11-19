@@ -2506,7 +2506,10 @@ impl Editor {
             ui.close();
         }
         if self.layout.formats().layer_fit[i].is_some()
-            && ui.button("Convert to Smart crop")
+            && ui.add(
+                egui::Button::new("Convert to Smart crop")
+                    .wrap_mode(egui::TextWrapMode::Extend),
+            )
                 .on_hover_text("Keep an exact matching crop; otherwise reset to centered cover framing. Undo restores the advanced fit.")
                 .clicked() {
             match self.layout.convert_to_smart_crop(i) {
@@ -2516,7 +2519,10 @@ impl Editor {
             ui.close();
         }
         if self.layout.formats().layer_fit[i].is_none()
-            && ui.button("Convert to Edge crop")
+            && ui.add(
+                egui::Button::new("Convert to Edge crop")
+                    .wrap_mode(egui::TextWrapMode::Extend),
+            )
                 .on_hover_text("Keep the current picture and crop, then edit its source edges independently. Undo returns to Smart crop.")
                 .clicked() {
             match self.layout.convert_to_edge_crop(i) {
@@ -9139,6 +9145,36 @@ mod tests {
                 assert!(labels.contains(&"Convert to Edge crop"));
                 assert!(!labels.contains(&"Convert to Smart crop"));
             }
+        }
+    }
+
+    #[test]
+    fn crop_conversion_menu_actions_stay_on_one_line_in_a_narrow_menu() {
+        use canvas_pilot::formats::LayerFit;
+        for fit in [None, Some(LayerFit::Centered)] {
+            let ctx = egui::Context::default();
+            let mut app = Editor::default();
+            app.layout.select(Some(0));
+            app.layout
+                .set_layer_fit(0, fit, Default::default())
+                .unwrap();
+            let output = ctx.run_ui(egui::RawInput::default(), |root_ui| {
+                root_ui.allocate_ui(Vec2::new(100.0, 300.0), |ui| {
+                    app.crop_mask_menu(ui, 0);
+                });
+            });
+            let expected = if fit.is_some() {
+                "Convert to Smart crop"
+            } else {
+                "Convert to Edge crop"
+            };
+            let rows = output.shapes.iter().find_map(|shape| match &shape.shape {
+                egui::Shape::Text(text) if text.galley.text() == expected => {
+                    Some(text.galley.rows.len())
+                }
+                _ => None,
+            });
+            assert_eq!(rows, Some(1), "{expected}");
         }
     }
 

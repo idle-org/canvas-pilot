@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### v0.10.0-rc.16
+
+- Keep **Convert to Smart crop** and **Convert to Edge crop** on one line in the
+  layer context menu, allowing the menu to grow to the action label width.
+
 ### v0.10.0-rc.15
 
 - Add the inverse **Convert to Edge crop** action to the layer context menu and
