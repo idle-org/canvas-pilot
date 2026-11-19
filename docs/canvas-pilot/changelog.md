@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+## v0.10.0-rc.16 — 2026-11-19
+
+Published release candidate collecting the crop, preview, input adaptation and
+transfer-recovery changes below. See the
+[release notes](../development/release-notes/v0.10.0-rc.16.md) for highlights,
+pack downloads, compatibility and validation limits.
+
 ### v0.10.0-rc.16
 
 - Keep **Convert to Smart crop** and **Convert to Edge crop** on one line in the
