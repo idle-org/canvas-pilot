@@ -1,11 +1,50 @@
 # Release preparation
 
-## Local release candidate: v0.10.0-rc.1
+## Published prerelease: v0.10.0-rc.16
+
+[Download v0.10.0-rc.16](https://proxy.dandaedre.com/gitea/idle-org/canvas-pilot/releases/tag/v0.10.0-rc.16)
+was published on 2026-11-19 from annotated tag `v0.10.0-rc.16`, source commit
+`72dc29837a3430da64351a922da1e6b4af9f72a1`. See the
+[release notes](release-notes/v0.10.0-rc.16.md). Publication records after that
+commit do not move the tag.
+
+The prerelease contains 18 assets: four portable bundles, four canonical
+cargo-binstall archives, four raw binaries, the artifact manifest and primary
+checksums, `classic-themes.zip`, `video-game-themes.zip`, `language-pack.zip`, and
+`EXTRAS-SHA256SUMS.txt`. The two theme collections contain the 17 distributed
+example themes. The language bundle is the format-2, revision-1 Ukrainian/Bhojpuri
+teaching example; both translations remain partial and unreviewed.
+
+All draft assets were downloaded before publication. The primary checksum file
+verified every generated payload and manifest, all archives passed integrity
+checks, and the raw binaries were identified as ELF x86-64, PE x86-64, Mach-O
+arm64 and Mach-O x86-64. The separately downloaded theme and language ZIPs matched
+their extras checksum file and passed ZIP integrity checks. Anonymous API access
+then confirmed the public prerelease and its exact tagged commit, and anonymous
+downloads of all three pack ZIPs reproduced their recorded hashes. An isolated
+cargo-binstall fetched the public Linux archive and installed a binary identical to
+the published raw executable (`c3adf1a0e5c57b9d6a514d8f39b9a548569776dc438a17d2c03adafdcf9c1cb6`).
+
+rust_realease 0.1.6-rc.3 built all four targets from a fresh work directory.
+Portable tree, embedded-file hash and architecture checks passed for every target;
+both macOS binaries also passed macOS 13.0 deployment-minimum, system-library,
+archive-layout and checksum validation. The validated local Apple builder used
+Rust 1.100.0. Native GUI runtime was not configured in the release tool, and no
+compatible Windows or macOS runner was available, so native runtime acceptance
+remains outstanding.
+
+Formatting, both Clippy configurations, all required Rust test configurations,
+rustdoc, all 33 Python checks, the theme-pack consistency check and the pinned
+manual build passed before tagging. Whole-application line coverage is 91.65%.
+No device writes were performed for this release. Generated archives, credentials
+and build caches are not committed to Git.
+
+## Earlier source checkpoint: v0.10.0-rc.1
 
 Annotated tag `v0.10.0-rc.1` marks the first candidate for the 0.10 minor release.
 See the [candidate notes](release-notes/v0.10.0-rc.1.md). This is a source checkpoint;
 no binaries have been built or published for this candidate, and the tag has not
-been pushed. The last published release remains v0.9.34 below.
+been pushed.
 
 ## Published release: v0.9.34
 
