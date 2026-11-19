@@ -13,7 +13,7 @@ fn valid_project_round_trip_is_exact_without_warnings_or_retired_fields() {
     let loaded = from_json(&text).unwrap();
     assert!(loaded.warnings.is_empty());
     assert_eq!(loaded.project, project);
-    assert_eq!(loaded.project.version, 20);
+    assert_eq!(loaded.project.version, 21);
 }
 
 #[test]

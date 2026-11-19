@@ -910,6 +910,7 @@ impl Editor {
         }
         self.fields_edited = false;
         if let Some(i) = self.layout.selected() {
+            self.keep_aspect_ratio = self.layout.layer_info(i).keep_aspect_ratio;
             let g = self.layout.layers()[i];
             let [x, y] = self
                 .position_reference()
@@ -2277,6 +2278,10 @@ impl Editor {
         Ok(())
     }
     fn resize_ratio_option(&mut self, ui: &mut egui::Ui) {
+        let Some(i) = self.layout.selected() else {
+            return;
+        };
+        self.keep_aspect_ratio = self.layout.layer_info(i).keep_aspect_ratio;
         let changed = ui
             .checkbox(
                 &mut self.keep_aspect_ratio,
@@ -2302,9 +2307,9 @@ impl Editor {
         {
             self.ratio_edit.error = error;
         }
-        if changed {
-            let options = self.application_settings(ui.ctx());
-            self.settings.save(&options);
+        if changed && let Err(error) = self.layout.set_keep_aspect_ratio(i, self.keep_aspect_ratio)
+        {
+            self.error = error;
         }
     }
     fn measurement_points_menu(&mut self, ui: &mut egui::Ui) {
@@ -3500,7 +3505,7 @@ impl Editor {
                         i,
                         corner,
                         point,
-                        self.keep_aspect_ratio,
+                        self.layout.layer_info(i).keep_aspect_ratio,
                         self.active_resize_mode(),
                     ) {
                         self.layout.gesture_error = Some(e);
@@ -7178,6 +7183,8 @@ mod tests {
             frame(&mut app, &ctx, vec![mouse(pos, false)]);
         }
         assert!(!app.keep_aspect_ratio);
+        assert!(!app.layout.layer_info(1).keep_aspect_ratio);
+        assert!(app.layout.layer_info(0).keep_aspect_ratio);
         assert!(app.show_pattern);
         assert!(app.show_toolbar_icon_names);
         assert_eq!(*app.layout.layers(), before);
@@ -8068,6 +8075,7 @@ mod tests {
                     keep_aspect_ratio: false,
                     ..Default::default()
                 };
+                app.layout.set_keep_aspect_ratio(1, false).unwrap();
                 let ctx = egui::Context::default();
                 let output = frame(&mut app, &ctx, vec![]);
                 let rect = layer_rects(&output)[1];
@@ -8117,6 +8125,9 @@ mod tests {
                     keep_aspect_ratio,
                     ..Default::default()
                 };
+                app.layout
+                    .set_keep_aspect_ratio(1, keep_aspect_ratio)
+                    .unwrap();
                 let ctx = egui::Context::default();
                 let output = frame(&mut app, &ctx, vec![]);
                 let before = app.layout.layers().clone();

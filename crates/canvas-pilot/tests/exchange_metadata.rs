@@ -418,7 +418,7 @@ fn every_snapshot_codec_roundtrips_all_fit_modes_masks_sources_links_and_workspa
             p.editor.show_source_pattern = true;
             p.editor.viewport_zoom = 1.75;
             p.editor.backdrop_title = "Round trip".into();
-            p.editor.keep_aspect_ratio = false;
+            p.layers[0].keep_aspect_ratio = false;
             p.editor.outline_layers = true;
             p.editor.show_toolbar_icon_names = true;
             p.workspace.resize_mode = canvas_pilot::ResizeMode::Mirror;

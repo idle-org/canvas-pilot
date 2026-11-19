@@ -54,7 +54,7 @@ fn v18_migration_synchronizes_links_and_v19_requires_both_directions() {
     let project = canvas_pilot::project_recovery::from_json(old)
         .unwrap()
         .project;
-    assert_eq!(project.version, 20);
+    assert_eq!(project.version, 21);
     for layer in &project.layers {
         assert_eq!(
             layer.send_mapping,
@@ -64,7 +64,7 @@ fn v18_migration_synchronizes_links_and_v19_requires_both_directions() {
     assert_eq!(
         project,
         Project::from_json(include_str!(
-            "../../../docs/interfaces/canvas-pilot-v20.example.json"
+            "../../../docs/interfaces/canvas-pilot-v21.example.json"
         ))
         .unwrap()
     );

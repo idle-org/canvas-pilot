@@ -131,7 +131,6 @@ impl Editor {
         p.editor.position_point = self.corner;
         p.editor.position_layer_point = self.position_layer_point;
         p.editor.backdrop_title = self.backdrop_title.clone();
-        p.editor.keep_aspect_ratio = self.keep_aspect_ratio;
         p.editor.viewport_zoom = self.zoom;
         p.editor.viewport_pan = [self.pan.x, self.pan.y];
         p.editor.show_source_pattern = self.show_pattern;
@@ -218,7 +217,7 @@ impl Editor {
             corner: e.position_point,
             position_layer_point: e.position_layer_point,
             backdrop_title: e.backdrop_title,
-            keep_aspect_ratio: e.keep_aspect_ratio,
+            keep_aspect_ratio: true,
             zoom: e.viewport_zoom,
             pan: Vec2::from(e.viewport_pan),
             show_pattern: e.show_source_pattern,
@@ -1029,7 +1028,8 @@ mod tests {
         app.corner = PositionPoint::TopLeft;
         app.position_layer_point = Some(PositionPoint::Center);
         app.backdrop_title = "Conference 2027 · Main stage".into();
-        app.keep_aspect_ratio = false;
+        app.layout.set_keep_aspect_ratio(1, false).unwrap();
+        app.sync();
         app.show_pattern = true;
         app.show_toolbar_icon_names = true;
         app.layout

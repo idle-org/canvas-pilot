@@ -36,7 +36,7 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 | `theme` | Built-in theme ID below or `{"pack":"pack-id/theme-id"}`; default `"midra"` |
 | `recent_themes` | 1–3 unique built-in IDs or pack references, newest first; first must equal `theme`; default `["midra"]` |
 | `show_toolbar_icon_names` | Boolean; default false |
-| `keep_aspect_ratio` | Boolean; default true |
+| `keep_aspect_ratio` | Legacy compatibility value; current projects store the required resize lock on each layer and new layers default to true |
 | `show_source_pattern` | Boolean; default false. Shows source patterns on other layers only during crop editing; normal editing always hides patterns. |
 | `snapping` | Object with required boolean fields `enabled` (false), `pixels` (true), `screen_edges` (true; screen edges plus 25%, 50% and 75% guides on both axes), `layer_edges` (true), `mask_edges` (false), `grid` (false), `show_grid` (true), and `grid_divisions` ([8, 6]); unknown fields rejected |
 

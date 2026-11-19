@@ -357,6 +357,7 @@ impl Editor {
             }
             if self.property_tab == PropertyTab::Layer {
             let before_size = d.size;
+            self.keep_aspect_ratio = self.layout.layer_info(i).keep_aspect_ratio;
             ui.heading(tr(ui.ctx(), "ui.layer-resolution-final-visible-box"));
             ui.label(tr(ui.ctx(), "ui.resizing-automatically-adjusts-the-layer-crop-to-fit-the-new-dimensions"));
             ui.horizontal(|ui| {
@@ -373,7 +374,11 @@ impl Editor {
                 match d.commit_ratio(self.keep_aspect_ratio) {Ok(())=>d.error.clear(),Err(error)=>d.error=error}
             }
             if !self.keep_aspect_ratio && d.ratio_edit.target.is_some() {ui.small(tr(ui.ctx(), "ui.ratio-ready-enable-the-lock-to-resize"));}
-            if lock_changed {self.settings.save(&self.application_settings(ui.ctx()));}
+            if lock_changed
+                && let Err(error) = self.layout.set_keep_aspect_ratio(i, self.keep_aspect_ratio)
+            {
+                d.error = error;
+            }
             let old=d.size;
             dimensions(ui,&mut d.size,"Visible pixels");
             if self.keep_aspect_ratio {

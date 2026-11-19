@@ -477,6 +477,7 @@ impl DeviceLink {
 #[serde(deny_unknown_fields)]
 pub struct LayerInfo {
     pub pivot: [f64; 2],
+    pub keep_aspect_ratio: bool,
     pub load_mapping: Option<DeviceLink>,
     pub send_mapping: SendMapping,
     pub id: usize,
@@ -574,6 +575,7 @@ impl Default for Layout {
             info: vec![
                 LayerInfo {
                     pivot: [0.5; 2],
+                    keep_aspect_ratio: true,
                     load_mapping: None,
                     send_mapping: Default::default(),
                     id: 2,
@@ -582,6 +584,7 @@ impl Default for Layout {
                 },
                 LayerInfo {
                     pivot: [0.5; 2],
+                    keep_aspect_ratio: true,
                     load_mapping: None,
                     send_mapping: Default::default(),
                     id: 1,
@@ -761,6 +764,7 @@ impl Layout {
         self.layers.push(g);
         self.info.push(LayerInfo {
             pivot: [0.5; 2],
+            keep_aspect_ratio: true,
             load_mapping: None,
             send_mapping: Default::default(),
             id: self.next_id,
@@ -1291,6 +1295,22 @@ impl Layout {
             }
         }
         self.remember(before);
+    }
+    /// Change the resize lock for one layer as an undoable layer property.
+    pub fn set_keep_aspect_ratio(&mut self, index: usize, keep: bool) -> Result<(), String> {
+        let current = self
+            .info
+            .get(index)
+            .ok_or("Layer no longer exists.")?
+            .keep_aspect_ratio;
+        if current == keep {
+            return Ok(());
+        }
+        self.finish_drag();
+        let before = self.snapshot();
+        self.info[index].keep_aspect_ratio = keep;
+        self.remember(before);
+        Ok(())
     }
     /// A single selected layer, or None for zero/multiple selections.
     pub fn selected(&self) -> Option<usize> {

@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### v0.10.2
+
+- Store **Keep aspect ratio when resizing** on each layer, so layers can use
+  different resize behavior. The choice is undoable, survives reordering and
+  project round trips, and old project-wide choices migrate to every layer.
+
 ### v0.10.1
 
 - Size the right inspector to its visible empty/reference message when no layer is

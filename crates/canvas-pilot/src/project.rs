@@ -35,6 +35,7 @@ pub struct Input {
 #[serde(deny_unknown_fields)]
 pub struct Layer {
     pub pivot: [f64; 2],
+    pub keep_aspect_ratio: bool,
     #[serde(deserialize_with = "deserialize_link")]
     pub load_mapping: Option<crate::DeviceLink>,
     pub send_mapping: crate::SendMapping,
@@ -103,7 +104,6 @@ pub struct EditorSettings {
     pub position_point: PositionPoint,
     #[serde(deserialize_with = "deserialize_layer_point")]
     pub position_layer_point: Option<PositionPoint>,
-    pub keep_aspect_ratio: bool,
     pub viewport_zoom: f32,
     pub viewport_pan: [f32; 2],
     pub show_source_pattern: bool,
@@ -180,7 +180,7 @@ impl Project {
             folders: layout.folders.clone(),
             workspace: Workspace::default(),
             format: FORMAT.into(),
-            version: 20,
+            version: 21,
             next_layer_id: layout.next_id,
             output_resolution: layout.formats.output.into(),
             inputs: (0..layout.formats.sources.len())
@@ -196,6 +196,7 @@ impl Project {
             layers: (0..layout.layers.len())
                 .map(|i| Layer {
                     pivot: layout.info[i].pivot,
+                    keep_aspect_ratio: layout.info[i].keep_aspect_ratio,
                     load_mapping: layout.info[i].load_mapping.clone(),
                     send_mapping: layout.info[i].send_mapping.clone(),
                     name: layout.info[i].name.clone(),
@@ -220,7 +221,6 @@ impl Project {
                     .collect(),
                 position_point: PositionPoint::TopLeft,
                 position_layer_point: None,
-                keep_aspect_ratio: true,
                 viewport_zoom: 1.0,
                 viewport_pan: [0.0; 2],
                 show_source_pattern: false,
@@ -231,9 +231,9 @@ impl Project {
     }
     /// Build a fresh document only after validating the entire file. No history is restored.
     pub fn layout(&self) -> Result<Layout, String> {
-        if self.format != FORMAT || self.version != 20 {
+        if self.format != FORMAT || self.version != 21 {
             return Err(
-                "Unsupported project format/version; expected beffroi.midra-layout version 20."
+                "Unsupported project format/version; expected beffroi.midra-layout version 21."
                     .into(),
             );
         }
@@ -323,6 +323,7 @@ impl Project {
             crate::validate_pivot(layer.pivot)?;
             layout.info.push(crate::LayerInfo {
                 pivot: layer.pivot,
+                keep_aspect_ratio: layer.keep_aspect_ratio,
                 load_mapping: layer.load_mapping.clone(),
                 send_mapping: layer.send_mapping.clone(),
                 id: layer.id,
@@ -428,8 +429,8 @@ impl Project {
         }
         let header: Header =
             serde_json::from_str(text).map_err(|e| format!("Invalid project JSON: {e}"))?;
-        if !(1..=20).contains(&header.version) {
-            return Err("Unsupported project version; expected versions 1–20.".into());
+        if !(1..=21).contains(&header.version) {
+            return Err("Unsupported project version; expected versions 1–21.".into());
         }
         let mut migrated: serde_json::Value = if header.version == 1 || header.version == 2 {
             let mut value: serde_json::Value =
@@ -727,6 +728,23 @@ impl Project {
                     .remove("input_crop");
             }
             migrated["version"] = 20.into();
+        }
+        if header.version <= 20 {
+            let keep = migrated["editor"]
+                .as_object_mut()
+                .ok_or("Missing editor settings")?
+                .remove("keep_aspect_ratio")
+                .ok_or("Missing aspect-ratio setting")?;
+            let keep: bool = serde_json::from_value(keep)
+                .map_err(|_| "Invalid aspect-ratio setting".to_string())?;
+            for layer in migrated["layers"].as_array_mut().ok_or("Missing layers")? {
+                let layer = layer.as_object_mut().ok_or("Invalid project layer")?;
+                if layer.contains_key("keep_aspect_ratio") {
+                    return Err("Unexpected per-layer aspect-ratio setting in old project.".into());
+                }
+                layer.insert("keep_aspect_ratio".into(), keep.into());
+            }
+            migrated["version"] = 21.into();
         }
         let p: Self =
             serde_json::from_value(migrated).map_err(|e| format!("Invalid project JSON: {e}"))?;
