@@ -32,7 +32,7 @@ unknown theme names are rejected. There are no numeric coordinates or units.
 | `language` | `"system"` (default), `"en"`, `"fr"`, `"ja"`, `"zh-CN"`, `"es"`, `"grc"`, `"eo"`, `"pt-PT"`, `"ne"`, `"th"`, `"hi"`, `"tok"`, or `{"pack":"uk"}` for an installed language. Pack identifiers use 1–63 lowercase ASCII letters, digits and hyphens, without a leading/trailing hyphen. Unknown built-in string values are rejected. |
 | `autoconnect_at_startup` | Boolean; default false. Try one background connection at application startup if the saved address is nonblank. |
 | `allow_sending_to_program` | Boolean; default false. Enables the Program destination in the exporter. Turning it off restores Preview; applies to quick Apply too. |
-| `midra_host` | Device IP address text with optional TCP port (e.g. `192.168.10.146:3000`, `[::1]:3000`; default port 80); default `""`. Saved as typed, including incomplete drafts; validated when connecting. |
+| `midra_host` | Device IP address text with optional TCP port (e.g. `192.168.10.146:3000`, `[::1]:3000`; default port 80; root HTTP URLs also accepted); default `""`. Saved as typed, including incomplete drafts; validated when connecting. |
 | `theme` | Built-in theme ID below or `{"pack":"pack-id/theme-id"}`; default `"midra"` |
 | `recent_themes` | 1–3 unique built-in IDs or pack references, newest first; first must equal `theme`; default `["midra"]` |
 | `show_toolbar_icon_names` | Boolean; default false |

@@ -436,7 +436,7 @@ fn execute_changes(
     apply_preset: bool,
 ) -> Result<Snapshot, String> {
     for (i, change) in changes.iter().enumerate() {
-        transport.write(change).map_err(|e| format!("Send stopped after {i}/{} confirmed socket writes. Device may be partially changed; refresh before retrying. {e}", changes.len()))?;
+        transport.write(change).map_err(|e| format!("Send stopped after {i}/{} completed socket writes (not device acknowledgements). Device may be partially changed; refresh before retrying. {e}", changes.len()))?;
     }
     // Input crop is staged independently of preset geometry, as in WebRCS.
     let input_crops: BTreeSet<_> = changes
@@ -483,10 +483,26 @@ fn execute_changes(
             })?;
         }
     }
+    let started = std::time::Instant::now();
+    let mut read_error = None;
     let mut mismatches = Vec::new();
-    for _ in 0..3 {
+    for attempt in 0..3 {
+        // Do not multiply a slow/failed fetch by three. An in-flight read retains
+        // its existing socket timeout; this bounds starting additional reads.
+        if attempt > 0 && started.elapsed() >= Duration::from_secs(5) {
+            break;
+        }
         transport.pause();
-        let snapshot = transport.read().map_err(|e| format!("Commands sent, but readback failed; outcome uncertain. Refresh before retrying. {e}"))?;
+        let snapshot = match transport.read() {
+            Ok(snapshot) => {
+                read_error = None;
+                snapshot
+            }
+            Err(error) => {
+                read_error = Some(error);
+                continue;
+            }
+        };
         if changes.iter().all(|c| {
             snapshot
                 .raw
@@ -510,6 +526,11 @@ fn execute_changes(
             })
             .take(4)
             .collect();
+    }
+    if let Some(error) = read_error {
+        return Err(format!(
+            "Commands sent, but readback failed; outcome uncertain. Refresh before retrying. {error}"
+        ));
     }
     Err(format!(
         "Commands sent but readback did not match. Device may have clamped values or another controller changed them. Refresh and review; no automatic resend or rollback was performed. {}",
@@ -1100,6 +1121,65 @@ mod tests {
             Ok(())
         }
     }
+    #[test]
+    fn readback_recovers_without_repeating_writes_and_reports_last_outcome() {
+        struct Flaky {
+            inner: Mock,
+            failures: std::collections::VecDeque<bool>,
+            reads: usize,
+        }
+        impl Transport for Flaky {
+            fn read(&mut self) -> Result<Snapshot, String> {
+                self.reads += 1;
+                if self.failures.pop_front().unwrap() {
+                    Err("Temporary read failure".into())
+                } else {
+                    self.inner.read()
+                }
+            }
+            fn write(&mut self, change: &Change) -> Result<(), String> {
+                self.inner.write(change)
+            }
+        }
+        for (failures, ignore, expected, reads) in [
+            (vec![true, false], false, "", 2),
+            (vec![true, true, false], false, "", 3),
+            (vec![true, true, true], false, "outcome uncertain", 3),
+            (vec![false, true, false], true, "did not match", 3),
+            (vec![false, false, true], true, "outcome uncertain", 3),
+        ] {
+            let state = snapshot();
+            let plan = Plan::prepare(
+                &state,
+                &layout(),
+                0,
+                &[(2, "1".into())],
+                Target::Preview,
+                Sizing::OutputBox,
+            )
+            .unwrap();
+            let mut transport = Flaky {
+                inner: Mock {
+                    state,
+                    writes: 0,
+                    fail_at: None,
+                    ignore,
+                    writes_log: vec![],
+                },
+                failures: failures.into(),
+                reads: 0,
+            };
+            let result = execute(&plan, &mut transport);
+            if expected.is_empty() {
+                assert!(result.is_ok());
+            } else {
+                assert!(result.unwrap_err().contains(expected));
+            }
+            assert_eq!(transport.reads, reads);
+            assert_eq!(transport.inner.writes, plan.changes.len() + 2);
+        }
+    }
+
     #[test]
     fn explicit_input_crop_changes_pulse_only_that_input_before_preset_apply() {
         let mut state = snapshot();

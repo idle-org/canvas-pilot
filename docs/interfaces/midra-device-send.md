@@ -1,7 +1,8 @@
 # Midra reviewed layer exchange
 
 The Rust adapter uses the configured IP and optional port for this endpoint
-(default 80), including emulator addresses such as `192.168.10.146:3000`.
+(default 80), accepting IP addresses or root HTTP URLs (no credentials, query,
+fragment or non-root path), including emulator addresses such as `192.168.10.146:3000`.
 
 This is a transient device protocol, not a project/save schema. Reference collections in project v10 do not change device layer mapping. Compatibility exercised: Eikos 4K firmware 3.3.10, installed WebRCS
 `app.e42fce4879f318b28cde.js`. Other firmware needs verification.
@@ -86,7 +87,11 @@ Only an explicit Send click creates a worker. Read/refresh, editing, project loa
 import, undo and redo never write. Requests run off the UI thread with bounded
 socket operations. After preflight, changed fields are written sequentially once. Crop and mask decreases precede increases
 to avoid temporarily exhausting an axis while moving either window.
-Readback checks every changed field. Valid plans remain sendable even when stored geometry matches: sending still applies staged values. Failure reports
+Readback checks every changed field. Verification retries both mismatched values
+and read errors, up to three read attempts, without repeating writes or apply
+pulses. No additional attempt starts after five seconds of verification; an
+in-flight read retains its existing timeout. An unavailable final read reports an
+uncertain outcome, while a readable mismatch reports the mismatching fields. Valid plans remain sendable even when stored geometry matches: sending still applies staged values. Failure reports
 partial/uncertain outcomes without blind retries or automatic rollback.
 
 Program selection is explicit. The application defaults to Preview and hides Program unless the persisted `allow_sending_to_program` preference is enabled. Turning it off resets the exporter to Preview, including quick Apply. Layer screen/destination links are saved in project version 5. Plans and raw snapshots are not saved in projects or preferences. The device address is saved in [application settings](canvas-pilot-settings.md), never in projects. Refresh and screen changes preserve saved links. Physical display

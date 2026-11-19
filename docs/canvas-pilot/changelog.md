@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### v0.10.0-rc.10
+
+- Recover from temporary send-readback failures using up to three read attempts,
+  without repeating writes or apply pulses. Stop starting retries after five
+  seconds; an in-flight read retains its existing timeout. Report uncertain
+  outcomes when verification remains unavailable.
+- Accept pasted root HTTP device URLs as well as IP addresses, and disable linked
+  Send while a shared-input send is active. Socket-write counts no longer imply
+  device acknowledgement. Regression tests cover recovery and address validation.
+
 ### v0.10.0-rc.9
 
 - Enabling Follow input now adapts the layer to the selected input’s processed

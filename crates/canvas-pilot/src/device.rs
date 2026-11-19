@@ -154,13 +154,15 @@ fn read_json(
     }
     serde_json::from_slice(&bytes).map_err(|e| format!("Invalid device JSON: {e}"))
 }
-/// Parse an IP address with an optional TCP port (default 80).
+/// Parse an IP address with an optional TCP port (default 80), or a root HTTP URL.
 /// IPv6 with a port uses bracket notation: `[::1]:3000`.
 pub fn address(host: &str) -> Result<SocketAddr, String> {
     let host = host.trim();
+    let host = host.strip_prefix("http://").unwrap_or(host);
+    let host = host.strip_suffix('/').unwrap_or(host);
     let address = host.parse::<IpAddr>().map(|ip| SocketAddr::new(ip, 80))
         .or_else(|_| host.parse::<SocketAddr>())
-        .map_err(|_| "Enter a device IP address, optionally with a port, e.g. 192.168.10.146:3000 or [::1]:3000; omit http:// and paths.")?;
+        .map_err(|_| "Enter a device IP address, optionally with a port, e.g. 192.168.10.146:3000 or [::1]:3000; HTTP root URLs are also accepted; omit credentials, queries and paths.")?;
     if address.port() == 0 {
         return Err("Device port must be between 1 and 65535.".into());
     }

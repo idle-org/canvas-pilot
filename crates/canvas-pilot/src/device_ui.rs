@@ -1049,7 +1049,7 @@ impl Editor {
     pub(super) fn device_send_button(&mut self, ui: &mut egui::Ui) {
         let plans = self.device.linked_plans(&self.layout);
         let conflicts = link_conflicts(&self.layout, &self.device.scoped_send_links(&self.layout));
-        let enabled = self.device.online() && self.device.pending.is_none() && conflicts.is_none();
+        let enabled = self.device.online() && !self.device.busy() && conflicts.is_none();
         let tooltip = if let Some(error) = conflicts {
             error
         } else if self.device.sending {

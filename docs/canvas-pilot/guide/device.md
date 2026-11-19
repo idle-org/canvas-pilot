@@ -6,7 +6,9 @@
 
 Enter an IP address in **Device IP / port**, optionally followed by a TCP port:
 `192.168.10.146:3000`. Without a port, the app uses port 80. IPv6 addresses
-with a port use brackets, for example `[::1]:3000`. Omit URL schemes and paths.
+with a port use brackets, for example `[::1]:3000`. A pasted root HTTP URL,
+for example `http://192.168.10.142/`, also works. Omit credentials, queries,
+fragments and page paths; HTTPS and hostnames are not supported.
 The address is saved in preferences and used for identity, input snapshots,
 automatic reconnect and WebSocket sends. Aquilon also requires AWJ TCP port
 10606 on the same IP for its targeted geometry reads; Midra reads use the HTTP port.
