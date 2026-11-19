@@ -379,6 +379,12 @@ The old local source pre-crop model and saved input proposals have been removed.
 Projects retain processed source dimensions and independent layer framing; legacy
 native projects can be opened with a reported best-effort recovery.
 
+Enabling **Enable input preview** in the right-click menu or Preview properties
+requests a fresh still for the configured input immediately. It does not enable
+recurring auto-refresh. A capture already in progress or the five-second request
+cooldown can defer that request; no device request is made for a local picture or
+when no capture input is configured.
+
 ### Captured picture proportions
 
 Input captures and local reference pictures fit centered inside the source format

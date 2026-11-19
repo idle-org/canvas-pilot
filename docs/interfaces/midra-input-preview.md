@@ -16,7 +16,7 @@ The connected snapshot's `/device/inputList/items/INPUT_N` supplies:
 - `snapshot.pp.enable`: capture is disabled in the editor when WebRCS snapshots
   are disabled. The application does not write this field or snapshot size.
 
-Each input-selection capture, explicit **Capture still**, or automatic timer request issues
+Each input-selection capture, preview-enable capture, explicit **Capture still**, or automatic timer request issues
 `GET http://<configured-IP>/api/device/snapshots/inputs/N`, with N an integer
 1–16 and `Cache-Control: no-cache`. IPv4 and IPv6 literal addresses are accepted;
 no proxy or redirect is followed. No immediate retries, WebSocket subscription,
@@ -117,6 +117,11 @@ can share the result too, but still requires explicit import. Changed, removed o
 disabled targets reject the result; other inputs keep their own requests.
 Existing manual stills without a queued capture are never replaced by another
 layer's capture.
+Enabling a configured input preview from the context menu or Preview properties
+also queues a one-shot capture, including when auto-refresh is off. Disabling
+clears that queued request; local pictures (input zero) never queue one. The same
+connection/source validation, in-flight request and cooldown gates apply.
+
 Selecting an input queues a one-shot capture in either picker, including the first
 signal-bearing input selected when opening snapshot import. Selection captures
 use the shared five-second minimum rather than waiting the configured refresh

@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.0-rc.14
+
+- Enabling an input preview from the right-click menu or Preview properties queues
+  its first still immediately, without requiring auto-refresh. Keep capture
+  cooldown, single-request scheduling and local-picture behavior. UI regression
+  coverage checks one-shot scheduling, disabling and the cooldown.
+
 ### v0.10.0-rc.13
 
 - Tolerate up to one output pixel of device rounding when importing Centered/Cropped

@@ -616,10 +616,19 @@ impl Editor {
             return;
         };
         ui.separator();
-        ui.checkbox(
-            &mut preview.enabled,
-            tr(ui.ctx(), "ui.enable-input-preview"),
-        );
+        if ui
+            .checkbox(
+                &mut preview.enabled,
+                tr(ui.ctx(), "ui.enable-input-preview"),
+            )
+            .changed()
+        {
+            preview.capture_on_selection = preview.enabled && preview.input != 0;
+            if preview.enabled {
+                preview.paused = false;
+            }
+            ui.ctx().request_repaint();
+        }
         let has_image = preview.enabled
             && preview.texture.is_some()
             && preview.source == self.layout.formats().source_for[i];
@@ -834,11 +843,12 @@ impl Editor {
                 tr(ui.ctx(), "ui.enable-input-preview"),
             )
             .changed()
-            && preview.enabled
-            && following
         {
-            preview.capture_on_selection = preview.input != 0;
-            preview.paused = false;
+            preview.capture_on_selection = preview.enabled && preview.input != 0;
+            if preview.enabled {
+                preview.paused = false;
+            }
+            ui.ctx().request_repaint();
         }
         let mut capture = false;
         let mut changed_input = (follow_enabled && chosen != 0).then_some(chosen);
@@ -2322,6 +2332,98 @@ mod tests {
         assert!(app.capture.error.is_empty());
         assert!(app.references.is_empty());
     }
+    #[test]
+    fn quick_preview_enable_queues_one_still_without_enabling_auto_refresh() {
+        let ctx = egui::Context::default();
+        let mut app = Editor::default();
+        app.capture.test_now = Some(std::time::Instant::now());
+        app.device.host = "127.0.0.1".into();
+        app.device.snapshot = Some(canvas_pilot::device::Snapshot {
+            profile: Default::default(),
+            identity: "Test".into(),
+            screens: vec![],
+            raw: serde_json::json!({"device":{"inputList":{"items":{
+                "INPUT_3":{"status":{"pp":{"isAvailable":true,"plug":"1"}},"snapshot":{"pp":{"enable":true}}}
+            }}}}),
+        });
+        let i = app.layout.selected().unwrap();
+        let id = app.layout.layer_info(i).id;
+        let source = app.layout.formats().source_for[i];
+        app.capture.layers.insert(
+            id,
+            LayerPreview {
+                input: 3,
+                host: app.device.host.clone(),
+                source,
+                texture: None,
+                bytes: vec![],
+                paused: true,
+                automatic: false,
+                capture_on_selection: false,
+                name: String::new(),
+                enabled: false,
+                guides: 0.25,
+            },
+        );
+        let draw = |app: &mut Editor, events| {
+            ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(600.0, 400.0))),
+                    events,
+                    ..Default::default()
+                },
+                |ui| app.crop_preview_quick_controls(ui, i),
+            )
+        };
+        let output = draw(&mut app, vec![]);
+        let pos = output
+            .shapes
+            .iter()
+            .find_map(|shape| match &shape.shape {
+                egui::Shape::Text(t) if t.galley.text() == "Enable input preview" => {
+                    Some(t.pos + Vec2::splat(4.0))
+                }
+                _ => None,
+            })
+            .unwrap();
+        let click = |app: &mut Editor| {
+            for pressed in [true, false] {
+                draw(
+                    app,
+                    vec![
+                        egui::Event::PointerMoved(pos),
+                        egui::Event::PointerButton {
+                            pos,
+                            button: egui::PointerButton::Primary,
+                            pressed,
+                            modifiers: Default::default(),
+                        },
+                    ],
+                );
+            }
+        };
+        click(&mut app);
+        assert!(app.capture.layers[&id].capture_on_selection);
+        assert!(!app.capture.layers[&id].automatic);
+        assert!(!app.capture.layers[&id].paused);
+        assert_eq!(app.capture.layers[&id].guides, 0.25);
+        app.capture.last_request = Some(app.capture.now());
+        assert!(app.next_selection_capture().is_none()); // cooldown keeps it queued
+        app.capture.last_request = None;
+        assert_eq!(
+            app.next_selection_capture(),
+            Some((3, Some((id, source, 3, app.device.host.clone()))))
+        );
+        assert!(app.next_selection_capture().is_none()); // one-shot
+        click(&mut app); // disable
+        assert!(!app.capture.layers[&id].enabled);
+        assert!(!app.capture.layers[&id].capture_on_selection);
+        app.capture.layers.get_mut(&id).unwrap().input = 0; // local picture / unchosen input
+        click(&mut app);
+        assert!(app.capture.layers[&id].enabled);
+        assert!(!app.capture.layers[&id].capture_on_selection);
+    }
+
     #[test]
     fn layer_preview_toggle_keeps_opacity_and_follows_stable_layer_id() {
         let ctx = egui::Context::default();
