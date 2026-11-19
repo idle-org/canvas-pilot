@@ -1571,9 +1571,14 @@ impl Editor {
             };
         let row_offset = (row_count as f32 - 2.0) * 44.0
             - input_reference_rows as f32 * (44.0 - capture_ui::INPUT_REFERENCE_ROW_HEIGHT);
+        let details_height = match self.layout.selected_indices().len() {
+            0 => 220.0,
+            1 => 958.0,
+            _ => 1071.0,
+        };
         let palette = theme::palette(ui.ctx());
         let (r, _) = ui.allocate_exact_size(
-            Vec2::new(ui.available_width(), 1071.0 + row_offset),
+            Vec2::new(ui.available_width(), details_height + row_offset),
             egui::Sense::hover(),
         );
         let ink = Ink::new(ui, r);
@@ -2103,16 +2108,6 @@ impl Editor {
         ink.text(
             0.0,
             663.0,
-            &tr(ink.painter.ctx(), "ui.visible-box-center-position"),
-            11.0,
-            palette.cyan,
-        );
-        let [h, v] = g.center();
-        ink.field(0.0, 693.0, half, "Horizontal · from left", &number(h));
-        ink.field(half + 12.0, 693.0, half, "Vertical · from top", &number(v));
-        ink.text(
-            0.0,
-            776.0,
             &tr(
                 ink.painter.ctx(),
                 "ui.layer-properties-crops-provisional-device-mapping",
@@ -2120,17 +2115,17 @@ impl Editor {
             12.0,
             palette.muted,
         );
-        ink.button(0.0, 808.0, w, "Copy layer values", true);
-        if click(ui, &ink, [0.0, 808.0, w, 34.0], "copy-values") {
+        ink.button(0.0, 695.0, w, "Copy layer values", true);
+        if click(ui, &ink, [0.0, 695.0, w, 34.0], "copy-values") {
             self.copy(ui.ctx());
         }
-        ink.button(0.0, 857.0, w, "Paste layer(s) values", false);
-        if click(ui, &ink, [0.0, 857.0, w, 34.0], "paste-button") {
+        ink.button(0.0, 744.0, w, "Paste layer(s) values", false);
+        if click(ui, &ink, [0.0, 744.0, w, 34.0], "paste-button") {
             self.open_paste(String::new());
         }
         ink.text(
             0.0,
-            912.0,
+            799.0,
             &tr(
                 ink.painter.ctx(),
                 "ui.or-ctrl-cmd-v-with-the-viewport-focused",

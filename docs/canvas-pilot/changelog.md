@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.1
+
+- Size the right inspector to its visible empty/reference message when no layer is
+  selected, removing the long blank scroll range while retaining scrolling for
+  layer properties and long layer/reference lists. Remove the duplicated read-only
+  **Visible box / center position** block and pull the copy/paste actions upward.
+
 ## v0.10.0-rc.18 — 2026-11-19
 
 Published release candidate collecting the extreme-zoom performance fix and

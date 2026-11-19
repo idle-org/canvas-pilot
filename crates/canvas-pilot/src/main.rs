@@ -143,13 +143,6 @@ impl Ink {
         );
         self.text(x + 12.0, y + 9.0, label, 13.0, palette.text);
     }
-
-    fn field(&self, x: f32, y: f32, w: f32, label: &str, value: &str) {
-        let palette = theme::palette(self.painter.ctx());
-        self.text(x, y, label, 12.0, palette.muted);
-        self.card(x, y + 23.0, w, 42.0, palette.field, palette.line);
-        self.text(x + 12.0, y + 34.0, value, 18.0, palette.text);
-    }
 }
 
 const SCREEN_LABEL_TOP: f32 = 24.0;
