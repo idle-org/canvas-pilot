@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### v0.10.10
+
+- Disclose the project's MIT license, LLM-generated or LLM-assisted development,
+  human review and professional use in the public README.
+- The pinned mdBook build passes, validating 25 HTML pages and 1,660 local
+  links/assets.
+
 ### v0.10.9
 
 - Add optional forced whole-pixel snapping for moves, resizes and pivots, with a

@@ -32,6 +32,13 @@ You can use the editor and file exchange without any connected equipment.
 *Slides + Presenter on a Full HD canvas. Screenshots predate the Canvas Pilot
 rename and still show the former “Midra Layout” name.*
 
+## Open source and development
+
+Canvas Pilot is open-source software under the [MIT license](LICENSE). Its
+development includes LLM-generated or LLM-assisted work, with human review.
+It is used in professional settings; supported workflows and current
+limitations are documented in this repository.
+
 ## From an idea to a screen layout
 
 1. **Set the stage.** Choose a canvas size or import geometry. Add a reference
